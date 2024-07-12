@@ -1,0 +1,11 @@
+.env
+.venv/
+venv/
+.testing_keys
+public
+logs/
+__pycache__
+.idea/
+#PIP
+src/
+*.old

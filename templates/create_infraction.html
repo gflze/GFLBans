@@ -1,0 +1,203 @@
+<div id="createModal" class="modal">
+    <div class="modal-background"></div>
+    <div class="modal-card">
+        <header class="modal-card-head {{theme['background-secondary']}}">
+            <p class="modal-card-title {{theme['text-color']}}">Create Infraction</p>
+            <button class="delete cInfractionDismiss"></button>
+        </header>
+        <section class="modal-card-body {{theme['background']}}">
+            <div id="infractionCreateError" class="notification is-danger is-hidden">
+                <button class="delete cDismissError"></button>
+                <span id="infractionCreateErrorMsg"></span>
+            </div>
+            <label class="label {{theme['text-color']}}">User</label>
+            <div class="field is-grouped">
+                <div class="field has-addons mr-3">
+                    <div class="control">
+                        <div class="select">
+                            <select id="serviceSelector">
+                                <option value="steam" selected>Steam</option>
+                                <option value="discord">Discord</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="control">
+                        <input id="gameIdEntry" class="input" type="text" placeholder="Game ID">
+                    </div>
+                </div>
+                <div class="field">
+                    <input id="ipEntry" class="input" type="text" placeholder="IP Address">
+                </div>
+            </div>
+            <label class="label {{theme['text-color']}}">Scoping</label>
+            <div class="field">
+                <div class="control">
+                    <label class="checkbox {% if theme['name'] == 'DARK' %}has-light-hover{% endif %}">
+                        <input id="isWebToggle" type="checkbox" name="isWebInfract">
+                        This is a web infraction
+                    </label>
+                </div>
+            </div>
+            <div class="field" id="targetServerField">
+                <p>Target server</p>
+                <div class="control">
+                    <div class="select">
+                        <select id="serverSelector" class="select-exp"></select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="control">
+                <label id="serverOnlyLabel" class="radio {% if theme['name'] == 'DARK' %}has-light-hover{% endif %}">
+                    <input class="scope-check" id="serverOnlyCheck" type="radio" name="scope" data-has-permissions="1">
+                    Server
+                </label>
+                <label id="globalLabel" class="radio {% if theme['name'] == 'DARK' %}has-light-hover{% endif %}">
+                    <input class="scope-check" id="globalCheck" type="radio" name="scope" {% if user is not none and has_flag(user.permissions, p_nodes['Add Global Infractions']) %}data-has-permissions="1"{% else %}data-has-permissions="0"{% endif %} checked>
+                    Global
+                </label>
+                <label id="communityLabel" class="radio {% if theme['name'] == 'DARK' %}has-light-hover{% endif %}">
+                    <input class="scope-check" id="communityCheck" type="radio" name="scope" {% if user is not none and has_flag(user.permissions, p_nodes['Add Community Infractions']) %}data-has-permissions="1"{% else %}data-has-permissions="0"{% endif %}>
+                    Community
+                </label>
+            </div>
+            <br>
+            <div id="cAutomationSection"><label class="label {{theme['text-color']}}">Automation</label><div id="autoWrapper">
+            <div class="field">
+                <div class="control">
+                    <label class="checkbox {% if theme['name'] == 'DARK' %}has-light-hover{% endif %}">
+                        <input id="automaticCheck" type="checkbox" name="isAutoInfract">
+                        Automatically determine the reason, length, and restrictions
+                    </label>
+                </div>
+            </div>
+            <div class="field" id="offenseField">
+                <p>Choose an offense</p>
+                <div class="control">
+                    <div class="select">
+                        <select id="offenseSelector" class="select-exp">
+                            <option selected>Offense 1</option>
+                            <option>Offense 2</option>
+                            <option>Offense 3</option>
+                        </select>
+                    </div>
+                </div>
+            </div></div>
+                <div id="autoSetupMessage" class="is-hidden">
+                    <p>Automatic infractions are not setup for this server. Ask your server manager to set some up!</p>
+                </div>
+            <br>
+            </div>
+            <label class="label {{theme['text-color']}}">Reasoning and Evidence</label>
+            <textarea id="reasonEntry" class="textarea is-{{theme['accent']}}" maxlength="280" placeholder="Reason"></textarea>
+            <br>
+            <div class="file is-normal has-name">
+                <label class="file-label ">
+                    <input id="fileInput" class="file-input" type="file" name="resume">
+                    <span class="file-cta">
+                      <span class="file-icon">
+                        <i class="fas fa-upload"></i>
+                      </span>
+                      <span class="file-label">
+                        Attach evidence
+                      </span>
+                    </span>
+                    <span id="fileName" class="file-name">
+                      No file uploaded.
+                    </span>
+                </label>
+            </div>
+            <br>
+            <div id="cRestrictionsSection">
+            <label class="label {{theme['text-color']}}">Restrictions</label>
+            <p>To issue a warning, deselect all restrictions.</p>
+            <br>
+            <div class="is-flex is-justify-content-center">
+                <div class="buttons">
+                <button id="restrictVoice" class="rbtn button is-voice-btn is-outlined">
+                    <span class="icon is-small ricon">
+                      <i class="fas fa-volume-mute ricon"></i>
+                    </span>
+                  </button>
+                  <button id="restrictJoin" class="rbtn button is-ban-btn is-outlined">
+                    <span class="icon is-small ricon">
+                      <i class="fas fa-ban ricon"></i>
+                    </span>
+                  </button>
+                  <button id="restrictText" class="rbtn button is-text-btn is-outlined">
+                    <span class="icon is-small ricon">
+                      <i class="fas fa-comment-slash ricon"></i>
+                    </span>
+                  </button>
+                <button id="restrictAdminChat" class="rbtn button is-admin-chat-btn is-outlined">
+                    <span class="icon is-small ricon">
+                      <i class="fas fa-hands-helping ricon"></i>
+                    </span>
+                  </button>
+                <button id="restrictCallAdmin" class="rbtn button is-call-admin-btn is-outlined">
+                    <span class="icon is-small ricon">
+                      <i class="fas fa-phone-slash ricon"></i>
+                    </span>
+                  </button>
+            </div>
+            </div>
+            <br>
+            </div>
+            <div id="cExpirationSection">
+            <label class="label {{theme['text-color']}}">Expiration</label>
+            <div class="field" id="cPermCheckField">
+                <div class="control">
+                    <label class="checkbox {% if theme['name'] == 'DARK' %}has-light-hover{% endif %}">
+                        <input id="permanentCheck" type="checkbox" name="isPermanent">
+                        This infraction shouldn't expire
+                    </label>
+                </div>
+            </div>
+            <div class="field" id="cTimeDecCheckField">
+                <div class="control">
+                    <label class="checkbox {% if theme['name'] == 'DARK' %}has-light-hover{% endif %}">
+                        <input id="timeDecCheck" type="checkbox" name="isTimeDec">
+                        This infraction's time remaining only decreases while the user is connected
+                    </label>
+                </div>
+            </div>
+            <div class="field has-addons is-justify-content-center" id="cDurationField">
+                <div class="control">
+                    <input id="durationEntry" class="input" type="number" min="1" placeholder="Duration">
+                </div>
+                <div class="control">
+                    <div class="select">
+                        <select id="unitSelector">
+                            <option value="m">Minutes</option>
+                            <option value="h" selected>Hours</option>
+                            <option value="d">Days</option>
+                            <option value="w">Weeks</option>
+                            <option value="mo">Months</option>
+                            <option value="y">Years</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <br>
+            </div>
+        </section>
+        <footer class="modal-card-foot {{theme['background-secondary']}}">
+            <button id="cInfractionSubmit" class="button is-success">Add Infraction</button>
+            <button class="button is-danger cInfractionDismiss">Cancel</button>
+        </footer>
+    </div>
+
+</div>
+
+<div id="cLoadingModal" class="modal">
+    <div class="modal-background"></div>
+    <div class="modal-card">
+        <section class="modal-card-body {{theme['background']}} card-rounded">
+            <p class="has-text-centered">Creating the infraction...</p>
+            <br>
+            <progress class="progress is-{{theme['accent']}}" max="100">30%</progress>
+        </section>
+    </div>
+</div>
+
+<script src="/static/js/components/infraction_add.js"></script>

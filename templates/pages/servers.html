@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html id="htmlRoot" lang="en" class="{{theme['background']}}">
+<head>
+    {% include 'meta.html' with context %}
+    <!--This page requires tooltips-->
+    <link rel="stylesheet" href="/static/3rdparty/css/bulma-tooltips.css">
+    <title>{{BRANDING}} - Servers</title>
+</head>
+<body class="{{theme['text-color']}}">
+{% include 'header.html' with context %}
+<div class="container is-max-desktop" id="server_root">
+</div>
+{% include 'server_info.html' %}
+{% include 'error.html' %}
+{% include 'loading.html' with context %}
+{% include 'js_includes.html' %}
+<script src="/static/js/servers.js"></script>
+{% include 'footer.html' with context %}
+</body>
+</html>

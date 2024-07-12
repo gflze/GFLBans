@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en" class="{{theme['background']}}">
+<head>
+    {% include 'meta.html' with context %}
+    <link rel="stylesheet" href="/static/3rdparty/css/chart.css">
+    <title>{{BRANDING}} - Infractions</title>
+    {% include 'infractions_meta.html' with context %}
+</head>
+<body class="{{theme['text-color']}}">
+{% include 'header.html' with context %}
+<div class="mt-5 mb-5">
+    {% include 'infractions_list.html' with context %}
+</div>
+{% include 'error.html' %}
+{% include 'js_includes.html' %}
+<script src="/static/js/infractions.js"></script>
+{% include 'create_infraction.html' with context %}
+{% include 'view_infraction.html' with context %}
+{% include 'loading.html' with context %}
+{% include 'footer.html' with context %}
+</body>
+</html>

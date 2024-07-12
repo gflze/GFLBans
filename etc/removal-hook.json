@@ -1,0 +1,49 @@
+{
+    "username": "",
+    "avatar_url": "",
+    "content": "",
+    "embeds": [
+      {
+        "title": "Revoked Infraction on Salad",
+        "color": 16711792,
+        "timestamp": "2021-08-18T07:16:00.000Z",
+        "url": "https://bans.aurora.vg/infractions/611c94a62cd1d68e3c8854e5/",
+        "author": {
+          "name": "Aurora",
+          "url": "https://aurora.vg",
+          "icon_url": "https://bans.aurora.vg/file/uploads/61242fab2cd1d68e3c8854fa/avatar.webp"
+        },
+        "image": {
+          "url": ""
+        },
+        "thumbnail": {
+          "url": "https://bans.aurora.vg/file/uploads/611c8e872cd1d68e3c885497/avatar.webp"
+        },
+        "footer": {
+          "text": "[GFLClan.com] PurgeRP",
+          "icon_url": "https://bans.aurora.vg/static/images/gflbans64.png"
+        },
+        "fields": [
+          {
+            "name": "Player",
+            "value": "Salad",
+            "inline": true
+          },
+          {
+            "name": "Duration",
+            "value": "1 Week",
+            "inline": true
+          },
+          {
+            "name": "Reason",
+            "value": "Started yelling slurs at random people"
+          },
+          {
+            "name": "Removal Reason",
+            "value": "Paid me a not insignificant amount of money"
+          }
+        ]
+      }
+    ],
+    "components": []
+  }

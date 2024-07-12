@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en" class="{{theme['background']}}">
+<head>
+    {% include 'meta.html' with context %}
+    <link rel="stylesheet" href="/static/3rdparty/css/chart.css">
+    <title>{{BRANDING}} - Dashboard</title>
+</head>
+<body class="{{theme['text-color']}}">
+{% include 'header.html' with context %}
+<div class="m-5">
+    <div class="columns is-desktop">
+        <div class="column is-three-quarters-fullhd is-three-fifths-desktop is-three-fifth-tablet">
+            <div class="panel">
+                <p class="panel-heading {{theme['background-secondary']}} {{theme['text-color']}}">Welcome to
+                    {{BRANDING}}!</p>
+                <div class="panel-block {{theme['text-color']}} {{theme['background-secondary']}} no-bottom-border">
+                    <p class="is-size-7 is-size-6-fullhd">If you've been banned, you can use the search icon at the top
+                        of the page to find information about your ban. Once you've found your ban, you may submit an
+                        appeal <a class="has-text-{{theme['accent']}}" href="https://gflclan.com/forms">on our
+                            website</a>. You can also file a report on another player on our website. If you have any
+                        questions, you can use our <a class="has-text-{{theme['accent']}}"
+                                                      href="https://gflclan.com/forums/forum/18-general/">support
+                            subforum</a> or <a class="has-text-{{theme['accent']}}" href="https://ds.gflclan.com">our
+                            Discord</a> to get in contact with a staff member.</p>
+                </div>
+                <div class="panel-block {{theme['text-color']}} {{theme['background-secondary']}}">
+                    <form method="get" action="/infractions" class="index-search">
+                        <div class="field has-addons">
+                            <label class="control is-flex-grow-1">
+                                <input name="search" class="input index-search-input" type="text" placeholder="Search">
+                            </label>
+                            <div class="control">
+                                <button class="button is-{{theme['accent']}}"><i class="fas fa-search"></i></button>
+                            </div>
+                        </div>
+                    </form>
+
+
+                </div>
+
+            </div>
+            <div class="panel is-loading">
+                <p class="panel-heading {{theme['background-secondary']}} {{theme['text-color']}}">New Infractions
+                    Created</p>
+                <div class="panel-block {{theme['text-color']}} {{theme['background-secondary']}}">
+                    <canvas id="infractionsChart">
+
+                    </canvas>
+                </div>
+            </div>
+        </div>
+        <div class="column">
+            <div class="columns is-mobile">
+                <div class="column">
+                    <div class="card mb-4 has-background-primary is-white-shadow-text is-loading">
+                        <div class="card-content stat-card is-flex is-align-items-center is-justify-content-space-between">
+                            <span class="fas fa-gavel"></span>
+                            <span id="count_total_infractions">0</span>
+                        </div>
+                    </div>
+                    <div class="card mb-4 has-background-warning is-white-shadow-text is-loading">
+                        <div class="card-content stat-card is-flex is-align-items-center is-justify-content-space-between">
+                            <span class="fas fa-hourglass-half"></span>
+                            <span id="count_active_infractions">0</span>
+                        </div>
+                    </div>
+                    <div class="card mb-4 has-background-pink is-white-shadow-text is-loading">
+                        <div class="card-content stat-card is-flex is-align-items-center is-justify-content-space-between">
+                            <span class="fas fa-server"></span>
+                            <span id="count_servers">0</span>
+                        </div>
+                    </div>
+                    <div class="card mb-4 has-background-success is-white-shadow-text is-loading">
+                        <div class="card-content stat-card is-flex is-align-items-center is-justify-content-space-between">
+                            <span class="fas fa-user"></span>
+                            <span id="count_total_players">0</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="column">
+                    <div class="card mb-4 has-background-danger is-white-shadow-text is-loading">
+                        <div class="card-content stat-card is-flex is-align-items-center is-justify-content-space-between">
+                            <span class="fas fa-ban"></span>
+                            <span id="count_total_bans">0</span>
+                        </div>
+                    </div>
+                    <div class="card mb-4 has-background-purple is-white-shadow-text is-loading">
+                        <div class="card-content stat-card is-flex is-align-items-center is-justify-content-space-between">
+                            <span class="fas fa-comment-slash"></span>
+                            <span id="count_total_mutes">0</span>
+                        </div>
+                    </div>
+                    <div class="card mb-4 has-background-link is-white-shadow-text is-loading">
+                        <div class="card-content stat-card is-flex is-align-items-center is-justify-content-space-between">
+                            <span class="fas fa-volume-mute"></span>
+                            <span id="count_total_gags">0</span>
+                        </div>
+                    </div>
+                    <div class="card mb-4 has-background-orange is-white-shadow-text is-loading">
+                        <div class="card-content stat-card is-flex is-align-items-center is-justify-content-space-between">
+                            <span class="fas fa-exclamation-triangle"></span>
+                            <span id="count_total_warnings">0</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div>
+                <nav class="panel {{theme['background-secondary']}} {{theme['text-color']}}">
+                    <p class="panel-heading {{theme['background-secondary']}} {{theme['text-color']}}">External
+                        Links</p>
+                    <a href="//gfl.gs/member" class="panel-block {{theme['text-color']}}">
+                        Apply for Member
+                    </a>
+                    <a href="//gfl.gs/donate" class="panel-block {{theme['text-color']}}">
+                        Donate to GFL
+                    </a>
+                    <a href="#" class="panel-block {{theme['text-color']}}">
+                        {{BRANDING}} Changelog
+                    </a>
+                    <a href="#" class="panel-block {{theme['text-color']}}">
+                        {{BRANDING}} User Guide
+                    </a>
+                    <a href="//gfl.gs/discord" class="panel-block {{theme['text-color']}}">
+                        GFLClan Discord
+                    </a>
+                    <a href="//gfl.gs/" class="panel-block {{theme['text-color']}}">
+                        GFLClan Website
+                    </a>
+                </nav>
+            </div>
+        </div>
+    </div>
+</div>
+{% include 'error.html' %}
+{% include 'js_includes.html' %}
+<script src="/static/3rdparty/js/chart.js"></script>
+<script src="/static/js/index.js"></script>
+{% include 'footer.html' with context %}
+</body>
+</html>

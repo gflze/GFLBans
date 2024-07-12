@@ -1,0 +1,30 @@
+<nav class="pagination mr-5 ml-5" role="navigation" aria-label="pagination">
+    {% if user is not none and has_flag(user.permissions, p_nodes['Add Infractions']) %}
+    <a id="createInfractionLoader" class="pagination-next is-{{theme['accent']}} button"><i class="fas fa-gavel"></i></a>
+    {% endif %}
+    <ul id="infraction-pages" class="pagination-list">
+
+    </ul>
+</nav>
+<div class="table-container is-hidden" id="infractions_tab">
+    <table class="table is-fullwidth {{theme['background']}} infractions-table">
+        <thead>
+        <tr>
+            <th class="has-text-centered max-50 is-hidden-mobile {{theme['text-color']}}">Svc</th>
+            <th class="has-text-centered max-200 is-hidden-touch {{theme['text-color']}}">Created</th>
+            <th class="has-text-centered max-200 is-hidden-mobile-tiny {{theme['text-color']}}">Restrictions</th>
+            <th class="has-text-centered min-200 {{theme['text-color']}}">User</th>
+            <th class="has-text-centered min-200 is-hidden-mobile {{theme['text-color']}}">Admin</th>
+            <th class="has-text-centered max-250 {{theme['text-color']}}">Remaining</th>
+        </tr>
+        </thead>
+        <tbody id="infractionBase">
+
+        </tbody>
+    </table>
+    <div class="ml-5 mr-5">
+    <p class="has-text-left is-size-7"><span id="resultCount">0</span> infractions</p>
+        </div>
+</div>
+
+<script src="/static/js/components/infraction_list.js"></script>

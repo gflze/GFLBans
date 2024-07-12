@@ -1,0 +1,67 @@
+.chartist-tooltip {
+  position: absolute;
+  display: inline-block;
+  opacity: 0;
+  min-width: 5em;
+  padding: .5em;
+  background: #F4C63D;
+  color: #453D3F;
+  text-align: center;
+  pointer-events: none;
+  z-index: 1;
+  -webkit-transition: opacity .2s linear;
+  -moz-transition: opacity .2s linear;
+  -o-transition: opacity .2s linear;
+  transition: opacity .2s linear; }
+  .chartist-tooltip:before {
+    content: "";
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    margin-left: -15px;
+    border: 15px solid transparent;
+    border-top-color: #F4C63D; }
+  .chartist-tooltip.tooltip-show {
+    opacity: 1; }
+
+.ct-area, .ct-line {
+  pointer-events: none; }
+
+/* Color Overrides */
+
+/* Series A is Bans */
+.ct-series-a > .ct-bar {
+  stroke: #f14668;
+}
+
+/* Series B is Gags */
+.ct-series-b > .ct-bar {
+  stroke: #3273dc;
+}
+
+/* Series C is Mutes */
+.ct-series-c > .ct-bar {
+  stroke: purple;
+}
+
+/* Series D is admin chat blocks */
+.ct-series-d > .ct-bar {
+  stroke: mediumseagreen;
+}
+
+/* Series E is call admin blocks */
+.ct-series-e > .ct-bar {
+  stroke: #ffdd57;
+}
+
+/* Series F is Warnings */
+.ct-series-f > .ct-bar {
+  stroke: orange;
+}
+
+/* Series G is Total Infractions */
+.ct-series-g > .ct-bar {
+  stroke: hotpink;
+}

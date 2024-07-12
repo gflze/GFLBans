@@ -1,0 +1,25 @@
+<!--Begin metatags for specific infractions-->
+{% if set_page %}
+<!--The infraction given in the url is on this page, so it takes priority over the query string-->
+<meta name="page_override" content="{{set_page}}">
+{% endif %}
+{% if infraction %}
+<!--Tell the JS loader to open the modal for this infraction on page load-->
+<meta name="load_infraction" content="{{tostring(infraction.id)}}">
+<!--Allow apps like Discord to embed this infraction-->
+<meta property="og:site_name" content="{{BRANDING}}">
+<meta property="og:url" content="http://{{GB_HOST}}/infractions/{{tostring(infraction.id)}}/">
+{% if infraction.user is not none and infraction.user.gs_name is not none %}
+<meta property="og:title" content="Infraction on {{infraction.user.gs_name}}">
+{% else %}
+<meta property="og:title" content="Infraction on an unknown player">
+{% endif %}
+<meta property="og:description" content="{{infraction.reason}}">
+<meta property="og:type" content="website">
+{% if infraction.user is not none and infraction.user.gs_avatar is not none %}
+<meta property="og:image" content="https://{{GB_HOST}}/file/uploads/{{infraction.user.gs_avatar.gridfs_file}}/avatar.webp">
+{% else %}
+<meta property="og:image" content="https://{{GB_HOST}}/images/fallback_av.webp">
+{% endif %}
+{% endif %}
+<!--End metatags for specific infractions-->

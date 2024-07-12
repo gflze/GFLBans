@@ -1,0 +1,50 @@
+{
+    "embeds": [
+      {
+        "title": "Infraction on Salad Updated",
+        "color": 1104124,
+        "timestamp": "2021-08-23T23:28:00.000Z",
+        "url": "https://bans.aurora.vg/infractions/611c94a62cd1d68e3c8854e5/",
+        "author": {
+          "name": "Aurora",
+          "url": "https://bans.aurora.vg",
+          "icon_url": "https://bans.aurora.vg/file/uploads/61242fab2cd1d68e3c8854fa/avatar.webp"
+        },
+        "image": {},
+        "thumbnail": {
+          "url": "https://bans.aurora.vg/file/uploads/611c8e872cd1d68e3c885497/avatar.webp"
+        },
+        "footer": {
+          "text": "[GFLClan.com] DarkRP",
+          "icon_url": "https://bans.aurora.vg/static/images/gflbans64.png"
+        },
+        "fields": [
+          {
+            "name": "Owner",
+            "value": "~~System~~ → Aurora",
+            "inline": true
+          },
+          {
+            "name": "Duration",
+            "value": "~~1 Week~~ → Permanent",
+            "inline": true
+          },
+          {
+            "name": "Tiering Policy",
+            "value": "~~None~~ → Slurs",
+            "inline": true
+          },
+          {
+            "name": "Server",
+            "value": "~~GMOD DarkRP~~ → GMOD TTT 4 Anarchy",
+            "inline": true
+          },
+          {
+            "name": "Scope",
+            "value": "~~Global~~ → Community",
+            "inline": true
+          }
+        ]
+      }
+    ]
+}

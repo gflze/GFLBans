@@ -1,0 +1,80 @@
+<!--Global Navbar-->
+<nav class="navbar is-{{theme['accent']}}" role="navigation" aria-label="main navigation">
+    <div class="navbar-brand">
+        <a class="navbar-item" href="/">
+            <i class="fas fa-gavel fa-2x mr-1"></i>
+            <h2 class="ab-title is-size-4 has-text-white">{{BRANDING}}</h2>
+        </a>
+
+        <a role="button" class="navbar-burger" aria-label="menu" aria-expanded="false" data-target="navbarContents">
+            <span aria-hidden="true"></span>
+            <span aria-hidden="true"></span>
+            <span aria-hidden="true"></span>
+        </a>
+    </div>
+
+    <div id="navbarContents" class="navbar-menu">
+        <div class="navbar-start">
+            <a href="/" class="navbar-item {% if page == 'index' %}is-active{% endif %}"><i
+                    class="fas fa-tachometer-alt nav-icon"></i>Dashboard</a>
+
+            <a href="/servers" class="navbar-item {% if page == 'servers' %}is-active{% endif %}"><i class="fas fa-server nav-icon"></i>Servers</a>
+
+            <a href="/infractions" class="navbar-item {% if page == 'infractions' %}is-active{% endif %}"><i
+                    class="fas fa-gavel nav-icon"></i>Infractions</a>
+
+            {% if user is not none and has_flag(user.permissions, bit_or(p_nodes['ACP Manage Servers'], p_nodes['ACP Manage VPNs'], p_nodes['ACP Database'], p_nodes['ACP Audit Log'], p_nodes['ACP Groups'], p_nodes['ACP API Keys'])) %}
+            <a href="/manage" class="navbar-item {% if page == 'admin' %}is-active {% endif %}"><i
+                    class="fas fa-user-shield nav-icon"></i>Manage</a>
+            {% endif %}
+
+            <div class="navbar-item has-dropdown is-hoverable">
+                <div class="navbar-link is-arrowless is-hoverable is-hidden-touch"><i class="fa fa-search nav-icon-mobile"></i></div>
+                <div class="navbar-dropdown">
+                    <form method="get" action="/infractions">
+                        <div class="field search has-addons px-2">
+                            <div class="control is-flex-grow-1">
+                                <input class="input is-small" name="search" aria-label="search" type="text"
+                                       placeholder="Search"/>
+                            </div>
+                            <div class="control">
+                                <button class="button is-small is-{{theme['accent']}}"><i class="fas fa-search"></i></button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <a id="dark-mode-toggle"
+               data-modeset="{% if 'dark_mode' in request.session and request.session['dark_mode'] %}light{% else %}dark{% endif %}"
+               class="navbar-item">{% if 'dark_mode' in request.session and request.session['dark_mode'] %}<i
+                    class="far fa-sun nav-icon-mobile"></i>{% else %}<i class="far fa-moon nav-icon-mobile"></i>{% endif
+                %}<span class="is-hidden-desktop">{% if 'dark_mode' in request.session and request.session['dark_mode'] %}Enable Light Mode{% else %}Enable Dark Mode{% endif %}</span></a>
+
+        </div>
+
+        <div class="navbar-end">
+
+            {% if user is none %}
+            <a class="navbar-item" href="/login">Log in</a>
+            {% else %}
+            <div class="navbar-item user-button">
+                <div class="is-hidden-touch">
+                    {% if user.avatar %}
+                    <img class="user-avatar" src="/file/uploads/{{user.avatar.gridfs_file}}/avatar.webp" alt="">
+                    {% else %}
+                    <img class="user-avatar" src="/static/images/fallback_av.png" alt="">
+                    {% endif %}
+                </div>
+                <i class="is-hidden-desktop nav-icon fas fa-user"></i>
+                <span>{{user.name}}</span>
+            </div>
+
+            <a class="navbar-item" href="/login/logout">
+                <i class="fas fa-sign-out-alt nav-icon-mobile"></i>
+                <span class="is-hidden-desktop">Sign Out</span>
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</nav>
