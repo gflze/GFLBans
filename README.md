@@ -1,8 +1,6 @@
 # GFLBans Web
 ## Ban Management system for GFL
-#### GFLBans (C) Aurora 2021. All Rights Reserved
-
-License: Private and Confidential!
+#### GFLBans (C) Aurora 2021. Licensed Under GPLv3
 
 Windows: Not Tested
 macOS: Working
