@@ -19,7 +19,7 @@ from starlette.requests import Request
 from gflbans.api_util import construct_ci_resp
 from gflbans.internal.asn import check_vpn, VPN_YES, VPN_CLOUD
 from gflbans.internal.avatar import process_avatar
-from gflbans.internal.config import FORUMS_HOST, HOST, MONGO_DB, GLOBAL_INFRACTION_WEBHOOK
+from gflbans.internal.config import FORUMS_HOST, HOST, MONGO_DB, GLOBAL_INFRACTION_WEBHOOK, GFLBANS_ICON, COMMUNITY_ICON
 from gflbans.internal.constants import SERVER_KEY
 from gflbans.internal.database.common import DFile
 from gflbans.internal.database.infraction import DInfraction, DUser, build_query_dict
@@ -615,7 +615,7 @@ def embed_duration(dinf: DInfraction):
 
 
 async def discord_notify_create_infraction(app, dinf: DInfraction):
-    bot_name, bot_avatar = await get_var(app.state.db[MONGO_DB], 'bot.name', 'GFLBans Bot'), await get_var(app.state.db[MONGO_DB], 'bot.avatar', 'https://gflusercontent.gflclan.com/file/forums-prod/monthly_2020_12/android-chrome-512x512.png')
+    bot_name, bot_avatar = await get_var(app.state.db[MONGO_DB], 'bot.name', 'GFLBans Bot'), await get_var(app.state.db[MONGO_DB], 'bot.avatar', COMMUNITY_ICON)
 
     embed = {
         'username': bot_name,
@@ -630,7 +630,7 @@ async def discord_notify_create_infraction(app, dinf: DInfraction):
                     'url': target_avatar(dinf)
                 },
                 'footer': {
-                    'icon_url': f'http://{HOST}/static/images/gflbans256.png',
+                    'icon_url': GFLBANS_ICON,
                     'text': await _embed_host(app.state.db[MONGO_DB], dinf.server)
                 },
                 'timestamp': datetime.fromtimestamp(dinf.created, tz=UTC).strftime('%Y-%m-%dT%H:%M:%SZ'),
@@ -675,7 +675,7 @@ async def discord_notify_create_infraction(app, dinf: DInfraction):
 
 
 async def discord_notify_edit_infraction(app, dinf: DInfraction, editor: Optional[ObjectId], changes):
-    bot_name, bot_avatar = await get_var(app.state.db[MONGO_DB], 'bot.name', 'GFLBans Bot'), await get_var(app.state.db[MONGO_DB], 'bot.avatar', 'https://gflusercontent.gflclan.com/file/forums-prod/monthly_2020_12/android-chrome-512x512.png')
+    bot_name, bot_avatar = await get_var(app.state.db[MONGO_DB], 'bot.name', 'GFLBans Bot'), await get_var(app.state.db[MONGO_DB], 'bot.avatar', COMMUNITY_ICON)
 
     embed = {
         'username': bot_name,
@@ -690,7 +690,7 @@ async def discord_notify_edit_infraction(app, dinf: DInfraction, editor: Optiona
                     'url': target_avatar(dinf)
                 },
                 'footer': {
-                    'icon_url': f'http://{HOST}/static/images/gflbans256.png',
+                    'icon_url': GFLBANS_ICON,
                     'text': await _embed_host(app.state.db[MONGO_DB], dinf.server)
                 },
                 'timestamp': datetime.fromtimestamp(dinf.created, tz=UTC).strftime('%Y-%m-%dT%H:%M:%SZ'),
@@ -726,7 +726,7 @@ async def discord_notify_edit_infraction(app, dinf: DInfraction, editor: Optiona
 
 
 async def discord_notify_revoke_infraction(app, dinf: DInfraction, actor: Optional[ObjectId]):
-    bot_name, bot_avatar = await get_var(app.state.db[MONGO_DB], 'bot.name', 'GFLBans Bot'), await get_var(app.state.db[MONGO_DB], 'bot.avatar', 'https://gflusercontent.gflclan.com/file/forums-prod/monthly_2020_12/android-chrome-512x512.png')
+    bot_name, bot_avatar = await get_var(app.state.db[MONGO_DB], 'bot.name', 'GFLBans Bot'), await get_var(app.state.db[MONGO_DB], 'bot.avatar', COMMUNITY_ICON)
 
     embed = {
         'username': bot_name,
@@ -741,7 +741,7 @@ async def discord_notify_revoke_infraction(app, dinf: DInfraction, actor: Option
                     'url': target_avatar(dinf)
                 },
                 'footer': {
-                    'icon_url': f'http://{HOST}/static/images/gflbans256.png',
+                    'icon_url': GFLBANS_ICON,
                     'text': await _embed_host(app.state.db[MONGO_DB], dinf.server)
                 },
                 'timestamp': datetime.fromtimestamp(dinf.removed, tz=UTC).strftime('%Y-%m-%dT%H:%M:%SZ'),
@@ -790,7 +790,7 @@ async def discord_notify_revoke_infraction(app, dinf: DInfraction, actor: Option
 
 
 async def discord_notify_reinst_infraction(app, dinf: DInfraction, actor: Optional[ObjectId]):
-    bot_name, bot_avatar = await get_var(app.state.db[MONGO_DB], 'bot.name', 'GFLBans Bot'), await get_var(app.state.db[MONGO_DB], 'bot.avatar', 'https://gflusercontent.gflclan.com/file/forums-prod/monthly_2020_12/android-chrome-512x512.png')
+    bot_name, bot_avatar = await get_var(app.state.db[MONGO_DB], 'bot.name', 'GFLBans Bot'), await get_var(app.state.db[MONGO_DB], 'bot.avatar', COMMUNITY_ICON)
 
     embed = {
         'username': bot_name,
@@ -805,7 +805,7 @@ async def discord_notify_reinst_infraction(app, dinf: DInfraction, actor: Option
                     'url': target_avatar(dinf)
                 },
                 'footer': {
-                    'icon_url': f'http://{HOST}/static/images/gflbans256.png',
+                    'icon_url': GFLBANS_ICON,
                     'text': await _embed_host(app.state.db[MONGO_DB], dinf.server)
                 },
                 'timestamp': datetime.now(tz=UTC).strftime('%Y-%m-%dT%H:%M:%SZ'),

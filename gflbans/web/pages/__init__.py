@@ -5,7 +5,8 @@ from starlette.requests import Request
 
 from gflbans.internal.config import BRANDING
 from gflbans.internal.flags import name2perms
-from gflbans.web.data import THEME, GB_VERSION
+from gflbans.web.data import THEME
+from gflbans.internal.constants import GB_VERSION
 from gflbans.web.login import current_user
 
 

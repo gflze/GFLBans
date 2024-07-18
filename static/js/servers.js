@@ -199,7 +199,7 @@ function serverDetails(server_id, mod, map, hostname, ip) {
         }
     }).catch(reason => {
         console.log(reason);
-        showError('Failed to load player list. Try refreshing the page or contact Aurora if the problem persists.')
+        showError('Failed to load player list. Try refreshing the page or the host if the problem persists.')
     });
 }
 

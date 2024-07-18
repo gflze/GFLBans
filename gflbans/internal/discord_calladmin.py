@@ -14,8 +14,8 @@ from gflbans.internal.constants import COLOR_SUCCESS, COLOR_WARNING
 from motor.motor_asyncio import AsyncIOMotorGridFSBucket
 from dateutil.tz import UTC
 
-from gflbans.internal import VERSION
-from gflbans.internal.config import DISCORD_BOT_TOKEN, HOST, MONGO_DB
+from gflbans.internal.constants import GB_VERSION
+from gflbans.internal.config import DISCORD_BOT_TOKEN, HOST, MONGO_DB, GFLBANS_ICON, COMMUNITY_ICON
 from gflbans.internal.database.common import DFile
 from gflbans.internal.database.server import DServer, DCallData
 from gflbans.internal.kv import get_var
@@ -44,8 +44,8 @@ async def execute_webhook(app, srv: DServer, call: ExecuteCallAdmin, image: Opti
         'color': COLOR_WARNING,
         'timestamp': datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ'),
         'footer': {
-            'icon_url': f'https://{HOST}/static/images/gflbans256.png',
-            'text': f'GFLBans {VERSION}'
+            'icon_url': GFLBANS_ICON,
+            'text': f'GFLBans {GB_VERSION}'
         },
         'fields': [
             {
@@ -102,8 +102,7 @@ async def execute_webhook(app, srv: DServer, call: ExecuteCallAdmin, image: Opti
         })
 
     bot_name, bot_avatar = await get_var(app.state.db[MONGO_DB], 'bot.name', 'GFLBans Bot'), await get_var(
-        app.state.db[MONGO_DB], 'bot.avatar',
-        'https://gflusercontent.gflclan.com/file/forums-prod/monthly_2020_12/android-chrome-512x512.png')
+        app.state.db[MONGO_DB], 'bot.avatar', COMMUNITY_ICON)
 
     request_json = {'content': '@here' if srv.discord_staff_tag == 'here' else f'<@&{srv.discord_staff_tag}>',
                     'username': bot_name,
@@ -171,8 +170,8 @@ async def execute_claim(app, srv: DServer, claim: ClaimCallAdmin, call: DCallDat
         'color': COLOR_SUCCESS,
         'timestamp': datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ'),
         'footer': {
-            'icon_url': f'https://{HOST}/static/images/gflbans256.png',
-            'text': f'GFLBans {VERSION}'
+            'icon_url': GFLBANS_ICON,
+            'text': f'GFLBans {GB_VERSION}'
         },
         'fields': [
             {
