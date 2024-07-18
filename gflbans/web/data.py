@@ -21,6 +21,3 @@ THEME = {
         'name': 'DARK'
     }
 }
-
-# User friendly version
-GB_VERSION = '0.4-ALPHA'

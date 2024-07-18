@@ -34,13 +34,13 @@ async def get_groups(request: Request, auth: Tuple[int, Optional[ObjectId], int]
     results = []
 
     for group in groups:
-        dg = await DGroup.find_one_from_query(request.app.state.db[MONGO_DB], {'ips_group': group['id']})
+        dg = await DGroup.find_one_from_query(request.app.state.db[MONGO_DB], {'ips_group': group['ips_group']})
 
         if dg is None:
-            dg = DGroup(privileges=0, ips_group=group['id'])
+            dg = DGroup(privileges=group['privileges'], ips_group=group['ips_group'])
             await dg.commit(request.app.state.db[MONGO_DB])
 
-        results.append(Group(group_name=group['name'], group_id=group['id'], permissions=dg.privileges))
+        results.append(Group(group_name=group['name'], group_id=group['ips_group'], permissions=dg.privileges))
 
     return results
 

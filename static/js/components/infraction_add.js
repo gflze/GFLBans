@@ -288,7 +288,7 @@ function openModal() {
 
     loadModal().catch(function (e) {
        console.log(e);
-       showError('An error occurred. Please try reloading the page or contact Aurora if the problem persists.')
+       showError('An error occurred. Please try reloading the page or contact the host if the problem persists.')
    })
 }
 
@@ -309,7 +309,7 @@ $(document).ready(function () {
     $(cTargetServer).change(function () {
         setServer($(cTargetServer).val()).catch(function (e) {
             console.log(e);
-            showError('An error occurred. Please try reloading the page or contact Aurora if the problem persists.')
+            showError('An error occurred. Please try reloading the page or contact the host if the problem persists.')
         })
     })
 
@@ -340,7 +340,7 @@ function submitInfraction() {
 
     gbRequest('POST', route, createCall[2], true).then(handleInfractionSubmission).catch(function (e) {
         console.log(e);
-        showError('An error occurred. Please try reloading the page or contact Aurora if the problem persists.');
+        showError('An error occurred. Please try reloading the page or contact the host if the problem persists.');
     })
 }
 

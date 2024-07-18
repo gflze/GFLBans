@@ -1,3 +1,6 @@
+from bson import json_util
+import json
+
 from contextlib import suppress
 from typing import Tuple
 
@@ -7,7 +10,7 @@ from aredis.cache import IdentityGenerator
 
 from gflbans.internal.avatar import process_avatar
 from gflbans.internal.config import FORUMS_OAUTH_TOKEN_URL, FORUMS_OAUTH_CLIENT_SECRET, FORUMS_OAUTH_CLIENT_ID, HOST, \
-    FORUMS_API_PATH
+    FORUMS_API_PATH, MONGO_DB
 from gflbans.internal.errors import NoSuchAdminError
 from gflbans.internal.log import logger
 from gflbans.internal.utils import slash_fix
@@ -46,7 +49,7 @@ async def get_token(app):
 
         return j['access_token']
 
-
+# Used in login
 async def get_user_token(app, auth_token: str):
     async with app.state.aio_session.post(FORUMS_OAUTH_TOKEN_URL, data={'grant_type': 'authorization_code',
                                                                   'code': auth_token,
@@ -82,7 +85,7 @@ async def refresh_access_token(app, refresh_token: str) -> Tuple[str, str, str]:
 
         return j['access_token'], j['expires_in'], j['refresh_token']
 
-
+# Used in login
 async def get_member_id_from_token(app, access_token: str):
     async with app.state.aio_session.get(f'{slash_fix(FORUMS_API_PATH)}core/me',
                                    headers={'Authorization': f'Bearer {access_token}'}) as resp:
@@ -108,24 +111,19 @@ async def get_member_by_id(app, member_id: int):
 # A version of get_member_by_id that skips the cache
 # Used for Admin()
 async def get_member_by_id_nc(app, member_id: int):
-    token = await get_token(app)
+    response = await app.state.db[MONGO_DB]['admin_cache'].find_one({'ips_user': member_id})
 
-    async with app.state.aio_session.get(f'{slash_fix(FORUMS_API_PATH)}core/members/{member_id}',
-                                   headers={'Authorization': f'Bearer {token}'}) as resp:
-        try:
-            resp.raise_for_status()
-        except Exception:
-            logger.error('IPS API Error!', exc_info=True)
-            raise
+    if response is None:
+        logger.debug(f'DB: no document for ips user {member_id}')
+        return
 
-        j = await resp.json()
+    json_response = json.loads(json_util.dumps(response))
 
-        with suppress(Exception):
-            await app.state.ips_cache.set(str(member_id), j, 'user_cache',
+    with suppress(Exception):
+            await app.state.ips_cache.set(str(member_id), json_response, 'user_cache',
                                 expire_time=10 * 60)
 
-        return j
-
+    return json_response
 
 # Wrapper around process_avatar for IPS photoUrl results
 # as sometimes photoUrl doesn't return an HTTP url
@@ -143,23 +141,7 @@ async def ips_process_avatar(app, avatar_url):
 
 # Gets an IPS member id from a game server id
 async def ips_get_member_id_from_gsid(app, gs_service, gs_id):
-    with suppress(RedisError):
-        a = await app.state.ips_cache.get(gs_id, f'{gs_service}_mid_cache')
-        if a is not None and 'member_id' in a:
-            return int(a['member_id'])
-
-    if gs_service == 'steam':
-        result = await steam_ips_get_member_id_from_gsid(app, gs_id)
-    elif gs_service == 'discord':
-        result = await discord_ips_get_member_id_from_gsid(app, gs_id)
-    else:
-        raise NotImplementedError(f'{gs_service} not implemented.')
-
-    with suppress(Exception):
-        await app.state.ips_cache.set(gs_id, result, f'{gs_service}_mid_cache', expire_time=30 * 60)
-
-    return int(result['member_id'])
-
+    return int(gs_id) - 76561197960265728 # Convert Steam64 ID to 32, since mongodb doesnt like 64 bit numbers
 
 async def discord_ips_get_member_id_from_gsid(app, gs_id):
     token = await get_token(app)
@@ -199,32 +181,13 @@ async def steam_ips_get_member_id_from_gsid(app, gs_id):
 
 
 async def _get_groups(app):
-    token = await get_token(app)
+    groups = await app.state.db[MONGO_DB]['groups'].find()
 
-    async with app.state.aio_session.get(f'{slash_fix(FORUMS_API_PATH)}core/groups',
-                                   headers={'Authorization': f'Bearer {token}'}) as resp:
-        resp.raise_for_status()
+    if groups is None:
+        logger.debug('DB: no collection of groups')
+        return
 
-        r = await resp.json()
-
-        group_results = r['results']
-
-        if r['totalPages'] > 1:
-            t = r['totalPages'] - 1
-
-            for i in range(t):
-                r_page = t + 1
-
-                async with app.state.aio_session.get(f'{slash_fix(FORUMS_API_PATH)}core/groups?page={r_page}',
-                                               headers={'Authorization': f'Bearer {token}'}) as resp2:
-                    resp2.raise_for_status()
-
-                    r2 = await resp2.json()
-
-                    group_results = [*group_results, *r2['results']]
-
-        return group_results
-
+    return json.loads(json_util.dumps(groups))
 
 async def get_groups(app):
     with suppress(RedisError):

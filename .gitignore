@@ -9,3 +9,4 @@ __pycache__
 #PIP
 src/
 *.old
+*.vscode

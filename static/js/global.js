@@ -76,7 +76,7 @@ function getMeta(metaName) {
   return '';
 }
 
-const defaultError = 'An error occurred while loading this page. Try again in a few minutes or contact Aurora if the problem persists.';
+const defaultError = 'An error occurred while loading this page. Try again in a few minutes or contact the host if the problem persists.';
 
 function showError(error_message=defaultError) {
     closeModals();

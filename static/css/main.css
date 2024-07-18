@@ -124,7 +124,6 @@
 }
 
 .tile.server-card {
-    max-height: 350px;
     min-height: 350px;
 }
 
@@ -575,4 +574,12 @@ img {
 
 #user_name {
     margin-right: 2px;
+}
+
+#editTimeTimeDec.button {
+    background-color: #ff7373;
+}
+
+#editTimeTimeDec.button.is-light {
+    background-color: white;
 }

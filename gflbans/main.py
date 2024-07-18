@@ -11,7 +11,7 @@ from pytz import UTC
 
 from gflbans.internal.config import WEB_USE_UNIX, WEB_UNIX, WEB_PORT, WORKERS, DISCORD_BOT_TOKEN
 from gflbans.internal.log import logger
-from gflbans.internal import VERSION
+from gflbans.internal.constants import GB_VERSION
 from gflbans.asgi import new_app
 
 def start_gflbans():
@@ -25,7 +25,7 @@ def start_gflbans():
 
 
 if __name__ == '__main__':
-    logger.info(f'GFLBans {VERSION} by Aurora')
+    logger.info(f'GFLBans {GB_VERSION} by Aurora')
 
     api = Process(target=start_gflbans)
     api.start()
