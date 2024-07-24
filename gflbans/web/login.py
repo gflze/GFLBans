@@ -1,18 +1,20 @@
 import os
 from datetime import datetime
+import random
+import re
 from typing import Optional
 import urllib.parse
 
-from aiohttp import ClientResponseError
+import aiohttp
 from dateutil.tz import UTC
 from fastapi import APIRouter, HTTPException
 from starlette.requests import Request
 from starlette.responses import RedirectResponse
 
-from gflbans.internal.config import FORUMS_OAUTH_CLIENT_ID, HOST, MONGO_DB
+from gflbans.internal.config import HOST, MONGO_DB
 from gflbans.internal.database.admin import Admin
 from gflbans.internal.database.uref import UserReference
-from gflbans.internal.integrations.ips import get_member_id_from_token, get_user_token
+from gflbans.internal.integrations.ips import get_member_id_from_token, ips_get_member_id_from_gsid
 
 login_router = APIRouter()
 
@@ -29,7 +31,7 @@ async def current_user(request: Request) -> Optional[Admin]:
     if (datetime.now(tz=UTC).replace(tzinfo=None) - uref.last_validated).total_seconds() > 600:
         try:
             mid = await get_member_id_from_token(request.app, uref.access_token)
-        except ClientResponseError:
+        except aiohttp.ClientResponseError:
             del request.session['uref']
             return None
 
@@ -68,17 +70,6 @@ async def start_login(request: Request, dcl_token: str = None):
         'openid.claimed_id=http://specs.openid.net/auth/2.0/identifier_select'
     }
 
-    ''' Don't think this is needed, but dont delete until login is fully done and I am sure.
-    parameters = {
-        'openid.ns=' + urllib.parse.quote_plus('http://specs.openid.net/auth/2.0'),
-        'openid.mode=' + urllib.parse.quote_plus('checkid_setup'),
-        'openid.return_to=' + urllib.parse.quote_plus(f'http://{HOST}/login/finish'),
-        'openid.realm=' + urllib.parse.quote_plus(f'http://{HOST}'),
-        'openid.identity=' + urllib.parse.quote_plus('http://specs.openid.net/auth/2.0/identifier_select'),
-        'openid.claimed_id=' + urllib.parse.quote_plus('http://specs.openid.net/auth/2.0/identifier_select')
-    }
-    '''
-
     url_params = None
     for param in parameters:
         if url_params is None:
@@ -92,26 +83,62 @@ async def start_login(request: Request, dcl_token: str = None):
 
 
 @login_router.get('/finish')
-async def finish_login(request: Request, code: str, state: str):
-    if 'oauth_state' not in request.session or request.session['oauth_state'] != state:
-        raise HTTPException(status_code=403, detail='State validation failed')
+async def finish_login(request: Request):
+    response_data = urllib.parse.parse_qs(urllib.parse.urlparse(str(request.url)).query)
+    suffix_strings = str(response_data['openid.signed'][0]).split(',')
+    data = {}
+    for suffix in suffix_strings:
+        data['openid_' + suffix] = response_data['openid.' + suffix][0]
 
-    now = datetime.now(tz=UTC)
+    id_regex = re.compile('^https?:\/\/steamcommunity.com\/openid\/id\/(7656119[0-9]{10})\/?$')
+    if data['openid_claimed_id'] != data['openid_identity'] or \
+        data['openid_op_endpoint'] != 'https://steamcommunity.com/openid/login' or \
+	    data['openid_return_to'] != f'http://{HOST}/login/finish' or \
+	    not id_regex.match(data['openid_identity']):
+        raise HTTPException(status_code=502, detail='Login rejected')
+    steam_id = int(id_regex.findall(data['openid_identity'])[0])
+    data['openid_sig'] = response_data['openid.sig'][0]
+    data['openid_ns'] = 'http://specs.openid.net/auth/2.0'
+    data['openid_mode'] = 'check_authentication'
 
-    try:
-        resp = await get_user_token(request.app, code)
-        mid = await get_member_id_from_token(request.app, resp['access_token'])
-    except ClientResponseError:
-        raise HTTPException(status_code=502, detail='An upstream server rejected your login')
+    async with aiohttp.ClientSession() as session:
+        async with session.post('https://steamcommunity.com/openid/login',
+                                headers={'Accept-language': 'en','Content-Type': 'application/x-www-form-urlencoded'},
+                                data=aiohttp.FormData(data)) as resp:
+            if resp.status >= 400:
+                print(f'failed to authenticate (HTTP {resp.status}): {await resp.text()}, api request:')
+                print(data)
+                return
+            resp_lines = str(await resp.text()).split('\n')
+            resp_keys = {}
+            for line in resp_lines:
+                pair = line.split(':')
+                if len(pair) < 2:
+                    continue
+                if len(pair) > 2:
+                    for text in pair[2:]:
+                        pair[1] = pair[1] + ':' + text # There was a colon in text (ie. 'http://')
+                resp_keys[pair[0]] = pair[1]
 
-    uref = UserReference(authed_as=mid, access_token=resp['access_token'], created=now, last_validated=now)
+            if resp_keys['ns'] is None or resp_keys['ns'] != 'http://specs.openid.net/auth/2.0' or \
+                resp_keys['is_valid'] is None or resp_keys['is_valid'] != 'true':
+                raise HTTPException(status_code=502, detail='Login rejected')
+            
+            response = await request.app.state.db[MONGO_DB]['user_cache'].find_one({'authed_as': ips_get_member_id_from_gsid(steam_id)})
 
-    await uref.commit(request.app.state.db[MONGO_DB])
+            if response is None:
+                # No such user, so generate a random token for them
+                token = random.SystemRandom().randint(1, 1 << 64)
+                now = datetime.now(tz=UTC)
+                ips_user = ips_get_member_id_from_gsid(steam_id)
+                uref = UserReference(authed_as=ips_user, access_token=str(token), created=now, last_validated=now)
 
-    request.session['uref'] = str(uref.id)
-    del request.session['oauth_state']
+                await uref.commit(request.app.state.db[MONGO_DB])
+                request.session['uref'] = str(uref.id)
+            else:
+                request.session['uref'] = str(response['_id'])
 
-    return RedirectResponse(url='/', status_code=302)
+            return RedirectResponse(url='/', status_code=302)
 
 
 @login_router.get('/logout')
