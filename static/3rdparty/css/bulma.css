@@ -11621,4 +11621,14 @@ a.has-text-danger-dark:hover, a.has-text-danger-dark:focus {
   background-color: #fafafa;
   padding: 3rem 1.5rem 6rem;
 }
-/*# sourceMappingURL=bulma.css.map */
+
+#login {
+  padding: 0;
+  margin: 0.5rem 0.75rem;
+  width: fit-content;
+  height: fit-content;
+}
+
+#login > img {
+  max-height: none;
+}

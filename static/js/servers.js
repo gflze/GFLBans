@@ -83,20 +83,19 @@ function addServer(server_hostname, ip, map, mod, os, player_text='0/0', id, is_
     info_icon_container.classList.add('has-text-centered', 'has-text-white', 'server-icons');
 
     //The mod
-
-    let mod_icon_container = document.createElement('span');
-    mod_icon_container.classList.add('icon-text', 'server-icon-child');
-    let mod_icon_sc = document.createElement('span');
-    mod_icon_sc.classList.add('icon', 'img-mod-icon-sc')
-    let mod_icon = document.createElement('img');
-    mod_icon.setAttribute('src', '/static/images/mods/' + mod + '.webp');
-    mod_icon.classList.add('img-mod-icon');
-
-    mod_icon_container.appendChild(mod_icon_sc);
-    mod_icon_sc.appendChild(mod_icon);
-
-    info_icon_container.appendChild(mod_icon_container);
-
+    if ( mod !== '' ) {
+        let mod_icon_container = document.createElement( 'span' );
+        mod_icon_container.classList.add( 'icon-text', 'server-icon-child' );
+        let mod_icon_sc = document.createElement( 'span' );
+        mod_icon_sc.classList.add( 'icon', 'img-mod-icon-sc' );
+        let mod_icon = document.createElement( 'img' );
+        mod_icon.setAttribute( 'src', '/static/images/mods/' + mod + '.webp' );
+        mod_icon.classList.add( 'img-mod-icon' );
+        mod_icon_sc.appendChild( mod_icon );
+        mod_icon_container.appendChild( mod_icon_sc );
+        info_icon_container.appendChild( mod_icon_container );
+    }
+    
     //The operating system
 
     if (os === 'linux' || os === 'windows' || os === 'apple' || os === 'freebsd') {
@@ -144,19 +143,21 @@ function addServer(server_hostname, ip, map, mod, os, player_text='0/0', id, is_
         ev.target.setAttribute('src', '/static/images/server.webp');
     });
 
-    $(mod_icon).on('error', function (ev) {
-        ev.target.remove();
+    if (mod !== '') {
+        $( mod_icon ).on( 'error', function ( ev ) {
+            ev.target.remove();
 
-        let ic = 'fa-question'
+            let ic = 'fa-question'
 
-        if (mod === '') {
-            return
-        }
+            if ( mod === '' ) {
+                return
+            }
 
-        let unknown_icon = document.createElement('i');
-        unknown_icon.classList.add('fas', ic, 'fa-lg');
-        mod_icon_sc.appendChild(unknown_icon);
-    });
+            let unknown_icon = document.createElement( 'i' );
+            unknown_icon.classList.add( 'fas', ic, 'fa-lg' );
+            mod_icon_sc.appendChild( unknown_icon );
+        } );
+    }
 
     c_row.appendChild(parent_tile);
 
