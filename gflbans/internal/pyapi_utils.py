@@ -27,7 +27,7 @@ async def load_admin_from_initiator(app, admin: Initiator):
         await a.fetch_details(app)
         return a
     else:
-        a = Admin(await ips_get_member_id_from_gsid(app, admin.gs_admin.gs_service, admin.gs_admin.gs_id))
+        a = Admin(await ips_get_member_id_from_gsid(admin.gs_admin.gs_id))
         await a.fetch_details(app)
         return a
 

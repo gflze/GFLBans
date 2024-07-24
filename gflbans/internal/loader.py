@@ -10,7 +10,7 @@ from pymongo import ASCENDING, DESCENDING
 
 from gflbans.internal import shard
 from gflbans.internal.asn import IPInfoIdentityGenerator
-from gflbans.internal.config import MONGO_URI, RETAIN_AUDIT_LOG_FOR, REDIS_URI, FORUMS_OAUTH_ACCESS_TOKEN_LIFETIME, \
+from gflbans.internal.config import MONGO_URI, RETAIN_AUDIT_LOG_FOR, REDIS_URI, STEAM_OPENID_ACCESS_TOKEN_LIFETIME, \
     MONGO_DB
 from gflbans.internal.integrations.games.discord import DiscordIdentityGenerator
 from gflbans.internal.integrations.games.steam import SteamIdentityGenerator
@@ -99,7 +99,7 @@ async def gflbans_init(app):
                                                             ('session_token', ASCENDING)])
 
         await app.state.db[MONGO_DB].sessions.create_index([('created', ASCENDING)], background=True,
-                                                           expireAfterSeconds=604800)
+                                                           expireAfterSeconds=STEAM_OPENID_ACCESS_TOKEN_LIFETIME)
 
         # Signatures
         await app.state.db[MONGO_DB].signatures.create_index([
@@ -125,7 +125,7 @@ async def gflbans_init(app):
 
         await app.state.db[MONGO_DB].user_cache.create_index([('created', ASCENDING)], background=True,
                                                              expireAfterSeconds=(
-                                                                         FORUMS_OAUTH_ACCESS_TOKEN_LIFETIME - 30))
+                                                                         STEAM_OPENID_ACCESS_TOKEN_LIFETIME - 30))
 
         # GKV
         await app.state.db[MONGO_DB].value_store.create_index([('key', ASCENDING)], unique=True)
