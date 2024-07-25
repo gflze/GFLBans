@@ -26,7 +26,6 @@ RETAIN_AUDIT_LOG_FOR = config('RETAIN_AUDIT_LOG_FOR', cast=int, default=3600 * 2
 SERVER_CACHE_STALE_AFTER = config('SERVER_CACHE_STALE_AFTER', cast=int, default=600)
 SIGNING_KEY = config('SECRET_KEY', default='testing')  # Required string, should be long and random!
 BRANDING = config('BRANDING', default='gflbans')  # Replace all gflbans branding with your own branding
-DEFAULT_PROFILE_PIC = config('DEFAULT_PROFILE_PIC', default='https://avatars.akamai.steamstatic.com/fef49e7fa7e1997310d705b2a6158ff8dc1cdfeb_full.jpg') # Profile picture if user does not have one
 COMMUNITY_ICON = config('COMMUNITY_ICON', default='https://gflusercontent.gflclan.com/file/forums-prod/monthly_2020_12/android-chrome-512x512.png') # Profile picture for discord embeds
 GFLBANS_ICON = config('GFLBANS_ICON', default='https/bans.gflclan.com/static/images/gflbans256.png') # Branding for GFLBans in Discord embeds
 

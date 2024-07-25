@@ -4,7 +4,7 @@ from typing import Optional
 from bson import ObjectId
 from dateutil.tz import UTC
 
-from gflbans.internal.config import ROOT_USER, MONGO_DB, DEFAULT_PROFILE_PIC
+from gflbans.internal.config import ROOT_USER, MONGO_DB
 from gflbans.internal.database.common import DFile
 from gflbans.internal.database.dadmin import DAdmin
 from gflbans.internal.database.group import DGroup
@@ -42,9 +42,8 @@ class Admin:
             self.__dadmin.last_updated = datetime.now(tz=UTC).timestamp()
             self.__dadmin.name = adm_data['name']
             try:
-                av = DFile(**await ips_process_avatar(app, DEFAULT_PROFILE_PIC))
-                # av = DFile(**await ips_process_avatar(app, adm_data['photoUrl']))
-            except FileNotFoundError:
+                av = DFile(**await ips_process_avatar(app, adm_data['photoUrl']))
+            except:
                 av = None
 
             if av is not None:
