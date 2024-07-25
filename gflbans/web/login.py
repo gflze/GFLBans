@@ -6,17 +6,15 @@ from typing import Optional
 import urllib.parse
 
 import aiohttp
-from contextlib import suppress
 from dateutil.tz import UTC
 from fastapi import APIRouter, HTTPException
 from starlette.requests import Request
 from starlette.responses import RedirectResponse
 
-from gflbans.internal.config import HOST, MONGO_DB, STEAM_API_KEY
+from gflbans.internal.config import HOST, MONGO_DB
 from gflbans.internal.database.admin import Admin
 from gflbans.internal.database.uref import UserReference
 from gflbans.internal.integrations.ips import get_member_id_from_token, ips_get_member_id_from_gsid
-from gflbans.internal.log import logger
 
 login_router = APIRouter()
 
@@ -139,24 +137,6 @@ async def finish_login(request: Request):
                 request.session['uref'] = str(uref.id)
             else:
                 request.session['uref'] = str(response['_id'])
-
-            admin = await request.app.state.db[MONGO_DB]['admin_cache'].find_one({'ips_user': ips_get_member_id_from_gsid(steam_id)})
-            if admin is not None:
-                # If they are an admin, update their profile pic URL when they login
-                async with session.get('https://api.steampowered.com/ISteamUser/GetPlayerSummaries/v0002/',
-                                    params={'key': STEAM_API_KEY, 'steamids': steam_id, 'format': 'json'}) as profile_resp:
-                    try:
-                        profile_resp.raise_for_status()
-                    except Exception:
-                        logger.error('Steam API error!', exc_info=True)
-                        raise
-
-                    j = await profile_resp.json()
-
-                    query = { "_id": admin['_id'] }
-                    new_url = { "$set": { "photoUrl": j['response']['players'][0]['avatarmedium'] } }
-
-                    request.app.state.db[MONGO_DB]['admin_cache'].update_one(query, new_url)
 
             return RedirectResponse(url='/', status_code=302)
 

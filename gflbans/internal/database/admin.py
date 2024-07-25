@@ -9,7 +9,8 @@ from gflbans.internal.database.common import DFile
 from gflbans.internal.database.dadmin import DAdmin
 from gflbans.internal.database.group import DGroup
 from gflbans.internal.flags import ALL_PERMISSIONS, PERMISSION_VPN_CHECK_SKIP
-from gflbans.internal.integrations.ips import get_member_by_id_nc, ips_process_avatar
+from gflbans.internal.integrations.games.steam import _get_steam_user_info
+from gflbans.internal.integrations.ips import get_member_by_id_nc, ips_get_gsid_from_member_id, ips_process_avatar
 
 
 class Admin:
@@ -42,10 +43,11 @@ class Admin:
             self.__dadmin.last_updated = datetime.now(tz=UTC).timestamp()
             self.__dadmin.name = adm_data['name']
             try:
-                av = DFile(**await ips_process_avatar(app, adm_data['photoUrl']))
+                steam_json = await _get_steam_user_info(app, ips_get_gsid_from_member_id(self.__ips_id))
+                av = DFile(**await ips_process_avatar(app, adm_data[steam_json['avatarmedium']]))
             except:
                 av = None
-
+                
             if av is not None:
                 self.__dadmin.avatar = av
 
