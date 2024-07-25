@@ -30,7 +30,6 @@ PERMISSION_SKIP_IMMUNITY = 1 << 25  # Overrides immunity
 PERMISSION_RPC_KICK = 1 << 26
 PERMISSION_ASSIGN_TO_SERVER = 1 << 27  # Assign an infraction to a specific server
 PERMISSION_MANAGE_MAP_ICONS = 1 << 28  # Upload and delete map icons
-PERMISSION_RESTRICT_ITEMS = 1 << 29 # Add an item restriction to infractions
 # There is no permission node for SCOPE_SERVER because that's implied w/ create perms
 
 # This isn't a permission node, but a hard coded value for what may be done by a server acting a system
@@ -40,8 +39,7 @@ SERVER_KEY_PERMISSIONS = PERMISSION_COMMENT | PERMISSION_VIEW_IP_ADDR | PERMISSI
                          PERMISSION_EDIT_OWN_INFRACTIONS | PERMISSION_EDIT_ALL_INFRACTIONS | PERMISSION_ATTACH_FILE | \
                          PERMISSION_BLOCK_CHAT | PERMISSION_BLOCK_VOICE | PERMISSION_BAN | \
                          PERMISSION_ADMIN_CHAT_BLOCK | PERMISSION_CALL_ADMIN_BLOCK | PERMISSION_SCOPE_GLOBAL | \
-                         PERMISSION_SCOPE_SUPER_GLOBAL | PERMISSION_MANAGE_POLICY | PERMISSION_SKIP_IMMUNITY | \
-                         PERMISSION_RESTRICT_ITEMS
+                         PERMISSION_SCOPE_SUPER_GLOBAL | PERMISSION_MANAGE_POLICY | PERMISSION_SKIP_IMMUNITY
 
 ALL_PERMISSIONS = PERMISSION_LOGIN | PERMISSION_COMMENT | PERMISSION_VIEW_IP_ADDR | PERMISSION_CREATE_INFRACTION \
                   | PERMISSION_EDIT_OWN_INFRACTIONS | PERMISSION_EDIT_ALL_INFRACTIONS | PERMISSION_ATTACH_FILE \
@@ -52,7 +50,7 @@ ALL_PERMISSIONS = PERMISSION_LOGIN | PERMISSION_COMMENT | PERMISSION_VIEW_IP_ADD
                   | PERMISSION_CALL_ADMIN_BLOCK | PERMISSION_SCOPE_GLOBAL | PERMISSION_SCOPE_SUPER_GLOBAL \
                   | PERMISSION_RPC_KICK | PERMISSION_VPN_CHECK_SKIP | PERMISSION_MANAGE_POLICY\
                   | PERMISSION_IMMUNE | PERMISSION_SKIP_IMMUNITY | PERMISSION_ASSIGN_TO_SERVER\
-                  | PERMISSION_MANAGE_MAP_ICONS | PERMISSION_RESTRICT_ITEMS
+                  | PERMISSION_MANAGE_MAP_ICONS
 
 # INFRACTION FLAGS
 # These are given to infraction objects to indicate some basic information about them
@@ -71,15 +69,13 @@ INFRACTION_CALL_ADMIN_BAN = 1 << 11  # The player may not call an admin (using !
 INFRACTION_SESSION = 1 << 12
 INFRACTION_DEC_ONLINE_ONLY = 1 << 13  # Only reduces infraction time when player is online. Invalid for bans and web
 INFRACTION_AUTO_TIER = 1 << 16  # This infraction is considered for tiering purposes.
-INFRACTION_RESTRICT_ITEMS = 1 << 17 # The player may not pick up weapons spawned by the map
 
 str2pflag = {
     'voice_block': INFRACTION_VOICE_BLOCK,
     'chat_block': INFRACTION_CHAT_BLOCK,
     'ban': INFRACTION_BAN,
     'admin_chat_block': INFRACTION_ADMIN_CHAT_BLOCK,
-    'call_admin_block': INFRACTION_CALL_ADMIN_BAN,
-    'item_block': INFRACTION_RESTRICT_ITEMS
+    'call_admin_block': INFRACTION_CALL_ADMIN_BAN
 }
 
 scope_to_flag = {
@@ -106,8 +102,7 @@ str2permflag = {
     'chat_block': PERMISSION_BLOCK_CHAT,
     'ban': PERMISSION_BAN,
     'admin_chat_block': PERMISSION_ADMIN_CHAT_BLOCK,
-    'call_admin_block': PERMISSION_CALL_ADMIN_BLOCK,
-    'item_block': PERMISSION_RESTRICT_ITEMS
+    'call_admin_block': PERMISSION_CALL_ADMIN_BLOCK
 }
 
 name2perms = {
@@ -132,6 +127,5 @@ name2perms = {
     'Restrict Call Admin': PERMISSION_CALL_ADMIN_BLOCK,
     'Add Community Infractions': PERMISSION_SCOPE_SUPER_GLOBAL,
     'Add Global Infractions': PERMISSION_SCOPE_GLOBAL,
-    'VPN Kick Immunity': PERMISSION_VPN_CHECK_SKIP,
-    'Restrict Item Pickup': PERMISSION_RESTRICT_ITEMS
+    'VPN Kick Immunity': PERMISSION_VPN_CHECK_SKIP
 }
