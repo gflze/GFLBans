@@ -77,6 +77,9 @@ async def ips_process_avatar(app, avatar_url):
 def ips_get_member_id_from_gsid(gs_id):
     return int(gs_id) - 76561197960265728 # Convert Steam64 ID to 32, since mongodb doesnt like 64 bit numbers
 
+# Gets a game server id from an IPS member id
+def ips_get_gsid_from_member_id(member_id: int):
+    return member_id + 76561197960265728
 
 async def _get_groups(app):
     groups = await app.state.db[MONGO_DB]['groups'].find()
