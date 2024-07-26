@@ -9,10 +9,6 @@ MONGO_DB = config('DB_NAME', default='gflbans')
 # Redis Configuration options
 REDIS_URI = config('REDIS_URI', default='redis://127.0.0.1/3')
 
-# IPS4 Options
-STEAM_OPENID_ACCESS_TOKEN_LIFETIME = config('STEAM_OPENID_ACCESS_TOKEN_LIFETIME', cast=int, default=604800)
-FORUMS_HOST = config('FORUMS_HOST')
-
 # gflbans General
 ROOT_USER = config('ROOT_USER', cast=int, default=None)
 
@@ -32,6 +28,7 @@ GFLBANS_ICON = config('GFLBANS_ICON', default='https/bans.gflclan.com/static/ima
 # Integrations with other services
 DISCORD_BOT_TOKEN = config('DISCORD_BOT_TOKEN', default=None)
 STEAM_API_KEY = config('STEAM_API_KEY', default=None)
+STEAM_OPENID_ACCESS_TOKEN_LIFETIME = config('STEAM_OPENID_ACCESS_TOKEN_LIFETIME', cast=int, default=604800)
 GLOBAL_INFRACTION_WEBHOOK = config('GLOBAL_INFRACT_WEBHOOK', default=None)  # For global monitoring
 
 # Web Server Configuration
