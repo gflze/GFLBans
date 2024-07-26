@@ -19,7 +19,7 @@ from starlette.requests import Request
 from gflbans.api_util import construct_ci_resp
 from gflbans.internal.asn import check_vpn, VPN_YES, VPN_CLOUD
 from gflbans.internal.avatar import process_avatar
-from gflbans.internal.config import FORUMS_HOST, HOST, MONGO_DB, GLOBAL_INFRACTION_WEBHOOK, GFLBANS_ICON, COMMUNITY_ICON
+from gflbans.internal.config import HOST, MONGO_DB, GLOBAL_INFRACTION_WEBHOOK, GFLBANS_ICON, COMMUNITY_ICON
 from gflbans.internal.constants import SERVER_KEY
 from gflbans.internal.database.common import DFile
 from gflbans.internal.database.infraction import DInfraction, DUser, build_query_dict
@@ -573,7 +573,7 @@ async def embed_author(app, admin_id: Optional[ObjectId]):
         return {
             'name': adm.name,
             'icon_url': f'http://{HOST}/static/images/fallback_av.png' if adm.avatar is None else f'http://{HOST}/file/uploads/{adm.avatar.gridfs_file}/avatar.webp',
-            'url': f'http://{FORUMS_HOST}/profile/{adm.ips_id}-admin/'
+            'url': f'https://steamcommunity.com/profiles/{adm.ips_id}/'
         }
     else:
         return {
