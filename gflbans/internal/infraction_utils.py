@@ -2,6 +2,7 @@ import asyncio
 from datetime import datetime, timedelta
 from gflbans.internal.database.admin import Admin
 from gflbans.internal.errors import NoSuchAdminError
+from gflbans.internal.integrations.ips import ips_get_gsid_from_member_id
 from gflbans.internal.kv import get_var
 from gflbans.internal.pyapi_utils import load_admin_from_initiator
 from typing import List, Union, Optional
@@ -573,7 +574,7 @@ async def embed_author(app, admin_id: Optional[ObjectId]):
         return {
             'name': adm.name,
             'icon_url': f'http://{HOST}/static/images/fallback_av.png' if adm.avatar is None else f'http://{HOST}/file/uploads/{adm.avatar.gridfs_file}/avatar.webp',
-            'url': f'https://steamcommunity.com/profiles/{adm.ips_id}/'
+            'url': f'https://steamcommunity.com/profiles/{ips_get_gsid_from_member_id(adm.ips_id)}/'
         }
     else:
         return {
