@@ -11,6 +11,7 @@ from gflbans.internal.database.group import DGroup
 from gflbans.internal.flags import ALL_PERMISSIONS, PERMISSION_VPN_CHECK_SKIP
 from gflbans.internal.integrations.games.steam import _get_steam_user_info
 from gflbans.internal.integrations.ips import get_member_by_id_nc, ips_get_gsid_from_member_id, ips_process_avatar
+from gflbans.internal.log import logger
 
 
 class Admin:
@@ -44,9 +45,10 @@ class Admin:
             self.__dadmin.name = adm_data['name']
             try:
                 steam_json = await _get_steam_user_info(app, ips_get_gsid_from_member_id(self.__ips_id))
-                av = DFile(**await ips_process_avatar(app, adm_data[steam_json['avatarmedium']]))
+                av = DFile(**await ips_process_avatar(app, steam_json['avatarfull']))
             except:
                 av = None
+                logger.warning('No Admin Profile Picture found')
                 
             if av is not None:
                 self.__dadmin.avatar = av
