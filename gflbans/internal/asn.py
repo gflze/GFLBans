@@ -21,6 +21,11 @@ VPN_CLOUD = 2
 
 async def check_vpn(app, ip_addr: str) -> int:
 
+    # Wtf is ip2asn.gflclan.com?
+    # Whatever it is, we don't have it, and it breaks infraction loading
+    # And no VPN integration is on gameserver yet anyways, so we're losing nothing by doing this
+    return VPN_NO
+
     a = None
 
     with suppress(RedisError):
