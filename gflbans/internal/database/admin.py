@@ -41,20 +41,21 @@ class Admin:
                 timestamp():
 
             self.__dadmin.last_updated = datetime.now(tz=UTC).timestamp()
-            try:
-                steam_json = await _get_steam_user_info(app, ips_get_gsid_from_member_id(self.__ips_id))
-                av = DFile(**await ips_process_avatar(app, steam_json['avatarfull']))
-                self.__dadmin.name = steam_json['personaname']
-            except:
-                av = None
-                
-            if av is not None:
-                self.__dadmin.avatar = av
 
             i_grps = []
 
             adm_data = await get_member_by_id_nc(app, self.__dadmin.ips_user)
             if adm_data is not None:
+                try:
+                    steam_json = await _get_steam_user_info(app, ips_get_gsid_from_member_id(self.__ips_id))
+                    av = DFile(**await ips_process_avatar(app, steam_json['avatarfull']))
+                    self.__dadmin.name = steam_json['personaname']
+                except:
+                    av = None
+                    
+                if av is not None:
+                    self.__dadmin.avatar = av
+
                 if 'name' in adm_data:
                     self.__dadmin.name = adm_data['name'] # Override steam name if one is specified in admin document
                 for grp in adm_data['groups']:
