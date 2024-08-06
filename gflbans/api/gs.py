@@ -31,6 +31,7 @@ from gflbans.internal.flags import INFRACTION_DEC_ONLINE_ONLY, str2pflag, PERMIS
     INFRACTION_CALL_ADMIN_BAN
 from gflbans.internal.infraction_utils import create_dinfraction, get_user_data
 from gflbans.internal.integrations.games import get_user_info
+from gflbans.internal.integrations.games.steam import get_steam_multiple_user_info
 from gflbans.internal.log import logger
 from gflbans.internal.models.api import PlayerObjNoIp, PlayerObjSimple, Initiator, AdminInfo, PlayerObjIPOptional
 from gflbans.internal.models.protocol import HeartbeatChange, Heartbeat, RunSignaturesReply, RunSignatures, \
@@ -55,6 +56,32 @@ async def _process_heartbeat_player(app, ply: PlayerObjIPOptional) -> DUserIP:
 
     return DUserIP(**ply.dict(), gs_name=name, gs_avatar=avatar)
 
+async def _process_heartbeat_multiple_players(app, ply_list: list[PlayerObjIPOptional]) -> list[DUserIP]:
+    user_list = []
+    steamid_list = []
+    for ply in ply_list:
+        steamid_list.append(ply.gs_id)
+
+    try:
+        info_list = await get_steam_multiple_user_info(app, steamid_list)
+    except Exception as e:
+        logger.error('Failed to fetch user info.', exc_info=e)
+    
+    for ply in ply_list:
+        avatar: Optional[DFile] = None
+        name: str = 'Unknown Player'
+
+        try:
+            info = info_list[ply.gs_id]
+            avatar = DFile(**await process_avatar(app, info['avatar_url']))
+            name = info['name']
+        except Exception as e:
+            logger.error('Failed to fetch name or download avatar image.', exc_info=e)
+
+        user_list.append(DUserIP(**ply.dict(), gs_name=name, gs_avatar=avatar))
+
+    return user_list
+
 
 @gs_router.post('/heartbeat', response_model=List[HeartbeatChange], response_model_exclude_unset=True,
                 response_model_exclude_none=True)
@@ -72,7 +99,7 @@ async def heartbeat(request: Request, beat: Heartbeat,
 
     dsi.last_updated = datetime.now(tz=UTC).replace(tzinfo=None)
 
-    users = await asyncio.gather(*[_process_heartbeat_player(request.app, ply) for ply in beat.players])
+    users = await _process_heartbeat_multiple_players(request.app, beat.players)
 
     lup = {}
     i = 0
