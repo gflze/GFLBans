@@ -47,13 +47,12 @@ async def _process_heartbeat_player(app, ply: PlayerObjIPOptional) -> DUserIP:
     avatar: Optional[DFile] = None
     name: str = 'Unknown Player'
 
-    # Temporarily disabled, because we're spamming Steam API due to aredis being unmaintained/broken
-    #try:
-        #user_info = await get_user_info(app, ply.gs_service, ply.gs_id)
-        #avatar = DFile(**await process_avatar(app, user_info['avatar_url']))
-        #name = user_info['name']
-    #except Exception as e:
-        #logger.error('Failed to download avatar image or fetch user info.', exc_info=e)
+    try:
+        user_info = await get_user_info(app, ply.gs_service, ply.gs_id)
+        avatar = DFile(**await process_avatar(app, user_info['avatar_url']))
+        name = user_info['name']
+    except Exception as e:
+        logger.error('Failed to download avatar image or fetch user info.', exc_info=e)
 
     return DUserIP(**ply.dict(), gs_name=name, gs_avatar=avatar)
 
