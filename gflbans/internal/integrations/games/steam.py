@@ -62,8 +62,9 @@ async def _get_steam_multiple_user_info(app, steamid64_list: list[str]):
     if len(steamid64_list) == 0:
         return users
     
+    batched_steam_ids = ""
     for steamid64 in steamid64_list:
-        batched_steam_ids = f',{steamid64}'
+        batched_steam_ids += f',{steamid64}'
     batched_steam_ids = batched_steam_ids[1:] # Remove comma at start
 
     async with app.state.aio_session.get('https://api.steampowered.com/ISteamUser/GetPlayerSummaries/v0002/',
