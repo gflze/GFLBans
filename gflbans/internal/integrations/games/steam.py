@@ -1,16 +1,10 @@
 from contextlib import suppress
 
-from aredis import RedisError
-from aredis.cache import IdentityGenerator
+from redis.exceptions import RedisError
 
 from gflbans.internal.config import STEAM_API_KEY
 from gflbans.internal.log import logger
 from gflbans.internal.search import id64_or_none
-
-
-class SteamIdentityGenerator(IdentityGenerator):
-    def generate(self, key, typ):
-        return 'Steam::%s:%s' % (typ, key)
 
 
 async def _get_steam_user_info(app, steamid64: str):

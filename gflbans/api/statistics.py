@@ -2,7 +2,7 @@ import asyncio
 from contextlib import suppress
 from datetime import datetime, time, timedelta
 
-from aredis import RedisError
+from redis.exceptions import RedisError
 from dateutil.tz import UTC
 from fastapi import APIRouter
 from fastapi.responses import ORJSONResponse

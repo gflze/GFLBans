@@ -5,7 +5,7 @@ from datetime import datetime
 import re
 from typing import Tuple, Optional, List
 
-from aredis import RedisError
+from redis.exceptions import RedisError
 from bson import ObjectId
 from dateutil.tz import UTC
 from fastapi import APIRouter, Depends, HTTPException
@@ -62,22 +62,24 @@ async def _process_heartbeat_multiple_players(app, ply_list: list[PlayerObjIPOpt
     for ply in ply_list:
         steamid_list.append(ply.gs_id)
 
-    # Temporarily disabled, because we're spamming Steam API due to aredis being unmaintained/broken
-    #try:
-        #info_list = await get_steam_multiple_user_info(app, steamid_list)
-    #except Exception as e:
-        #logger.error('Failed to fetch user info.', exc_info=e)
+    try:
+        info_list = await get_steam_multiple_user_info(app, steamid_list)
+    except Exception as e:
+        logger.error('Failed to fetch user info.', exc_info=e)
+        for ply in ply_list:
+            user_list.append(DUserIP(**ply.dict(), gs_name='Unknown Player', gs_avatar=None))
+        return user_list
     
     for ply in ply_list:
         avatar: Optional[DFile] = None
         name: str = 'Unknown Player'
 
-        #try:
-            #info = info_list[ply.gs_id]
-            #avatar = DFile(**await process_avatar(app, info['avatar_url']))
-            #name = info['name']
-        #except Exception as e:
-            #logger.error('Failed to fetch name or download avatar image.', exc_info=e)
+        try:
+            info = info_list[ply.gs_id]
+            avatar = DFile(**await process_avatar(app, info['avatar_url']))
+            name = info['name']
+        except Exception as e:
+            logger.error('Failed to fetch name or download avatar image.', exc_info=e)
 
         user_list.append(DUserIP(**ply.dict(), gs_name=name, gs_avatar=avatar))
 

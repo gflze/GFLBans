@@ -5,18 +5,11 @@ import json
 
 from contextlib import suppress
 
-from aredis import RedisError
-
-from aredis.cache import IdentityGenerator
+from redis.exceptions import RedisError
 
 from gflbans.internal.avatar import process_avatar
 from gflbans.internal.config import MONGO_DB, STEAM_OPENID_ACCESS_TOKEN_LIFETIME
 from gflbans.internal.log import logger
-
-
-class IPSIdentityGenerator(IdentityGenerator):
-    def generate(self, key, typ):
-        return 'IPS::%s:%s' % (typ, key)
 
 
 # Used in login
