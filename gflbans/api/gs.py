@@ -102,7 +102,7 @@ async def heartbeat(request: Request, beat: Heartbeat,
 
     dsi.last_updated = datetime.now(tz=UTC).replace(tzinfo=None)
 
-    users = await _process_heartbeat_multiple_players(request.app, beat.players)
+    users = await asyncio.gather(*[_process_heartbeat_player(request.app, ply) for ply in beat.players])
 
     lup = {}
     i = 0
