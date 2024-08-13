@@ -1,17 +1,11 @@
 from contextlib import suppress
 
-from aredis import RedisError
-from aredis.cache import IdentityGenerator
+from redis.exceptions import RedisError
 from netaddr import IPAddress
 
 from gflbans.internal.config import MONGO_DB
 from gflbans.internal.database.vpn import DVPN
 from gflbans.internal.log import logger
-
-
-class IPInfoIdentityGenerator(IdentityGenerator):
-    def generate(self, key, typ):
-        return 'IPInfo::%s:%s' % (typ, key)
 
 
 VPN_YES = 0

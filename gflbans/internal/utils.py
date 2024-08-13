@@ -1,14 +1,10 @@
 import os
-import pickle
 import re
 import unicodedata
-from datetime import datetime
 from hashlib import sha512
 
 import orjson
-from aredis.exceptions import SerializeError
-from bson import ObjectId
-from dateutil.tz import UTC
+from redis.exceptions import RedisError
 from pydantic import validate_model, BaseModel
 from starlette.requests import Request
 
@@ -86,11 +82,11 @@ class ORJSONSerializer:
         try:
             return orjson.dumps(content)
         except Exception as e:
-            raise SerializeError('Content cannot be encoded') from e
+            raise RedisError('Content cannot be encoded') from e
 
     def deserialize(self, content):
         try:
             return orjson.loads(content)
         except Exception as e:
-            raise SerializeError('Content cannot be decoded') from e
+            raise RedisError('Content cannot be decoded') from e
 

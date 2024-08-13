@@ -4,7 +4,7 @@ from datetime import datetime
 from typing import List, Optional
 
 import bbcode
-from aredis import RedisError
+from redis.exceptions import RedisError
 from bson import ObjectId
 from dateutil.tz import UTC
 from fastapi import HTTPException

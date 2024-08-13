@@ -2,7 +2,6 @@ import json
 from typing import Union, Optional, Any, Tuple
 from warnings import warn
 
-from aredis import RedisError
 from bson import ObjectId
 from motor.motor_asyncio import AsyncIOMotorDatabase
 from pydantic import BaseModel, ValidationError

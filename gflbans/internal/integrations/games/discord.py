@@ -2,16 +2,10 @@ import math
 from contextlib import suppress
 
 import asyncio
-from aredis import RedisError
-from aredis.cache import IdentityGenerator
+from redis.exceptions import RedisError
 
 from gflbans.internal.config import DISCORD_BOT_TOKEN
 from gflbans.internal.log import logger
-
-
-class DiscordIdentityGenerator(IdentityGenerator):
-    def generate(self, key, typ):
-        return 'Discord::%s:%s' % (typ, key)
 
 
 async def _get_discord_user_info(app, discord_id: str, t=0):

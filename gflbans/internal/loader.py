@@ -3,54 +3,51 @@ from concurrent.futures.process import ProcessPoolExecutor
 from hashlib import md5
 
 import aiohttp
-from aredis import StrictRedis, VERSION
-from aredis.cache import IdentityGenerator
+from redis.asyncio import Redis
 from motor.motor_asyncio import AsyncIOMotorClient
 from pymongo import ASCENDING, DESCENDING
 
 from gflbans.internal import shard
-from gflbans.internal.asn import IPInfoIdentityGenerator
-from gflbans.internal.config import MONGO_URI, RETAIN_AUDIT_LOG_FOR, REDIS_URI, STEAM_OPENID_ACCESS_TOKEN_LIFETIME, \
-    MONGO_DB
-from gflbans.internal.integrations.games.discord import DiscordIdentityGenerator
-from gflbans.internal.integrations.games.steam import SteamIdentityGenerator
-from gflbans.internal.integrations.ips import IPSIdentityGenerator
+from gflbans.internal.config import MONGO_URI, RETAIN_AUDIT_LOG_FOR, REDIS_URI, \
+                                    STEAM_OPENID_ACCESS_TOKEN_LIFETIME, MONGO_DB
+from gflbans.internal.constants import GB_VERSION
 from gflbans.internal.log import logger
 from gflbans.internal.task import task_loop
 from gflbans.internal.utils import ORJSONSerializer
 
+class RedisCache:
+    def __init__(self, redis_client, name, serializer):
+        self.redis_client = redis_client
+        self.name = name
+        self.serializer = serializer
+
+    def _generate_key(self, key, typ):
+        typ = md5(typ.encode()).hexdigest().upper()
+        return f'{self.name}::{typ}:{key}'
+
+    async def set(self, key, value, typ, expire_time=None):
+        cache_key = self._generate_key(key, typ)
+        serialized_value = self.serializer.serialize(value)
+        if expire_time:
+            await self.redis_client.setex(cache_key, expire_time, serialized_value)
+        else:
+            await self.redis_client.set(cache_key, serialized_value)
+
+    async def get(self, key, typ):
+        cache_key = self._generate_key(key, typ)
+        value = await self.redis_client.get(cache_key)
+        return self.serializer.deserialize(value) if value else None
+
 
 def configure_app(app):
     app.state.db = AsyncIOMotorClient(MONGO_URI)
+    app.state.redis_client = Redis.from_url(REDIS_URI, db=3)
 
-    app.state.redis_client = StrictRedis.from_url(REDIS_URI, db=3)
-
-    class GlobalCacheIG(IdentityGenerator):
-        def generate(self, key, typ):
-            typ = md5(typ).hexdigest().upper()
-            return 'global_cache::%s:%s' % (typ, key)
-
-    class DBCacheIG(IdentityGenerator):
-        def generate(self, key, typ):
-            typ = md5(typ).hexdigest().upper()
-
-            return 'db_cache::%s:%s' % (typ, key)
-
-    app.state.cache = app.state.redis_client.cache('GlobalCache', identity_generator_class=GlobalCacheIG,
-                                         serializer_class=ORJSONSerializer)
-
-    app.state.discord_cache = app.state.redis_client.cache('DiscordCache', identity_generator_class=DiscordIdentityGenerator,
-                                         serializer_class=ORJSONSerializer)
-
-    app.state.steam_cache = app.state.redis_client.cache('SteamCache', identity_generator_class=SteamIdentityGenerator,
-                                         serializer_class=ORJSONSerializer)
-
-    app.state.ips_cache = app.state.redis_client.cache('IPSCache', identity_generator_class=IPSIdentityGenerator,
-                                                        serializer_class=ORJSONSerializer)
-
-    app.state.ip_info_cache = app.state.redis_client.cache('IPInfoCache',
-                                                            identity_generator_class=IPInfoIdentityGenerator,
-                                                            serializer_class=ORJSONSerializer)
+    app.state.cache = RedisCache(app.state.redis_client, 'GlobalCache', ORJSONSerializer())
+    app.state.discord_cache = RedisCache(app.state.redis_client, 'DiscordCache', ORJSONSerializer())
+    app.state.steam_cache = RedisCache(app.state.redis_client, 'SteamCache', ORJSONSerializer())
+    app.state.ips_cache = RedisCache(app.state.redis_client, 'IPSCache', ORJSONSerializer())
+    app.state.ip_info_cache = RedisCache(app.state.redis_client, 'IPInfoCache', ORJSONSerializer())
 
     app.state.aio_session = aiohttp.ClientSession()
 
@@ -59,7 +56,7 @@ def configure_app(app):
 
 async def gflbans_init(app):
     try:
-        logger.info(f'gflbans v{VERSION}: API Shard Startup')
+        logger.info(f'gflbans v{GB_VERSION}: API Shard Startup')
         logger.info(f'Using {shard} as shard identifier')
 
         logger.info('Connecting to MongoDB...')
