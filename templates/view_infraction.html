@@ -178,23 +178,86 @@
                                         <td>Restrictions</td>
                                         <td id="restrictionsValue" class="data-cell">
                                             <div class="tags">
-                                                <span id="callAdminFlag" class="ptag tag has-background-calladmin">Call Admin Block</span>
-                                                <span id="adminChatFlag" class="ptag tag has-background-adminchat">Admin Chat Block</span>
-                                                <span id="textChatFlag"
-                                                      class="ptag tag has-background-text">Text Block</span>
-                                                <span id="voiceChatFlag" class="ptag tag has-background-voice">Voice Block</span>
-                                                <span id="warningFlag"
-                                                      class="ptag tag has-background-warning">Warning</span>
-                                                <span id="banFlag" class="ptag tag has-background-ban">Ban</span>
+                                                <span id="textChatFlag" class="ptag tag has-background-text">
+                                                    <span class="icon is-small ricon">
+                                                        <i class="fas fa-comment-slash ricon"></i>
+                                                    </span>
+                                                    Text
+                                                </span>
+                                                <span id="voiceChatFlag" class="ptag tag has-background-voice">
+                                                    <span class="icon is-small ricon">
+                                                        <i class="fas fa-volume-mute ricon"></i>
+                                                    </span>
+                                                    Voice
+                                                </span>
+                                                <span id="banFlag" class="ptag tag has-background-ban">
+                                                    <span class="icon is-small ricon">
+                                                        <i class="fas fa-ban ricon"></i>
+                                                    </span>
+                                                    Ban
+                                                </span>
+                                                <span id="adminChatFlag" class="ptag tag has-background-adminchat">
+                                                    <span class="icon is-small ricon">
+                                                        <i class="fas fa-hands-helping ricon"></i>
+                                                    </span>
+                                                    Admin Chat
+                                                </span>
+                                                <span id="callAdminFlag" class="ptag tag has-background-calladmin">
+                                                    <span class="icon is-small ricon">
+                                                        <i class="fas fa-phone-slash ricon"></i>
+                                                    </span>
+                                                    Call Admin
+                                                </span>
+                                                <span id="warningFlag" class="ptag tag has-background-warning">
+                                                    <span class="icon is-small ricon">
+                                                        <i class="fas fa-exclamation-triangle ricon"></i>
+                                                    </span>
+                                                    Warning
+                                                </span>
                                             </div>
                                         </td>
                                         <td id="restrictionsEditCell" class="is-hidden edit-cell">
                                             <div class="tags">
-                                                <a id="callAdminFlagEdit" data-punishment="call_admin_block" data-target="callAdminFlag" class="tag etag has-background-calladmin">Call Admin Block</a>
-                                                <a id="adminChatFlagEdit" data-punishment="admin_chat_block" data-target="adminChatFlag" class="tag etag has-background-adminchat">Admin Chat Block</a>
-                                                <a id="textChatFlagEdit" data-punishment="chat_block" data-target="textChatFlag" class="tag etag has-background-text">Text Block</a>
-                                                <a id="voiceChatFlagEdit" data-punishment="voice_block" data-target="voiceChatFlag" class="etag tag has-background-voice">Voice Block</a>
-                                                <a id="banFlagEdit" data-punishment="ban" class="etag tag has-background-ban" data-target="banFlag">Ban</a>
+                                                {% if user is not none and has_flag(user.permissions, p_nodes['Restrict Text']) %}
+                                                <a id="textChatFlagEdit" data-punishment="chat_block" data-target="textChatFlag" class="tag etag has-background-text">
+                                                    <span class="icon is-small ricon">
+                                                        <i class="fas fa-comment-slash ricon"></i>
+                                                    </span>
+                                                    Text
+                                                </a>
+                                                {% endif %}
+                                                {% if user is not none and has_flag(user.permissions, p_nodes['Restrict Voice']) %}
+                                                <a id="voiceChatFlagEdit" data-punishment="voice_block" data-target="voiceChatFlag" class="etag tag has-background-voice">
+                                                    <span class="icon is-small ricon">
+                                                        <i class="fas fa-volume-mute ricon"></i>
+                                                    </span>
+                                                    Voice
+                                                </a>
+                                                {% endif %}
+                                                {% if user is not none and has_flag(user.permissions, p_nodes['Ban']) %}
+                                                <a id="banFlagEdit" data-punishment="ban" data-target="banFlag" class="etag tag has-background-ban">
+                                                    <span class="icon is-small ricon">
+                                                        <i class="fas fa-ban ricon"></i>
+                                                    </span>
+                                                    Ban
+                                                </a>
+                                                {% endif %}
+                                                {% if user is not none and has_flag(user.permissions, p_nodes['Restrict Admin Chat']) %}
+                                                <a id="adminChatFlagEdit" data-punishment="admin_chat_block" data-target="adminChatFlag" class="tag etag has-background-adminchat">
+                                                    <span class="icon is-small ricon">
+                                                        <i class="fas fa-hands-helping ricon"></i>
+                                                    </span>
+                                                    Admin Chat
+                                                </a>
+                                                {% endif %}
+                                                {% if user is not none and has_flag(user.permissions, p_nodes['Restrict Call Admin']) %}
+                                                <a id="callAdminFlagEdit" data-punishment="call_admin_block" data-target="callAdminFlag" class="tag etag has-background-calladmin">
+                                                    <span class="icon is-small ricon">
+                                                        <i class="fas fa-phone-slash ricon"></i>
+                                                    </span>
+                                                    Call Admin
+                                                </a>
+                                                {% endif %}
                                             </div>
                                         </td>
                                         <td id="restrictionsEdit"><a class="fas fa-pen edit {{theme['text-color']}}"></a></td>

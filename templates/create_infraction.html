@@ -31,7 +31,7 @@
             </div>
             <label class="label {{theme['text-color']}}">Scoping</label>
             <div class="field">
-                <div class="control">
+                <div class="control {% if user is none or not has_flag(user.permissions, bit_or(p_nodes['Add Global Infractions'], p_nodes['Add Community Infractions'])) %}is-hidden{% endif %}">
                     <label class="checkbox {% if theme['name'] == 'DARK' %}has-light-hover{% endif %}">
                         <input id="isWebToggle" type="checkbox" name="isWebInfract">
                         This is a web infraction
@@ -46,10 +46,9 @@
                     </div>
                 </div>
             </div>
-
-            <div class="control">
+            <div class="control {% if user is none or not has_flag(user.permissions, bit_or(p_nodes['Add Global Infractions'], p_nodes['Add Community Infractions'])) %}is-hidden{% endif %}">
                 <label id="serverOnlyLabel" class="radio {% if theme['name'] == 'DARK' %}has-light-hover{% endif %}">
-                    <input class="scope-check" id="serverOnlyCheck" type="radio" name="scope" data-has-permissions="1">
+                    <input class="scope-check" id="serverOnlyCheck" type="radio" name="scope" data-has-permissions="1" checked>
                     Server
                 </label>
                 <label id="globalLabel" class="radio {% if theme['name'] == 'DARK' %}has-light-hover{% endif %}">
@@ -108,41 +107,58 @@
                 </label>
             </div>
             <br>
+            {% if user is not none and has_flag(user.permissions, bit_or(p_nodes['Restrict Text'], p_nodes['Restrict Voice'], p_nodes['Restrict Admin Chat'], p_nodes['Restrict Call Admin'], p_nodes['Ban'])) %}
             <div id="cRestrictionsSection">
-            <label class="label {{theme['text-color']}}">Restrictions</label>
-            <p>To issue a warning, deselect all restrictions.</p>
-            <br>
-            <div class="is-flex is-justify-content-center">
-                <div class="buttons">
-                <button id="restrictVoice" class="rbtn button is-voice-btn is-outlined">
-                    <span class="icon is-small ricon">
-                      <i class="fas fa-volume-mute ricon"></i>
-                    </span>
-                  </button>
-                  <button id="restrictJoin" class="rbtn button is-ban-btn is-outlined">
-                    <span class="icon is-small ricon">
-                      <i class="fas fa-ban ricon"></i>
-                    </span>
-                  </button>
-                  <button id="restrictText" class="rbtn button is-text-btn is-outlined">
-                    <span class="icon is-small ricon">
-                      <i class="fas fa-comment-slash ricon"></i>
-                    </span>
-                  </button>
-                <button id="restrictAdminChat" class="rbtn button is-admin-chat-btn is-outlined">
-                    <span class="icon is-small ricon">
-                      <i class="fas fa-hands-helping ricon"></i>
-                    </span>
-                  </button>
-                <button id="restrictCallAdmin" class="rbtn button is-call-admin-btn is-outlined">
-                    <span class="icon is-small ricon">
-                      <i class="fas fa-phone-slash ricon"></i>
-                    </span>
-                  </button>
+                <label class="label {{theme['text-color']}}">Restrictions</label>
+                <p>To issue a warning, deselect all restrictions.</p>
+                <br>
+                <div class="is-flex is-justify-content-center">
+                    <div class="buttons">
+                        {% if user is not none and has_flag(user.permissions, p_nodes['Restrict Text']) %}
+                        <button id="restrictText" class="rbtn button is-text-btn is-outlined">
+                            <span class="icon is-small ricon">
+                                <i class="fas fa-comment-slash ricon"></i>
+                            </span>
+                            Text
+                        </button>
+                        {% endif %}
+                        {% if user is not none and has_flag(user.permissions, p_nodes['Restrict Voice']) %}
+                        <button id="restrictVoice" class="rbtn button is-voice-btn is-outlined">
+                            <span class="icon is-small ricon">
+                                <i class="fas fa-volume-mute ricon"></i>
+                            </span>
+                            Voice
+                        </button>
+                        {% endif %}
+                        {% if user is not none and has_flag(user.permissions, p_nodes['Ban']) %}
+                        <button id="restrictJoin" class="rbtn button is-ban-btn is-outlined">
+                            <span class="icon is-small ricon">
+                                <i class="fas fa-ban ricon"></i>
+                            </span>
+                            Ban
+                        </button>
+                        {% endif %}
+                        {% if user is not none and has_flag(user.permissions, p_nodes['Restrict Admin Chat']) %}
+                        <button id="restrictAdminChat" class="rbtn button is-admin-chat-btn is-outlined">
+                            <span class="icon is-small ricon">
+                                <i class="fas fa-hands-helping ricon"></i>
+                            </span>
+                            Admin Chat
+                        </button>
+                        {% endif %}
+                        {% if user is not none and has_flag(user.permissions, p_nodes['Restrict Call Admin']) %}
+                        <button id="restrictCallAdmin" class="rbtn button is-call-admin-btn is-outlined">
+                            <span class="icon is-small ricon">
+                                <i class="fas fa-phone-slash ricon"></i>
+                            </span>
+                            Call Admin
+                        </button>
+                        {% endif %}
+                    </div>
+                </div>
+                <br>
             </div>
-            </div>
-            <br>
-            </div>
+            {% endif %}
             <div id="cExpirationSection">
             <label class="label {{theme['text-color']}}">Expiration</label>
             <div class="field" id="cPermCheckField">
