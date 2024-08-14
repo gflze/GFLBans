@@ -41,7 +41,9 @@ def new_app():
     app.mount('/static', StaticFiles(directory='static'), name='static')
 
     app.add_exception_handler(Exception, handle_exception)
+    app.add_exception_handler(502, handle_exception)
     app.add_exception_handler(404, handle_exception)
+    app.add_exception_handler(403, handle_exception)
     app.add_exception_handler(400, handle_exception)
 
     @app.on_event("shutdown")

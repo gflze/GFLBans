@@ -5,7 +5,7 @@ from pytz import UTC
 
 
 def has_flag(flags: int, flag: int) -> bool:
-    return flags & flag == flag
+    return flags & flag
 
 
 def bit_or(*args) -> int:

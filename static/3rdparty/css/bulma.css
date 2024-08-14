@@ -51,8 +51,7 @@
 }
 
 .delete, .modal-close {
-  -moz-appearance: none;
-  -webkit-appearance: none;
+  appearance: none;
   background-color: rgba(10, 10, 10, 0.2);
   border: none;
   border-radius: 290486px;
@@ -172,8 +171,7 @@
 .pagination-next,
 .pagination-link,
 .pagination-ellipsis {
-  -moz-appearance: none;
-  -webkit-appearance: none;
+  appearance: none;
   align-items: center;
   border: 1px solid transparent;
   border-radius: 4px;
@@ -505,7 +503,6 @@ a.box:active {
 
 .button .icon:first-child:last-child {
   margin-left: calc(-0.5em - 1px);
-  margin-right: calc(-0.5em - 1px);
 }
 
 .button:hover, .button.is-hovered {
@@ -2381,8 +2378,7 @@ fieldset[disabled] .button {
 }
 
 .progress {
-  -moz-appearance: none;
-  -webkit-appearance: none;
+  appearance: none;
   border: none;
   border-radius: 290486px;
   display: block;
@@ -2841,7 +2837,7 @@ fieldset[disabled] .button {
 }
 
 .tags .tag:not(:last-child) {
-  margin-right: 0.5rem;
+  margin-right: 0.25rem;
 }
 
 .tags:last-child {
@@ -2907,7 +2903,7 @@ fieldset[disabled] .button {
   justify-content: center;
   line-height: 1.5;
   padding-left: 0.75em;
-  padding-right: 0.75em;
+  padding-right: 0.5em;
   white-space: nowrap;
 }
 
@@ -3020,7 +3016,6 @@ fieldset[disabled] .button {
 
 .tag:not(body) .icon:first-child:last-child {
   margin-left: -0.375em;
-  margin-right: -0.375em;
 }
 
 .tag:not(body).is-delete {
@@ -4696,10 +4691,9 @@ fieldset[disabled] .select select:hover {
 .dropdown-menu {
   display: none;
   left: 0;
-  min-width: 12rem;
   padding-top: 4px;
   position: absolute;
-  top: 100%;
+  top: 75%;
   z-index: 20;
 }
 
@@ -5242,7 +5236,7 @@ button.dropdown-item.is-active {
   flex-direction: column;
   max-height: calc(100vh - 40px);
   overflow: hidden;
-  -ms-overflow-y: visible;
+  overflow-y: visible;
 }
 
 .modal-card-head,

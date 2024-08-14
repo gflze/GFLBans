@@ -70,8 +70,10 @@ function resetModal() {
     $(cGlobalRadio).prop('disabled', gp);
     if (gp) {
         cGlobalLabel.setAttribute('disabled', '1')
+        $('#globalLabel').addClass('is-hidden')
     } else {
         cGlobalLabel.removeAttribute('disabled')
+        $('#globalLabel').removeClass('is-hidden')
     }
 
 
@@ -79,13 +81,15 @@ function resetModal() {
     $(cCommunityRadio).prop('disabled', cp);
     if (cp) {
         cCommunityLabel.setAttribute('disabled', '1')
+        $('#communityLabel').addClass('is-hidden')
     } else {
         cCommunityLabel.removeAttribute('disabled')
+        $('#communityLabel').removeClass('is-hidden')
     }
 
     $('.scope-check').prop('checked', false)
 
-    $(cGlobalRadio).prop('checked', true)
+    $(serverOnlyCheck).prop('checked', true)
 
     //The automation check is not checked by default, so the offense chooser should be hidden and the restrictions / expiration sections should both be visible
     $(cAutomaticCheck).prop('checked', false)
@@ -120,6 +124,15 @@ function handleWebCheckChanged() {
 
         $(cTargetServerField).addClass('is-hidden');
         $(cAutomationSection).addClass('is-hidden');
+
+        if ($(cServerRadio).prop('checked')) {
+            $(cServerRadio).prop('checked', false);
+
+            if ($(cGlobalRadio).attr('data-has-permissions') === '1')
+                $(cGlobalRadio).prop('checked', true);
+            else if ($(cCommunityRadio).attr('data-has-permissions') === '1')
+                $(cCommunityRadio).prop('checked', true);
+        }
 
         $(cAutomaticCheck).prop('checked', false);
         handleAutoChanged();
@@ -393,10 +406,17 @@ function createAndValidateInfraction() {
         return [false, 'You must target either an IP address, a player, or both!']
     }
 
-    //Assign server
+    // Assign server
     if (!$(cWebCheck).prop('checked')) {
-        infraction['server'] = $(cTargetServer).val()
+        infraction['server'] = $(cTargetServer).val();
+        infraction['scope'] = 'server';
     }
+
+    // Scope
+    if ($(cCommunityRadio).prop('checked') && $(cCommunityRadio).attr('data-has-permissions') === '1')
+        infraction['scope'] = 'community';
+    else if (($(cWebCheck).prop('checked') || $(cGlobalRadio).prop('checked')) && $(cGlobalRadio).attr('data-has-permissions') === '1')
+        infraction['scope'] = 'global';
 
     //Reason
 
@@ -412,20 +432,6 @@ function createAndValidateInfraction() {
     //    return [false, 'The file must be no more than 30 MB.']
     //}
 
-    //Scope
-
-    if ($(cServerRadio).prop('checked')) {
-        if ($(cWebCheck).prop('checked')) {
-            return [false, 'You cannot create a server specific infraction that does not have a server assigned to it.']
-        }
-
-        infraction['scope'] = 'server';
-    } else if ($(cGlobalRadio).prop('checked')) {
-        infraction['scope'] = 'global';
-    } else if ($(cCommunityRadio).prop('checked')) {
-        infraction['scope'] = 'community';
-    }
-
     //Automation
 
     if ($(cAutomaticCheck).prop('checked')) {
@@ -437,27 +443,27 @@ function createAndValidateInfraction() {
     // Allow STEAMID32 in the request field
     infraction['allow_normalize'] = true;
 
-    //Restrictions
+    //Restrictions. Only apply if button exists (length is non-zero) and pressed
 
     infraction['punishments'] = [];
 
-    if (!$(cVoiceBtn).hasClass('is-outlined')) {
+    if ($(cVoiceBtn).length && !$(cVoiceBtn).hasClass('is-outlined')) {
         infraction['punishments'].push('voice_block');
     }
 
-    if (!$(cBanBtn).hasClass('is-outlined')) {
+    if ($(cBanBtn).length && !$(cBanBtn).hasClass('is-outlined')) {
         infraction['punishments'].push('ban');
     }
 
-    if (!$(cTextBtn).hasClass('is-outlined')) {
+    if ($(cTextBtn).length && !$(cTextBtn).hasClass('is-outlined')) {
         infraction['punishments'].push('chat_block');
     }
 
-    if (!$(cCallAdminBtn).hasClass('is-outlined')) {
+    if ($(cCallAdminBtn).length && !$(cCallAdminBtn).hasClass('is-outlined')) {
         infraction['punishments'].push('call_admin_block');
     }
 
-    if (!$(cAdminChatBtn).hasClass('is-outlined')) {
+    if ($(cAdminChatBtn).length && !$(cAdminChatBtn).hasClass('is-outlined')) {
         infraction['punishments'].push('admin_chat_block');
     }
 

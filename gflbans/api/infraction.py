@@ -20,29 +20,28 @@ from gflbans.api_util import str_id, as_infraction, should_include_ip, user_str,
     construct_ci_resp
 from gflbans.internal.config import MONGO_DB
 from gflbans.internal.constants import NOT_AUTHED_USER, SERVER_KEY, AUTHED_USER
-from gflbans.internal.database.admin import Admin
 from gflbans.internal.database.audit_log import EVENT_NEW_INFRACTION, DAuditLog, EVENT_REMOVE_INFRACTION, \
     EVENT_EDIT_INFRACTION, EVENT_NEW_COMMENT, EVENT_DELETE_COMMENT, EVENT_EDIT_COMMENT, EVENT_UPLOAD_FILE
 from gflbans.internal.database.common import DFile
 from gflbans.internal.database.infraction import DInfraction, build_query_dict, DComment
 from gflbans.internal.database.tiering_policy import DTieringPolicyTier, DTieringPolicy
-from gflbans.internal.errors import SearchError, NoSuchAdminError
-from gflbans.internal.flags import PERMISSION_MANAGE_POLICY, PERMISSION_CREATE_INFRACTION, str2pflag, str2permflag, \
-    INFRACTION_GLOBAL, PERMISSION_SCOPE_GLOBAL, PERMISSION_SCOPE_SUPER_GLOBAL, INFRACTION_SUPER_GLOBAL, \
-    PERMISSION_IMMUNE, PERMISSION_SKIP_IMMUNITY, PERMISSION_EDIT_OWN_INFRACTIONS, PERMISSION_EDIT_ALL_INFRACTIONS, \
-    PERMISSION_COMMENT, PERMISSION_WEB_MODERATOR, PERMISSION_ATTACH_FILE, PERMISSION_ASSIGN_TO_SERVER, \
-    INFRACTION_VOICE_BLOCK, INFRACTION_CHAT_BLOCK, INFRACTION_BAN, INFRACTION_ADMIN_CHAT_BLOCK, \
-    INFRACTION_CALL_ADMIN_BAN
+from gflbans.internal.errors import SearchError
+from gflbans.internal.flags import PERMISSION_ADMIN_CHAT_BLOCK, PERMISSION_BAN, PERMISSION_BLOCK_CHAT, \
+                                   PERMISSION_BLOCK_VOICE, PERMISSION_CALL_ADMIN_BLOCK, PERMISSION_CREATE_INFRACTION, \
+                                   PERMISSION_MANAGE_POLICY, str2pflag, PERMISSION_EDIT_ALL_INFRACTIONS, \
+                                   PERMISSION_COMMENT, PERMISSION_WEB_MODERATOR, PERMISSION_ATTACH_FILE, \
+                                   PERMISSION_ASSIGN_TO_SERVER, INFRACTION_VOICE_BLOCK, INFRACTION_CHAT_BLOCK, \
+                                   INFRACTION_BAN, INFRACTION_ADMIN_CHAT_BLOCK, INFRACTION_CALL_ADMIN_BAN
 from gflbans.internal.infraction_utils import check_immunity, create_dinfraction, get_permissions, get_user_data, get_vpn_data, \
     create_dinfraction_with_policy, modify_infraction, push_state_to_nodes, filter_badchars
 from gflbans.internal.log import logger
-from gflbans.internal.models.api import Infraction, Initiator, PlayerObjNoIp, Comment, FileInfo, TieringPolicy
+from gflbans.internal.models.api import Infraction, Initiator, Comment, FileInfo, TieringPolicy
 from gflbans.internal.models.protocol import GetInfractionsReply, GetInfractions, CheckInfractionsReply, \
     CheckInfractions, \
     RegisterInfractionTieringPolicyReply, RegisterInfractionTieringPolicy, Search, CreateInfraction, \
     CreateInfractionUsingPolicy, RemoveInfractionsOfPlayerReply, RemoveInfractionsOfPlayer, ModifyInfraction, \
     AddComment, EditComment, DeleteComment, DeleteFile, UnlinkInfractionTieringPolicy, InfractionStatisticsReply
-from gflbans.internal.pyapi_utils import load_admin_from_initiator, get_acting, load_admin
+from gflbans.internal.pyapi_utils import get_acting, load_admin
 from gflbans.internal.search import do_infraction_search
 from gflbans.internal.utils import slugify
 
@@ -402,10 +401,10 @@ async def remove_infraction(request: Request, query: RemoveInfractionsOfPlayer, 
 
     acting_admin, acting_admin_id = await get_acting(request, query.admin, auth[0], auth[1])
 
-    if (acting_admin.permissions & PERMISSION_EDIT_OWN_INFRACTIONS != PERMISSION_EDIT_OWN_INFRACTIONS and
+    if (acting_admin.permissions & PERMISSION_CREATE_INFRACTION != PERMISSION_CREATE_INFRACTION and
         acting_admin.permissions & PERMISSION_EDIT_ALL_INFRACTIONS != PERMISSION_EDIT_ALL_INFRACTIONS) or \
             (auth[2] & PERMISSION_EDIT_ALL_INFRACTIONS != PERMISSION_EDIT_ALL_INFRACTIONS and
-             auth[2] & PERMISSION_EDIT_OWN_INFRACTIONS != PERMISSION_EDIT_OWN_INFRACTIONS):
+             auth[2] & PERMISSION_CREATE_INFRACTION != PERMISSION_CREATE_INFRACTION):
         raise HTTPException(detail='You do not have permission to do this!', status_code=403)
 
     q = build_query_dict(auth[0], auth[1], gs_service=query.player.gs_service, gs_id=query.player.gs_id,
@@ -490,13 +489,46 @@ async def edit_infraction(request: Request, infraction_id: str, query: ModifyInf
     if dinf is None:
         raise HTTPException(detail=f'Infraction {infraction_id} does not exist.', status_code=404)
 
-    if (dinf.admin != acting_admin_id and acting_admin.permissions & PERMISSION_EDIT_ALL_INFRACTIONS
-        != PERMISSION_EDIT_ALL_INFRACTIONS) or (dinf.admin == acting_admin_id and acting_admin.permissions &
-                                                PERMISSION_EDIT_OWN_INFRACTIONS != PERMISSION_EDIT_OWN_INFRACTIONS
-                                                and acting_admin.permissions &
-                                                PERMISSION_EDIT_ALL_INFRACTIONS != PERMISSION_EDIT_ALL_INFRACTIONS):
-        raise HTTPException(detail='You do not have permissions to do that!', status_code=403)
+    if not (acting_admin.permissions & PERMISSION_EDIT_ALL_INFRACTIONS == PERMISSION_EDIT_ALL_INFRACTIONS or \
+            (dinf.admin == acting_admin_id and acting_admin.permissions & PERMISSION_CREATE_INFRACTION == PERMISSION_CREATE_INFRACTION)):
+        raise HTTPException(detail='You do not have permission to edit this infraction.', status_code=403)
+    
+    # Changing a punishment type they dont have access to. Just ignore and keep as status already saved in database
+    if acting_admin.permissions & PERMISSION_BLOCK_VOICE != PERMISSION_BLOCK_VOICE:
+        adding_punishment = 'voice_chat' in query.punishments
+        if adding_punishment and dinf.flags & INFRACTION_VOICE_BLOCK != INFRACTION_VOICE_BLOCK:
+            query.punishments.remove('voice_block')
+        elif not adding_punishment and dinf.flags & INFRACTION_VOICE_BLOCK == INFRACTION_VOICE_BLOCK:
+            query.punishments.append('voice_block')
 
+    if acting_admin.permissions & PERMISSION_BLOCK_CHAT != PERMISSION_BLOCK_CHAT:
+        adding_punishment = 'chat_block' in query.punishments
+        if adding_punishment and dinf.flags & INFRACTION_CHAT_BLOCK != INFRACTION_CHAT_BLOCK:
+            query.punishments.remove('chat_block')
+        elif not adding_punishment and dinf.flags & INFRACTION_CHAT_BLOCK == INFRACTION_CHAT_BLOCK:
+            query.punishments.append('chat_block')
+    
+    if acting_admin.permissions & PERMISSION_BAN != PERMISSION_BAN:
+        adding_punishment = 'ban' in query.punishments
+        if adding_punishment and dinf.flags & INFRACTION_BAN != INFRACTION_BAN:
+            query.punishments.remove('ban')
+        elif not adding_punishment and dinf.flags & INFRACTION_BAN == INFRACTION_BAN:
+            query.punishments.append('ban')
+    
+    if acting_admin.permissions & PERMISSION_ADMIN_CHAT_BLOCK != PERMISSION_ADMIN_CHAT_BLOCK:
+        adding_punishment = 'admin_chat_block' in query.punishments
+        if adding_punishment and dinf.flags & INFRACTION_ADMIN_CHAT_BLOCK != INFRACTION_ADMIN_CHAT_BLOCK:
+            query.punishments.remove('admin_chat_block')
+        elif not adding_punishment and dinf.flags & INFRACTION_ADMIN_CHAT_BLOCK == INFRACTION_ADMIN_CHAT_BLOCK:
+            query.punishments.append('admin_chat_block')
+    
+    if acting_admin.permissions & PERMISSION_CALL_ADMIN_BLOCK != PERMISSION_CALL_ADMIN_BLOCK:
+        adding_punishment = 'call_admin_block' in query.punishments
+        if adding_punishment and dinf.flags & INFRACTION_CALL_ADMIN_BAN != INFRACTION_CALL_ADMIN_BAN:
+            query.punishments.remove('call_admin_block')
+        elif not adding_punishment and dinf.flags & INFRACTION_CALL_ADMIN_BAN == INFRACTION_CALL_ADMIN_BAN:
+            query.punishments.append('call_admin_block')
+    
     a = query.admin
 
     if query.admin is not None and isinstance(query.admin, Initiator):

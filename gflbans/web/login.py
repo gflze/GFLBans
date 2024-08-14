@@ -14,7 +14,10 @@ from starlette.responses import RedirectResponse
 from gflbans.internal.config import HOST, MONGO_DB
 from gflbans.internal.database.admin import Admin
 from gflbans.internal.database.uref import UserReference
+from gflbans.internal.flags import PERMISSION_LOGIN
 from gflbans.internal.integrations.ips import get_member_id_from_token, ips_get_member_id_from_gsid
+from gflbans.internal.models.api import Initiator
+from gflbans.internal.pyapi_utils import load_admin_from_initiator
 
 login_router = APIRouter()
 
@@ -123,14 +126,19 @@ async def finish_login(request: Request):
             if resp_keys['ns'] is None or resp_keys['ns'] != 'http://specs.openid.net/auth/2.0' or \
                 resp_keys['is_valid'] is None or resp_keys['is_valid'] != 'true':
                 raise HTTPException(status_code=502, detail='Login rejected')
+            ips_user = ips_get_member_id_from_gsid(steam_id)
             
-            response = await request.app.state.db[MONGO_DB]['user_cache'].find_one({'authed_as': ips_get_member_id_from_gsid(steam_id)})
+            response = await request.app.state.db[MONGO_DB]['user_cache'].find_one({'authed_as': ips_user})
 
             if response is None:
-                # No such user, so generate a random token for them
+                # No such user already logged in. Make sure they are allowed to login
+                admin_object = await load_admin_from_initiator(request.app, Initiator(ips_id=ips_user))
+                if admin_object is None or not (admin_object.permissions & PERMISSION_LOGIN):
+                    raise HTTPException(status_code=502, detail='Login rejected')
+
+                # Generate a new token to save their login
                 token = random.SystemRandom().randint(1, 1 << 64)
                 now = datetime.now(tz=UTC)
-                ips_user = ips_get_member_id_from_gsid(steam_id)
                 uref = UserReference(authed_as=ips_user, access_token=str(token), created=now, last_validated=now)
 
                 await uref.commit(request.app.state.db[MONGO_DB])
