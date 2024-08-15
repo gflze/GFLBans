@@ -178,17 +178,17 @@
                                         <td>Restrictions</td>
                                         <td id="restrictionsValue" class="data-cell">
                                             <div class="tags">
-                                                <span id="textChatFlag" class="ptag tag has-background-text">
-                                                    <span class="icon is-small ricon">
-                                                        <i class="fas fa-comment-slash ricon"></i>
-                                                    </span>
-                                                    Text
-                                                </span>
                                                 <span id="voiceChatFlag" class="ptag tag has-background-voice">
                                                     <span class="icon is-small ricon">
                                                         <i class="fas fa-volume-mute ricon"></i>
                                                     </span>
                                                     Voice
+                                                </span>
+                                                <span id="textChatFlag" class="ptag tag has-background-text">
+                                                    <span class="icon is-small ricon">
+                                                        <i class="fas fa-comment-slash ricon"></i>
+                                                    </span>
+                                                    Text
                                                 </span>
                                                 <span id="banFlag" class="ptag tag has-background-ban">
                                                     <span class="icon is-small ricon">
@@ -218,20 +218,20 @@
                                         </td>
                                         <td id="restrictionsEditCell" class="is-hidden edit-cell">
                                             <div class="tags">
-                                                {% if user is not none and has_flag(user.permissions, p_nodes['Restrict Text']) %}
-                                                <a id="textChatFlagEdit" data-punishment="chat_block" data-target="textChatFlag" class="tag etag has-background-text">
-                                                    <span class="icon is-small ricon">
-                                                        <i class="fas fa-comment-slash ricon"></i>
-                                                    </span>
-                                                    Text
-                                                </a>
-                                                {% endif %}
                                                 {% if user is not none and has_flag(user.permissions, p_nodes['Restrict Voice']) %}
                                                 <a id="voiceChatFlagEdit" data-punishment="voice_block" data-target="voiceChatFlag" class="etag tag has-background-voice">
                                                     <span class="icon is-small ricon">
                                                         <i class="fas fa-volume-mute ricon"></i>
                                                     </span>
                                                     Voice
+                                                </a>
+                                                {% endif %}
+                                                {% if user is not none and has_flag(user.permissions, p_nodes['Restrict Text']) %}
+                                                <a id="textChatFlagEdit" data-punishment="chat_block" data-target="textChatFlag" class="tag etag has-background-text">
+                                                    <span class="icon is-small ricon">
+                                                        <i class="fas fa-comment-slash ricon"></i>
+                                                    </span>
+                                                    Text
                                                 </a>
                                                 {% endif %}
                                                 {% if user is not none and has_flag(user.permissions, p_nodes['Ban']) %}
