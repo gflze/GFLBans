@@ -114,20 +114,20 @@
                 <br>
                 <div class="is-flex is-justify-content-center">
                     <div class="buttons">
-                        {% if user is not none and has_flag(user.permissions, p_nodes['Restrict Text']) %}
-                        <button id="restrictText" class="rbtn button is-text-btn is-outlined">
-                            <span class="icon is-small ricon">
-                                <i class="fas fa-comment-slash ricon"></i>
-                            </span>
-                            Text
-                        </button>
-                        {% endif %}
                         {% if user is not none and has_flag(user.permissions, p_nodes['Restrict Voice']) %}
                         <button id="restrictVoice" class="rbtn button is-voice-btn is-outlined">
                             <span class="icon is-small ricon">
                                 <i class="fas fa-volume-mute ricon"></i>
                             </span>
                             Voice
+                        </button>
+                        {% endif %}
+                        {% if user is not none and has_flag(user.permissions, p_nodes['Restrict Text']) %}
+                        <button id="restrictText" class="rbtn button is-text-btn is-outlined">
+                            <span class="icon is-small ricon">
+                                <i class="fas fa-comment-slash ricon"></i>
+                            </span>
+                            Text
                         </button>
                         {% endif %}
                         {% if user is not none and has_flag(user.permissions, p_nodes['Ban']) %}

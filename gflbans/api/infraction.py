@@ -493,41 +493,42 @@ async def edit_infraction(request: Request, infraction_id: str, query: ModifyInf
             (dinf.admin == acting_admin_id and acting_admin.permissions & PERMISSION_CREATE_INFRACTION == PERMISSION_CREATE_INFRACTION)):
         raise HTTPException(detail='You do not have permission to edit this infraction.', status_code=403)
     
-    # Changing a punishment type they dont have access to. Just ignore and keep as status already saved in database
-    if acting_admin.permissions & PERMISSION_BLOCK_VOICE != PERMISSION_BLOCK_VOICE:
-        adding_punishment = 'voice_chat' in query.punishments
-        if adding_punishment and dinf.flags & INFRACTION_VOICE_BLOCK != INFRACTION_VOICE_BLOCK:
-            query.punishments.remove('voice_block')
-        elif not adding_punishment and dinf.flags & INFRACTION_VOICE_BLOCK == INFRACTION_VOICE_BLOCK:
-            query.punishments.append('voice_block')
+    if query.punishments is not None:
+        # Changing a punishment type they dont have access to. Just ignore and keep as status already saved in database
+        if acting_admin.permissions & PERMISSION_BLOCK_VOICE != PERMISSION_BLOCK_VOICE:
+            adding_punishment = 'voice_block' in query.punishments
+            if adding_punishment and dinf.flags & INFRACTION_VOICE_BLOCK != INFRACTION_VOICE_BLOCK:
+                query.punishments.remove('voice_block')
+            elif not adding_punishment and dinf.flags & INFRACTION_VOICE_BLOCK == INFRACTION_VOICE_BLOCK:
+                query.punishments.append('voice_block')
 
-    if acting_admin.permissions & PERMISSION_BLOCK_CHAT != PERMISSION_BLOCK_CHAT:
-        adding_punishment = 'chat_block' in query.punishments
-        if adding_punishment and dinf.flags & INFRACTION_CHAT_BLOCK != INFRACTION_CHAT_BLOCK:
-            query.punishments.remove('chat_block')
-        elif not adding_punishment and dinf.flags & INFRACTION_CHAT_BLOCK == INFRACTION_CHAT_BLOCK:
-            query.punishments.append('chat_block')
-    
-    if acting_admin.permissions & PERMISSION_BAN != PERMISSION_BAN:
-        adding_punishment = 'ban' in query.punishments
-        if adding_punishment and dinf.flags & INFRACTION_BAN != INFRACTION_BAN:
-            query.punishments.remove('ban')
-        elif not adding_punishment and dinf.flags & INFRACTION_BAN == INFRACTION_BAN:
-            query.punishments.append('ban')
-    
-    if acting_admin.permissions & PERMISSION_ADMIN_CHAT_BLOCK != PERMISSION_ADMIN_CHAT_BLOCK:
-        adding_punishment = 'admin_chat_block' in query.punishments
-        if adding_punishment and dinf.flags & INFRACTION_ADMIN_CHAT_BLOCK != INFRACTION_ADMIN_CHAT_BLOCK:
-            query.punishments.remove('admin_chat_block')
-        elif not adding_punishment and dinf.flags & INFRACTION_ADMIN_CHAT_BLOCK == INFRACTION_ADMIN_CHAT_BLOCK:
-            query.punishments.append('admin_chat_block')
-    
-    if acting_admin.permissions & PERMISSION_CALL_ADMIN_BLOCK != PERMISSION_CALL_ADMIN_BLOCK:
-        adding_punishment = 'call_admin_block' in query.punishments
-        if adding_punishment and dinf.flags & INFRACTION_CALL_ADMIN_BAN != INFRACTION_CALL_ADMIN_BAN:
-            query.punishments.remove('call_admin_block')
-        elif not adding_punishment and dinf.flags & INFRACTION_CALL_ADMIN_BAN == INFRACTION_CALL_ADMIN_BAN:
-            query.punishments.append('call_admin_block')
+        if acting_admin.permissions & PERMISSION_BLOCK_CHAT != PERMISSION_BLOCK_CHAT:
+            adding_punishment = 'chat_block' in query.punishments
+            if adding_punishment and dinf.flags & INFRACTION_CHAT_BLOCK != INFRACTION_CHAT_BLOCK:
+                query.punishments.remove('chat_block')
+            elif not adding_punishment and dinf.flags & INFRACTION_CHAT_BLOCK == INFRACTION_CHAT_BLOCK:
+                query.punishments.append('chat_block')
+        
+        if acting_admin.permissions & PERMISSION_BAN != PERMISSION_BAN:
+            adding_punishment = ('ban' in query.punishments)
+            if adding_punishment and dinf.flags & INFRACTION_BAN != INFRACTION_BAN:
+                query.punishments.remove('ban')
+            elif not adding_punishment and dinf.flags & INFRACTION_BAN == INFRACTION_BAN:
+                query.punishments.append('ban')
+        
+        if acting_admin.permissions & PERMISSION_ADMIN_CHAT_BLOCK != PERMISSION_ADMIN_CHAT_BLOCK:
+            adding_punishment = 'admin_chat_block' in query.punishments
+            if adding_punishment and dinf.flags & INFRACTION_ADMIN_CHAT_BLOCK != INFRACTION_ADMIN_CHAT_BLOCK:
+                query.punishments.remove('admin_chat_block')
+            elif not adding_punishment and dinf.flags & INFRACTION_ADMIN_CHAT_BLOCK == INFRACTION_ADMIN_CHAT_BLOCK:
+                query.punishments.append('admin_chat_block')
+        
+        if acting_admin.permissions & PERMISSION_CALL_ADMIN_BLOCK != PERMISSION_CALL_ADMIN_BLOCK:
+            adding_punishment = 'call_admin_block' in query.punishments
+            if adding_punishment and dinf.flags & INFRACTION_CALL_ADMIN_BAN != INFRACTION_CALL_ADMIN_BAN:
+                query.punishments.remove('call_admin_block')
+            elif not adding_punishment and dinf.flags & INFRACTION_CALL_ADMIN_BAN == INFRACTION_CALL_ADMIN_BAN:
+                query.punishments.append('call_admin_block')
     
     a = query.admin
 
