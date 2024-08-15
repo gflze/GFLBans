@@ -23,3 +23,8 @@ FreeBSD: Working
 11) Checkout a branch
   - Use `git checkout branchname` to check out the branch you want to work on
   - Use `git branch branchname` to create a branch (usually after having checked out `main`)
+
+## Gameserver Plugins
+
+- [Counter-Strike 2](https://github.com/Frozen-H2O/CS2_Fixes/tree/gflbans) - Requires [Metamod](https://www.sourcemm.net/downloads.php/?branch=master)
+- [Source 1](https://github.com/GFLClan/sm_gflbans) - Requires [Metamod](https://www.sourcemm.net/downloads.php/?branch=master) and [Sourcemod](https://www.sourcemod.net/downloads.php)
