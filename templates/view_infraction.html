@@ -1,3 +1,11 @@
+<link rel="stylesheet" href="/static/3rdparty/css/bulma-tooltips.css">
+<style>
+    [data-tooltip]:not(.is-loading)::before, [data-tooltip]:not(.is-disabled)::before, [data-tooltip]:not([disabled])::before {
+        transform: translateY(-65%);
+        left: auto;
+        right: auto;
+    }
+</style>
 <div id="infraction_view_modal" class="modal" data-infraction="">
     <div id="ivm-back" class="modal-background"></div>
     <div class="modal-content {{theme['background-secondary']}} infraction-details">
