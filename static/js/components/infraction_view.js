@@ -186,6 +186,8 @@ async function setupViewModal(infraction) {
     }
 
     // Setup the time
+    timeValue.removeClass('has-tooltip-info');
+    timeValue.removeAttr('data-tooltip');
     if (infraction['flags'] & (1 << 3)) {
         timeValue.text('Permanent');
     } else if (infraction['flags'] & (1 << 12)) {
@@ -201,13 +203,19 @@ async function setupViewModal(infraction) {
         if (infraction.hasOwnProperty('orig_length')) {
             let ol = moment.duration(infraction['orig_length'] * 1000);
 
-            s = s + ' of ' + ol.humanize()
+            s = s + ' of ' + ol.humanize();
         }
-
-        timeValue.text(s)
 
         if (infraction['time_left'] <= 0) {
             timeValue.text('Expired (Was ' + moment.duration(infraction['orig_length'] * 1000) + ')');
+        }  else {
+            if (infraction['time_left'] > 60) {
+                // Display minutes left in a tooltip for if exact time is needed
+                timeValue.addClass('has-tooltip-info');
+                minutesLeft = ((moment.duration(infraction['time_left']) / 60) + " minutes left")
+                timeValue.attr('data-tooltip', minutesLeft);
+            } 
+            timeValue.text(s);
         }
     } else if (infraction.hasOwnProperty('expires')) {
         let exp = infraction['expires'] * 1000;
