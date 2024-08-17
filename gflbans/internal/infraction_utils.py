@@ -348,7 +348,7 @@ async def modify_infraction(app, target: ObjectId, author: Union[ObjectId, str, 
         clear_expiration_stuff()
         commit_list.append(dinf.add_bit_flag(db, 'flags', INFRACTION_PERMANENT))
     elif expiration is not None:
-        uwu('Duration', exp_orig_value(), naturaldelta(timedelta(seconds=(expiration + dinf.created))))
+        uwu('Duration', exp_orig_value(), naturaldelta(timedelta(seconds=(expiration))))
         clear_expiration_stuff()
         commit_list.append(dinf.update_field(db, 'expires', expiration + dinf.created))
     elif time_left is not None:
