@@ -1,21 +1,21 @@
 <nav class="pagination mr-5 ml-5" role="navigation" aria-label="pagination">
     {% if user is not none and has_flag(user.permissions, p_nodes['Add Infractions']) %}
-    <a id="createInfractionLoader" class="pagination-next is-{{theme['accent']}} button"><i class="fas fa-gavel"></i></a>
+    <a id="createInfractionLoader" class="pagination-next is-accent button"><i class="fas fa-gavel"></i></a>
     {% endif %}
     <ul id="infraction-pages" class="pagination-list">
 
     </ul>
 </nav>
 <div class="table-container is-hidden" id="infractions_tab">
-    <table class="table is-fullwidth {{theme['background']}} infractions-table">
+    <table class="table is-fullwidth background-primary infractions-table">
         <thead>
         <tr>
-            <th class="has-text-centered max-50 is-hidden-mobile {{theme['text-color']}}">Svc</th>
-            <th class="has-text-centered max-200 is-hidden-touch {{theme['text-color']}}">Created</th>
-            <th class="has-text-centered max-200 is-hidden-mobile-tiny {{theme['text-color']}}">Restrictions</th>
-            <th class="has-text-centered min-200 {{theme['text-color']}}">User</th>
-            <th class="has-text-centered min-200 is-hidden-mobile {{theme['text-color']}}">Admin</th>
-            <th class="has-text-centered max-250 {{theme['text-color']}}">Remaining</th>
+            <th class="has-text-centered max-50 is-hidden-mobile text-primary">Svc</th>
+            <th class="has-text-centered max-200 is-hidden-touch text-primary">Created</th>
+            <th class="has-text-centered max-200 is-hidden-mobile-tiny text-primary">Restrictions</th>
+            <th class="has-text-centered min-200 text-primary">User</th>
+            <th class="has-text-centered min-200 is-hidden-mobile text-primary">Admin</th>
+            <th class="has-text-centered max-250 text-primary">Remaining</th>
         </tr>
         </thead>
         <tbody id="infractionBase">

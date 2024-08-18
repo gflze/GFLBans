@@ -21,11 +21,7 @@ function addServer(server_hostname, ip, map, mod, os, player_text='0/0', id, is_
         child_tile.setAttribute('data-server-id', id);
     }
 
-    if (getMeta('current_theme') === 'DARK') {
-        child_tile.classList.add('has-background-danger');
-    } else {
-        child_tile.classList.add('has-background-link');
-    }
+    child_tile.classList.add('is-accent');
 
     parent_tile.appendChild(child_tile);
 
@@ -285,11 +281,7 @@ function showServerModal(mod, map, hostname, ip, players, id) {
             rpc_kick_btn.setAttribute('data-tooltip', 'Kick');
             rpc_kick_btn.classList.add('button', 'is-outlined', 'is-small');
 
-            if (getMeta('current_theme') === 'DARK') {
-                rpc_kick_btn.classList.add('is-danger')
-            } else {
-                rpc_kick_btn.classList.add('is-link')
-            }
+            rpc_kick_btn.classList.add('is-accent')
 
             if (i === 0) {
                 rpc_kick_btn.classList.add('has-tooltip-bottom')
@@ -334,11 +326,7 @@ function showServerModal(mod, map, hostname, ip, players, id) {
             profile_btn.classList.add('has-tooltip-bottom')
         }
 
-        if (getMeta('current_theme') === 'DARK') {
-                profile_btn.classList.add('is-danger')
-            } else {
-                profile_btn.classList.add('is-link')
-            }
+        profile_btn.classList.add('is-accent')
 
         let profile_icon = document.createElement('i');
         profile_icon.classList.add('fas', 'fa-address-card');
@@ -363,20 +351,12 @@ function showServerModal(mod, map, hostname, ip, players, id) {
 }
 
 function setupEmptySNotice() {
-    let theme_text_color;
-
-    if (getMeta('current_theme') === 'DARK') {
-        theme_text_color = 'has-text-light';
-    } else {
-        theme_text_color = 'has-text-dark';
-    }
-
     let server_root = document.getElementById('server_root');
 
     server_root.classList.add('has-text-centered')
 
     let icon = document.createElement('i');
-    icon.classList.add('fas', 'fa-question', 'mt-5', 'nf-icon', theme_text_color);
+    icon.classList.add('fas', 'fa-question', 'mt-5', 'nf-icon', 'text-primary');
 
     let text = document.createElement('h1');
     text.innerText = 'No Servers';

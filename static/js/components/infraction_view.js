@@ -165,12 +165,6 @@ async function setupViewModal(infraction) {
             xd.setAttribute('href', 'http://steamcommunity.com/profiles/' + infraction['player']['gs_id']);
             xd.setAttribute('target', '_blank')
 
-            if (getMeta('current_theme') === 'DARK') {
-                xd.classList.add('has-text-danger');
-            } else {
-                xd.classList.add('has-text-link')
-            }
-
             idValue.append(xd)
         } else {
             idValue.text(infraction['player']['gs_id']);
@@ -396,11 +390,7 @@ function addComments(renderableComments) {
         let date = document.createElement('small');
         let priv = document.createElement('small');
 
-        if (getMeta('current_theme') === 'DARK') {
-            username.classList.add('has-text-light');
-        } else {
-            username.classList.add('has-text-dark')
-        }
+        username.classList.add('text-primary')
 
         $(username).text('Loading');
         $(date).text(' ' + moment.unix(rc['created']).format('LLL') + ' ');

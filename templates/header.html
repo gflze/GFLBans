@@ -1,5 +1,5 @@
 <!--Global Navbar-->
-<nav class="navbar is-{{theme['accent']}}" role="navigation" aria-label="main navigation">
+<nav class="navbar is-accent" role="navigation" aria-label="main navigation">
     <div class="navbar-brand">
         <a class="navbar-item" href="/">
             <i class="fas fa-gavel fa-2x mr-1"></i>
@@ -30,7 +30,7 @@
 
             <div class="navbar-item has-dropdown is-hoverable">
                 <div class="navbar-link is-arrowless is-hoverable is-hidden-touch"><i class="fa fa-search nav-icon-mobile"></i></div>
-                <div class="navbar-dropdown">
+                <div class="navbar-dropdown background-secondary">
                     <form method="get" action="/infractions">
                         <div class="field search has-addons px-2">
                             <div class="control is-flex-grow-1">
@@ -38,7 +38,7 @@
                                        placeholder="Search"/>
                             </div>
                             <div class="control">
-                                <button class="button is-small is-{{theme['accent']}}"><i class="fas fa-search"></i></button>
+                                <button class="button is-small is-accent"><i class="fas fa-search"></i></button>
                             </div>
                         </div>
                     </form>

@@ -1,3 +1,60 @@
+:root {
+    --bans-color: rgba(241,70,104, 1);
+    --voice-color: rgba(50,115,220, 1);
+    --text-color: #b19cd9;
+    --admin-chat-color: #48c774;
+    --call-admin-color: #d3be05;
+    --warning-color: orange;
+    --background-accent-primary: #3273dc;
+    --background-accent-secondary: #2366d1;
+    --background-primary: #fff;
+    --background-secondary: whitesmoke;
+    --background-tertiary: hsl(0, 0%, 90%);
+    --text-primary: #363636;
+    --text-secondary: #363636;
+    --text-placeholder: #a0a0a0;
+    --link: #3273dc;
+    --link-hover: #2259b2;
+}
+
+.theme-dark {
+    --background-accent-primary: #105edb;
+    --background-accent-secondary: #0d50bb;
+    --background-primary: rgb(20, 20, 20);
+    --background-secondary: #242424;
+    --background-tertiary: hsl(0, 0%, 25%);
+    --text-primary: #f5f5f5;
+    --text-secondary: #dbdbdb;
+    --text-placeholder: #a0a0a0;
+    --link: #3273dc;
+    --link-hover: #2259b2;
+}
+
+.is-accent {
+    background-color: var(--background-accent-primary);
+    color: #fff;
+}
+
+.background-primary {
+    background-color: var(--background-primary);
+}
+
+.background-secondary {
+    background-color: var(--background-secondary);
+}
+
+.background-tertiary {
+    background-color: var(--background-tertiary);
+}
+
+.text-primary {
+    color: var(--text-primary);
+}
+
+.text-secondary {
+    color: var(--text-secondary);
+}
+
 .user-avatar {
     margin-right: 5px;
     border-radius: 50%;
@@ -298,22 +355,10 @@
     border-radius: 50%;
 }
 
-.infraction-user-wrapper {
-}
-
 @media screen and (max-width: 475px) {
   .is-hidden-mobile-tiny {
     display: none !important;
   }
-}
-
-:root {
-    --bans-color: rgba(241,70,104, 1);
-    --voice-color: rgba(50,115,220, 1);
-    --text-color: #b19cd9;
-    --admin-chat-color: #48c774;
-    --call-admin-color: #ffcd08;
-    --warning-color: orange;
 }
 
 .is-ban {
@@ -333,11 +378,11 @@
 }
 
 .is-call-admin {
-    color: var(--warning-color);
+    color: var(--call-admin-color);
 }
 
 .is-warning {
-    color: var(--call-admin-color);
+    color: var(--warning-color);
 }
 
 .has-background-ban {
@@ -412,62 +457,72 @@
     color: white;
 }
 
-.button.is-text-btn {
+.button.is-text-btn,
+.button.is-text-btn:hover {
   background-color: var(--text-color);
   border-color: transparent;
   color: #fff;
 }
 
-.button.is-text-btn.is-outlined {
+.button.is-text-btn.is-outlined,
+.button.is-text-btn.is-outlined:hover {
   background-color: transparent;
   border-color: var(--text-color);
   color: var(--text-color);
 }
 
 
-.button.is-call-admin-btn.is-outlined {
+.button.is-call-admin-btn.is-outlined,
+.button.is-call-admin-btn.is-outlined:hover {
   background-color: transparent;
-  border-color: #ffdd57;
-  color: #ffdd57;
+  border-color: var(--call-admin-color);
+  color: var(--call-admin-color);
 }
 
-.button.is-call-admin-btn {
-  background-color: #fad339;
+.button.is-call-admin-btn,
+.button.is-call-admin-btn:hover {
+  background-color: var(--call-admin-color);
   border-color: #fad339;
   color: #fff;
 }
 
-.button.is-admin-chat-btn {
+.button.is-admin-chat-btn,
+.button.is-admin-chat-btn:hover {
   background-color: #48c774;
   border-color: transparent;
   color: #fff;
 }
 
-.button.is-admin-chat-btn.is-outlined {
+.button.is-admin-chat-btn.is-outlined,
+.button.is-admin-chat-btn.is-outlined:hover {
   background-color: transparent;
   border-color: #48c774;
   color: #48c774;
 }
 
-.button.is-ban-btn {
+.button.is-ban-btn,
+.button.is-ban-btn:hover {
   background-color: var(--bans-color);
   border-color: transparent;
   color: #fff;
 }
 
-.button.is-ban-btn.is-outlined {
+.button.is-ban-btn.is-outlined,
+.button.is-ban-btn.is-outlined:hover {
   background-color: transparent;
   border-color: var(--bans-color);
   color: var(--bans-color);
 }
 
-.button.is-voice-btn {
+.button.is-voice-btn,
+.button.is-voice-btn:hover {
   background-color: var(--voice-color);
   border-color: transparent;
   color: #fff;
 }
 
-.button.is-voice-btn.is-outlined {
+.button.is-voice-btn.is-outlined,
+.button.is-voice-btn.is-outlined:hover {
   background-color: transparent;
   border-color: var(--voice-color);
   color: var(--voice-color);
@@ -575,10 +630,58 @@ img {
     margin-right: 2px;
 }
 
-#editTimeTimeDec.button {
-    background-color: #ff7373;
+#login {
+  padding: 0;
+  margin: 0.5rem 0.75rem;
+  width: fit-content;
+  height: fit-content;
 }
 
-#editTimeTimeDec.button.is-light {
-    background-color: white;
+#login > img {
+  max-height: none;
+}
+
+.button.is-accent {
+    border-color: transparent;
+}
+
+#gameIdEntry {
+    border-left: 0;
+}
+
+#doFileUpload:hover {
+    cursor: pointer;
+}
+
+.control .button {
+    border-color: transparent;
+}
+
+#editTimePerm {
+    border-right-color: var(--background-tertiary);
+}
+
+#editTimeUnitSelect {
+    border-left-color: transparent;
+}
+
+.control .button.is-light {
+    background-color: var(--background-primary);
+    color: var(--text-primary);
+}
+
+#editTimePerm.is-light[disabled="disabled"]:hover {
+    color: var(--text-primary);
+}
+
+#editTimeTimeDec.is-light:hover:not([disabled="disabled"]) {
+    color: var(--background-accent-secondary)
+}
+
+#server_map {
+    filter:invert();
+}
+
+.theme-dark #server_map {
+    filter:none;
 }
