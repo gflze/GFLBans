@@ -1,12 +1,12 @@
 <!DOCTYPE html>
-<html id="htmlRoot" lang="en" class="{{theme['background']}}">
+<html id="htmlRoot" lang="en" class="{% if theme['name'] == 'DARK' %}theme-dark{% endif %} background-primary">
 <head>
     {% include 'meta.html' with context %}
     <!--This page requires tooltips-->
     <link rel="stylesheet" href="/static/3rdparty/css/bulma-tooltips.css">
     <title>{{BRANDING}} - Servers</title>
 </head>
-<body class="{{theme['text-color']}}">
+<body>
 {% include 'header.html' with context %}
 <div class="container is-max-desktop" id="server_root">
 </div>

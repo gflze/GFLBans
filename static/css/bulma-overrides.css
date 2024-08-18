@@ -1,0 +1,154 @@
+/* Uses color variables defined in main.css */
+body,
+.input,
+.textarea,
+.select select {
+    color: var(--text-primary)
+}
+
+.navbar-item,
+.navbar-link,
+a.navbar-item.is-active,
+.navbar-link.is-active,
+.menu-label,
+.table,
+.table thead th,
+.pagination-next:hover,
+.pagination-link:hover,
+.file-cta,
+.file-label:hover .file-cta {
+    color: inherit;
+}
+
+.select select,
+.input,
+.textarea,
+.button.is-warning.is-light:hover {
+    background-color: var(--background-primary);
+}
+
+.menu-list a,
+.menu-list a:hover {
+    color: var(--text-secondary);
+}
+
+tr.infraction-row:hover,
+.menu-list a:hover,
+.pagination-link:hover {
+    background-color: var(--background-secondary);
+}
+
+.file-cta,
+.file-label:hover .file-cta {
+    background-color: var(--background-tertiary);
+}
+
+a {
+    color: var(--link);
+}
+
+a:hover {
+    color: var(--link-hover);
+}
+
+.input::placeholder,
+.textarea::placeholder {
+    color: var(--text-placeholder);
+}
+
+.navbar-dropdown.background-secondary {
+    border-top: 2px solid var(--background-secondary);
+}
+
+.input:not(:focus),
+.input:hover:not(:focus),
+.textarea:not(:focus),
+.textarea:hover:not(:focus),
+.select select:not(:focus),
+.select select:hover:not(:focus) {
+    border: 1px solid var(--background-tertiary);
+}
+
+.input[disabled],
+.select select[disabled] {
+    border-color: transparent;
+    background-color: var(--background-tertiary);
+}
+
+a.navbar-item.is-active:not(:focus):not(:hover),
+a.navbar-item:hover,
+.navbar-item.has-dropdown:hover .navbar-link,
+a.navbar-item:focus {
+    background-color: var(--background-accent-secondary);
+    color: inherit;
+}
+
+.button[disabled],
+.button,
+.navbar.button:focus {
+    background-color: var(--background-accent-primary);
+    color: #fff;
+}
+
+.button:hover {
+    background-color: var(--background-accent-secondary);
+    color: #fff;
+}
+
+.table td {
+    border-bottom: 1px solid var(--background-tertiary);
+}
+
+.field.has-addons .control:not(:last-child) {
+    margin-right: 0;
+}
+
+.button .icon:first-child:last-child,
+.tag:not(body) .icon:first-child:last-child {
+    margin-right: 0;
+}
+
+.tags .tag:not(:last-child) {
+    margin-right: 0.25rem;
+}
+
+.tag:not(body) {
+    padding-right: 0.5em;
+}
+
+.dropdown-menu {
+    min-width: 0;
+    top: 75%;
+}
+
+.modal-card-head,
+.panel-block:not(:last-child) {
+    border-bottom: 0;
+}
+
+.modal-card-foot {
+    border-top: 0;
+}
+
+.button.is-success {
+    background-color: #11c24f;
+}
+
+.button.is-success:hover {
+    background-color: #0d8939;
+}
+
+.button.is-danger:hover {
+    background-color: #b42643;
+}
+
+.button.is-outlined {
+    background-color: transparent;
+    border-color: var(--background-accent-secondary);
+    color: var(--background-accent-secondary);
+}
+
+.button.is-outlined:hover {
+    background-color: var(--background-accent-secondary);
+    color: #fff;
+}

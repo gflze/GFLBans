@@ -2,22 +2,6 @@
 const INFRACTIONS_PER_PAGE = 30;
 
 function setupNav(current_page, total_pages) {
-    //Get colors
-    let theme_text_color;
-    let theme_accent;
-
-    if (getMeta('current_theme') === 'DARK') {
-        theme_text_color = 'has-text-light';
-    } else {
-        theme_text_color = 'has-text-dark';
-    }
-
-    if (getMeta('current_theme') === 'DARK') {
-        theme_accent = 'danger';
-    } else {
-        theme_accent = 'link';
-    }
-
     //Reset the block
 
     let nav = document.getElementById('infraction-pages');
@@ -34,12 +18,12 @@ function setupNav(current_page, total_pages) {
         let page_li = document.createElement('li');
         let page_a = document.createElement('a');
 
-        page_a.classList.add('pagination-link', theme_text_color);
+        page_a.classList.add('pagination-link', 'text-primary');
         page_a.innerText = (page_n).toString();
 
         if (page_n === current_page) {
-            page_a.classList.remove(theme_text_color);
-            page_a.classList.add('is-current', 'has-background-' + theme_accent, 'has-white-text');
+            page_a.classList.remove('text-primary');
+            page_a.classList.add('is-current', 'is-accent', 'has-white-text');
         } else {
             $(page_a).click(function () {
                 insertParam('page', page_n)
@@ -55,7 +39,7 @@ function setupNav(current_page, total_pages) {
         let page_li = document.createElement('li');
         let page_span = document.createElement('span');
 
-        page_span.classList.add('pagination-ellipsis', theme_text_color);
+        page_span.classList.add('pagination-ellipsis', 'text-primary');
         page_span.innerText = '…';
 
         page_li.appendChild(page_span);
@@ -108,17 +92,7 @@ flags_to_str.set(1 << 11, 'call-admin');
 flags_to_str.set(1 << 10, 'admin-chat');
 
 function addInfractionRow(infraction) {
-    let theme_text_color;
-    let theme_lighter_text_color;
     let unixNow = Date.now() / 1000
-
-    if (getMeta('current_theme') === 'DARK') {
-        theme_text_color = 'has-text-light';
-        theme_lighter_text_color = 'has-text-grey-lighter';
-    } else {
-        theme_text_color = 'has-text-dark';
-        theme_lighter_text_color = 'has-text-grey-darker'
-    }
 
     let row = document.createElement('tr');
     row.classList.add('infraction-row');
@@ -126,7 +100,7 @@ function addInfractionRow(infraction) {
     //Utility function to create the wrapper for the text
     function getWrapper(el) {
         let w = document.createElement('div');
-        w.classList.add('has-text-centered', theme_text_color);
+        w.classList.add('has-text-centered', 'text-primary');
         el.appendChild(w);
 
         return w
@@ -213,7 +187,7 @@ function addInfractionRow(infraction) {
     }
 
     let user_cell = document.createElement('td');
-    user_cell.classList.add('vertical-center', 'has-text-centered', theme_text_color);
+    user_cell.classList.add('vertical-center', 'has-text-centered', 'text-primary');
 
     let uimg = document.createElement('img');
     uimg.classList.add('infraction-user-av', 'mr-2');
@@ -228,7 +202,7 @@ function addInfractionRow(infraction) {
 
     //Admin
     let admin_cell = document.createElement('td');
-    admin_cell.classList.add('vertical-center', 'has-text-centered', 'is-hidden-mobile', theme_text_color);
+    admin_cell.classList.add('vertical-center', 'has-text-centered', 'is-hidden-mobile', 'text-primary');
 
     let aimg = document.createElement('img');
     aimg.classList.add('infraction-user-av', 'mr-2');
@@ -288,7 +262,7 @@ function addInfractionRow(infraction) {
         time_text.classList.add('has-text-success');
         time_icon.classList.add('fas', 'fa-check');
     } else if (infraction['flags'] & INFRACTION_DEC_ONLINE_ONLY && ((infraction.hasOwnProperty('last_heartbeat') && (infraction['last_heartbeat'] + 300) < unixNow) || !infraction.hasOwnProperty('last_heartbeat'))) {
-        time_text.classList.add(theme_lighter_text_color);
+        time_text.classList.add('text-secondary');
         time_icon.classList.add('fas', 'fa-pause');
     } else {
         time_text.classList.add('has-text-orange');
