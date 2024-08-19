@@ -32,7 +32,7 @@
             <label class="label text-primary">Scoping</label>
             <div class="field">
                 <div class="control {% if user is none or not has_flag(user.permissions, bit_or(p_nodes['Add Global Infractions'], p_nodes['Add Community Infractions'])) %}is-hidden{% endif %}">
-                    <label class="checkbox {% if theme['name'] == 'DARK' %}has-light-hover{% endif %}">
+                    <label class="checkbox">
                         <input id="isWebToggle" type="checkbox" name="isWebInfract">
                         This is a web infraction
                     </label>
@@ -47,15 +47,15 @@
                 </div>
             </div>
             <div class="control {% if user is none or not has_flag(user.permissions, bit_or(p_nodes['Add Global Infractions'], p_nodes['Add Community Infractions'])) %}is-hidden{% endif %}">
-                <label id="serverOnlyLabel" class="radio {% if theme['name'] == 'DARK' %}has-light-hover{% endif %}">
+                <label id="serverOnlyLabel" class="radio">
                     <input class="scope-check" id="serverOnlyCheck" type="radio" name="scope" data-has-permissions="1" checked>
                     Server
                 </label>
-                <label id="globalLabel" class="radio {% if theme['name'] == 'DARK' %}has-light-hover{% endif %}">
+                <label id="globalLabel" class="radio">
                     <input class="scope-check" id="globalCheck" type="radio" name="scope" {% if user is not none and has_flag(user.permissions, p_nodes['Add Global Infractions']) %}data-has-permissions="1"{% else %}data-has-permissions="0"{% endif %} checked>
                     Global
                 </label>
-                <label id="communityLabel" class="radio {% if theme['name'] == 'DARK' %}has-light-hover{% endif %}">
+                <label id="communityLabel" class="radio">
                     <input class="scope-check" id="communityCheck" type="radio" name="scope" {% if user is not none and has_flag(user.permissions, p_nodes['Add Community Infractions']) %}data-has-permissions="1"{% else %}data-has-permissions="0"{% endif %}>
                     Community
                 </label>
@@ -64,7 +64,7 @@
             <div id="cAutomationSection"><label class="label text-primary">Automation</label><div id="autoWrapper">
             <div class="field">
                 <div class="control">
-                    <label class="checkbox {% if theme['name'] == 'DARK' %}has-light-hover{% endif %}">
+                    <label class="checkbox">
                         <input id="automaticCheck" type="checkbox" name="isAutoInfract">
                         Automatically determine the reason, length, and restrictions
                     </label>
@@ -163,7 +163,7 @@
             <label class="label text-primary">Expiration</label>
             <div class="field" id="cPermCheckField">
                 <div class="control">
-                    <label class="checkbox {% if theme['name'] == 'DARK' %}has-light-hover{% endif %}">
+                    <label class="checkbox">
                         <input id="permanentCheck" type="checkbox" name="isPermanent">
                         This infraction shouldn't expire
                     </label>
@@ -171,7 +171,7 @@
             </div>
             <div class="field" id="cTimeDecCheckField">
                 <div class="control">
-                    <label class="checkbox {% if theme['name'] == 'DARK' %}has-light-hover{% endif %}">
+                    <label class="checkbox">
                         <input id="timeDecCheck" type="checkbox" name="isTimeDec">
                         This infraction's time remaining only decreases while the user is connected
                     </label>

@@ -46,10 +46,8 @@
             </div>
 
             <a id="dark-mode-toggle"
-               data-modeset="{% if 'dark_mode' in request.session and request.session['dark_mode'] %}light{% else %}dark{% endif %}"
-               class="navbar-item">{% if 'dark_mode' in request.session and request.session['dark_mode'] %}<i
-                    class="far fa-sun nav-icon-mobile"></i>{% else %}<i class="far fa-moon nav-icon-mobile"></i>{% endif
-                %}<span class="is-hidden-desktop">{% if 'dark_mode' in request.session and request.session['dark_mode'] %}Enable Light Mode{% else %}Enable Dark Mode{% endif %}</span></a>
+               data-modeset="{% if opposite_theme %}opposite{% endif %}"
+               class="navbar-item"><i class="far nav-icon-mobile"></i><span class="is-hidden-desktop">Toggle Dark Mode</span></a>
 
         </div>
 
