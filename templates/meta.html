@@ -4,7 +4,7 @@
 {% if 'csrf_token' in request.session %}
 <meta name="csrf_token" content="{{request.session['csrf_token']}}">
 {% endif %}
-<meta name="current_theme" content="{{theme['name']}}">
+<meta name="theme-opposite" content="{{opposite_theme}}">
 <meta name="active_permissions" content="{% if user is not none %}{{user.permissions}}{% else %}0{% endif %}">
 {% if user is not none %}
 <meta name="current_user" content="{{user.ips_id}}">

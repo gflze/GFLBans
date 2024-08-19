@@ -32,9 +32,8 @@ $(document).ready(function () {
 
    //Switch between light and dark mode
    $("#dark-mode-toggle").click(function () {
-       let target_mode = $("#dark-mode-toggle").attr('data-modeset') === 'dark'
 
-      gbRequest('POST', '/set_dark_mode', {'enabled': target_mode}).then(resp => {
+      gbRequest('GET', '/toggle_theme').then(resp => {
          if (resp.ok) {
              location.reload();
          } else {

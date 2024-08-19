@@ -34,7 +34,8 @@ a.navbar-item.is-active,
 
 tr.infraction-row:hover,
 .menu-list a:hover,
-.pagination-link:hover {
+.pagination-link:hover,
+.background-secondary a.panel-block:hover {
     background-color: var(--background-secondary);
 }
 
