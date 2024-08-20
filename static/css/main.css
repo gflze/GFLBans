@@ -133,7 +133,7 @@
     background-color: var(--background-tertiary);
 }
 
-.text-primary {
+.text-primary, .text-primary:hover {
     color: var(--text-primary);
 }
 

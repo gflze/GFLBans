@@ -16,7 +16,9 @@ a.navbar-item.is-active,
 .pagination-next:hover,
 .pagination-link:hover,
 .file-cta,
-.file-label:hover .file-cta {
+.file-label:hover .file-cta,
+.modal-card-title,
+.label {
     color: inherit;
 }
 
