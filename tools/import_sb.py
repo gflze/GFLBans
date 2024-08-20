@@ -112,7 +112,7 @@ async def process_ban(adminid64, ban):
         else:
             api_req['duration'] = ban[5] - ban[4]  # sets the duration to the time remaining
 
-        async with session.post(f'{slash_fix(gflbans_instance)}api/v1/infractions/', headers={'Authorization': f'API {gflbans_api_key_id} {gflbans_api_key_secret}', 'Content-Type': 'application/json'}, json=api_req) as resp:
+        async with session.post(f'{slash_fix(gflbans_instance)}api/infractions/', headers={'Authorization': f'API {gflbans_api_key_id} {gflbans_api_key_secret}', 'Content-Type': 'application/json'}, json=api_req) as resp:
             if resp.status >= 400:
                 print(f'failed to create infraction (HTTP {resp.status}): {await resp.text()}, api request:')
                 print(api_req)
@@ -173,7 +173,7 @@ async def process_comm(adminid64, comm):
         else:
             api_req['punishments'] = ['chat_block']
 
-        async with session.post(f'{slash_fix(gflbans_instance)}api/v1/infractions/', headers={'Authorization': f'API {gflbans_api_key_id} {gflbans_api_key_secret}', 'Content-Type': 'application/json'}, json=api_req) as resp:
+        async with session.post(f'{slash_fix(gflbans_instance)}api/infractions/', headers={'Authorization': f'API {gflbans_api_key_id} {gflbans_api_key_secret}', 'Content-Type': 'application/json'}, json=api_req) as resp:
             if resp.status >= 400:
                 print(f'failed to create infraction (HTTP {resp.status}): {await resp.text()}')
                 return

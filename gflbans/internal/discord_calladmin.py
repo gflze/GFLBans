@@ -72,7 +72,7 @@ async def execute_webhook(app, srv: DServer, call: ExecuteCallAdmin, image: Opti
             'inline': True
         })
 
-    embed_info['url'] = f'http://{HOST}/api/v1/gs/calladmin/connect?server={srv.ip}%3A{srv.game_port}'
+    embed_info['url'] = f'http://{HOST}/api/gs/calladmin/connect?server={srv.ip}%3A{srv.game_port}'
 
     if srv.server_info is not None:
         embed_info['title'] = srv.server_info.hostname
@@ -213,7 +213,7 @@ async def execute_claim(app, srv: DServer, claim: ClaimCallAdmin, call: DCallDat
         embed_info['description'] = f'{call.call_info.caller_name} has requested an admin on {fn(srv)}. ' \
                                     f'{claim.admin_name} took the call.'
 
-    embed_info['url'] = f'http://{HOST}/api/v1/gs/calladmin/connect?server={srv.ip}%3A{srv.game_port}'
+    embed_info['url'] = f'http://{HOST}/api/gs/calladmin/connect?server={srv.ip}%3A{srv.game_port}'
 
     async with app.state.aio_session.patch(srv.discord_webhook + f'/messages/{call.claim_token}',
                                            headers={'User-Agent': 'gflbans (gflclan.com, 1.0)'},

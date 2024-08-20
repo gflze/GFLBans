@@ -88,7 +88,7 @@ function resetViewModal() {
 }
 
 async function setupViewModal(infraction) {
-    let gbServers = await gbRequest('GET', '/api/v1/server/?enabled_only=true');
+    let gbServers = await gbRequest('GET', '/api/server/?enabled_only=true');
 
     if (!gbServers.ok) {
         throw 'NOT OK'
@@ -252,7 +252,7 @@ async function setupViewModal(infraction) {
     if (infraction['flags'] & (1 << 5) || !infraction.hasOwnProperty('server')) {
         serverValue.text('Web');
     } else {
-        let sv = await gbRequest('GET', '/api/v1/server/' + infraction['server'], null);
+        let sv = await gbRequest('GET', '/api/server/' + infraction['server'], null);
 
         if (!sv.ok) {
             throw 'Not OK!'
@@ -468,7 +468,7 @@ function _openInfraction(infraction_id, start, skip_push=false) {
         setInfractionUri(infraction_id);
     }
 
-    gbRequest('GET', '/api/v1/infractions/' + infraction_id + '/info', null, false).then(function (r) {
+    gbRequest('GET', '/api/infractions/' + infraction_id + '/info', null, false).then(function (r) {
         r.json().then(function (j) {
             wrapSetupView(j, start)
         }).catch(genericError);

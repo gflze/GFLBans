@@ -3,16 +3,16 @@
 <head>
     {% include 'meta.html' with context %}
     <link rel="stylesheet" href="/static/3rdparty/css/chart.css">
+    <link rel="stylesheet" href="/static/css/management.css">
     <title>{{BRANDING}} - Infractions</title>
 </head>
 <body class="{{theme['text-color']}}">
 {% include 'header.html' with context %}
-<div>
-    {% include 'mgmt_sidebar.html' with context %}
-</div>
+{% include 'mgmt_navbar.html' with context %}
+<div style="text-align: center; font-size: 80pt">WORK IN PROGRESS</div>
 {% include 'error.html' %}
 {% include 'js_includes.html' %}
-<script src="/static/js/server_mgmt.js"></script>
+<script src="/static/js/management.js"></script>
 {% include 'loading.html' with context %}
 {% include 'footer.html' with context %}
 </body>

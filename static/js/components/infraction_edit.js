@@ -71,7 +71,7 @@ function submit_comment(infraction) {
     let is_private = $('#privateCheck').prop('checked');
     let target = infraction['id'];
 
-    gbRequest('POST', '/api/v1/infractions/' + target + '/comment', {
+    gbRequest('POST', '/api/infractions/' + target + '/comment', {
         'content': text,
         'set_private': is_private
     }, true).then(function (repl) {
@@ -116,7 +116,7 @@ function prepareEditor(infraction) {
                 $("#doFileUpload").prop("disabled", true);
 
                 uploadAttachment(infraction["id"], this.files[0].name, this.files[0], $('#privateCheck').prop("checked")).then(function () {
-                    gbRequest('GET', '/api/v1/infractions/i/' + infraction["id"], null, false).then(function (r) {
+                    gbRequest('GET', '/api/infractions/i/' + infraction["id"], null, false).then(function (r) {
                         r.json().then(function (j) {
                             commentContainer.empty()
                             addComments(mergeCommentFiles(j));
@@ -236,7 +236,7 @@ function editToggleTimeDec() {
 }
 
 async function submit_edit(id, mod) {
-    resp = await gbRequest('PATCH', '/api/v1/infractions/' + id, mod, true)
+    resp = await gbRequest('PATCH', '/api/infractions/' + id, mod, true)
 
     if (!resp.ok) {
         throw 'Recieved not OK response from the API.';

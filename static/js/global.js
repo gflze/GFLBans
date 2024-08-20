@@ -107,7 +107,7 @@ async function get_admin(admin_id) {
         return admin_cache.get(admin_id);
     }
 
-    let resp = await gbRequest('GET', '/api/v1/gs/admininfo?ips_id=' + admin_id, null)
+    let resp = await gbRequest('GET', '/api/gs/admininfo?ips_id=' + admin_id, null)
 
     if (!resp.ok) {
         throw 'Received Not-OK from API';
@@ -137,7 +137,7 @@ async function uploadAttachment(infraction, filename, fi, private=false) {
         hdrs['X-Set-Private'] = "true"
     }
 
-    return await fetch('/api/v1/infractions/' + infraction + '/attachment/' + filename, {
+    return await fetch('/api/infractions/' + infraction + '/attachment/' + filename, {
         method: 'POST',
         headers: hdrs,
         body: fi,

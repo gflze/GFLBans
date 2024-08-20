@@ -23,7 +23,7 @@
             <a href="/infractions" class="navbar-item {% if page == 'infractions' %}is-active{% endif %}"><i
                     class="fas fa-gavel nav-icon"></i>Infractions</a>
 
-            {% if user is not none and has_flag(user.permissions, bit_or(p_nodes['Manage Servers'], p_nodes['Manage Admins'], p_nodes['Manage VPNs'], p_nodes['Manage Groups'], p_nodes['Manage API Keys'])) %}
+            {% if user is not none and has_flag(user.permissions, bit_or(p_nodes['Manage Servers'], p_nodes['Manage VPNs'], p_nodes['Manage Groups and Admins'], p_nodes['Manage API Keys'])) %}
             <a href="/manage" class="navbar-item {% if page == 'admin' %}is-active {% endif %}"><i
                     class="fas fa-user-shield nav-icon"></i>Manage</a>
             {% endif %}

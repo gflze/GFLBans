@@ -55,7 +55,7 @@ function addServer(server_hostname, ip, map, mod, os, player_text='0/0', id, is_
     if (map === '' || mod === '') {
         map_url = '/static/images/server.webp'
     } else {
-        map_url = '/api/v1/maps/' + mod + '/' + map;
+        map_url = '/api/maps/' + mod + '/' + map;
     }
 
     let map_subimage = document.createElement('img');
@@ -176,7 +176,7 @@ function serverDetails(server_id, mod, map, hostname, ip) {
 
     setLoading();
 
-    gbRequest('GET', '/api/v1/server/' + server_id + '/players').then(resp => {
+    gbRequest('GET', '/api/server/' + server_id + '/players').then(resp => {
         if (resp.ok) {
             resp.json().then(data => {
 
@@ -212,7 +212,7 @@ function showServerModal(mod, map, hostname, ip, players, id) {
 
     $('#htmlRoot').addClass('is-clipped');
 
-    $('#server_map').attr('src', '/api/v1/maps/' + mod + '/' + map);
+    $('#server_map').attr('src', '/api/maps/' + mod + '/' + map);
     console.log(hostname);
     console.log(ip);
     $('#server_hostname').text(hostname);
@@ -302,7 +302,7 @@ function showServerModal(mod, map, hostname, ip, players, id) {
 
             rpc_kick_btn.onclick = function () {
                 rpc_kick_btn.classList.add('is-loading')
-                gbRequest('POST', '/api/v1/rpc/kick', {
+                gbRequest('POST', '/api/rpc/kick', {
                     'server_id': id,
                     'player': {
                         'gs_service': players[i]['gs_service'],
@@ -397,7 +397,7 @@ $(document).ready(function () {
 
     setLoading();
 
-    gbRequest('GET', '/api/v1/server/?enabled_only=true').then(resp => {
+    gbRequest('GET', '/api/server/?enabled_only=true').then(resp => {
         function _loadS() {
                 unsetLoading();
                 if (resp.ok) {

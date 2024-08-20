@@ -9,10 +9,9 @@ from pydantic import BaseModel, conint, PositiveInt, constr, validator, root_val
 # Infraction related API calls
 from gflbans.internal.config import MAX_UPLOAD_SIZE
 from gflbans.internal.flags import valid_types_regex
-from gflbans.internal.models.api import PlayerObjNoIpOptional, PositiveIntIncl0, Infraction, Initiator, \
-    CInfractionSummary, \
-    PlayerObjNoIp, InfractionTieringPolicyTier, PlayerObjSimple, Signature, AdminInfo, Server, ServerInternal, Group, \
-    AdminMinimal, VPNInfo, InfractionDay, PlayerObjIPOptional, RawSignature
+from gflbans.internal.models.api import FetchAdminInfo, PlayerObjNoIpOptional, PositiveIntIncl0, Infraction, Initiator, \
+    CInfractionSummary, PlayerObjNoIp, InfractionTieringPolicyTier, PlayerObjSimple, Signature, AdminInfo, Server, \
+    ServerInternal, Group, AdminMinimal, VPNInfo, InfractionDay, PlayerObjIPOptional, RawSignature
 
 
 class GetInfractions(BaseModel):
@@ -402,13 +401,9 @@ class DeleteServerReply(BaseModel):
 
 # Group APIs
 
-
-class SetGroupPerms(BaseModel):
-    permissions: PositiveIntIncl0
-
-
-class SetGroupPermsReply(BaseModel):
-    success: bool
+class UpdateGroup(BaseModel):
+    name: str
+    privileges: PositiveIntIncl0
 
 
 class GetGroups(BaseModel):
@@ -525,3 +520,10 @@ class ServerStats(BaseModel):
 
     # History
     history: Dict[str, InfractionDay]
+
+class GetAdmins(BaseModel):
+    admin: FetchAdminInfo = Depends(FetchAdminInfo)
+
+    # Cursor control
+    limit: Optional[conint(gt=0, le=50)]
+    skip: PositiveIntIncl0 = 0

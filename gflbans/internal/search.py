@@ -106,6 +106,7 @@ class InfractionSearchModelIP(InfractionSearchModel):
 
 # Regex
 REGEX_STEAM32 = re.compile('(?P<steamid32>(STEAM_)(\\d):(\\d):(\\d+))')
+REGEX_STEAM32_ACTUAL = re.compile('(?P<steamid32_actual>(U):(\\d):(\\d+))')
 REGEX_STEAM64 = re.compile('(?P<steamid64>(\\d){17})')
 REGEX_IDLINK = re.compile('(http(s)?:\\/\\/)?(www\\.)?steamcommunity.com\\/profiles\\/(?P<steamid64>(\\d){17})')
 REGEX_CUSTOM_URL = re.compile('(http(s)?:\\/\\/)?(www\\.)?steamcommunity.com\\/id\\/(?P<profile_name>[^\\/]+)')
@@ -114,6 +115,8 @@ REGEX_CUSTOM_URL = re.compile('(http(s)?:\\/\\/)?(www\\.)?steamcommunity.com\\/i
 def wut(gs_id):
     if REGEX_STEAM32.match(gs_id):
         return 'id32', REGEX_STEAM32.match(gs_id).groupdict()['steamid32']
+    elif REGEX_STEAM32_ACTUAL.match(gs_id):
+        return 'id32_actual', REGEX_STEAM32_ACTUAL.match(gs_id).groupdict()['steamid32_actual'][4:]
     elif REGEX_STEAM64.match(gs_id):
         return 'id64', REGEX_STEAM64.match(gs_id).groupdict()['steamid64']
     elif REGEX_IDLINK.match(gs_id):
@@ -141,6 +144,8 @@ async def id64_or_none(app, gs_id):
                 id64 = a.find('steamID64').text
         elif typ == 'id64':
             id64 = idt
+        elif typ == 'id32_actual':
+            id64 = str(int(idt) + 76561197960265728)
         else:
             id64 = steamid32_to_64(idt)
 

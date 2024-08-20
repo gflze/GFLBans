@@ -204,7 +204,7 @@ function handleTimeDecCheck() {
 }
 
 async function setServer(id) {
-    let policies = await gbRequest('GET', '/api/v1/infractions/policies?server=' + id, null);
+    let policies = await gbRequest('GET', '/api/infractions/policies?server=' + id, null);
 
     $(cOffense).empty();
 
@@ -240,7 +240,7 @@ async function loadModal() {
     closeModals();
 
     //Setup servers
-    let servers_req = await gbRequest('GET', '/api/v1/server/', null);
+    let servers_req = await gbRequest('GET', '/api/server/', null);
 
     if (!servers_req.ok) {
         throw servers_req.error();
@@ -345,10 +345,10 @@ function submitInfraction() {
 
     //Success, the second index is the request type and the third is the actual request struct
 
-    let route = '/api/v1/infractions/'
+    let route = '/api/infractions/'
 
     if (createCall[1]) {
-        route = '/api/v1/infractions/using_policy'
+        route = '/api/infractions/using_policy'
     }
 
     gbRequest('POST', route, createCall[2], true).then(handleInfractionSubmission).catch(function (e) {

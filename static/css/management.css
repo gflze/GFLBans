@@ -1,0 +1,120 @@
+/* MARK: Navigation Bar */
+#mgmt-navbar {
+    display: flex;
+    justify-content: center;
+    position: sticky;
+    margin: auto;
+    top: 0;
+    padding: 0;
+    list-style-type: none;
+    border-radius: 0 0 5px 5px;
+    background-color: rgb(50, 115, 220);
+    border: 2px solid CornflowerBlue;
+    border-top: 1px solid CornflowerBlue;
+    overflow: hidden;
+    height: 47px;
+    width: fit-content;
+}
+
+#mgmt-navbar a {
+    float: left;
+    text-align: center;
+    overflow: hidden;
+    border-right: 1px solid CornflowerBlue;
+    display: block;
+    padding: 10px 12px;
+    text-align: center;
+    text-decoration: none;
+    color: #fff;
+}
+
+#mgmt-navbar a:last-child {
+    border-right: 0;
+}
+
+#mgmt-navbar a:hover {
+    background-color: rgb(40, 92, 176);
+    cursor: pointer;
+}
+
+#mgmt-navbar a.is-active {
+    background-color: rgb(30, 69, 132);
+}
+
+/* MARK: Main UI */
+#mgmt-table {
+    margin: auto;
+    margin-bottom: 1.5rem;
+    width: fit-content;
+    min-width: 600px;
+}
+
+.mgmt-admin-av {
+    width: 42px;
+    height: 42px;
+    vertical-align: middle;
+    border-radius: 50%;
+    border: 1px solid black;
+}
+
+#mgmt-table tbody tr:hover {
+    cursor: pointer;
+    background-color: hsl(0, 0%, 90%);
+}
+
+@media only screen and (max-width: 600px) {
+    #mgmt-table {
+        margin: 55px auto 1.5rem auto;
+        width: 100%;
+        min-width: 250px;
+        overflow: hidden;
+    }
+
+    #header-admin {
+        width: 100px;
+        padding: 0;
+    }
+
+    #header-admin-groups {
+        width: 150px;
+        padding: 0;
+    }
+}
+
+@media only screen and (min-width: 601px) {
+    .group-list li {
+        display: inline;
+    }
+
+    .group-list li:not(:first-child)::before {
+        content: ", "
+    }
+}
+
+
+/*
+.mgmt-item {
+    border: 1px solid rgb(0, 255, 0);
+    min-width: 200px;
+    padding: 7px;
+    height: 56px;
+    overflow: hidden;
+    text-align: center;
+    border-radius: 10px;
+    background-color: grey;
+    
+}
+
+.mgmt-item img {
+    width: 42px;
+    height: 42px;
+    vertical-align: middle;
+    border-radius: 50%;
+    margin-right: 8px;
+}
+
+.mgmt-item span {
+    font-style: inherit;
+    font-weight: inherit;
+}
+*/

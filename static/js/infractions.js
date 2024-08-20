@@ -79,7 +79,7 @@ function setupEmptyINotice() {
 }
 
 function loadInfractions(page = 1, s, m) {
-    gbRequest('GET', '/api/v1/infractions?skip=' + ((page - 1) * 30), null).then(function (a) {
+    gbRequest('GET', '/api/infractions?skip=' + ((page - 1) * 30), null).then(function (a) {
         handleResp(a, page, s, m);
     }).catch(err => {
         console.log(err);
@@ -93,7 +93,7 @@ function doSearch(query, page = 1, s, m) {
         return
     }
 
-    gbRequest('GET', '/api/v1/infractions/search?skip=' + ((page - 1) * 30) + '&xql_string=' + encodeURIComponent(query), null).then(function (a) {
+    gbRequest('GET', '/api/infractions/search?skip=' + ((page - 1) * 30) + '&xql_string=' + encodeURIComponent(query), null).then(function (a) {
         handleResp(a, page, s, m);
     }).catch(err => {
         console.log(err);
