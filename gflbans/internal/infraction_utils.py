@@ -437,6 +437,8 @@ async def modify_infraction(app, target: ObjectId, author: Union[ObjectId, str, 
         return ', '.join([_lang(b) for b in a])
 
     if punishments is not None:
+        if 'ban' in punishments and dinf.flags & INFRACTION_DEC_ONLINE_ONLY == INFRACTION_DEC_ONLINE_ONLY:
+            raise ValueError('Cannot make a dec online only infraction into a ban')
         t = 0
         old_res = []
         for k, val in str2pflag.items():
