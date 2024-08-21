@@ -206,7 +206,7 @@ async function setupViewModal(infraction) {
             if (infraction['time_left'] > 60) {
                 // Display minutes left in a tooltip for if exact time is needed
                 timeValue.addClass('has-tooltip-info');
-                minutesLeft = ((moment.duration(infraction['time_left']) / 60) + " minutes left")
+                minutesLeft = (Math.round(moment.duration(infraction['time_left']) / 60) + " minutes left")
                 timeValue.attr('data-tooltip', minutesLeft);
             } 
             timeValue.text(s);
