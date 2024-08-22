@@ -23,9 +23,29 @@
             <a href="/infractions" class="navbar-item {% if page == 'infractions' %}is-active{% endif %}"><i
                     class="fas fa-gavel nav-icon"></i>Infractions</a>
 
-            {% if user is not none and has_flag(user.permissions, bit_or(p_nodes['Manage Servers'], p_nodes['Manage VPNs'], p_nodes['Manage Groups and Admins'], p_nodes['Manage API Keys'])) %}
-            <a href="/manage" class="navbar-item {% if page == 'admin' %}is-active {% endif %}"><i
+            {% if user is not none and has_flag(user.permissions, bit_or(p_nodes['Manage Servers'], p_nodes['Manage Groups and Admins'], p_nodes['Manage API Keys'])) %}
+            <div class="navbar-item has-dropdown is-hoverable">
+                <div class="navbar-link is-arrowless is-hoverable is-hidden-touch {% if page == 'manage' %}is-active{% endif %}">
+                    <a href="/manage"><i
                     class="fas fa-user-shield nav-icon"></i>Manage</a>
+                </div>
+                <div class="navbar-dropdown">
+                    <div class="has-addons px-2">
+                        <div class="is-flex-grow-1">
+                            {% if user is not none and has_flag(user.permissions, p_nodes['Manage Groups and Admins']) %}
+                                <a id="admin-mgmt" href="/manage/admin/" class="panel-block{% if mode == 'admin' %} is-active{% endif %}">Admins</a>
+                                <a id="group-mgmt" href="/manage/group/" class="panel-block{% if mode == 'group' %} is-active{% endif %}">Groups</a>
+                            {% endif %}
+                            {% if user is not none and has_flag(user.permissions, p_nodes['Manage Servers']) %}
+                                <a id="server-mgmt" href="/manage/server/" class="panel-block{% if mode == 'server' %} is-active{% endif %}">Servers</a>
+                            {% endif %}
+                            {% if user is not none and has_flag(user.permissions, p_nodes['Manage API Keys']) %}
+                                <a id="API-mgmt" href="/manage/apikey/" class="panel-block{% if mode == 'apikey' %} is-active{% endif %}">API Keys</a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
             {% endif %}
 
             <div class="navbar-item has-dropdown is-hoverable">

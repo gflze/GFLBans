@@ -65,7 +65,7 @@ async def admin_mgmt(request: Request):
                                                          'mode': 'server'})
 
 
-@management_router.get('/api/')
+@management_router.get('/apikey/')
 async def admin_mgmt(request: Request):
     sc = await sctx(request)
 
@@ -74,5 +74,5 @@ async def admin_mgmt(request: Request):
 
     return request.app.state.templates.TemplateResponse('pages/management.html',
                                                         {**sc, 'page': 'manage',
-                                                         'mode': 'api'})
+                                                         'mode': 'apikey'})
 

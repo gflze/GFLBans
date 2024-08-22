@@ -91,30 +91,34 @@
     }
 }
 
-
-/*
-.mgmt-item {
-    border: 1px solid rgb(0, 255, 0);
-    min-width: 200px;
-    padding: 7px;
-    height: 56px;
-    overflow: hidden;
-    text-align: center;
-    border-radius: 10px;
-    background-color: grey;
-    
+.group-list {
+    max-width: 50vw;
 }
 
-.mgmt-item img {
-    width: 42px;
-    height: 42px;
-    vertical-align: middle;
-    border-radius: 50%;
-    margin-right: 8px;
+.permission-list {
+    list-style: disc;
 }
 
-.mgmt-item span {
-    font-style: inherit;
-    font-weight: inherit;
+@media only screen and (min-width: 800px) {
+    .permission-list {
+        columns: 2;
+    }
+
+    .permission-list li {
+        padding-right: 1rem;
+    }
 }
-*/
+
+@media only screen and (min-width: 1200px) {
+    .permission-list {
+        columns: 3;
+    }
+}
+
+.fa-check-circle {
+    color: green;
+}
+
+.fa-minus-circle {
+    color: red;
+}

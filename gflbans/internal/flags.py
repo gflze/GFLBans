@@ -117,5 +117,11 @@ name2perms = {
     'Restrict Call Admin': PERMISSION_CALL_ADMIN_BLOCK,
     'Add Community Infractions': PERMISSION_SCOPE_SUPER_GLOBAL,
     'Add Global Infractions': PERMISSION_SCOPE_GLOBAL,
-    'VPN Kick Immunity': PERMISSION_VPN_CHECK_SKIP
+    'VPN Kick Immunity': PERMISSION_VPN_CHECK_SKIP,
+    'Manage Tiering Policies': PERMISSION_MANAGE_POLICY,
+    'Immune from Bans': PERMISSION_IMMUNE,
+    'Overrides Immunity': PERMISSION_SKIP_IMMUNITY,
+    'RPC Kick': PERMISSION_RPC_KICK,
+    'Assign an Infraction to a Specific Server': PERMISSION_ASSIGN_TO_SERVER,
+    'Upload and Delete Map Icons': PERMISSION_MANAGE_MAP_ICONS
 }
