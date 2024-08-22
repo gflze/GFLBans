@@ -1,38 +1,38 @@
 <!DOCTYPE html>
-<html lang="en" class="{{theme['background']}}">
+<html lang="en" class="{% if opposite_theme %}theme-opposite {% endif %}background-primary">
 <head>
     {% include 'meta.html' with context %}
     <link rel="stylesheet" href="/static/3rdparty/css/chart.css">
     <title>{{BRANDING}} - Dashboard</title>
 </head>
-<body class="{{theme['text-color']}}">
+<body>
 {% include 'header.html' with context %}
 <div class="m-5">
     <div class="columns is-desktop">
         <div class="column is-three-quarters-fullhd is-three-fifths-desktop is-three-fifth-tablet">
             <div class="panel">
-                <p class="panel-heading {{theme['background-secondary']}} {{theme['text-color']}}">Welcome to
+                <p class="panel-heading background-secondary text-primary">Welcome to
                     {{BRANDING}}!</p>
-                <div class="panel-block {{theme['text-color']}} {{theme['background-secondary']}} no-bottom-border">
+                <div class="panel-block text-primary background-secondary no-bottom-border">
                     <p class="is-size-7 is-size-6-fullhd">If you've been banned/punished, you can use the search bar below
                         to find information about your infraction. Once you've found your infraction, you can
-                        <a class="has-text-{{theme['accent']}}" href="https://discord.gg/gflze">join our Discord</a>,
+                        <a href="https://discord.gg/gflze">join our Discord</a>,
                         and DM the <b>ZE ModMail</b> bot to submit an appeal. Please include your Steam ID, and why you
                         think you should be unbanned. Response times may vary.</p>
                 </div>
-                <div class="panel-block {{theme['text-color']}} {{theme['background-secondary']}} no-bottom-border">
+                <div class="panel-block text-primary background-secondary no-bottom-border">
                     <p class="is-size-7 is-size-6-fullhd">Alternatively, use
-                        <a class="has-text-{{theme['accent']}}" href="https://discord.gg/Hmck6UnjWC">this Discord</a> if
+                        <a href="https://discord.gg/Hmck6UnjWC">this Discord</a> if
                         you're unable to join our main Discord due to an existing ban.</p>
                 </div>
-                <div class="panel-block {{theme['text-color']}} {{theme['background-secondary']}}">
+                <div class="panel-block text-primary background-secondary">
                     <form method="get" action="/infractions" class="index-search">
                         <div class="field has-addons">
                             <label class="control is-flex-grow-1">
                                 <input name="search" class="input index-search-input" type="text" placeholder="Search">
                             </label>
                             <div class="control">
-                                <button class="button is-{{theme['accent']}}"><i class="fas fa-search"></i></button>
+                                <button class="button is-accent"><i class="fas fa-search"></i></button>
                             </div>
                         </div>
                     </form>
@@ -42,9 +42,9 @@
 
             </div>
             <div class="panel is-loading">
-                <p class="panel-heading {{theme['background-secondary']}} {{theme['text-color']}}">New Infractions
+                <p class="panel-heading background-secondary text-primary">New Infractions
                     Created</p>
-                <div class="panel-block {{theme['text-color']}} {{theme['background-secondary']}}">
+                <div class="panel-block text-primary background-secondary">
                     <canvas id="infractionsChart">
 
                     </canvas>
@@ -107,16 +107,16 @@
                 </div>
             </div>
             <div>
-                <nav class="panel {{theme['background-secondary']}} {{theme['text-color']}}">
-                    <p class="panel-heading {{theme['background-secondary']}} {{theme['text-color']}}">External
+                <nav class="panel background-secondary text-primary">
+                    <p class="panel-heading background-secondary text-primary">External
                         Links</p>
-                    <a href="//gflclan.com" class="panel-block {{theme['text-color']}}">
+                    <a href="//gflclan.com" class="panel-block text-primary">
                         GFL ZE Website
                     </a>
-                    <a href="//discord.gg/gflze" class="panel-block {{theme['text-color']}}">
+                    <a href="//discord.gg/gflze" class="panel-block text-primary">
                         GFL ZE Discord
                     </a>
-                    <a href="//donate.gflclan.com" class="panel-block {{theme['text-color']}}">
+                    <a href="//donate.gflclan.com" class="panel-block text-primary">
                         Donate to GFL ZE
                     </a>
                 </nav>

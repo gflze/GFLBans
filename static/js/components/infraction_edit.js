@@ -269,7 +269,7 @@ function process_time_edit(infraction) {
     } else if (!etp.hasClass('is-light')) {
         mod['make_permanent'] = true;
     } else {
-        mod['expiration'] = Math.floor(Date.now() / 1000) + (parseInt(ett.val()) * mult);
+        mod['expiration'] = parseInt(ett.val()) * mult;
     }
 
     submit_edit(infraction['id'], mod).then(function (new_inf) {
@@ -306,7 +306,7 @@ function editTime(infraction) {
     } else if (infraction['flags'] & (1 << 13)) {
         perm.attr('disabled', '1')
         td.removeClass('is-light');
-        ett.val(Math.ceil(infraction['time_left'] / 60).toString());
+        ett.val(Math.ceil(infraction['orig_length'] / 60).toString());
     } else {
         ett.val(Math.ceil((infraction['expires'] - infraction['created']) / 60))
     }

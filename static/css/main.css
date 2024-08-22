@@ -1,3 +1,146 @@
+:root {
+    --bans-color: rgba(241,70,104, 1);
+    --voice-color: rgba(50,115,220, 1);
+    --text-color: #b19cd9;
+    --admin-chat-color: #48c774;
+    --call-admin-color: #d3be05;
+    --warning-color: orange;
+
+    /* light mode color scheme */
+    --light-background-accent-primary: #3273dc;
+    --light-background-accent-secondary: #2366d1;
+    --light-background-primary: #fff;
+    --light-background-secondary: whitesmoke;
+    --light-background-tertiary: hsl(0, 0%, 90%);
+    --light-text-primary: #363636;
+    --light-text-secondary: #363636;
+    --light-text-placeholder: #a0a0a0;
+    --light-link: #3273dc;
+    --light-link-hover: #2259b2;
+
+    /* dark mode color scheme */
+    --dark-background-accent-primary: #105edb;
+    --dark-background-accent-secondary: #0d50bb;
+    --dark-background-primary: rgb(20, 20, 20);
+    --dark-background-secondary: #242424;
+    --dark-background-tertiary: hsl(0, 0%, 25%);
+    --dark-text-primary: #f5f5f5;
+    --dark-text-secondary: #dbdbdb;
+    --dark-text-placeholder: #a0a0a0;
+    --dark-link: #3273dc;
+    --dark-link-hover: #2259b2;
+
+    /* default to light mode if no media query for prefers-color-scheme: dark */
+    --background-accent-primary: var(--light-background-accent-primary);
+    --background-accent-secondary: var(--light-background-accent-secondary);
+    --background-primary: var(--light-background-primary);
+    --background-secondary: var(--light-background-secondary);
+    --background-tertiary: var(--light-background-tertiary);
+    --text-primary: var(--light-text-primary);
+    --text-secondary: var(--light-text-secondary);
+    --text-placeholder: var(--light-text-placeholder);
+    --link: var(--light-link);
+    --link-hover: var(--light-link-hover);
+}
+
+.theme-opposite {
+    --background-accent-primary: var(--dark-background-accent-primary);
+    --background-accent-secondary: var(--dark-background-accent-secondary);
+    --background-primary: var(--dark-background-primary);
+    --background-secondary: var(--dark-background-secondary);
+    --background-tertiary: var(--dark-background-tertiary);
+    --text-primary: var(--dark-text-primary);
+    --text-secondary: var(--dark-text-secondary);
+    --text-placeholder: var(--dark-text-placeholder);
+    --link: var(--dark-link);
+    --link-hover: var(--dark-link-hover);
+}
+
+#dark-mode-toggle i:before {
+    content: "\f186";
+}
+
+#dark-mode-toggle[data-modeset="opposite"] i:before {
+    content: "\f185";
+}
+
+#server_map {
+    filter: invert();
+}
+
+.theme-opposite #server_map {
+    filter: none;
+}
+
+@media (prefers-color-scheme: dark) {
+    :root {
+        --background-accent-primary: var(--dark-background-accent-primary);
+        --background-accent-secondary: var(--dark-background-accent-secondary);
+        --background-primary: var(--dark-background-primary);
+        --background-secondary: var(--dark-background-secondary);
+        --background-tertiary: var(--dark-background-tertiary);
+        --text-primary: var(--dark-text-primary);
+        --text-secondary: var(--dark-text-secondary);
+        --text-placeholder: var(--dark-text-placeholder);
+        --link: var(--dark-link);
+        --link-hover: var(--dark-link-hover);
+    }
+
+    .theme-opposite {
+        --background-accent-primary: var(--light-background-accent-primary);
+        --background-accent-secondary: var(--light-background-accent-secondary);
+        --background-primary: var(--light-background-primary);
+        --background-secondary: var(--light-background-secondary);
+        --background-tertiary: var(--light-background-tertiary);
+        --text-primary: var(--light-text-primary);
+        --text-secondary: var(--light-text-secondary);
+        --text-placeholder: var(--light-text-placeholder);
+        --link: var(--light-link);
+        --link-hover: var(--light-link-hover);
+    }
+
+    #dark-mode-toggle i:before {
+        content: "\f185";
+    }
+
+    #dark-mode-toggle[data-modeset="opposite"] i:before {
+        content: "\f186";
+    }
+
+    .theme-opposite #server_map {
+        filter: invert();
+    }
+
+    #server_map {
+        filter: none;
+    }
+}
+
+.is-accent {
+    background-color: var(--background-accent-primary);
+    color: #fff;
+}
+
+.background-primary {
+    background-color: var(--background-primary);
+}
+
+.background-secondary {
+    background-color: var(--background-secondary);
+}
+
+.background-tertiary {
+    background-color: var(--background-tertiary);
+}
+
+.text-primary, .text-primary:hover {
+    color: var(--text-primary);
+}
+
+.text-secondary {
+    color: var(--text-secondary);
+}
+
 .user-avatar {
     margin-right: 5px;
     border-radius: 50%;
@@ -298,22 +441,10 @@
     border-radius: 50%;
 }
 
-.infraction-user-wrapper {
-}
-
 @media screen and (max-width: 475px) {
   .is-hidden-mobile-tiny {
     display: none !important;
   }
-}
-
-:root {
-    --bans-color: rgba(241,70,104, 1);
-    --voice-color: rgba(50,115,220, 1);
-    --text-color: #b19cd9;
-    --admin-chat-color: #48c774;
-    --call-admin-color: #ffcd08;
-    --warning-color: orange;
 }
 
 .is-ban {
@@ -333,11 +464,11 @@
 }
 
 .is-call-admin {
-    color: var(--warning-color);
+    color: var(--call-admin-color);
 }
 
 .is-warning {
-    color: var(--call-admin-color);
+    color: var(--warning-color);
 }
 
 .has-background-ban {
@@ -412,62 +543,72 @@
     color: white;
 }
 
-.button.is-text-btn {
+.button.is-text-btn,
+.button.is-text-btn:hover {
   background-color: var(--text-color);
   border-color: transparent;
   color: #fff;
 }
 
-.button.is-text-btn.is-outlined {
+.button.is-text-btn.is-outlined,
+.button.is-text-btn.is-outlined:hover {
   background-color: transparent;
   border-color: var(--text-color);
   color: var(--text-color);
 }
 
 
-.button.is-call-admin-btn.is-outlined {
+.button.is-call-admin-btn.is-outlined,
+.button.is-call-admin-btn.is-outlined:hover {
   background-color: transparent;
-  border-color: #ffdd57;
-  color: #ffdd57;
+  border-color: var(--call-admin-color);
+  color: var(--call-admin-color);
 }
 
-.button.is-call-admin-btn {
-  background-color: #fad339;
+.button.is-call-admin-btn,
+.button.is-call-admin-btn:hover {
+  background-color: var(--call-admin-color);
   border-color: #fad339;
   color: #fff;
 }
 
-.button.is-admin-chat-btn {
+.button.is-admin-chat-btn,
+.button.is-admin-chat-btn:hover {
   background-color: #48c774;
   border-color: transparent;
   color: #fff;
 }
 
-.button.is-admin-chat-btn.is-outlined {
+.button.is-admin-chat-btn.is-outlined,
+.button.is-admin-chat-btn.is-outlined:hover {
   background-color: transparent;
   border-color: #48c774;
   color: #48c774;
 }
 
-.button.is-ban-btn {
+.button.is-ban-btn,
+.button.is-ban-btn:hover {
   background-color: var(--bans-color);
   border-color: transparent;
   color: #fff;
 }
 
-.button.is-ban-btn.is-outlined {
+.button.is-ban-btn.is-outlined,
+.button.is-ban-btn.is-outlined:hover {
   background-color: transparent;
   border-color: var(--bans-color);
   color: var(--bans-color);
 }
 
-.button.is-voice-btn {
+.button.is-voice-btn,
+.button.is-voice-btn:hover {
   background-color: var(--voice-color);
   border-color: transparent;
   color: #fff;
 }
 
-.button.is-voice-btn.is-outlined {
+.button.is-voice-btn.is-outlined,
+.button.is-voice-btn.is-outlined:hover {
   background-color: transparent;
   border-color: var(--voice-color);
   color: var(--voice-color);
@@ -575,10 +716,50 @@ img {
     margin-right: 2px;
 }
 
-#editTimeTimeDec.button {
-    background-color: #ff7373;
+#login {
+  padding: 0;
+  margin: 0.5rem 0.75rem;
+  width: fit-content;
+  height: fit-content;
 }
 
-#editTimeTimeDec.button.is-light {
-    background-color: white;
+#login > img {
+  max-height: none;
+}
+
+.button.is-accent {
+    border-color: transparent;
+}
+
+#gameIdEntry {
+    border-left: 0;
+}
+
+#doFileUpload:hover {
+    cursor: pointer;
+}
+
+.control .button {
+    border-color: transparent;
+}
+
+#editTimePerm {
+    border-right-color: var(--background-tertiary);
+}
+
+#editTimeUnitSelect {
+    border-left-color: transparent;
+}
+
+.control .button.is-light {
+    background-color: var(--background-primary);
+    color: var(--text-primary);
+}
+
+#editTimePerm.is-light[disabled="disabled"]:hover {
+    color: var(--text-primary);
+}
+
+#editTimeTimeDec.is-light:hover:not([disabled="disabled"]) {
+    color: var(--background-accent-secondary)
 }

@@ -348,17 +348,24 @@ async def modify_infraction(app, target: ObjectId, author: Union[ObjectId, str, 
         clear_expiration_stuff()
         commit_list.append(dinf.add_bit_flag(db, 'flags', INFRACTION_PERMANENT))
     elif expiration is not None:
-        uwu('Duration', exp_orig_value(), naturaldelta(timedelta(seconds=(expiration - dinf.created))))
+        uwu('Duration', exp_orig_value(), naturaldelta(timedelta(seconds=(expiration))))
         clear_expiration_stuff()
-        commit_list.append(dinf.update_field(db, 'expires', expiration))
+        commit_list.append(dinf.update_field(db, 'expires', expiration + dinf.created))
     elif time_left is not None:
         if dinf.flags & INFRACTION_BAN == INFRACTION_BAN and (punishments is None or 'ban' in punishments):
             raise ValueError('Cannot set a ban to dec online only')
 
         uwu('Duration', exp_orig_value(), naturaldelta(timedelta(seconds=time_left)))
         clear_expiration_stuff()
-        commit_list.append(dinf.update_field(db, 'time_left', time_left))
-        commit_list.append(dinf.update_field(db, 'original_time', time_left))
+        if dinf.time_left is not None and dinf.original_time is not None:
+            actual_time_left = time_left - (dinf.original_time - dinf.time_left)
+            if actual_time_left < 0:
+                actual_time_left = 0
+            commit_list.append(dinf.update_field(db, 'time_left', actual_time_left))
+            commit_list.append(dinf.update_field(db, 'original_time', time_left))
+        else:
+            commit_list.append(dinf.update_field(db, 'time_left', time_left))
+            commit_list.append(dinf.update_field(db, 'original_time', time_left))
         commit_list.append(dinf.add_bit_flag(db, 'flags', INFRACTION_DEC_ONLINE_ONLY))
 
     # Handle policy_id set or remove
@@ -430,6 +437,8 @@ async def modify_infraction(app, target: ObjectId, author: Union[ObjectId, str, 
         return ', '.join([_lang(b) for b in a])
 
     if punishments is not None:
+        if 'ban' in punishments and dinf.flags & INFRACTION_DEC_ONLINE_ONLY == INFRACTION_DEC_ONLINE_ONLY:
+            raise ValueError('Cannot make a dec online only infraction into a ban')
         t = 0
         old_res = []
         for k, val in str2pflag.items():

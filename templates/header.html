@@ -1,19 +1,19 @@
 <!--Global Navbar-->
-<nav class="navbar is-{{theme['accent']}}" role="navigation" aria-label="main navigation">
+<nav class="navbar is-accent" role="navigation" aria-label="main navigation">
     <div class="navbar-brand">
         <a class="navbar-item" href="/">
             <i class="fas fa-gavel fa-2x mr-1"></i>
             <h2 class="ab-title is-size-4 has-text-white">{{BRANDING}}</h2>
         </a>
 
-        <a role="button" class="navbar-burger" aria-label="menu" aria-expanded="false" data-target="navbarContents">
+        <a role="button" class="navbar-burger is-accent" aria-label="menu" aria-expanded="false" data-target="navbarContents">
             <span aria-hidden="true"></span>
             <span aria-hidden="true"></span>
             <span aria-hidden="true"></span>
         </a>
     </div>
 
-    <div id="navbarContents" class="navbar-menu">
+    <div id="navbarContents" class="navbar-menu is-accent">
         <div class="navbar-start">
             <a href="/" class="navbar-item {% if page == 'index' %}is-active{% endif %}"><i
                     class="fas fa-tachometer-alt nav-icon"></i>Dashboard</a>
@@ -50,7 +50,7 @@
 
             <div class="navbar-item has-dropdown is-hoverable">
                 <div class="navbar-link is-arrowless is-hoverable is-hidden-touch"><i class="fa fa-search nav-icon-mobile"></i></div>
-                <div class="navbar-dropdown">
+                <div class="navbar-dropdown background-secondary">
                     <form method="get" action="/infractions">
                         <div class="field search has-addons px-2">
                             <div class="control is-flex-grow-1">
@@ -58,7 +58,7 @@
                                        placeholder="Search"/>
                             </div>
                             <div class="control">
-                                <button class="button is-small is-{{theme['accent']}}"><i class="fas fa-search"></i></button>
+                                <button class="button is-small is-accent"><i class="fas fa-search"></i></button>
                             </div>
                         </div>
                     </form>
@@ -66,10 +66,8 @@
             </div>
 
             <a id="dark-mode-toggle"
-               data-modeset="{% if 'dark_mode' in request.session and request.session['dark_mode'] %}light{% else %}dark{% endif %}"
-               class="navbar-item">{% if 'dark_mode' in request.session and request.session['dark_mode'] %}<i
-                    class="far fa-sun nav-icon-mobile"></i>{% else %}<i class="far fa-moon nav-icon-mobile"></i>{% endif
-                %}<span class="is-hidden-desktop">{% if 'dark_mode' in request.session and request.session['dark_mode'] %}Enable Light Mode{% else %}Enable Dark Mode{% endif %}</span></a>
+               data-modeset="{% if opposite_theme %}opposite{% endif %}"
+               class="navbar-item"><i class="far nav-icon-mobile"></i><span class="is-hidden-desktop">Toggle Dark Mode</span></a>
 
         </div>
 

@@ -23,7 +23,10 @@ class SetDark(BaseModel):
     enabled: bool
 
 
-@web_router.post('/set_dark_mode')
-async def set_dark_mode(request: Request, s: SetDark):
-    request.session['dark_mode'] = s.enabled
+@web_router.get('/toggle_theme')
+async def toggle_theme(request: Request):
+    if 'opposite_theme' in request.session:
+        request.session['opposite_theme'] = not request.session['opposite_theme']
+    else:
+        request.session['opposite_theme'] = True
     return Response(status_code=204)

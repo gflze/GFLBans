@@ -123,7 +123,10 @@ $(document).ready(function () {
                     chartOpts.data.datasets[6].data.push(decoded.history[labels[i]].total);
                 }
 
-                if (getMeta('current_theme') !== 'LIGHT') {
+
+                if (window.matchMedia &&
+                    ((window.matchMedia('(prefers-color-scheme: dark)').matches && !(getMeta('theme-opposite') === 'True')) ||
+                    (!window.matchMedia('(prefers-color-scheme: dark)').matches && (getMeta('theme-opposite') === 'True')))) {
                     chartOpts.options.legend.labels.fontColor = '#FFFFFF'
                     chartOpts.options.scales.xAxes[0].gridLines.color = 'rgba(255, 255, 255, 0.1)'
                     chartOpts.options.scales.yAxes[0].gridLines.color = 'rgba(255, 255, 255, 0.1)'

@@ -1,7 +1,15 @@
+<link rel="stylesheet" href="/static/3rdparty/css/bulma-tooltips.css">
+<style>
+    [data-tooltip]:not(.is-loading)::before, [data-tooltip]:not(.is-disabled)::before, [data-tooltip]:not([disabled])::before {
+        transform: translateY(-65%);
+        left: auto;
+        right: auto;
+    }
+</style>
 <div id="infraction_view_modal" class="modal" data-infraction="">
     <div id="ivm-back" class="modal-background"></div>
-    <div class="modal-content {{theme['background-secondary']}} infraction-details">
-        <div class="box {{theme['background-secondary']}}">
+    <div class="modal-content background-secondary infraction-details">
+        <div class="box background-secondary">
             <article class="media">
                 <div class="media-left">
                     <figure class="image is-64x64 crop-to-container server-map-image">
@@ -11,22 +19,22 @@
                 </div>
                 <div class="media-content">
                     <div class="content ">
-                        <div class="{{theme['text-color']}}">
+                        <div class="text-primary">
                             <div class="is-flex is-justify-content-flex-center is-align-items-center">
-                                <strong id="user_name" class="{{theme['text-color']}}">Aurora</strong>
+                                <strong id="user_name" class="text-primary">Aurora</strong>
                                 <small id="createdAt" class="is-flex-grow-1">March 10, 2021 @ 09:24 AM</small>
 
                                 <div id="infMenu" class="dropdown is-right is-hoverable">
                                   <div class="dropdown-trigger">
-                                    <a id="infOptions" class="has-text-{{theme['accent']}} fas fa-cog"></a>
+                                    <a id="infOptions" class="fas fa-cog"></a>
                                   </div>
                                   <div class="dropdown-menu" id="dropdown-menu6" role="menu">
-                                    <div class="dropdown-content">
+                                    <div class="dropdown-content background-primary">
                                         <div class="dropdown-item" id="triggerRemoveVis">
-                                        <a id="triggerRemove" class="has-text-{{theme['accent']}}">Remove</a>
+                                        <a id="triggerRemove">Remove</a>
                                       </div>
                                         <div class="dropdown-item" id="triggerReinstVis">
-                                            <a id="triggerReinstate" class="has-text-{{theme['accent']}}">Reinstate</a>
+                                            <a id="triggerReinstate">Reinstate</a>
                                         </div>
                                     </div>
                                   </div>
@@ -40,7 +48,7 @@
                                 <span id="fweb" class="ftag tag is-link">Web</span>
                             </div>
                             <div class="table-container">
-                                <table class="table {{theme['background-secondary']}} {{theme['text-color']}}">
+                                <table class="table background-secondary text-primary">
                                     <tbody class="is-borderless scrollable-table inf-view-tab">
                                     <tr id="idContainer">
                                         <td id="idLabel">ID</td>
@@ -92,7 +100,7 @@
                                                 </div>
                                             </div>
                                         </td>
-                                        <td><a id="editTime" class="fas fa-pen edit {{theme['text-color']}}"></a></td>
+                                        <td><a id="editTime" class="fas fa-pen edit text-primary"></a></td>
                                     </tr>
                                     <tr id="adminContainer">
                                         <td>Issued By</td>
@@ -122,7 +130,7 @@
                                                 </div>
                                             </div>
                                         </td>
-                                        <td><a id="editServer" class="fas fa-pen edit {{theme['text-color']}}"></a></td>
+                                        <td><a id="editServer" class="fas fa-pen edit text-primary"></a></td>
                                     </tr>
                                     <tr>
                                         <td>Scope</td>
@@ -150,7 +158,7 @@
                                                 </div>
                                             </div>
                                         </td>
-                                        <td><a id="editScope" class="fas fa-pen edit {{theme['text-color']}}"></a></td>
+                                        <td><a id="editScope" class="fas fa-pen edit text-primary"></a></td>
                                     </tr>
                                     <tr>
                                         <td>Reason</td>
@@ -172,23 +180,23 @@
                                                 </div>
                                             </div>
                                         </td>
-                                        <td><a id="editReason" class="fas fa-pen edit {{theme['text-color']}}"></a></td>
+                                        <td><a id="editReason" class="fas fa-pen edit text-primary"></a></td>
                                     </tr>
                                     <tr>
                                         <td>Restrictions</td>
                                         <td id="restrictionsValue" class="data-cell">
                                             <div class="tags">
-                                                <span id="textChatFlag" class="ptag tag has-background-text">
-                                                    <span class="icon is-small ricon">
-                                                        <i class="fas fa-comment-slash ricon"></i>
-                                                    </span>
-                                                    Text
-                                                </span>
                                                 <span id="voiceChatFlag" class="ptag tag has-background-voice">
                                                     <span class="icon is-small ricon">
                                                         <i class="fas fa-volume-mute ricon"></i>
                                                     </span>
                                                     Voice
+                                                </span>
+                                                <span id="textChatFlag" class="ptag tag has-background-text">
+                                                    <span class="icon is-small ricon">
+                                                        <i class="fas fa-comment-slash ricon"></i>
+                                                    </span>
+                                                    Text
                                                 </span>
                                                 <span id="banFlag" class="ptag tag has-background-ban">
                                                     <span class="icon is-small ricon">
@@ -218,20 +226,20 @@
                                         </td>
                                         <td id="restrictionsEditCell" class="is-hidden edit-cell">
                                             <div class="tags">
-                                                {% if user is not none and has_flag(user.permissions, p_nodes['Restrict Text']) %}
-                                                <a id="textChatFlagEdit" data-punishment="chat_block" data-target="textChatFlag" class="tag etag has-background-text">
-                                                    <span class="icon is-small ricon">
-                                                        <i class="fas fa-comment-slash ricon"></i>
-                                                    </span>
-                                                    Text
-                                                </a>
-                                                {% endif %}
                                                 {% if user is not none and has_flag(user.permissions, p_nodes['Restrict Voice']) %}
                                                 <a id="voiceChatFlagEdit" data-punishment="voice_block" data-target="voiceChatFlag" class="etag tag has-background-voice">
                                                     <span class="icon is-small ricon">
                                                         <i class="fas fa-volume-mute ricon"></i>
                                                     </span>
                                                     Voice
+                                                </a>
+                                                {% endif %}
+                                                {% if user is not none and has_flag(user.permissions, p_nodes['Restrict Text']) %}
+                                                <a id="textChatFlagEdit" data-punishment="chat_block" data-target="textChatFlag" class="tag etag has-background-text">
+                                                    <span class="icon is-small ricon">
+                                                        <i class="fas fa-comment-slash ricon"></i>
+                                                    </span>
+                                                    Text
                                                 </a>
                                                 {% endif %}
                                                 {% if user is not none and has_flag(user.permissions, p_nodes['Ban']) %}
@@ -260,8 +268,8 @@
                                                 {% endif %}
                                             </div>
                                         </td>
-                                        <td id="restrictionsEdit"><a class="fas fa-pen edit {{theme['text-color']}}"></a></td>
-                                        <td id="restrictionsCancel"><a id="restrictionsCancelIcon" class="fas fa-undo {{theme['text-color']}}"></a></td>
+                                        <td id="restrictionsEdit"><a class="fas fa-pen edit text-primary"></a></td>
+                                        <td id="restrictionsCancel"><a id="restrictionsCancelIcon" class="fas fa-undo text-primary"></a></td>
                                     </tr>
                                     <tr class="rmEl">
                                         <td>Rm. At</td>
@@ -281,9 +289,9 @@
                         </div>
                     </div>
 
-                    <a id="commentToggle" class="{{theme['text-color']}}">Comments (<span id="commentCount">0</span>)
-                        <span id="commentState" class="fas fa-sort-up {{theme['text-color']}}"></span></a>
-                    <div id="iComments" class="mb-2 {{theme['text-color']}}">
+                    <a id="commentToggle" class="text-primary">Comments (<span id="commentCount">0</span>)
+                        <span id="commentState" class="fas fa-sort-up text-primary"></span></a>
+                    <div id="iComments" class="mb-2 text-primary">
                     </div>
 
                     {% if user is not none and has_flag(user.permissions, p_nodes['Can Comment']) %}
@@ -307,20 +315,20 @@
                                 <div class="control is-expanded">
                                     <label class="checkbox">
                                         <input type="checkbox" id="privateCheck">
-                                        <span class="{{theme['text-color']}}">Mark as private</span>
+                                        <span class="text-primary">Mark as private</span>
                                     </label>
                                 </div>
 
                                 {% if user is not none and has_flag(user.permissions, p_nodes['Attach Files']) %}
                                 <div class="control">
-                                    <div id="FileButton" class="button click is-{{theme['accent']}}">
+                                    <div id="FileButton" class="button click is-accent">
                                             <input id="doFileUpload" class="file-input" type="file">
                                             <i class="fas fa-upload"></i>
                                     </div>
                                 </div>
                                 {% endif %}
                                 <p class="control">
-                                    <button class="button is-{{theme['accent']}}" id="doPost"><i
+                                    <button class="button is-accent" id="doPost"><i
                                             class="fas fa-paper-plane"></i></button>
                                 </p>
                             </div>
@@ -336,11 +344,12 @@
     <button id="ivm-close" class="modal-close is-large" aria-label="close"></button>
 </div>
 <div class="modal" id="removeModal">
-    <div class="modal-card has-text-black">
-        <section class="modal-card-head">
+    <div id="rmm-back" class="modal-background"></div>
+    <div class="modal-card">
+        <section class="modal-card-head background-tertiary">
             <p class="modal-card-title">Remove Infraction</p>
         </section>
-        <section class="modal-card-body">
+        <section class="modal-card-body background-secondary">
             <div class="field">
                 <label class="label" id="removalLabel">Why do you want to remove this infraction?</label>
                 <div class="control">
@@ -348,7 +357,7 @@
                 </div>
             </div>
         </section>
-        <section class="modal-card-foot">
+        <section class="modal-card-foot background-secondary">
             <button id="removeButton" class="button is-danger">Remove Infraction</button>
             <button id="cancelRemoval" class="button">Cancel</button>
         </section>

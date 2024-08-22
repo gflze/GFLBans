@@ -1,16 +1,16 @@
 <div id="createModal" class="modal">
     <div class="modal-background"></div>
     <div class="modal-card">
-        <header class="modal-card-head {{theme['background-secondary']}}">
-            <p class="modal-card-title {{theme['text-color']}}">Create Infraction</p>
+        <header class="modal-card-head background-tertiary">
+            <p class="modal-card-title text-primary">Create Infraction</p>
             <button class="delete cInfractionDismiss"></button>
         </header>
-        <section class="modal-card-body {{theme['background']}}">
+        <section class="modal-card-body background-secondary">
             <div id="infractionCreateError" class="notification is-danger is-hidden">
                 <button class="delete cDismissError"></button>
                 <span id="infractionCreateErrorMsg"></span>
             </div>
-            <label class="label {{theme['text-color']}}">User</label>
+            <label class="label text-primary">User</label>
             <div class="field is-grouped">
                 <div class="field has-addons mr-3">
                     <div class="control">
@@ -29,10 +29,10 @@
                     <input id="ipEntry" class="input" type="text" placeholder="IP Address">
                 </div>
             </div>
-            <label class="label {{theme['text-color']}}">Scoping</label>
+            <label class="label text-primary">Scoping</label>
             <div class="field">
                 <div class="control {% if user is none or not has_flag(user.permissions, bit_or(p_nodes['Add Global Infractions'], p_nodes['Add Community Infractions'])) %}is-hidden{% endif %}">
-                    <label class="checkbox {% if theme['name'] == 'DARK' %}has-light-hover{% endif %}">
+                    <label class="checkbox">
                         <input id="isWebToggle" type="checkbox" name="isWebInfract">
                         This is a web infraction
                     </label>
@@ -47,24 +47,24 @@
                 </div>
             </div>
             <div class="control {% if user is none or not has_flag(user.permissions, bit_or(p_nodes['Add Global Infractions'], p_nodes['Add Community Infractions'])) %}is-hidden{% endif %}">
-                <label id="serverOnlyLabel" class="radio {% if theme['name'] == 'DARK' %}has-light-hover{% endif %}">
+                <label id="serverOnlyLabel" class="radio">
                     <input class="scope-check" id="serverOnlyCheck" type="radio" name="scope" data-has-permissions="1" checked>
                     Server
                 </label>
-                <label id="globalLabel" class="radio {% if theme['name'] == 'DARK' %}has-light-hover{% endif %}">
+                <label id="globalLabel" class="radio">
                     <input class="scope-check" id="globalCheck" type="radio" name="scope" {% if user is not none and has_flag(user.permissions, p_nodes['Add Global Infractions']) %}data-has-permissions="1"{% else %}data-has-permissions="0"{% endif %} checked>
                     Global
                 </label>
-                <label id="communityLabel" class="radio {% if theme['name'] == 'DARK' %}has-light-hover{% endif %}">
+                <label id="communityLabel" class="radio">
                     <input class="scope-check" id="communityCheck" type="radio" name="scope" {% if user is not none and has_flag(user.permissions, p_nodes['Add Community Infractions']) %}data-has-permissions="1"{% else %}data-has-permissions="0"{% endif %}>
                     Community
                 </label>
             </div>
             <br>
-            <div id="cAutomationSection"><label class="label {{theme['text-color']}}">Automation</label><div id="autoWrapper">
+            <div id="cAutomationSection"><label class="label text-primary">Automation</label><div id="autoWrapper">
             <div class="field">
                 <div class="control">
-                    <label class="checkbox {% if theme['name'] == 'DARK' %}has-light-hover{% endif %}">
+                    <label class="checkbox">
                         <input id="automaticCheck" type="checkbox" name="isAutoInfract">
                         Automatically determine the reason, length, and restrictions
                     </label>
@@ -87,8 +87,8 @@
                 </div>
             <br>
             </div>
-            <label class="label {{theme['text-color']}}">Reasoning and Evidence</label>
-            <textarea id="reasonEntry" class="textarea is-{{theme['accent']}}" maxlength="280" placeholder="Reason"></textarea>
+            <label class="label text-primary">Reasoning and Evidence</label>
+            <textarea id="reasonEntry" class="textarea is-accent" maxlength="280" placeholder="Reason"></textarea>
             <br>
             <div class="file is-normal has-name">
                 <label class="file-label ">
@@ -109,25 +109,25 @@
             <br>
             {% if user is not none and has_flag(user.permissions, bit_or(p_nodes['Restrict Text'], p_nodes['Restrict Voice'], p_nodes['Restrict Admin Chat'], p_nodes['Restrict Call Admin'], p_nodes['Ban'])) %}
             <div id="cRestrictionsSection">
-                <label class="label {{theme['text-color']}}">Restrictions</label>
+                <label class="label text-primary">Restrictions</label>
                 <p>To issue a warning, deselect all restrictions.</p>
                 <br>
                 <div class="is-flex is-justify-content-center">
                     <div class="buttons">
-                        {% if user is not none and has_flag(user.permissions, p_nodes['Restrict Text']) %}
-                        <button id="restrictText" class="rbtn button is-text-btn is-outlined">
-                            <span class="icon is-small ricon">
-                                <i class="fas fa-comment-slash ricon"></i>
-                            </span>
-                            Text
-                        </button>
-                        {% endif %}
                         {% if user is not none and has_flag(user.permissions, p_nodes['Restrict Voice']) %}
                         <button id="restrictVoice" class="rbtn button is-voice-btn is-outlined">
                             <span class="icon is-small ricon">
                                 <i class="fas fa-volume-mute ricon"></i>
                             </span>
                             Voice
+                        </button>
+                        {% endif %}
+                        {% if user is not none and has_flag(user.permissions, p_nodes['Restrict Text']) %}
+                        <button id="restrictText" class="rbtn button is-text-btn is-outlined">
+                            <span class="icon is-small ricon">
+                                <i class="fas fa-comment-slash ricon"></i>
+                            </span>
+                            Text
                         </button>
                         {% endif %}
                         {% if user is not none and has_flag(user.permissions, p_nodes['Ban']) %}
@@ -160,10 +160,10 @@
             </div>
             {% endif %}
             <div id="cExpirationSection">
-            <label class="label {{theme['text-color']}}">Expiration</label>
+            <label class="label text-primary">Expiration</label>
             <div class="field" id="cPermCheckField">
                 <div class="control">
-                    <label class="checkbox {% if theme['name'] == 'DARK' %}has-light-hover{% endif %}">
+                    <label class="checkbox">
                         <input id="permanentCheck" type="checkbox" name="isPermanent">
                         This infraction shouldn't expire
                     </label>
@@ -171,7 +171,7 @@
             </div>
             <div class="field" id="cTimeDecCheckField">
                 <div class="control">
-                    <label class="checkbox {% if theme['name'] == 'DARK' %}has-light-hover{% endif %}">
+                    <label class="checkbox">
                         <input id="timeDecCheck" type="checkbox" name="isTimeDec">
                         This infraction's time remaining only decreases while the user is connected
                     </label>
@@ -197,7 +197,7 @@
             <br>
             </div>
         </section>
-        <footer class="modal-card-foot {{theme['background-secondary']}}">
+        <footer class="modal-card-foot background-tertiary">
             <button id="cInfractionSubmit" class="button is-success">Add Infraction</button>
             <button class="button is-danger cInfractionDismiss">Cancel</button>
         </footer>
@@ -208,10 +208,10 @@
 <div id="cLoadingModal" class="modal">
     <div class="modal-background"></div>
     <div class="modal-card">
-        <section class="modal-card-body {{theme['background']}} card-rounded">
+        <section class="modal-card-body background-secondary card-rounded">
             <p class="has-text-centered">Creating the infraction...</p>
             <br>
-            <progress class="progress is-{{theme['accent']}}" max="100">30%</progress>
+            <progress class="progress is-accent" max="100">30%</progress>
         </section>
     </div>
 </div>

@@ -47,13 +47,6 @@ function handleResp(d, page, s, m) {
 }
 
 function setupEmptyINotice() {
-    let theme_text_color;
-
-    if (getMeta('current_theme') === 'DARK') {
-        theme_text_color = 'has-text-light';
-    } else {
-        theme_text_color = 'has-text-dark';
-    }
 
     let i_root = document.getElementById('infractions_tab');
 
@@ -63,7 +56,7 @@ function setupEmptyINotice() {
     i_root.classList.remove('table-container');
 
     let icon = document.createElement('i');
-    icon.classList.add('fas', 'fa-question', 'mt-5', 'nf-icon', theme_text_color);
+    icon.classList.add('fas', 'fa-question', 'mt-5', 'nf-icon', 'text-primary');
 
     let text = document.createElement('h1');
     text.innerText = 'No Infractions';
