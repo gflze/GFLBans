@@ -18,7 +18,10 @@ a.navbar-item.is-active,
 .file-cta,
 .file-label:hover .file-cta,
 .modal-card-title,
-.label {
+.label,
+.panel-block,
+.panel-block:hover,
+.panel-block.is-active {
     color: inherit;
 }
 
@@ -59,8 +62,8 @@ a:hover {
     color: var(--text-placeholder);
 }
 
-.navbar-dropdown.background-secondary {
-    border-top: 2px solid var(--background-secondary);
+.navbar-dropdown {
+    border-top: 0;
 }
 
 .input:not(:focus),
@@ -79,6 +82,7 @@ a:hover {
 }
 
 a.navbar-item.is-active:not(:focus):not(:hover),
+.navbar-link.is-active:not(:focus):not(:hover),
 a.navbar-item:hover,
 .navbar-item.has-dropdown:hover .navbar-link,
 a.navbar-item:focus {
@@ -93,7 +97,7 @@ a.navbar-item:focus {
     color: #fff;
 }
 
-.button:hover {
+.button:hover, .panel-block.is-active {
     background-color: var(--background-accent-secondary);
     color: #fff;
 }
