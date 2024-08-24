@@ -136,7 +136,7 @@ function prepareEditor(infraction) {
     let current_user = parseInt(getMeta('current_user'));
     let active_perms = parseInt(getMeta('active_permissions'));
 
-    if ((infraction.hasOwnProperty('admin') && infraction['admin'] === current_user && (active_perms & 1 << 4)) || active_perms & (1 << 5)) {
+    if ((infraction.hasOwnProperty('admin') && infraction['admin'] === current_user && (active_perms & PERMISSION.CREATE_INFRACTION)) || active_perms & (PERMISSION.EDIT_ALL_INFRACTIONS)) {
         prepareEdits(infraction)
     }
 }
@@ -145,7 +145,7 @@ function prepareEdits(infraction) {
     $('.edit').removeClass('is-hidden').off('click');
     $('#infOptions').removeClass('is-hidden');
 
-    if (!(infraction['flags'] & (1 << 12))) {
+    if (!(infraction['flags'] & (INFRACTION.SESSION))) {
         $('#editTime').click(function () {
             editTime(infraction);
         });
@@ -194,7 +194,7 @@ function prepareEdits(infraction) {
     rem.addClass('is-hidden');
     reinst.addClass('is-hidden');
 
-    if (infraction['flags'] & (1 << 6)) {
+    if (infraction['flags'] & (INFRACTION.REMOVED)) {
         reinst.removeClass('is-hidden');
     } else {
         rem.removeClass('is-hidden');
@@ -298,12 +298,12 @@ function editTime(infraction) {
     console.log(infraction)
 
     // Permanent
-    if (infraction['flags'] & (1 << 3)) {
+    if (infraction['flags'] & (INFRACTION.PERMANENT)) {
         perm.removeClass('is-light');
         td.attr('disabled', '1');
         ett.prop('disabled', true);
         ets.prop('disabled', true)
-    } else if (infraction['flags'] & (1 << 13)) {
+    } else if (infraction['flags'] & (INFRACTION.DEC_ONLINE_ONLY)) {
         perm.attr('disabled', '1')
         td.removeClass('is-light');
         ett.val(Math.ceil(infraction['orig_length'] / 60).toString());
@@ -312,7 +312,7 @@ function editTime(infraction) {
     }
 
 
-    if (infraction['flags'] & (1 << 9)) {
+    if (infraction['flags'] & (INFRACTION.BAN)) {
         td.attr('disabled', '1').attr('data-disable-ban', '1');
     }
 
@@ -344,7 +344,7 @@ function editServer(infraction) {
     ess.append(web);
 
     // Is Web?
-    if (infraction['flags'] & (1 << 5)) {
+    if (infraction['flags'] & (INFRACTION.WEB)) {
         $(web).prop('selected', true)
     }
 
@@ -358,7 +358,7 @@ function editServer(infraction) {
             $(nd).text(server_data[i]['ip'] + ':' + server_data[i]['game_port'])
         }
 
-        if (!(infraction['flags'] & (1 << 5)) && infraction['server'] === server_data[i]['id']) {
+        if (!(infraction['flags'] & (INFRACTION.WEB)) && infraction['server'] === server_data[i]['id']) {
             $(nd).prop('selected', true);
         }
 
@@ -389,7 +389,7 @@ function process_server_edit(infraction, new_val) {
     }
 
     // Save time if we don't actually need to update the server
-    if ((new_val === 'web' && infraction['flags'] & (1 << 5)) || new_val === infraction['server']) {
+    if ((new_val === 'web' && infraction['flags'] & (INFRACTION.WEB)) || new_val === infraction['server']) {
         doSuccess();
         return;
     }
@@ -420,9 +420,9 @@ function editScope(infraction) {
     $('#editScope').addClass('is-hidden');
     $('.oeserver').prop('selected', false);
 
-    if (infraction['flags'] & (1 << 1)) { // Global
+    if (infraction['flags'] & (INFRACTION.GLOBAL)) {
         ess.val('global');
-    } else if (infraction['flags'] & (1 << 2)) { // Community
+    } else if (infraction['flags'] & (INFRACTION.SUPER_GLOBAL)) {
         ess.val('community');
     } else {
         ess.val('server')
@@ -497,38 +497,6 @@ function process_reason_edit(infraction, val) {
     }).catch(genericError);
 }
 
-/*
-<td id="restrictionsEditCell">
-                                            <div class="tags">
-                                                <span id="callAdminFlagEdit" class="tag etag has-background-calladmin">Call Admin Block</span>
-                                                <span id="adminChatFlagEdit" class="tag etag has-background-adminchat">Admin Chat Block</span>
-                                                <span id="textChatFlagEdit"
-                                                      class="tag etag has-background-text">Text Block</span>
-                                                <span id="voiceChatFlagEdit" class="etag tag has-background-voice">Voice Block</span>
-                                                <span id="banFlagEdit" class="etag tag has-background-ban">Ban</span>
-                                            </div>
-                                        </td>
-
-
-                                        ...
-
-let callAdminFlagEdit = $('#callAdminFlagEdit')
-let adminChatFlagEdit = $('#adminChatFlagEdit')
-let textChatFlagEdit = $('#textChatFlagEdit')
-let voiceChatFlagEdit = $('#voiceChatFlagEdit')
-let banFlagEdit = $('#banFlagEdit')
-let restrictionsEditCell = $('#restrictionsEditCell')
-let restrictionsEdit = $('#restrictionsEdit')
-let restrictionsCancel = $('#restrictionsCancel')
-
-INFRACTION_VOICE_BLOCK = 1 << 7  # The player may not speak in game
-INFRACTION_CHAT_BLOCK = 1 << 8  # The player may not type in game
-INFRACTION_BAN = 1 << 9  # The player may not join the server
-INFRACTION_ADMIN_CHAT_BLOCK = 1 << 10  # The player may not use admin chat
-INFRACTION_CALL_ADMIN_BAN = 1 << 11  # The player may not call an admin (using !calladmin)
-
- */
-
 function editRestrictions(infraction) {
     let ic = $('#restrictionsCancelIcon');
 
@@ -542,23 +510,23 @@ function editRestrictions(infraction) {
     restrictionsEdit.addClass('is-hidden');
     restrictionsCancel.removeClass('is-hidden');
 
-    if (infraction['flags'] & (1 << 7)) {
+    if (infraction['flags'] & (INFRACTION.VOICE_BLOCK)) {
         voiceChatFlagEdit.removeClass('half-opacity')
     }
 
-    if (infraction['flags'] & (1 << 8)) {
+    if (infraction['flags'] & (INFRACTION.CHAT_BLOCK)) {
         textChatFlagEdit.removeClass('half-opacity');
     }
 
-    if (infraction['flags'] & (1 << 9)) {
+    if (infraction['flags'] & (INFRACTION.BAN)) {
         banFlagEdit.removeClass('half-opacity');
     }
 
-    if (infraction['flags'] & (1 << 10)) {
+    if (infraction['flags'] & (INFRACTION.ADMIN_CHAT_BLOCK)) {
         adminChatFlagEdit.removeClass('half-opacity')
     }
 
-    if (infraction['flags'] & (1 << 11)) {
+    if (infraction['flags'] & (INFRACTION.CALL_ADMIN_BAN)) {
         callAdminFlagEdit.removeClass('half-opacity');
     }
 

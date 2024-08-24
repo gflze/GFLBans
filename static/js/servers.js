@@ -199,8 +199,6 @@ function serverDetails(server_id, mod, map, hostname, ip) {
     });
 }
 
-const PERMISSION_RPC_KICK = 1 << 26
-
 function showServerModal(mod, map, hostname, ip, players, id) {
     closeModals();
 
@@ -219,7 +217,7 @@ function showServerModal(mod, map, hostname, ip, players, id) {
     $(server_players).empty();
 
     //Do we have RPC_KICK permissions?
-    let can_rpc_kick = parseInt(getMeta('active_permissions')) & PERMISSION_RPC_KICK;
+    let can_rpc_kick = parseInt(getMeta('active_permissions')) & PERMISSION.RPC_KICK;
 
     if (players.length === 0) {
         let row = document.createElement('tr');

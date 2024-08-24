@@ -85,11 +85,11 @@ const restrictions = {
 
 const flags_to_str = new Map();
 
-flags_to_str.set(1 << 7, 'voice');
-flags_to_str.set(1 << 8, 'text');
-flags_to_str.set(1 << 9, 'ban');
-flags_to_str.set(1 << 11, 'call-admin');
-flags_to_str.set(1 << 10, 'admin-chat');
+flags_to_str.set(INFRACTION.VOICE_BLOCK, 'voice');
+flags_to_str.set(INFRACTION.CHAT_BLOCK, 'text');
+flags_to_str.set(INFRACTION.BAN, 'ban');
+flags_to_str.set(INFRACTION.CALL_ADMIN_BAN, 'call-admin');
+flags_to_str.set(INFRACTION.ADMIN_CHAT_BLOCK, 'admin-chat');
 
 function addInfractionRow(infraction) {
     let unixNow = Date.now() / 1000
@@ -213,7 +213,7 @@ function addInfractionRow(infraction) {
     atxt.innerText = 'Fetching...';
     admin_cell.appendChild(atxt);
 
-    if (infraction['flags'] & (1 << 0) || !infraction.hasOwnProperty('admin')) { //System infraction
+    if (infraction['flags'] & (INFRACTION.SYSTEM) || !infraction.hasOwnProperty('admin')) { //System infraction
         atxt.innerText = 'System';
     } else {
         get_admin(infraction['admin']).then(result => {
@@ -252,16 +252,16 @@ function addInfractionRow(infraction) {
     time_wrapper.appendChild(time_text);
 
     //Color and icons
-    if (infraction['flags'] & INFRACTION_REMOVED) {
+    if (infraction['flags'] & INFRACTION.REMOVED) {
         time_text.classList.add('has-text-warning');
         time_icon.classList.add('fas', 'fa-ankh');
-    } else if (infraction['flags'] & INFRACTION_PERMANENT) {
+    } else if (infraction['flags'] & INFRACTION.PERMANENT) {
         time_text.classList.add('has-text-danger');
         time_icon.classList.add('fas', 'fa-skull');
-    } else if (infraction['flags'] & INFRACTION_SESSION || (infraction.hasOwnProperty('time_left')) && infraction['time_left'] <= 0 || (infraction.hasOwnProperty('expires') && infraction['expires'] < unixNow)) {
+    } else if (infraction['flags'] & INFRACTION.SESSION || (infraction.hasOwnProperty('time_left')) && infraction['time_left'] <= 0 || (infraction.hasOwnProperty('expires') && infraction['expires'] < unixNow)) {
         time_text.classList.add('has-text-success');
         time_icon.classList.add('fas', 'fa-check');
-    } else if (infraction['flags'] & INFRACTION_DEC_ONLINE_ONLY && ((infraction.hasOwnProperty('last_heartbeat') && (infraction['last_heartbeat'] + 300) < unixNow) || !infraction.hasOwnProperty('last_heartbeat'))) {
+    } else if (infraction['flags'] & INFRACTION.DEC_ONLINE_ONLY && ((infraction.hasOwnProperty('last_heartbeat') && (infraction['last_heartbeat'] + 300) < unixNow) || !infraction.hasOwnProperty('last_heartbeat'))) {
         time_text.classList.add('text-secondary');
         time_icon.classList.add('fas', 'fa-pause');
     } else {
@@ -282,21 +282,16 @@ function addInfractionRow(infraction) {
     ibase.appendChild(row);
 }
 
-const INFRACTION_PERMANENT = 1 << 3
-const INFRACTION_REMOVED = 1 << 6
-const INFRACTION_SESSION = 1 << 12
-const INFRACTION_DEC_ONLINE_ONLY = 1 << 13
-
 function getTimeRemainingText(infraction) {
     let original = 0;
 
     //Simple cases that do not require any other work
-    if (infraction['flags'] & INFRACTION_REMOVED) {
-        if (infraction['flags'] & INFRACTION_SESSION || infraction['flags'] & INFRACTION_PERMANENT) {
+    if (infraction['flags'] & INFRACTION.REMOVED) {
+        if (infraction['flags'] & INFRACTION.SESSION || infraction['flags'] & INFRACTION.PERMANENT) {
             return 'Removed';
         }
 
-        if (infraction['flags'] & INFRACTION_DEC_ONLINE_ONLY) {
+        if (infraction['flags'] & INFRACTION.DEC_ONLINE_ONLY) {
             if (infraction.hasOwnProperty('orig_length')) {
                 original = infraction['orig_length'] * 1000;
             }
@@ -311,9 +306,9 @@ function getTimeRemainingText(infraction) {
         let o_dur = moment.duration(original).humanize();
 
         return 'Removed (' + o_dur.charAt(0).toUpperCase() + o_dur.slice(1) + ')';
-    } else if (infraction['flags'] & INFRACTION_SESSION) {
+    } else if (infraction['flags'] & INFRACTION.SESSION) {
         return 'Session';
-    } else if (infraction['flags'] & INFRACTION_PERMANENT) {
+    } else if (infraction['flags'] & INFRACTION.PERMANENT) {
         return 'Permanent';
     }
 
@@ -321,7 +316,7 @@ function getTimeRemainingText(infraction) {
     let remaining = 0;
     original = 0;
 
-    if (infraction['flags'] & INFRACTION_DEC_ONLINE_ONLY) {
+    if (infraction['flags'] & INFRACTION.DEC_ONLINE_ONLY) {
         remaining = infraction['time_left'] * 1000;
 
         //Infraction might not have this attribute

@@ -369,7 +369,7 @@ class AddServerReply(BaseModel):
 
 
 class EditServer(BaseModel):
-    ip: IPvAnyAddress
+    ip: Optional[IPvAnyAddress]
     game_port: Optional[conint(gt=0, le=65535)]
     enabled: Optional[bool]
     friendly_name: Optional[constr(min_length=1, max_length=32)]

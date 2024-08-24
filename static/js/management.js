@@ -7,38 +7,6 @@ const MGMT = Object.freeze({
 
 let MGMT_MODE = 0;
 
-const PERMISSION = Object.freeze({
-    LOGIN: 1 << 0, // Login to the website
-    COMMENT: 1 << 1,
-    VIEW_IP_ADDR: 1 << 2,
-    CREATE_INFRACTION: 1 << 3,
-    EDIT_OWN_INFRACTIONS: 1 << 4, // Deprecated, all admins with PERMISSION.CREATE_INFRACTION can edit their own punishments.
-    EDIT_ALL_INFRACTIONS: 1 << 5,
-    ATTACH_FILE: 1 << 6,
-    WEB_MODERATOR: 1 << 7, // Can edit or delete comments/files on infractions
-    MANAGE_SERVERS: 1 << 8,
-    MANAGE_VPNS: 1 << 9,
-    PRUNE_INFRACTIONS: 1 << 10,
-    VIEW_AUDIT_LOG: 1 << 11,
-    MANAGE_GROUPS_AND_ADMINS: 1 << 12,
-    MANAGE_API_KEYS: 1 << 13,
-    ACP_BLOCK_EDITOR: 1 << 14, // Deprecated
-    BLOCK_VOICE: 1 << 15,  // Add voice blocks to infractions
-    BLOCK_CHAT: 1 << 16,  // Add chat blocks to infractions
-    BAN: 1 << 17,  // Add bans to infractions
-    ADMIN_CHAT_BLOCK: 1 << 18,  // Block admin chat
-    CALL_ADMIN_BLOCK: 1 << 19,  // Block call admin usage
-    SCOPE_SUPER_GLOBAL: 1 << 20,  // Admin can use SUPER GLOBAL infractions
-    SCOPE_GLOBAL: 1 << 21,  // Admins can use GLOBAL infractions
-    VPN_CHECK_SKIP: 1 << 22,  // Users with this permission are immune to VPN kicks
-    MANAGE_POLICY: 1 << 23,  // Manage tiering policies
-    IMMUNE: 1 << 24,  // Immune from bans
-    SKIP_IMMUNITY: 1 << 25,  // Overrides immunity
-    RPC_KICK: 1 << 26,
-    ASSIGN_TO_SERVER: 1 << 27,  // Assign an infraction to a specific server
-    MANAGE_MAP_ICONS: 1 << 28  // Upload and delete map icons
-});
-
 let perms2name = {};
 perms2name[PERMISSION.LOGIN] = 'Can Login';
 perms2name[PERMISSION.COMMENT] = 'Can Comment';
@@ -322,13 +290,11 @@ function addServerRow(server) {
     row.append(name_cell);
     row.append(ip_cell);
 
-    /* Click to edit server view
-    row.setAttribute('data-server', group['id']);
-
+    row.attr('data-server', server['id']);
+    
     row.click(function () {
-        openServer(row.getAttribute('data-server'));
+        openServerMenu(this.getAttribute('data-server'));
     });
-    */
 
     $('#mgmt-table > tbody').append(row);
 }
@@ -343,7 +309,7 @@ function getFlagsFromBitFlag(bitFlag) {
     let base2 = (bitFlag).toString(2);
     let bitFlags = [];
     for (let i = 0; i < base2.length; i++)
-        if (base2[i] === '1') bitFlags.push(1 << i);
+        if (base2[i] === '1') bitFlags.push(1 << (base2.length - i - 1));
     return bitFlags;
 }
 
@@ -550,10 +516,8 @@ function createAndValidateAdmin() {
     else
         return [false, 'You must enter a Steam64 ID.']
 
-    $('.gbtn').each(function(i, obj) {
-        let gbtn = $(obj);
-        if (!gbtn.hasClass('is-outlined'))
-            admin['groups'].push(gbtn.val());
+    $('.gbtn:not(.is-outlined)').each(function(i, obj) {
+        admin['groups'].push($(obj).val());
     });
 
     if (admin['groups'].length === 0)
@@ -666,7 +630,7 @@ function submitGroupChange() {
 
     if (typeof groupID === 'undefined' || groupID === false) {
         // Adding new group
-        let route = '/api/group/add';
+        let route = '/api/group/';
         gbRequest('POST', route, groupCall[1], true).then(handleGroupSubmission).catch(function (e) {
             console.log(e);
             showError('An error occurred. Please try reloading the page or contact the host if the problem persists.');
@@ -723,11 +687,273 @@ function createAndValidateGroup() {
         return [false, 'You must enter a name.'];
 
     group['privileges'] = 0;
-    $('.gbtn').each(function(i, obj) {
-        let gbtn = $(obj);
-        if (!gbtn.hasClass('is-outlined'))
-            group['privileges'] |= Number(gbtn.val());
+    $('.gbtn:not(.is-outlined)').each(function(i, obj) {
+        group['privileges'] |= Number($(obj).val());
     });
 
     return [true, group];
+}
+
+
+// Stuff for adding/editing/deleting a server in database
+function openServerMenu(serverID = 0) {
+    if ($('#mgmt-add').hasClass('is-loading'))
+        return;
+    $('#mgmt-add').addClass('is-loading');
+
+    loadServerMenu(serverID).catch(function (e) {
+       console.log(e);
+       showError('An error occurred. Please try reloading the page or contact the host if the problem persists.')
+   });
+}
+
+async function loadServerMenu(serverID) {
+    resetServerMenu();
+    if (serverID === 0) {
+        $('.modal-card-title').text('Create Server');
+        $('#manageSubmit').text('Add Server');
+        $('#manageDelete').addClass('is-hidden');
+    } else {
+        let serverInfo = await gbRequest('GET', '/api/server/' + serverID, null);
+        if (!serverInfo.ok) {
+            throw serverInfo.error();
+        }
+        let server = await serverInfo.json();
+        $('#generateToken').removeClass('is-hidden');
+        $('#manageDelete').removeClass('is-hidden');
+
+        if (server['enabled'])
+            $('#manageDelete').removeClass('is-success').addClass('is-danger').text('Disable');
+        else
+            $('#manageDelete').removeClass('is-danger').addClass('is-success').text('Enable');
+
+        // Use existing server identity
+        $('#nameEntry').val(server.hasOwnProperty('friendly_name') ? server['friendly_name'] : '');
+        $('#ipEntry').val(server.hasOwnProperty('ip') ? server['ip'] : '');
+        $('#portEntry').val(server.hasOwnProperty('game_port') ? Number(server['game_port']) : '');
+
+        $('.modal-card-title').text('Update ' + (server.hasOwnProperty('friendly_name') ? server['friendly_name'] : 'Server'));
+        $('#manageSubmit').text('Update Server');
+
+        $('#manageSubmit').attr('data-server', serverID);
+        $('#manageDelete').click(toggleServer);
+
+        $('#generateToken').click(function (ev) {
+            toggleButton(ev.target);
+        })
+    }
+    
+    closeModals();
+
+    //Setup and show the error AddMenu
+    $('#createAddMenu').addClass('is-active');
+
+    $('#htmlRoot').addClass('is-clipped');
+
+    $('#mgmt-add').removeClass('is-loading');
+
+    $('#manageDismiss').off('click').click(function () {
+        resetServerMenu();
+        closeModals();
+    });
+
+    $('.cDismissError').click(function () {
+        $('#createError').addClass('is-hidden');
+    })
+
+    $('#manageSubmit').click(submitServerChange)
+}
+
+function resetServerMenu() {
+    $('#mgmt-add').removeClass('is-loading');
+    $('#createError').addClass('is-hidden');
+    $('#generateToken').addClass('is-hidden');
+    $('#manageSubmit').removeAttr('data-server');
+
+    // Default server identity
+    $('#nameEntry').val('');
+    $('#ipEntry').val('');
+    $('#portEntry').val('');
+    $('#calladminEntry').val('');
+    $('#infractionEntry').val('');
+    $('#roleIDEntry').val('');
+}
+
+async function submitServerChange() {
+    setLoading();
+
+    let serverID = $('#manageSubmit').attr('data-server');
+
+    // First request
+    let serverCall = createAndValidateServer();
+
+    // Failure, the second index is the error
+    if (!serverCall[0]) {
+        $('#createErrorMsg').text(serverCall[1]);
+        $('#createError').removeClass('is-hidden');
+        unsetLoading();
+        return;
+    }
+
+    if (typeof serverID === 'undefined' || serverID === false) {
+        // Adding new server
+        serverCall[1]['enabled'] = true;
+        let route = '/api/server/';
+        let serverInfo = await gbRequest('POST', route, serverCall[1], true);
+
+        if (!serverInfo.ok) {
+            console.log(e);
+            showError('An error occurred. Please try reloading the page or contact the host if the problem persists.');
+            return;
+        }
+
+        showNewToken(await serverInfo.json());
+        
+        //gbRequest('POST', route, serverCall[1], true).then(handleServerSubmissionNewToken).catch(function (e) {
+        //    console.log(e);
+        //    showError('An error occurred. Please try reloading the page or contact the host if the problem persists.');
+        //});
+    } else {
+        // Patching existing server
+        let route = '/api/server/' + serverID;
+        if (!$('#generateToken').hasClass('is-outlined')) {
+            let serverInfo = await gbRequest('PATCH', route, serverCall[1], true);
+
+            if (!serverInfo.ok) {
+                console.log(e);
+                showError('An error occurred. Please try reloading the page or contact the host if the problem persists.');
+                return;
+            }
+
+            //gbRequest('PATCH', route, serverCall[1], true).then(handleServerSubmissionDoublePatch).catch(function (e) {
+            //    console.log(e);
+            //    showError('An error occurred. Please try reloading the page or contact the host if the problem persists.');
+            //});
+
+            route = route + '/token';
+            serverInfo = await gbRequest('GET', route, null, true);
+
+            if (!serverInfo.ok) {
+                console.log(e);
+                showError('An error occurred. Please try reloading the page or contact the host if the problem persists.');
+                return;
+            }
+
+            showNewToken(await serverInfo.json());
+
+            //gbRequest('GET', route, null, true).then(handleServerSubmissionNewToken).catch(function (e) {
+            //    console.log(e);
+            //    showError('An error occurred. Please try reloading the page or contact the host if the problem persists.');
+            //});
+        } else {
+            gbRequest('PATCH', route, serverCall[1], true).then(handleServerSubmission).catch(function (e) {
+                console.log(e);
+                showError('An error occurred. Please try reloading the page or contact the host if the problem persists.');
+            });
+        }
+    }
+}
+
+function toggleServer() {
+    setLoading();
+    let serverID = $('#manageSubmit').attr('data-server');
+
+    if (typeof serverID === 'undefined' || serverID === false) {
+        $('#createErrorMsg').text('Something went wrong. This server does not have an associated id.');
+        $('#createError').removeClass('is-hidden');
+        unsetLoading();
+        return;
+    }
+
+    let server = {};
+    server['enabled'] = $('#manageDelete').hasClass('is-success');
+    let route = '/api/server/' + serverID;
+
+    // We disable servers rather than deleting so we dont mess up infractions tied to them
+    gbRequest('PATCH', route, server, true).then(handleServerSubmission).catch(function (e) {
+        console.log(e);
+        showError('An error occurred. Please try reloading the page or contact the host if the problem persists.');
+    })
+}
+
+function handleServerSubmission(resp) {
+    if (!resp.ok) {
+        console.log(resp);
+        resp.text().then(function (t) {
+            console.log(t)
+        })
+        throw 'Server returned a non-OK error code.'
+    }
+
+    closeModals();
+    window.location.reload();
+}
+
+function handleServerSubmissionDoublePatch(resp) {
+    if (!resp.ok) {
+        console.log(resp);
+        resp.text().then(function (t) {
+            console.log(t)
+        })
+        throw 'Server returned a non-OK error code.'
+    }
+}
+
+function showNewToken(serverInfo) {
+    closeModals();
+
+    //Setup and show the error modal
+    $('.modal-card-title').text('CS2Fixes Convars');
+    $('#setupURL').text(window.location.host + '/api/');
+    if (serverInfo.hasOwnProperty('server'))
+        $('#setupID').text(serverInfo['server']);
+    else
+        $('#setupID').text($('#manageSubmit').attr('data-server'));
+
+    $('#setupkey').text(serverInfo['server_secret_key']);
+
+    $('#setupClipboard').click(function () {
+        let text = '';
+        $('#setupModal section p').each(function(i, obj) {
+            let convar = $(obj);
+            text = text + convar.text() + '\n';
+        });
+        navigator.clipboard.writeText(text);
+    });
+
+    $('#setupModal').addClass('is-active');
+    $('#htmlRoot').addClass('is-clipped');
+
+    $(".modal-background").click(function () {
+        closeModals();
+        window.location.reload();
+    });
+}
+
+function createAndValidateServer() {
+    let server = {};
+
+    if ($('#nameEntry').val().trim() !== '')
+        server['friendly_name'] = $('#nameEntry').val().trim();
+    else
+        return [false, 'You must enter a name.'];
+
+    let ip = $('#ipEntry').val().trim();
+    if (ip !== '' && /^((25[0-5]|(2[0-4]|1\d|[1-9]|)\d)\.?\b){4}$/.test(ip))
+        server['ip'] = ip;
+    else
+        return [false, 'You must enter a valid IP Address.'];
+
+    if ($('#portEntry').val().trim() !== '')
+        server['game_port'] = $('#portEntry').val().trim();
+    else
+        return [false, 'You must enter a port.'];
+
+    if ($('#calladminEntry').val().trim() !== '' && $('#roleIDEntry').val().trim() !== '') {
+        server['discord_webhook'] = $('#calladminEntry').val().trim();
+        server['discord_staff_tag'] = $('#roleIDEntry').val().trim();
+    } else if (($('#calladminEntry').val().trim() !== '' || $('#roleIDEntry').val().trim() !== ''))
+        return [false, 'You must give either both discord_webhook and discord_staff_tag or neither.'];
+
+    return [true, server];
 }

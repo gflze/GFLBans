@@ -45,7 +45,7 @@ async def get_groups(request: Request, ips_group: PositiveIntIncl0):
 
     return Group(group_name=group['name'], group_id=group['ips_group'], permissions=group['privileges'])
 
-@group_router.post('/add', dependencies=[Depends(csrf_protect)],
+@group_router.post('/', dependencies=[Depends(csrf_protect)],
                   response_model_exclude_unset=True, response_model_exclude_none=True)
 async def update_group(request: Request, ug_query: UpdateGroup,
                        auth: Tuple[int, Optional[ObjectId], int] = Depends(check_access)):

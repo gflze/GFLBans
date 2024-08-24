@@ -175,3 +175,11 @@
     left: 20px;
     position:absolute;
 }
+
+.button.is-danger.is-outlined:focus {
+    background-color: inherit;
+}
+
+.button.is-danger.is-outlined:hover {
+    background-color: #b42643;
+}
