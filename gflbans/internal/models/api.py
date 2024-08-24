@@ -198,7 +198,6 @@ class ServerInternal(BaseModel):
 
 class Group(BaseModel):
     group_name: str
-    group_name_formatted: Optional[str]
     group_id: PositiveIntIncl0
     permissions: PositiveIntIncl0
 
@@ -207,7 +206,7 @@ class AdminInfo(BaseModel):
     admin_name: Optional[str]
     admin_id: PositiveIntIncl0
     avatar_id: Optional[str]
-    permissions: PositiveIntIncl0
+    permissions: Optional[PositiveIntIncl0]
     groups: Optional[List[Group]]
 
 class FetchAdminInfo(BaseModel):

@@ -25,9 +25,9 @@
 
             {% if user is not none and has_flag(user.permissions, bit_or(p_nodes['Manage Servers'], p_nodes['Manage Groups and Admins'], p_nodes['Manage API Keys'])) %}
             <div class="navbar-item has-dropdown is-hoverable">
-                <div class="navbar-link is-arrowless is-hoverable is-hidden-touch {% if page == 'manage' %}is-active{% endif %}"><i
+                <a href="/manage/" class="navbar-link is-arrowless is-hoverable is-hidden-touch {% if page == 'manage' %}is-active{% endif %}"><i
                     class="fas fa-user-shield nav-icon"></i>Manage
-                </div>
+                </a>
                 <div class="navbar-dropdown is-paddingless is-accent">
                     <div class="has-addons">
                         <div class="is-flex-grow-1">

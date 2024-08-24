@@ -61,7 +61,7 @@ async def get_admins(request: Request, query: GetAdmins = Depends(GetAdmins)):
     return admin_list
 
 
-@admin_router.put('/update', response_model_exclude_unset=True,
+@admin_router.put('/', response_model_exclude_unset=True,
                   response_model_exclude_none=True, dependencies=[Depends(csrf_protect)])
 async def update_admin(request: Request, uai_query: UpdateAdminInfo,
                        auth: Tuple[int, Optional[ObjectId], int] = Depends(check_access)):

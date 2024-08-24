@@ -1,17 +1,23 @@
-/* MARK: Main UI */
+/* Main list styling */
+#mgmt-add {
+    position:absolute;
+    right: 1.5rem;
+    top: 4.5rem;
+}
+
 #mgmt-table {
-    margin: auto;
-    margin-bottom: 1.5rem;
+    margin: 1.5rem auto;
     width: fit-content;
     min-width: 600px;
 }
 
-.mgmt-admin-av {
-    width: 42px;
-    height: 42px;
-    vertical-align: middle;
-    border-radius: 50%;
-    border: 1px solid var(--background-tertiary);
+#mgmt-table th {
+    font-size: 20pt;
+    text-decoration: underline;
+}
+
+#header-server-enabled {
+    max-width: 80px;
 }
 
 #mgmt-table tbody tr:hover {
@@ -48,8 +54,21 @@
     }
 }
 
+.mgmt-admin-av {
+    width: 42px;
+    height: 42px;
+    vertical-align: middle;
+    border-radius: 50%;
+    border: 1px solid var(--background-tertiary);
+}
+
 .group-list {
     max-width: 50vw;
+}
+
+.group-row td:not(:first-child) {
+    padding-left: 25px;
+    border-left: 1px solid var(--background-tertiary);
 }
 
 .permission-list {
@@ -78,4 +97,81 @@
 
 .fa-minus-circle {
     color: red;
+}
+
+
+/* Popout modal styling */
+.modal-card-body label {
+    text-decoration: underline;
+}
+
+#groupButtons,
+#permissionButtons {
+    display: grid;
+    grid-template-columns: 32% 32% 32%;
+    column-gap: 10px;
+    row-gap: 10px;
+}
+
+.gbtn {
+    text-wrap: balance;
+    height: fit-content;
+    height: 100%;
+    margin: 0;
+    overflow: hidden;
+}
+
+@media only screen and (max-width: 640px) {
+    #groupButtons,
+    #permissionButtons {
+        grid-template-columns: 49% 49%;
+    }
+}
+
+@media only screen and (max-width: 440px) {
+    #groupButtons,
+    #permissionButtons {
+        grid-template-columns: 100%;
+    }
+}
+
+.gbtn.is-outlined,
+.pbtn.is-outlined {
+    color: var(--text-primary);
+    border-color: var(--background-accent-primary);
+}
+
+.gbtn:not(.is-outlined),
+.pbtn:not(.is-outlined) {
+    color: #fff !important;
+}
+
+.gbtn:hover,
+.pbtn:hover,
+.button {
+    border-color: var(--background-accent-primary);
+}
+
+.gbtn:hover,
+.pbtn:hover {
+    background-color: var(--background-accent-secondary);
+}
+
+.buttons .button,
+.buttons .button:not(:last-child):not(.is-fullwidth) {
+    margin: 0;
+}
+
+.modal-card-foot {
+    flex-direction: row-reverse;
+}
+
+.modal-card-foot > button:first-child {
+    margin-left: 5px;
+    margin-right: 0 !important;
+}
+
+.modal-card-foot > button:last-child {
+    left: 20px;
+    position:absolute;
 }

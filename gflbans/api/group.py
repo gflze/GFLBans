@@ -16,7 +16,7 @@ from gflbans.internal.database.group import DGroup
 from gflbans.internal.flags import PERMISSION_MANAGE_GROUPS_AND_ADMINS
 from gflbans.internal.integrations.ips import get_groups as py_get_groups
 from gflbans.internal.log import logger
-from gflbans.internal.models.api import Group
+from gflbans.internal.models.api import Group, PositiveIntIncl0
 from gflbans.internal.models.protocol import UpdateGroup
 
 group_router = APIRouter(default_response_class=ORJSONResponse)
@@ -24,12 +24,7 @@ group_router = APIRouter(default_response_class=ORJSONResponse)
 
 @group_router.get('/', response_model_exclude_unset=True, response_model_exclude_none=True,
                   response_model=List[Group])
-async def get_groups(request: Request, auth: Tuple[int, Optional[ObjectId], int] = Depends(check_access)):
-    if auth[0] == NOT_AUTHED_USER: raise HTTPException(status_code=401, detail='You must be authenticated to do this!')
-
-    if auth[2] & PERMISSION_MANAGE_GROUPS_AND_ADMINS != PERMISSION_MANAGE_GROUPS_AND_ADMINS:
-        raise HTTPException(detail='You do not have permission to do this!', status_code=403)
-
+async def get_groups(request: Request):
     groups = await py_get_groups(request.app)
 
     results = []
@@ -39,6 +34,16 @@ async def get_groups(request: Request, auth: Tuple[int, Optional[ObjectId], int]
                              permissions=group['privileges']))
 
     return results
+
+@group_router.get('/{ips_group}', response_model_exclude_unset=True, response_model_exclude_none=True,
+                  response_model=Group)
+async def get_groups(request: Request, ips_group: PositiveIntIncl0):
+    group = await request.app.state.db[MONGO_DB]['groups'].find_one({'ips_group': ips_group})
+
+    if group is None:
+        raise HTTPException(detail='No group exists with ips_group: {ips_group}', status_code=404)
+
+    return Group(group_name=group['name'], group_id=group['ips_group'], permissions=group['privileges'])
 
 @group_router.post('/add', dependencies=[Depends(csrf_protect)],
                   response_model_exclude_unset=True, response_model_exclude_none=True)

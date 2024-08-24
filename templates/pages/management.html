@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-<html lang="en" class="{% if opposite_theme %}theme-opposite {% endif %}background-primary">
+<html lang="en" class="{% if opposite_theme %}theme-opposite {% endif %}background-primary"
+    data-mode="{% if mode == 'group' %}GROUP{% elif mode == 'server' %}SERVER{% elif mode == 'apikey' %}APIKEY{% else %}ADMIN{% endif %}">
 <head>
     {% include 'meta.html' with context %}
     <link rel="stylesheet" href="/static/3rdparty/css/chart.css">
@@ -8,54 +9,28 @@
 </head>
 <body>
 {% include 'header.html' with context %}
+<div id="mgmt-add" class="pagination-next is-accent button"><i class="fas fa-plus"></i></div>
 <table id="mgmt-table" class="table background-primary">
     <thead>
         <tr>
             {% if mode == 'group' %}
-            <th id="header-group" class="has-text-centered min-250">Group</th>
-            <th id="header-group-privileges" class="has-text-centered min-500">Privileges</th>
+                <th id="header-group" class="has-text-centered min-250">Group</th>
+                <th id="header-group-privileges" class="has-text-centered min-500">Privileges</th>
             {% elif mode == 'server' %}
-            <th id="header-server-enabled" class="has-text-centered max-50 is-hidden-mobile">Enabled</th>
-            <th id="header-server" class="has-text-centered min-250">Server</th>
-            <th id="header-server-ip" class="has-text-centered min-250">IP</th>
+                <th id="header-server-enabled" class="has-text-centered is-hidden-mobile">Enabled</th>
+                <th id="header-server" class="has-text-centered min-250">Server</th>
+                <th id="header-server-ip" class="has-text-centered min-250">IP</th>
             {% elif mode == 'apikey' %}
-            <th id="header-api" class="has-text-centered min-500">Key</th>
+                <th id="header-api" class="has-text-centered min-500">Key</th>
             {% else %}
-            <th id="header-admin" class="has-text-centered min-250">Admin</th>
-            <th id="header-admin-groups" class="has-text-centered min-500">Groups</th>
+                <th id="header-admin" class="has-text-centered min-250">Admin</th>
+                <th id="header-admin-groups" class="has-text-centered min-500">Groups</th>
             {% endif %}
         </tr>
-</thead>
-    
-
-
-
-    
-    <tbody>
-        <tr class="mgmt-item">
-            <td class="vertical-center has-text-left">
-                <img src="https://avatars.steamstatic.com/14cd2844c3f3c54f46b7cabb23a4f1bfc7c84e24_medium.jpg" class="mgmt-admin-av mr-2"><span>Ice</span>
-            </td>
-            <td class="vertical-center has-text-centered">
-                <ul class="group-list">
-                    <li>Trial Admin</li><li>Admin</li><li>Senior Admin</li><li>Server Manager</li><li>Root</li>
-                </ul>
-            </td>
-        </tr>
-        <tr class="mgmt-item">
-            
-            <td class="vertical-center has-text-left">
-                <img src="https://avatars.steamstatic.com/14cd2844c3f3c54f46b7cabb23a4f1bfc7c84e24_medium.jpg" class="mgmt-admin-av mr-2">
-                <span>Ice</span>
-            </td>
-            <td class="vertical-center has-text-centered">
-                <ul class="group-list">
-                    <li>Trial Admin</li><li>Admin</li><li>Senior Admin</li>
-                </ul>
-            </td>
-        </tr>
-    </tbody>
+    </thead>
+    <tbody></tbody>
 </table>
+{% include 'management_add.html' with context %}
 {% include 'error.html' %}
 {% include 'js_includes.html' %}
 <script src="/static/js/management.js"></script>
