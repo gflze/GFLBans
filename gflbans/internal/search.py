@@ -6,11 +6,7 @@ from functools import partial
 
 from pymongo import MongoClient
 
-from xql import xql_compile
-from xql.compilers.XqlMongoCompiler import XqlMongoCompiler
 from defusedxml import ElementTree
-
-from xql.model import XqlModel, XqlString, XqlBoolBit, XqlInteger
 
 from gflbans.internal.config import MONGO_URI, MONGO_DB
 from gflbans.internal.errors import SearchError
@@ -26,7 +22,7 @@ executor = ProcessPoolExecutor(max_workers=3)
 def ips_id_to_mongo_object_id(s: str):
     client = MongoClient(MONGO_URI)
     db = client[MONGO_DB]
-    col = db.admins
+    col = db.admin_cache
 
     r = col.find_one({'ips_user': int(s)})
 
@@ -65,58 +61,19 @@ def server_ip_port_to_mongo_id(s: str):
     return r
 
 
-class InfractionSearchModel(XqlModel):
-    created = XqlInteger(backend_field='created')
-    expires = XqlInteger(backend_field='expires')
-    time_left = XqlInteger(backend_field='time_left')
-    gs_service = XqlString(backend_field='user.gs_service')
-    gs_id = XqlString(backend_field='user.gs_id')
-    gs_name = XqlString(backend_field='user.gs_name')
-    admin_id = XqlString(backend_field='admin', cast=ips_id_to_mongo_object_id)
-    admin = XqlString(backend_field='admin', cast=admin_name_mongo_ids)
-    server = XqlString(backend_field='server', cast=server_ip_port_to_mongo_id)
-    reason = XqlString(backend_field='reason')
-    ureason = XqlString(backend_field='ureason')
-
-    # BoolBits
-    is_system = XqlBoolBit(backend_field='flags', b=INFRACTION_SYSTEM)
-    is_global = XqlBoolBit(backend_field='flags', b=INFRACTION_GLOBAL)
-    is_super_global = XqlBoolBit(backend_field='flags', b=INFRACTION_SUPER_GLOBAL)
-    is_permanent = XqlBoolBit(backend_field='flags', b=INFRACTION_PERMANENT)
-    is_vpn = XqlBoolBit(backend_field='flags', b=INFRACTION_VPN)
-    is_web = XqlBoolBit(backend_field='flags', b=INFRACTION_WEB)
-    is_removed = XqlBoolBit(backend_field='flags', b=INFRACTION_REMOVED)
-    is_voice = XqlBoolBit(backend_field='flags', b=INFRACTION_VOICE_BLOCK)
-    is_text = XqlBoolBit(backend_field='flags', b=INFRACTION_CHAT_BLOCK)
-    is_ban = XqlBoolBit(backend_field='flags', b=INFRACTION_BAN)
-    is_admin_chat = XqlBoolBit(backend_field='flags', b=INFRACTION_ADMIN_CHAT_BLOCK)
-    is_call_admin = XqlBoolBit(backend_field='flags', b=INFRACTION_CALL_ADMIN_BAN)
-    is_session = XqlBoolBit(backend_field='flags', b=INFRACTION_SESSION)
-
-
-class WhitelistAdminSearchModel(XqlModel):
-    name = XqlString(backend_field='name')
-    ips_id = XqlInteger(backend_field='ips_user')
-
-
-# Only some users can search by ip
-class InfractionSearchModelIP(InfractionSearchModel):
-    ip = XqlString(backend_field='ip')
-
-
 # Regex
-REGEX_STEAM32 = re.compile('(?P<steamid32>(STEAM_)(\\d):(\\d):(\\d+))')
-REGEX_STEAM32_ACTUAL = re.compile('(?P<steamid32_actual>(U):(\\d):(\\d+))')
+REGEX_STEAMID = re.compile('(?P<steamid32>(STEAM_)(\\d):(\\d):(\\d+))')
+REGEX_STEAM32 = re.compile('(?P<steamid32_actual>(U):(\\d):(\\d+))')
 REGEX_STEAM64 = re.compile('(?P<steamid64>(\\d){17})')
 REGEX_IDLINK = re.compile('(http(s)?:\\/\\/)?(www\\.)?steamcommunity.com\\/profiles\\/(?P<steamid64>(\\d){17})')
 REGEX_CUSTOM_URL = re.compile('(http(s)?:\\/\\/)?(www\\.)?steamcommunity.com\\/id\\/(?P<profile_name>[^\\/]+)')
 
 
 def wut(gs_id):
-    if REGEX_STEAM32.match(gs_id):
-        return 'id32', REGEX_STEAM32.match(gs_id).groupdict()['steamid32']
-    elif REGEX_STEAM32_ACTUAL.match(gs_id):
-        return 'id32_actual', REGEX_STEAM32_ACTUAL.match(gs_id).groupdict()['steamid32_actual'][4:]
+    if REGEX_STEAMID.match(gs_id):
+        return 'id', REGEX_STEAMID.match(gs_id).groupdict()['steamid']
+    elif REGEX_STEAM32.match(gs_id):
+        return 'id32', REGEX_STEAM32.match(gs_id).groupdict()['steamid32'][4:]
     elif REGEX_STEAM64.match(gs_id):
         return 'id64', REGEX_STEAM64.match(gs_id).groupdict()['steamid64']
     elif REGEX_IDLINK.match(gs_id):
@@ -144,10 +101,10 @@ async def id64_or_none(app, gs_id):
                 id64 = a.find('steamID64').text
         elif typ == 'id64':
             id64 = idt
-        elif typ == 'id32_actual':
+        elif typ == 'id32':
             id64 = str(int(idt) + 76561197960265728)
         else:
-            id64 = steamid32_to_64(idt)
+            id64 = steamid_to_64(idt)
 
         if id64 is not None:
             return id64
@@ -155,41 +112,133 @@ async def id64_or_none(app, gs_id):
     return None
 
 
-def steamid32_to_64(id32):
-    n = id32[6:].split(':')
+def steamid_to_64(steamid):
+    n = steamid[6:].split(':')
     y = int(n[1])
     z = int(n[2])
     w = (z * 2) + 0x0110000100000000 + y
     return str(w)
 
 
-async def do_infraction_search(app, query: str, include_ip=False, strict=False):
+FIELD_MAP = {
+    'created': ('created', int),
+    'expires': ('expires', int),
+    'time_left': ('time_left', int),
+    'gs_service': ('user.gs_service', str),
+    'gs_id': ('user.gs_id', str),
+    'gs_name': ('user.gs_name', str),
+    'admin_id': ('admin', ips_id_to_mongo_object_id),
+    'admin': ('admin', admin_name_mongo_ids),
+    'server': ('server', server_ip_port_to_mongo_id),
+    'reason': ('reason', str),
+    'ureason': ('ureason', str),
+    # Bitflag fields use a custom type for easier detection
+    'is_system': ('flags', 'bitflag', INFRACTION_SYSTEM),
+    'is_global': ('flags', 'bitflag', INFRACTION_GLOBAL),
+    'is_super_global': ('flags', 'bitflag', INFRACTION_SUPER_GLOBAL),
+    'is_permanent': ('flags', 'bitflag', INFRACTION_PERMANENT),
+    'is_vpn': ('flags', 'bitflag', INFRACTION_VPN),
+    'is_web': ('flags', 'bitflag', INFRACTION_WEB),
+    'is_removed': ('flags', 'bitflag', INFRACTION_REMOVED),
+    'is_voice': ('flags', 'bitflag', INFRACTION_VOICE_BLOCK),
+    'is_text': ('flags', 'bitflag', INFRACTION_CHAT_BLOCK),
+    'is_ban': ('flags', 'bitflag', INFRACTION_BAN),
+    'is_admin_chat': ('flags', 'bitflag', INFRACTION_ADMIN_CHAT_BLOCK),
+    'is_call_admin': ('flags', 'bitflag', INFRACTION_CALL_ADMIN_BAN),
+    'is_session': ('flags', 'bitflag', INFRACTION_SESSION)
+}
 
-    c = True
 
-    logger.info(f'XQL: compile and run {query}')
+# Parses the input query and converts it into a MongoDB query.
+def build_mongo_query(query, include_ip, strict):
+    parsed_query = {}
+    
+    for field, (mongo_field, field_type, *flag_value) in FIELD_MAP.items():
+        if field in query:
+            if field_type == 'bitflag':
+                if parsed_query['flags'] is None:
+                    parsed_query['flags'] = {'$bitsAllSet': flag_value}
+                else:
+                    parsed_query['flags'] = {'$bitsAllSet': parsed_query['flags']['$bitsAllSet'] | flag_value}
+            else: # Assume type can be directly cast or function called on it
+                value_list = query.split(f"{field}:")[-1].split()
+                value = ''
+                for val in value_list:
+                    val = val.strip(' ')
+                    if val[0] == '"' and val[len(val) - 1] == '"':
+                        value = val
+                        break
+                if len(value) == 0 or len(value.strip('"')) == 0:
+                    continue
+                value = field_type(value.strip('"'))
+
+                if mongo_field not in parsed_query:
+                    if type(value) == list:
+                        parsed_query[mongo_field] = list()
+                        parsed_query[mongo_field].append(value)# this is for parsing at end. list in a list means $or check it
+                    else:
+                        parsed_query[mongo_field] = value
+                elif type(parsed_query[mongo_field]) != list:
+                    parsed_query[mongo_field] = [parsed_query[mongo_field], value] # $and check these later
+                else:
+                    parsed_query[mongo_field].append(value)
 
     if include_ip:
-        model = InfractionSearchModelIP
-    else:
-        model = InfractionSearchModel
+        parsed_query['ip'] = {'$exists': True}
+
+    to_remove = list()
+    and_query = list()
+
+    for key, item in parsed_query.items():
+        if type(item) == list and key != '$or' and key != '$and':
+            for value in item:
+                if type(value) == list:
+                    or_query = list()
+                    for val in value:
+                        or_query.append({key: val})
+                    and_query.append({'$or': or_query})
+                else:
+                    and_query.append({key: value})
+            to_remove.append(key)
+
+    if len(and_query) > 0:
+        parsed_query['$and'] = and_query
+        for key in to_remove:
+            del parsed_query[key]
+
+    return parsed_query
+
+
+def build_plain_text_query(query_string):
+    # Fallback to plain text search across multiple fields
+    return {
+        '$or': [
+            {'user.gs_service': {'$regex': re.escape(query_string), '$options': 'i'}},
+            {'user.gs_id': {'$regex': re.escape(query_string), '$options': 'i'}},
+            {'user.gs_name': {'$regex': re.escape(query_string), '$options': 'i'}},
+            {'reason': {'$regex': re.escape(query_string), '$options': 'i'}},
+            {'ureason': {'$regex': re.escape(query_string), '$options': 'i'}}
+        ]
+    }
+
+
+async def do_infraction_search(app, query: str, include_ip=False, strict=False):
+    logger.info(f'XQL: compile and run {query}')
 
     if len(query) > 2048:
         raise SearchError('Query too long!')
 
+
+    loop = asyncio.get_running_loop()
+
+    
     loop = asyncio.get_running_loop()
 
     try:
-        compiled_query = await asyncio.wait_for(
-            loop.run_in_executor(executor, partial(xql_compile, target=XqlMongoCompiler(model()), query=query)),
-            timeout=20)
-    except asyncio.TimeoutError as e:
-        logger.info(f'XQL: Query compiler took too long! Query = {query}', exc_info=True)
-        raise SearchError('Query took to long to compile. Try again later') from e
+        compiled_query = build_mongo_query(query, include_ip, strict)
     except Exception as e:
-
         if strict:
-            logger.error('XQL: Search failed!', exc_info=e)
+            logger.error('Search failed!', exc_info=e)
             raise SearchError('Query compilation failed') from e
 
         qs = query.strip(' \t\r\n')
@@ -200,37 +249,21 @@ async def do_infraction_search(app, query: str, include_ip=False, strict=False):
         if id64 is not None:
             return {'user.gs_service': 'steam', 'user.gs_id': id64}, True
 
-        # Fall back to a pain text search
-        c = False
+        # Fall back to a plain text search
+        return build_plain_text_query(qs), False
 
-        compiled_query = {
-            '$or': [
-                {'user.gs_service': {'$regex': re.escape(qs), '$options': 'i'}},
-                {'user.gs_id': {'$regex': re.escape(qs), '$options': 'i'}},
-                {'user.gs_name': {'$regex': re.escape(qs), '$options': 'i'}},
-                {'reason': {'$regex': re.escape(qs), '$options': 'i'}},
-                {'ureason': {'$regex': re.escape(qs), '$options': 'i'}}
-            ]
-        }
-
-    return compiled_query, c
+    return compiled_query, True
 
 
+# For VPN whitelist
 async def do_whitelist_search(query: str):
     if len(query) > 2048:
         raise SearchError('Query too long!')
 
-    loop = asyncio.get_running_loop()
-
     try:
-        compiled_query = await asyncio.wait_for(
-            loop.run_in_executor(executor, partial(xql_compile, target=XqlMongoCompiler(WhitelistAdminSearchModel()),
-                                                   query=query)), timeout=20)
-    except asyncio.TimeoutError as e:
-        logger.info(f'XQL: Query compiler took too long! Query = {query}', exc_info=True)
-        raise SearchError('Query took to long to compile. Try again later') from e
+        compiled_query = build_mongo_query(query, include_ip=False, strict=True)
     except Exception as e:
-        logger.error('XQL: Search failed!', exc_info=e)
+        logger.error('Search failed!', exc_info=e)
         raise SearchError('Query compilation failed') from e
 
     return compiled_query

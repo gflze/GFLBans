@@ -28,18 +28,18 @@ checkpoint_comms = int(default(input('Comms import checkpoint [0]'), '0'))
 
 session = aiohttp.ClientSession()
 
-def id_to_64(id32):
+def id_to_64(steamid):
 
-    if id32 == 'STEAM_ID_SERVER':
+    if steamid == 'STEAM_ID_SERVER':
             return None
 
-    id32 = id32[6:].split(':') # remove STEAM_ and split into 3 components
+    steamid = steamid[6:].split(':') # remove STEAM_ and split into 3 components
 
-    if len(id32) != 3:
+    if len(steamid) != 3:
         return None  # invalid
 
-    y = int(id32[1])
-    z = int(id32[2])
+    y = int(steamid[1])
+    z = int(steamid[2])
     
     return (z * 2) + y + 0x0110000100000000
 

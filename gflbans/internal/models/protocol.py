@@ -101,7 +101,7 @@ class CreateInfraction(BaseModel):
     dec_online_only: bool = False
     do_full_infraction: bool = False  # Get user data / vpn check before replying to the request
     server: Optional[str]  # Override the server
-    allow_normalize = False  # Attempt to convert steamid32 to steamid64, etc
+    allow_normalize = False  # Attempt to convert steamid to steamid64, etc
     import_mode = False  # skip check of admin perms
 
     @root_validator(pre=True)
@@ -128,7 +128,7 @@ class CreateInfractionUsingPolicy(BaseModel):
     consider_other_policies: List[str] = []
     server: Optional[str]  # Override the server
     do_full_infraction = False
-    allow_normalize = False  # Attempt to convert steamid32 to steamid64, etc
+    allow_normalize = False  # Attempt to convert steamid to steamid64, etc
 
 
 class UnlinkInfractionTieringPolicy(BaseModel):

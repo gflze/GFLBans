@@ -46,5 +46,4 @@ ujson==5.9.0
 urllib3==2.1.0
 uvicorn==0.24.0.post1
 uvloop==0.19.0
--e git+https://gitlab.gflclan.com/xy/xql.git@3dca00b346c9e0cdd3f638acea479c5ab966db66#egg=XQL
 yarl==1.9.4

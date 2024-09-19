@@ -440,7 +440,7 @@ function createAndValidateInfraction() {
         return [true, true, infraction];
     }
 
-    // Allow STEAMID32 in the request field
+    // Allow STEAMID in the request field
     infraction['allow_normalize'] = true;
 
     //Restrictions. Only apply if button exists (length is non-zero) and pressed
