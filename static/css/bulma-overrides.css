@@ -21,7 +21,9 @@ a.navbar-item.is-active,
 .label,
 .panel-block,
 .panel-block:hover,
-.panel-block.is-active {
+.panel-block.is-active,
+.checkbox:hover,
+.radio:hover {
     color: inherit;
 }
 
