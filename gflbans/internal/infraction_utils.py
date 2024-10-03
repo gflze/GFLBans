@@ -333,7 +333,7 @@ async def modify_infraction(app, target: ObjectId, author: Union[ObjectId, str, 
         elif dinf.flags & INFRACTION_SESSION == INFRACTION_SESSION:
             return 'Session'
         elif dinf.flags & INFRACTION_DEC_ONLINE_ONLY == INFRACTION_DEC_ONLINE_ONLY:
-            return naturaldelta(timedelta(seconds=dinf.time_left))
+            return naturaldelta(timedelta(seconds=dinf.original_time))
         elif dinf.expires is None:
             return 'ERROR'
         else:
