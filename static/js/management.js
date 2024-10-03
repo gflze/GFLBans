@@ -949,6 +949,10 @@ function createAndValidateServer() {
     else
         return [false, 'You must enter a port.'];
 
+    if ($('#infractionEntry').val().trim() !== '') {
+        server['infract_webhook'] = $('#infractionEntry').val().trim();
+    }
+
     if ($('#calladminEntry').val().trim() !== '' && $('#roleIDEntry').val().trim() !== '') {
         server['discord_webhook'] = $('#calladminEntry').val().trim();
         server['discord_staff_tag'] = $('#roleIDEntry').val().trim();
