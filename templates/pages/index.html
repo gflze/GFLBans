@@ -6,6 +6,7 @@
     <title>{{BRANDING}} - Dashboard</title>
 </head>
 <body>
+{% include 'js_includes.html' %}
 {% include 'header.html' with context %}
 <div class="m-5">
     <div class="columns is-desktop">
@@ -125,7 +126,6 @@
     </div>
 </div>
 {% include 'error.html' %}
-{% include 'js_includes.html' %}
 <script src="/static/3rdparty/js/chart.js"></script>
 <script src="/static/js/index.js"></script>
 {% include 'footer.html' with context %}

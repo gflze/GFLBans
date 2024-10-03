@@ -8,6 +8,7 @@
     <title>{{BRANDING}} - Management</title>
 </head>
 <body>
+{% include 'js_includes.html' %}
 {% include 'header.html' with context %}
 <div id="mgmt-add" class="pagination-next is-accent button"><i class="fas fa-plus"></i></div>
 {% if mode == 'server' %}
@@ -54,7 +55,6 @@
     <button class="modal-close is-large" aria-label="close"></button>
 </div>
 {% endif %}
-{% include 'js_includes.html' %}
 <script src="/static/js/management.js"></script>
 {% include 'loading.html' with context %}
 {% include 'footer.html' with context %}
