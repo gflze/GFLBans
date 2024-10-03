@@ -197,14 +197,14 @@ async function setupViewModal(infraction) {
         }
 
         if (infraction['time_left'] <= 0) {
-            timeValue.text('Expired (Was ' + moment.duration(infraction['orig_length'] * 1000) + ')');
+            timeValue.text('Expired (Was ' + moment.duration(infraction['orig_length'] * 1000).humanize() + ')');
         }  else {
             if (infraction['time_left'] > 60) {
-                // Display minutes left in a tooltip for if exact time is needed
+                // Display exact minutes left in a tooltip
                 timeValue.addClass('has-tooltip-info');
-                minutesLeft = (Math.round(moment.duration(infraction['time_left']) / 60) + " minutes left")
+                minutesLeft = (Math.round(moment.duration(infraction['time_left']) / 60) + " minutes left");
                 timeValue.attr('data-tooltip', minutesLeft);
-            } 
+            }
             timeValue.text(s);
         }
     } else if (infraction.hasOwnProperty('expires')) {
@@ -216,18 +216,22 @@ async function setupViewModal(infraction) {
 
         let ol = moment.duration(exp - c);
 
-         let s;
+        let s;
 
-         s = d.humanize();
+        s = d.humanize();
 
-         s = s.charAt(0).toUpperCase() + s.slice(1);
+        s = s.charAt(0).toUpperCase() + s.slice(1);
 
-         timeValue.text(s + ' of ' + ol.humanize());
+        timeValue.text(s + ' of ' + ol.humanize());
 
-         if (exp - now <= 0) {
-             timeValue.text('Expired (Was ' + ol.humanize() + ')');
-         }
-
+        if (exp - now <= 0) {
+            timeValue.text('Expired (Was ' + ol.humanize() + ')');
+        } else {
+            // Display exact minutes left in a tooltip
+            timeValue.addClass('has-tooltip-info');
+            minutesLeft = Math.round(d / 60000) + " minutes left";
+            timeValue.attr('data-tooltip', minutesLeft);
+        }
     } else {
         timeValue.text('NO VALUE');
     }
