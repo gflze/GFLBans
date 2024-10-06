@@ -253,6 +253,8 @@ async function loadModal() {
     serverSel.empty()
 
     for (let i = 0; i < servers.length; i++) {
+        if (!servers[i]['enabled'])
+            continue;
         let el = document.createElement('option');
         el.setAttribute('value', servers[i]['id'])
 
