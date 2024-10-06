@@ -231,6 +231,10 @@ function showServerModal(mod, map, hostname, ip, players, id) {
         return;
     }
 
+    players.sort(function(a, b) {
+        return a.gs_name.toLowerCase() > b.gs_name.toLowerCase();
+    });
+
     for (let i = 0; i < players.length; i++) {
         let row = document.createElement('tr');
 
