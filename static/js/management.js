@@ -906,7 +906,7 @@ function showNewToken(serverInfo) {
     $('.modal-card-title').text('CS2Fixes Convars');
     $('#setupURL').text(window.location.host + '/api/');
     if (serverInfo.hasOwnProperty('server'))
-        $('#setupID').text(serverInfo['server']);
+        $('#setupID').text(serverInfo['server']['id']);
     else
         $('#setupID').text($('#manageSubmit').attr('data-server'));
 
