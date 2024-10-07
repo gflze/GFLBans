@@ -9,15 +9,15 @@ from bson import ObjectId
 from dateutil.tz import UTC
 from fastapi import HTTPException
 from motor.motor_asyncio import AsyncIOMotorDatabase
-from starlette.requests import Request
 
-from gflbans.internal.config import MONGO_DB
+from gflbans.internal.config import MONGO_DB, ROOT_USER
 from gflbans.internal.constants import NOT_AUTHED_USER
 from gflbans.internal.database.common import DFile
+from gflbans.internal.database.dadmin import DAdmin
 from gflbans.internal.database.infraction import DComment, DUser, DInfraction
-from gflbans.internal.flags import PERMISSION_VIEW_IP_ADDR, INFRACTION_PERMANENT, INFRACTION_DEC_ONLINE_ONLY, \
+from gflbans.internal.flags import ALL_PERMISSIONS, PERMISSION_VIEW_IP_ADDR, INFRACTION_PERMANENT, INFRACTION_DEC_ONLINE_ONLY, \
     INFRACTION_SESSION, str2pflag
-from gflbans.internal.models.api import Comment, FileInfo, PlayerObjSimple, PlayerObj, Infraction, CInfractionSummary
+from gflbans.internal.models.api import AdminInfo, Comment, FileInfo, Group, PlayerObjSimple, PlayerObj, Infraction, CInfractionSummary, PositiveIntIncl0
 from gflbans.internal.models.protocol import CheckInfractionsReply
 from gflbans.internal.utils import validate
 
@@ -191,6 +191,27 @@ async def as_infraction(app, infraction: DInfraction, include_ip=True) -> Infrac
                       policy_id=str_id(infraction.policy_id),
                       last_heartbeat=infraction.last_heartbeat)
 
+
+async def as_groups(app, groups: List[int]) -> List[Group]:
+    group_list = []
+    for ips_group in groups:
+        g = await app.state.db[MONGO_DB].groups.find_one({'ips_group': ips_group})
+        group_list.append(Group(group_name=g['name'], group_id=ips_group, permissions=g['privileges']))
+    return group_list
+
+async def as_admin(app, admin: DAdmin) -> AdminInfo:
+    admin_info = AdminInfo(admin_id=PositiveIntIncl0(admin.ips_user),
+                           admin_name=admin.name, permissions = 0)
+    if admin.avatar is not None and admin.avatar.gridfs_file is not None:
+        admin_info.avatar_id = admin.avatar.gridfs_file
+    admin_info.groups = await as_groups(app, admin.groups)
+    if admin.ips_user == ROOT_USER:
+        admin_info.permissions = ALL_PERMISSIONS
+    else:
+        for grp in admin_info.groups:
+            admin_info.permissions |= grp.permissions 
+    return admin_info
+    
 
 def str_id(o: Optional[ObjectId]) -> Optional[str]:
     if o is None:

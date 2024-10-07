@@ -73,7 +73,7 @@ async def fetch_whitelist(request: Request, query: str, limit: conint(gt=0, le=5
     return FetchWhitelistReply(results=ais, total_whitelist=await DAdmin.count(request.app.state.db[MONGO_DB], qc))
 
 
-@vpn_router.put('/whitelist', dependencies=[Depends(ensure_management_privs)])
+@vpn_router.patch('/whitelist', dependencies=[Depends(ensure_management_privs)])
 async def add_whitelist(request: Request, admin: Initiator):
     try:
         adm = await load_admin_from_initiator(request.app, admin)

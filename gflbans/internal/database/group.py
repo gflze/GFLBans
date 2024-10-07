@@ -6,3 +6,4 @@ class DGroup(DBase):
 
     ips_group: int
     privileges: int
+    name: str

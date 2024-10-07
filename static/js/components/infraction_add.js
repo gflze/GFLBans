@@ -204,7 +204,7 @@ function handleTimeDecCheck() {
 }
 
 async function setServer(id) {
-    let policies = await gbRequest('GET', '/api/v1/infractions/policies?server=' + id, null);
+    let policies = await gbRequest('GET', '/api/infractions/policies?server=' + id, null);
 
     $(cOffense).empty();
 
@@ -240,7 +240,7 @@ async function loadModal() {
     closeModals();
 
     //Setup servers
-    let servers_req = await gbRequest('GET', '/api/v1/server/', null);
+    let servers_req = await gbRequest('GET', '/api/server/', null);
 
     if (!servers_req.ok) {
         throw servers_req.error();
@@ -253,6 +253,8 @@ async function loadModal() {
     serverSel.empty()
 
     for (let i = 0; i < servers.length; i++) {
+        if (!servers[i]['enabled'])
+            continue;
         let el = document.createElement('option');
         el.setAttribute('value', servers[i]['id'])
 
@@ -345,10 +347,10 @@ function submitInfraction() {
 
     //Success, the second index is the request type and the third is the actual request struct
 
-    let route = '/api/v1/infractions/'
+    let route = '/api/infractions/'
 
     if (createCall[1]) {
-        route = '/api/v1/infractions/using_policy'
+        route = '/api/infractions/using_policy'
     }
 
     gbRequest('POST', route, createCall[2], true).then(handleInfractionSubmission).catch(function (e) {
@@ -440,7 +442,7 @@ function createAndValidateInfraction() {
         return [true, true, infraction];
     }
 
-    // Allow STEAMID32 in the request field
+    // Allow STEAMID in the request field
     infraction['allow_normalize'] = true;
 
     //Restrictions. Only apply if button exists (length is non-zero) and pressed

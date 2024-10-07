@@ -6,6 +6,7 @@
     <title>{{BRANDING}} - Dashboard</title>
 </head>
 <body>
+{% include 'js_includes.html' %}
 {% include 'header.html' with context %}
 <div class="m-5">
     <div class="columns is-desktop">
@@ -110,13 +111,13 @@
                 <nav class="panel background-secondary text-primary">
                     <p class="panel-heading background-secondary text-primary">External
                         Links</p>
-                    <a href="//gflclan.com" class="panel-block text-primary">
+                    <a href="//gflclan.com" class="panel-block">
                         GFL ZE Website
                     </a>
-                    <a href="//discord.gg/gflze" class="panel-block text-primary">
+                    <a href="//discord.gg/gflze" class="panel-block">
                         GFL ZE Discord
                     </a>
-                    <a href="//donate.gflclan.com" class="panel-block text-primary">
+                    <a href="//donate.gflclan.com" class="panel-block">
                         Donate to GFL ZE
                     </a>
                 </nav>
@@ -125,7 +126,6 @@
     </div>
 </div>
 {% include 'error.html' %}
-{% include 'js_includes.html' %}
 <script src="/static/3rdparty/js/chart.js"></script>
 <script src="/static/js/index.js"></script>
 {% include 'footer.html' with context %}

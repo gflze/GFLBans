@@ -7,12 +7,12 @@
     {% include 'infractions_meta.html' with context %}
 </head>
 <body>
+{% include 'js_includes.html' %}
 {% include 'header.html' with context %}
 <div class="mt-5 mb-5">
     {% include 'infractions_list.html' with context %}
 </div>
 {% include 'error.html' %}
-{% include 'js_includes.html' %}
 <script src="/static/js/infractions.js"></script>
 {% include 'create_infraction.html' with context %}
 {% include 'view_infraction.html' with context %}

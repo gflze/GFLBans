@@ -35,7 +35,7 @@ def new_app():
     app.add_middleware(GZipMiddleware)
 
     app.include_router(web_router, prefix='')
-    app.include_router(api, prefix='/api/v1')
+    app.include_router(api, prefix='/api')
     app.include_router(file_router, prefix='/file')
 
     app.mount('/static', StaticFiles(directory='static'), name='static')

@@ -5,6 +5,7 @@ import json
 
 from contextlib import suppress
 
+from pymongo import ASCENDING
 from redis.exceptions import RedisError
 
 from gflbans.internal.avatar import process_avatar
@@ -75,19 +76,20 @@ def ips_get_gsid_from_member_id(member_id: int):
     return member_id + 76561197960265728
 
 async def _get_groups(app):
-    groups = await app.state.db[MONGO_DB]['groups'].find()
-
+    groups = await app.state.db[MONGO_DB]['groups'].find().to_list(None)
+    groups.sort(key=lambda x: x['ips_group'])
     if groups is None:
         logger.debug('DB: no collection of groups')
         return
 
     return json.loads(json_util.dumps(groups))
 
-async def get_groups(app):
-    with suppress(RedisError):
-        a = await app.state.ips_cache.get('GROUPS', 'GLOBAL_GROUPS')
-        if a is not None:
-            return a
+async def get_groups(app, force_update = False):
+    if not force_update:
+        with suppress(RedisError):
+            a = await app.state.ips_cache.get('GROUPS', 'GLOBAL_GROUPS')
+            if a is not None:
+                return a
 
     r = await _get_groups(app)
 

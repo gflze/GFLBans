@@ -58,7 +58,7 @@ function stupidSort(e1, e2) {
 }
 
 $(document).ready(function () {
-    gbRequest('GET', '/api/v1/statistics/', null).then(resp => {
+    gbRequest('GET', '/api/statistics/', null).then(resp => {
         if (resp.ok) {
             resp.json().then(decoded => {
                 let labels = Object.keys(decoded.history);

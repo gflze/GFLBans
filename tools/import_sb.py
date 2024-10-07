@@ -28,18 +28,18 @@ checkpoint_comms = int(default(input('Comms import checkpoint [0]'), '0'))
 
 session = aiohttp.ClientSession()
 
-def id_to_64(id32):
+def id_to_64(steamid):
 
-    if id32 == 'STEAM_ID_SERVER':
+    if steamid == 'STEAM_ID_SERVER':
             return None
 
-    id32 = id32[6:].split(':') # remove STEAM_ and split into 3 components
+    steamid = steamid[6:].split(':') # remove STEAM_ and split into 3 components
 
-    if len(id32) != 3:
+    if len(steamid) != 3:
         return None  # invalid
 
-    y = int(id32[1])
-    z = int(id32[2])
+    y = int(steamid[1])
+    z = int(steamid[2])
     
     return (z * 2) + y + 0x0110000100000000
 
@@ -112,7 +112,7 @@ async def process_ban(adminid64, ban):
         else:
             api_req['duration'] = ban[5] - ban[4]  # sets the duration to the time remaining
 
-        async with session.post(f'{slash_fix(gflbans_instance)}api/v1/infractions/', headers={'Authorization': f'API {gflbans_api_key_id} {gflbans_api_key_secret}', 'Content-Type': 'application/json'}, json=api_req) as resp:
+        async with session.post(f'{slash_fix(gflbans_instance)}api/infractions/', headers={'Authorization': f'API {gflbans_api_key_id} {gflbans_api_key_secret}', 'Content-Type': 'application/json'}, json=api_req) as resp:
             if resp.status >= 400:
                 print(f'failed to create infraction (HTTP {resp.status}): {await resp.text()}, api request:')
                 print(api_req)
@@ -173,7 +173,7 @@ async def process_comm(adminid64, comm):
         else:
             api_req['punishments'] = ['chat_block']
 
-        async with session.post(f'{slash_fix(gflbans_instance)}api/v1/infractions/', headers={'Authorization': f'API {gflbans_api_key_id} {gflbans_api_key_secret}', 'Content-Type': 'application/json'}, json=api_req) as resp:
+        async with session.post(f'{slash_fix(gflbans_instance)}api/infractions/', headers={'Authorization': f'API {gflbans_api_key_id} {gflbans_api_key_secret}', 'Content-Type': 'application/json'}, json=api_req) as resp:
             if resp.status >= 400:
                 print(f'failed to create infraction (HTTP {resp.status}): {await resp.text()}')
                 return

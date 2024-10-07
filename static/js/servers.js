@@ -51,7 +51,7 @@ function addServer(server_hostname, ip, map, mod, os, player_text='0/0', id, is_
     if (map === '' || mod === '') {
         map_url = '/static/images/server.webp'
     } else {
-        map_url = '/api/v1/maps/' + mod + '/' + map;
+        map_url = '/api/maps/' + mod + '/' + map;
     }
 
     let map_subimage = document.createElement('img');
@@ -172,7 +172,7 @@ function serverDetails(server_id, mod, map, hostname, ip) {
 
     setLoading();
 
-    gbRequest('GET', '/api/v1/server/' + server_id + '/players').then(resp => {
+    gbRequest('GET', '/api/server/' + server_id + '/players').then(resp => {
         if (resp.ok) {
             resp.json().then(data => {
 
@@ -199,8 +199,6 @@ function serverDetails(server_id, mod, map, hostname, ip) {
     });
 }
 
-const PERMISSION_RPC_KICK = 1 << 26
-
 function showServerModal(mod, map, hostname, ip, players, id) {
     closeModals();
 
@@ -208,7 +206,7 @@ function showServerModal(mod, map, hostname, ip, players, id) {
 
     $('#htmlRoot').addClass('is-clipped');
 
-    $('#server_map').attr('src', '/api/v1/maps/' + mod + '/' + map);
+    $('#server_map').attr('src', '/api/maps/' + mod + '/' + map);
     console.log(hostname);
     console.log(ip);
     $('#server_hostname').text(hostname);
@@ -219,7 +217,7 @@ function showServerModal(mod, map, hostname, ip, players, id) {
     $(server_players).empty();
 
     //Do we have RPC_KICK permissions?
-    let can_rpc_kick = parseInt(getMeta('active_permissions')) & PERMISSION_RPC_KICK;
+    let can_rpc_kick = parseInt(getMeta('active_permissions')) & PERMISSION.RPC_KICK;
 
     if (players.length === 0) {
         let row = document.createElement('tr');
@@ -232,6 +230,10 @@ function showServerModal(mod, map, hostname, ip, players, id) {
 
         return;
     }
+
+    players.sort(function(a, b) {
+        return a.gs_name.toLowerCase() > b.gs_name.toLowerCase();
+    });
 
     for (let i = 0; i < players.length; i++) {
         let row = document.createElement('tr');
@@ -294,7 +296,7 @@ function showServerModal(mod, map, hostname, ip, players, id) {
 
             rpc_kick_btn.onclick = function () {
                 rpc_kick_btn.classList.add('is-loading')
-                gbRequest('POST', '/api/v1/rpc/kick', {
+                gbRequest('POST', '/api/rpc/kick', {
                     'server_id': id,
                     'player': {
                         'gs_service': players[i]['gs_service'],
@@ -377,7 +379,7 @@ $(document).ready(function () {
 
     setLoading();
 
-    gbRequest('GET', '/api/v1/server/?enabled_only=true').then(resp => {
+    gbRequest('GET', '/api/server/?enabled_only=true').then(resp => {
         function _loadS() {
                 unsetLoading();
                 if (resp.ok) {

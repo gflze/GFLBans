@@ -9,10 +9,9 @@ from pydantic import BaseModel, conint, PositiveInt, constr, validator, root_val
 # Infraction related API calls
 from gflbans.internal.config import MAX_UPLOAD_SIZE
 from gflbans.internal.flags import valid_types_regex
-from gflbans.internal.models.api import PlayerObjNoIpOptional, PositiveIntIncl0, Infraction, Initiator, \
-    CInfractionSummary, \
-    PlayerObjNoIp, InfractionTieringPolicyTier, PlayerObjSimple, Signature, AdminInfo, Server, ServerInternal, Group, \
-    AdminMinimal, VPNInfo, InfractionDay, PlayerObjIPOptional, RawSignature
+from gflbans.internal.models.api import FetchAdminInfo, PlayerObjNoIpOptional, PositiveIntIncl0, Infraction, Initiator, \
+    CInfractionSummary, PlayerObjNoIp, InfractionTieringPolicyTier, PlayerObjSimple, Signature, AdminInfo, Server, \
+    ServerInternal, Group, AdminMinimal, VPNInfo, InfractionDay, PlayerObjIPOptional, RawSignature
 
 
 class GetInfractions(BaseModel):
@@ -102,7 +101,7 @@ class CreateInfraction(BaseModel):
     dec_online_only: bool = False
     do_full_infraction: bool = False  # Get user data / vpn check before replying to the request
     server: Optional[str]  # Override the server
-    allow_normalize = False  # Attempt to convert steamid32 to steamid64, etc
+    allow_normalize = False  # Attempt to convert steamid to steamid64, etc
     import_mode = False  # skip check of admin perms
 
     @root_validator(pre=True)
@@ -129,7 +128,7 @@ class CreateInfractionUsingPolicy(BaseModel):
     consider_other_policies: List[str] = []
     server: Optional[str]  # Override the server
     do_full_infraction = False
-    allow_normalize = False  # Attempt to convert steamid32 to steamid64, etc
+    allow_normalize = False  # Attempt to convert steamid to steamid64, etc
 
 
 class UnlinkInfractionTieringPolicy(BaseModel):
@@ -370,7 +369,7 @@ class AddServerReply(BaseModel):
 
 
 class EditServer(BaseModel):
-    ip: IPvAnyAddress
+    ip: Optional[IPvAnyAddress]
     game_port: Optional[conint(gt=0, le=65535)]
     enabled: Optional[bool]
     friendly_name: Optional[constr(min_length=1, max_length=32)]
@@ -402,13 +401,9 @@ class DeleteServerReply(BaseModel):
 
 # Group APIs
 
-
-class SetGroupPerms(BaseModel):
-    permissions: PositiveIntIncl0
-
-
-class SetGroupPermsReply(BaseModel):
-    success: bool
+class UpdateGroup(BaseModel):
+    name: str
+    privileges: PositiveIntIncl0
 
 
 class GetGroups(BaseModel):
@@ -525,3 +520,10 @@ class ServerStats(BaseModel):
 
     # History
     history: Dict[str, InfractionDay]
+
+class GetAdmins(BaseModel):
+    admin: FetchAdminInfo = Depends(FetchAdminInfo)
+
+    # Cursor control
+    limit: Optional[conint(gt=0, le=50)]
+    skip: PositiveIntIncl0 = 0
