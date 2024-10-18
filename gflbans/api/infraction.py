@@ -557,7 +557,7 @@ async def edit_infraction(request: Request, infraction_id: str, query: ModifyInf
                                 removal_reason=query.removal_reason, punishments=query.punishments, scope=query.scope,
                                 vpn=query.vpn, reuse_dinf=dinf, actor=acting_admin_id)
     except ValueError as e:
-        raise HTTPException(status_code=401, detail='Bad patch') from e
+        raise HTTPException(status_code=401, detail=str(e)) from e
 
     daudit = DAuditLog(time=datetime.now(tz=UTC), event_type=EVENT_EDIT_INFRACTION,
                        initiator=acting_admin.mongo_admin_id, key_pair=(auth[0], auth[1]),
