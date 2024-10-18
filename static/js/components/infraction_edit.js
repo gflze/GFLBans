@@ -510,6 +510,7 @@ function editRestrictions(infraction) {
 
     let et = $('.etag')
     et.removeClass('is-hidden').addClass('half-opacity').off('click');
+    et.removeAttr('disabled');
 
     restrictionsEditCell.removeClass('is-hidden');
     $('#restrictionsValue').addClass('is-hidden');
