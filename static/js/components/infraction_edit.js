@@ -164,6 +164,12 @@ function prepareEdits(infraction) {
         editReason(infraction);
     });
 
+    if (restrictionsCancel.hasClass('is-hidden')) {
+        restrictionsEditCell.addClass('is-hidden');
+        $('#restrictionsValue').removeClass('is-hidden');
+        restrictionsEdit.removeClass('is-hidden');
+    }
+
     restrictionsEdit.click(function () {
         editRestrictions(infraction);
     })
