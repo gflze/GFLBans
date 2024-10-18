@@ -76,7 +76,8 @@ function submit_comment(infraction) {
         'set_private': is_private
     }, true).then(function (repl) {
         if (!repl.ok) {
-            throw 'Got non-OK response from the API';
+            const errorData = repl.json();
+            throw new Error(errorData.detail || defaultAPIError);
         }
 
         repl.json().then(function (j) {
@@ -87,8 +88,8 @@ function submit_comment(infraction) {
 
             $('#commentText').prop('disabled', false).val('');
             $('#doPost').removeClass('is-loading');
-        }).catch(genericError);
-    }).catch(genericError)
+        }).catch(logException);
+    }).catch(logException)
 }
 
 function prepareEditor(infraction) {
@@ -115,16 +116,16 @@ function prepareEditor(infraction) {
                 $("#FileButton").addClass("is-loading");
                 $("#doFileUpload").prop("disabled", true);
 
-                uploadAttachment(infraction["id"], this.files[0].name, this.files[0], $('#privateCheck').prop("checked")).then(function () {
-                    gbRequest('GET', '/api/infractions/i/' + infraction["id"], null, false).then(function (r) {
+                uploadAttachment(infraction["id"], attachFile.files[0].name, attachFile.files[0], $('#privateCheck').prop("checked")).then(function () {
+                    gbRequest('GET', '/api/infractions/' + infraction["id"] + "/info", null, true).then(function (r) {
                         r.json().then(function (j) {
                             commentContainer.empty()
                             addComments(mergeCommentFiles(j));
                             $("#FileButton").removeClass("is-loading");
                             $("#doFileUpload").prop("disabled", false);
-                        }).catch(genericError);
-                    });
-                }).catch(genericError);
+                        });
+                    }).catch(logException);
+                }).catch(logException);
             }
         });
     }
@@ -187,7 +188,7 @@ function prepareEdits(infraction) {
             wrapSetupView(d);
         }).catch(function (e) {
             unsetLoading()
-            genericError(e)
+            logException(e)
         })
     })
 
@@ -239,7 +240,8 @@ async function submit_edit(id, mod) {
     resp = await gbRequest('PATCH', '/api/infractions/' + id, mod, true)
 
     if (!resp.ok) {
-        throw 'Recieved not OK response from the API.';
+        const errorData = await resp.json();
+        throw new Error(errorData.detail || defaultAPIError);
     }
 
     return await resp.json()
@@ -274,9 +276,7 @@ function process_time_edit(infraction) {
 
     submit_edit(infraction['id'], mod).then(function (new_inf) {
         wrapSetupView(new_inf, 0);
-    }).catch(function (err) {
-        showError();
-    });
+    }).catch(logException);
 }
 
 function editTime(infraction) {
@@ -404,7 +404,7 @@ function process_server_edit(infraction, new_val) {
 
     submit_edit(infraction['id'], mod).then(function (j) {
         wrapSetupView(j, 0)
-    }).catch(genericError)
+    }).catch(logException)
 }
 
 function editScope(infraction) {
@@ -457,7 +457,7 @@ function process_scope_edit(infraction, new_val) {
 
     submit_edit(infraction['id'], mod).then(function (j) {
         wrapSetupView(j, 0)
-    }).catch(genericError);
+    }).catch(logException);
 }
 
 function editReason(infraction) {
@@ -494,7 +494,7 @@ function process_reason_edit(infraction, val) {
 
     submit_edit(infraction['id'], mod).then(function (j) {
         wrapSetupView(j, 0)
-    }).catch(genericError);
+    }).catch(logException);
 }
 
 function editRestrictions(infraction) {
@@ -553,7 +553,7 @@ function editRestrictions(infraction) {
             wrapSetupView(d);
 
             editRestrictions(d);
-        }).catch(genericError)
+        }).catch(logException)
     }
 
     et.click(handleUWU)
@@ -612,7 +612,7 @@ function startRemove(infraction) {
         }).catch(function (e) {
             rm.removeClass('is-active');
 
-            genericError(e)
+            logException(e)
         })
 
     })

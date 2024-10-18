@@ -84,15 +84,15 @@ function loadMgmt(start) {
 
     gbRequest('GET', endpoint, null).then(function (response) {
         handleResponse(response, start);
-    }).catch(err => {
-        console.log(err);
-        showError();
+    }).catch(e => {
+        logException(e);
     });
 }
 
 function handleResponse(response, start) {
     if (!response.ok) {
-        throw 'Received Not-OK response from the API';
+        const errorData = response.json();
+        throw new Error(errorData.detail || defaultAPIError);
     }
 
     response.json().then(data => {
@@ -321,10 +321,7 @@ function openAdminMenu(adminID = 0) {
         return;
     $('#mgmt-add').addClass('is-loading');
 
-    loadAdminMenu(adminID).catch(function (e) {
-       console.log(e);
-       showError('An error occurred. Please try reloading the page or contact the host if the problem persists.')
-   });
+    loadAdminMenu(adminID).catch(logException);
 }
 
 async function loadAdminMenu(adminID) {
@@ -458,10 +455,7 @@ function submitNewAdmin() {
 
     let route = '/api/admin/'
 
-    gbRequest('PUT', route, adminCall[1], true).then(handleAdminSubmission).catch(function (e) {
-        console.log(e);
-        showError('An error occurred. Please try reloading the page or contact the host if the problem persists.');
-    })
+    gbRequest('PUT', route, adminCall[1], true).then(handleAdminSubmission).catch(logException);
 }
 
 function deleteAdmin() {
@@ -482,10 +476,7 @@ function deleteAdmin() {
 
     let route = '/api/admin/';
 
-    gbRequest('PUT', route, admin, true).then(handleAdminSubmission).catch(function (e) {
-        console.log(e);
-        showError('An error occurred. Please try reloading the page or contact the host if the problem persists.');
-    })
+    gbRequest('PUT', route, admin, true).then(handleAdminSubmission).catch(logException);
 }
 
 function handleAdminSubmission(resp) {
@@ -533,10 +524,7 @@ function openGroupMenu(groupID = 0) {
         return;
     $('#mgmt-add').addClass('is-loading');
 
-    loadGroupMenu(groupID).catch(function (e) {
-       console.log(e);
-       showError('An error occurred. Please try reloading the page or contact the host if the problem persists.')
-   });
+    loadGroupMenu(groupID).catch(logException);
 }
 
 async function loadGroupMenu(groupID) {
@@ -631,17 +619,11 @@ function submitGroupChange() {
     if (typeof groupID === 'undefined' || groupID === false) {
         // Adding new group
         let route = '/api/group/';
-        gbRequest('POST', route, groupCall[1], true).then(handleGroupSubmission).catch(function (e) {
-            console.log(e);
-            showError('An error occurred. Please try reloading the page or contact the host if the problem persists.');
-        })
+        gbRequest('POST', route, groupCall[1], true).then(handleGroupSubmission).catch(logException);
     } else {
         // Patching existing group
         let route = '/api/group/' + groupID;
-        gbRequest('PATCH', route, groupCall[1], true).then(handleGroupSubmission).catch(function (e) {
-            console.log(e);
-            showError('An error occurred. Please try reloading the page or contact the host if the problem persists.');
-        })
+        gbRequest('PATCH', route, groupCall[1], true).then(handleGroupSubmission).catch(logException);
     }
 }
 
@@ -659,10 +641,7 @@ function deleteGroup() {
 
     let route = '/api/group/' + groupID;
 
-    gbRequest('DELETE', route, null, true).then(handleGroupSubmission).catch(function (e) {
-        console.log(e);
-        showError('An error occurred. Please try reloading the page or contact the host if the problem persists.');
-    })
+    gbRequest('DELETE', route, null, true).then(handleGroupSubmission).catch(logException);
 }
 
 function handleGroupSubmission(resp) {
@@ -701,10 +680,7 @@ function openServerMenu(serverID = 0) {
         return;
     $('#mgmt-add').addClass('is-loading');
 
-    loadServerMenu(serverID).catch(function (e) {
-       console.log(e);
-       showError('An error occurred. Please try reloading the page or contact the host if the problem persists.')
-   });
+    loadServerMenu(serverID).catch(logException);
 }
 
 async function loadServerMenu(serverID) {
@@ -802,17 +778,12 @@ async function submitServerChange() {
         let serverInfo = await gbRequest('POST', route, serverCall[1], true);
 
         if (!serverInfo.ok) {
-            console.log(e);
-            showError('An error occurred. Please try reloading the page or contact the host if the problem persists.');
+            const errorData = await serverInfo.json();
+            logException(Error(errorData.detail || defaultAPIError));
             return;
         }
 
         showNewToken(await serverInfo.json());
-        
-        //gbRequest('POST', route, serverCall[1], true).then(handleServerSubmissionNewToken).catch(function (e) {
-        //    console.log(e);
-        //    showError('An error occurred. Please try reloading the page or contact the host if the problem persists.');
-        //});
     } else {
         // Patching existing server
         let route = '/api/server/' + serverID;
@@ -820,36 +791,23 @@ async function submitServerChange() {
             let serverInfo = await gbRequest('PATCH', route, serverCall[1], true);
 
             if (!serverInfo.ok) {
-                console.log(e);
-                showError('An error occurred. Please try reloading the page or contact the host if the problem persists.');
+                const errorData = await serverInfo.json();
+                logException(Error(errorData.detail || defaultAPIError));
                 return;
             }
-
-            //gbRequest('PATCH', route, serverCall[1], true).then(handleServerSubmissionDoublePatch).catch(function (e) {
-            //    console.log(e);
-            //    showError('An error occurred. Please try reloading the page or contact the host if the problem persists.');
-            //});
 
             route = route + '/token';
             serverInfo = await gbRequest('GET', route, null, true);
 
             if (!serverInfo.ok) {
-                console.log(e);
-                showError('An error occurred. Please try reloading the page or contact the host if the problem persists.');
+                const errorData = await serverInfo.json();
+                logException(Error(errorData.detail || defaultAPIError));
                 return;
             }
 
             showNewToken(await serverInfo.json());
-
-            //gbRequest('GET', route, null, true).then(handleServerSubmissionNewToken).catch(function (e) {
-            //    console.log(e);
-            //    showError('An error occurred. Please try reloading the page or contact the host if the problem persists.');
-            //});
         } else {
-            gbRequest('PATCH', route, serverCall[1], true).then(handleServerSubmission).catch(function (e) {
-                console.log(e);
-                showError('An error occurred. Please try reloading the page or contact the host if the problem persists.');
-            });
+            gbRequest('PATCH', route, serverCall[1], true).then(handleServerSubmission).catch(logException);
         }
     }
 }
@@ -870,10 +828,7 @@ function toggleServer() {
     let route = '/api/server/' + serverID;
 
     // We disable servers rather than deleting so we dont mess up infractions tied to them
-    gbRequest('PATCH', route, server, true).then(handleServerSubmission).catch(function (e) {
-        console.log(e);
-        showError('An error occurred. Please try reloading the page or contact the host if the problem persists.');
-    })
+    gbRequest('PATCH', route, server, true).then(handleServerSubmission).catch(logException);
 }
 
 function handleServerSubmission(resp) {

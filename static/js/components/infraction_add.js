@@ -301,10 +301,7 @@ function openModal() {
 
     cl.addClass('is-loading');
 
-    loadModal().catch(function (e) {
-       console.log(e);
-       showError('An error occurred. Please try reloading the page or contact the host if the problem persists.')
-   })
+    loadModal().catch(logException);
 }
 
 $(document).ready(function () {
@@ -322,13 +319,10 @@ $(document).ready(function () {
     })
 
     $(cTargetServer).change(function () {
-        setServer($(cTargetServer).val()).catch(function (e) {
-            console.log(e);
-            showError('An error occurred. Please try reloading the page or contact the host if the problem persists.')
-        })
+        setServer($(cTargetServer).val()).catch(logException);
     })
 
-    $('#createInfractionLoader').click(openModal)
+    $('#createInfractionLoader').click(openModal);
 })
 
 function submitInfraction() {
@@ -353,10 +347,7 @@ function submitInfraction() {
         route = '/api/infractions/using_policy'
     }
 
-    gbRequest('POST', route, createCall[2], true).then(handleInfractionSubmission).catch(function (e) {
-        console.log(e);
-        showError('An error occurred. Please try reloading the page or contact the host if the problem persists.');
-    })
+    gbRequest('POST', route, createCall[2], true).then(handleInfractionSubmission).catch(logException);
 }
 
 function handleInfractionSubmission(resp) {

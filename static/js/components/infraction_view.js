@@ -81,6 +81,7 @@ function resetViewModal() {
     $('.edit-cell').addClass('is-hidden');
     $('.data-cell').removeClass('is-hidden');
     $('#idValue').empty();
+    $('#ipValue').empty();
     restrictionsCancel.addClass('is-hidden');
     $('#cancelRemoval').removeAttr('disabled');
     $('#removeButton').removeAttr('disabled').removeClass('is-loading');
@@ -91,7 +92,8 @@ async function setupViewModal(infraction) {
     let gbServers = await gbRequest('GET', '/api/server/?enabled_only=true');
 
     if (!gbServers.ok) {
-        throw 'NOT OK'
+        const errorData = await gbServers.json();
+        throw new Error(errorData.detail || defaultAPIError);
     }
 
     server_data = await gbServers.json();
@@ -164,10 +166,10 @@ async function setupViewModal(infraction) {
         if (infraction['player']['gs_service'] === 'steam') {
             let steamProfile = document.createElement('a');
             steamProfile.text = userName.text();
-            userName.text('');
             steamProfile.setAttribute('href', 'http://steamcommunity.com/profiles/' + infraction['player']['gs_id']);
             steamProfile.setAttribute('target', '_blank');
 
+            userName.empty();
             userName.append(steamProfile);
         }
     } else {
@@ -266,7 +268,8 @@ async function setupViewModal(infraction) {
         let sv = await gbRequest('GET', '/api/server/' + infraction['server'], null);
 
         if (!sv.ok) {
-            throw 'Not OK!'
+            const errorData = await sv.json();
+            throw new Error(errorData.detail || defaultAPIError);
         }
 
         sv = await sv.json()
@@ -436,7 +439,6 @@ function addComments(renderableComments) {
                 $(avatarImage).attr('src', '/file/uploads/' + adm['avatar_id'] + '/avatar.webp');
             })
         }
-
     }
 
     if (renderableComments.length <= 3) {
@@ -466,7 +468,7 @@ function wrapSetupView(j, start=0) {
                 } else {
                     _showModal();
                 }
-            }).catch(genericError);
+            }).catch(logException);
 }
 
 function _openInfraction(infraction_id, start, skip_push=false) {
@@ -478,8 +480,8 @@ function _openInfraction(infraction_id, start, skip_push=false) {
     gbRequest('GET', '/api/infractions/' + infraction_id + '/info', null, false).then(function (r) {
         r.json().then(function (j) {
             wrapSetupView(j, start)
-        }).catch(genericError);
-    }).catch(genericError);
+        }).catch(logException);
+    }).catch(logException);
 }
 
 function openInfraction(infraction_id, skip_push=false) {

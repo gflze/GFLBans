@@ -2,7 +2,8 @@ const urlParams = new URLSearchParams(window.location.search);
 
 function handleResp(d, page, s, m) {
     if (!d.ok) {
-        throw 'Received Not-OK response from the API';
+        const errorData = d.json();
+        throw new Error(errorData.detail || defaultAPIError);
     }
 
     d.json().then(data => {
@@ -74,23 +75,21 @@ function setupEmptyINotice() {
 function loadInfractions(page = 1, s, m) {
     gbRequest('GET', '/api/infractions?skip=' + ((page - 1) * 30), null).then(function (a) {
         handleResp(a, page, s, m);
-    }).catch(err => {
-        console.log(err);
-        showError();
+    }).catch(e => {
+        logException(e);
     });
 }
 
 function doSearch(query, page = 1, s, m) {
     if (query.length < 1 || query.length > 256) {
         showError('The search query cannot be empty and may be no longer than 256 characters.');
-        return
+        return;
     }
 
     gbRequest('GET', '/api/infractions/search?skip=' + ((page - 1) * 30) + '&xql_string=' + encodeURIComponent(query), null).then(function (a) {
         handleResp(a, page, s, m);
-    }).catch(err => {
-        console.log(err);
-        showError();
+    }).catch(e => {
+        logException(e);
     });
 }
 

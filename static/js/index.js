@@ -149,10 +149,10 @@ $(document).ready(function () {
                 $('.is-loading').removeClass('is-loading')
             });
         } else {
-            throw 'Received Non-OK response from the API.';
+            const errorData = resp.json();
+            throw new Error(errorData.detail || defaultAPIError);
         }
-    }).catch(function (err) {
-        console.log(err);
-        showError();
+    }).catch(function (e) {
+        logException(e);
     });
 })

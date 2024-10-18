@@ -48,6 +48,9 @@ const INFRACTION = Object.freeze({
     AUTO_TIER: 1 << 16 // This infraction is considered for tiering purposes.
 });
 
+const defaultError = 'An error occurred while loading this page. Try again in a few minutes or contact the host if the problem persists.';
+const defaultAPIError = 'Received not OK response from the API.';
+
 //Request helper function
 
 async function gbRequest(method='GET', url='', data={}, send_token=false) {
@@ -75,25 +78,25 @@ async function gbRequest(method='GET', url='', data={}, send_token=false) {
 
 $(document).ready(function () {
     //Toggle the burger for mobile mode
-   $(".navbar-burger").click(function () {
-       $(".navbar-burger").toggleClass("is-active");
-       $(".navbar-menu").toggleClass("is-active");
-   });
+    $(".navbar-burger").click(function () {
+        $(".navbar-burger").toggleClass("is-active");
+        $(".navbar-menu").toggleClass("is-active");
+    });
 
-   //Switch between light and dark mode
-   $("#dark-mode-toggle").click(function () {
+    //Switch between light and dark mode
+    $("#dark-mode-toggle").click(function () {
 
-      gbRequest('GET', '/toggle_theme').then(resp => {
-         if (resp.ok) {
-             location.reload();
-         } else {
-             throw 'Received a Non-OK response from the server';
-         }
-      }).catch(function (error) {
-          console.log(error);
-          showError();
-      });
-   });
+        gbRequest('GET', '/toggle_theme').then(resp => {
+            if (resp.ok) {
+                location.reload();
+            } else {
+                const errorData = resp.json();
+                throw new Error(errorData.detail || defaultAPIError);
+            }
+        }).catch(function (e) {
+            logException(e);
+        });
+    });
 
     $(".modal-close").click(function () {
         closeModals();
@@ -124,8 +127,6 @@ function getMeta(metaName) {
 
   return '';
 }
-
-const defaultError = 'An error occurred while loading this page. Try again in a few minutes or contact the host if the problem persists.';
 
 function showError(error_message=defaultError) {
     closeModals();
@@ -186,7 +187,7 @@ async function uploadAttachment(infraction, filename, fi, private=false) {
         hdrs['X-Set-Private'] = "true"
     }
 
-    return await fetch('/api/infractions/' + infraction + '/attachment/' + filename, {
+    let resp = await fetch('/api/infractions/' + infraction + '/attachment/' + filename, {
         method: 'POST',
         headers: hdrs,
         body: fi,
@@ -194,7 +195,14 @@ async function uploadAttachment(infraction, filename, fi, private=false) {
         cache: 'no-cache',
         credentials: 'same-origin',
         redirect: 'follow'
-    })
+    });
+
+    if (!resp.ok) {
+        const errorData = await resp.json();
+        throw new Error(errorData.detail || defaultAPIError);
+    }
+
+    return resp;
 }
 
 document.addEventListener('load', function () {
@@ -204,7 +212,7 @@ document.addEventListener('load', function () {
     })
 });
 
-function genericError(err) {
-    console.log(err);
-    showError();
+function logException(e) {
+    console.log(e);
+    showError(e);
 }

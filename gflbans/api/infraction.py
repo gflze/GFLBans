@@ -697,7 +697,7 @@ async def add_attachment(request: Request, infraction_id: str, filename: str,
         raise HTTPException(detail='You do not have permission to do this!', status_code=403)
 
     if 'Content-Length' not in request.headers or int(request.headers['Content-Length']) > 30 * 1024 * 1024:
-        raise HTTPException(detail='File is too large or request doesn\'t specify content length', status_code=400)
+        raise HTTPException(detail='File is too large or request doesn\'t specify content length', status_code=413)
 
     dinf = await DInfraction.from_id(request.app.state.db[MONGO_DB], infraction_id)
 
