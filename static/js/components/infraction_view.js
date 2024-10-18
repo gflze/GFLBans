@@ -155,22 +155,31 @@ async function setupViewModal(infraction) {
     if (infraction['player'].hasOwnProperty('gs_id')) {
         idLabel.text(infraction['player']['gs_service'].charAt(0).toUpperCase() + infraction['player']['gs_service'].slice(1) + ' ID');
         
-        if (infraction['player']['gs_service'] === 'steam') {
-            let xd = document.createElement('a')
-            xd.text = infraction['player']['gs_id'];
-            xd.setAttribute('href', 'http://steamcommunity.com/profiles/' + infraction['player']['gs_id']);
-            xd.setAttribute('target', '_blank')
+        let search = document.createElement('a');
+        search.text = infraction['player']['gs_id'];
+        search.setAttribute('href', '/infractions/?search=gs_id:"' + infraction['player']['gs_id'] + '"');
 
-            idValue.append(xd)
-        } else {
-            idValue.text(infraction['player']['gs_id']);
+        idValue.append(search);
+
+        if (infraction['player']['gs_service'] === 'steam') {
+            let steamProfile = document.createElement('a');
+            steamProfile.text = userName.text();
+            userName.text('');
+            steamProfile.setAttribute('href', 'http://steamcommunity.com/profiles/' + infraction['player']['gs_id']);
+            steamProfile.setAttribute('target', '_blank');
+
+            userName.append(steamProfile);
         }
     } else {
         idContainer.addClass('is-hidden');
     }
 
     if (infraction['player'].hasOwnProperty('ip')) {
-        ipValue.text(infraction['player']['ip']);
+        let search = document.createElement('a');
+        search.text = infraction['player']['ip'];
+        search.setAttribute('href', '/infractions/?search=ip:"' + infraction['player']['ip'] + '"');
+
+        ipValue.append(search);
     } else {
         ipContainer.addClass('is-hidden');
     }
