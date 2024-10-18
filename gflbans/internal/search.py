@@ -62,8 +62,8 @@ def server_ip_port_to_mongo_id(s: str):
 
 
 # Regex
-REGEX_STEAMID = re.compile('(?P<steamid32>(STEAM_)(\\d):(\\d):(\\d+))')
-REGEX_STEAM32 = re.compile('(?P<steamid32_actual>(U):(\\d):(\\d+))')
+REGEX_STEAMID = re.compile('(?P<steamid>(STEAM_)(\\d):(\\d):(\\d+))')
+REGEX_STEAM32 = re.compile('(?P<steamid32>(U):(\\d):(\\d+))')
 REGEX_STEAM64 = re.compile('(?P<steamid64>(\\d){17})')
 REGEX_IDLINK = re.compile('(http(s)?:\\/\\/)?(www\\.)?steamcommunity.com\\/profiles\\/(?P<steamid64>(\\d){17})')
 REGEX_CUSTOM_URL = re.compile('(http(s)?:\\/\\/)?(www\\.)?steamcommunity.com\\/id\\/(?P<profile_name>[^\\/]+)')
