@@ -127,6 +127,7 @@ FIELD_MAP = {
     'gs_service': ('user.gs_service', str),
     'gs_id': ('user.gs_id', str),
     'gs_name': ('user.gs_name', str),
+    'ip': ('ip', str),
     'admin_id': ('admin', ips_id_to_mongo_object_id),
     'admin': ('admin', admin_name_mongo_ids),
     'server': ('server', server_ip_port_to_mongo_id),
@@ -155,42 +156,47 @@ def build_mongo_query(query, include_ip, strict):
     
     for field, (mongo_field, field_type, *flag_value) in FIELD_MAP.items():
         if field in query:
+            if field == 'ip' and not include_ip:
+                continue
             if field_type == 'bitflag':
                 if parsed_query['flags'] is None:
                     parsed_query['flags'] = {'$bitsAllSet': flag_value}
                 else:
                     parsed_query['flags'] = {'$bitsAllSet': parsed_query['flags']['$bitsAllSet'] | flag_value}
-            else: # Assume type can be directly cast or function called on it
+            else:
                 value_list = query.split(f"{field}:")[-1].split()
                 value = ''
                 for val in value_list:
                     val = val.strip(' ')
                     if val[0] == '"' and val[len(val) - 1] == '"':
-                        value = val
+                        value = val.strip('"')
                         break
                 if len(value) == 0 or len(value.strip('"')) == 0:
                     continue
-                value = field_type(value.strip('"'))
 
-                if mongo_field not in parsed_query:
-                    if type(value) == list:
-                        parsed_query[mongo_field] = list()
-                        parsed_query[mongo_field].append(value)# this is for parsing at end. list in a list means $or check it
-                    else:
-                        parsed_query[mongo_field] = value
-                elif type(parsed_query[mongo_field]) != list:
-                    parsed_query[mongo_field] = [parsed_query[mongo_field], value] # $and check these later
+                if field == 'gs_name':
+                    # Special handling for steam_name - always use $regex to allow for non-exact name matching
+                    parsed_query[mongo_field] = {'$regex': re.escape(value), '$options': 'i'}
                 else:
-                    parsed_query[mongo_field].append(value)
+                    # Cast to the expected type or call the function on the value
+                    value = field_type(value)
 
-    if include_ip:
-        parsed_query['ip'] = {'$exists': True}
+                    if mongo_field not in parsed_query:
+                        if type(value) == list:
+                            parsed_query[mongo_field] = list()
+                            parsed_query[mongo_field].append(value) # this is for parsing at end. list in a list means $or check it
+                        else:
+                            parsed_query[mongo_field] = value
+                    elif isinstance(parsed_query[mongo_field], list):
+                        parsed_query[mongo_field].append(value)
+                    else:
+                        parsed_query[mongo_field] = [parsed_query[mongo_field], value] # $and check these later
 
     to_remove = list()
     and_query = list()
 
     for key, item in parsed_query.items():
-        if type(item) == list and key != '$or' and key != '$and':
+        if isinstance(item, list) and key != '$or' and key != '$and':
             for value in item:
                 if type(value) == list:
                     or_query = list()
@@ -206,6 +212,8 @@ def build_mongo_query(query, include_ip, strict):
         for key in to_remove:
             del parsed_query[key]
 
+    if len(parsed_query) == 0 and len(query) > 0:
+        raise SearchError('No fields in query')
     return parsed_query
 
 
@@ -213,7 +221,6 @@ def build_plain_text_query(query_string):
     # Fallback to plain text search across multiple fields
     return {
         '$or': [
-            {'user.gs_service': {'$regex': re.escape(query_string), '$options': 'i'}},
             {'user.gs_id': {'$regex': re.escape(query_string), '$options': 'i'}},
             {'user.gs_name': {'$regex': re.escape(query_string), '$options': 'i'}},
             {'reason': {'$regex': re.escape(query_string), '$options': 'i'}},
@@ -227,12 +234,6 @@ async def do_infraction_search(app, query: str, include_ip=False, strict=False):
 
     if len(query) > 2048:
         raise SearchError('Query too long!')
-
-
-    loop = asyncio.get_running_loop()
-
-    
-    loop = asyncio.get_running_loop()
 
     try:
         compiled_query = build_mongo_query(query, include_ip, strict)
