@@ -23,7 +23,8 @@ a.navbar-item.is-active,
 .panel-block:hover,
 .panel-block.is-active,
 .checkbox:hover,
-.radio:hover {
+.radio:hover,
+.panel-heading {
     color: inherit;
 }
 
@@ -160,4 +161,12 @@ a.navbar-item:focus {
 .button.is-outlined:hover {
     background-color: var(--background-accent-secondary);
     color: #fff;
+}
+
+.panel-heading {
+    background-color: inherit;
+}
+
+.panel-block {
+    display: block;
 }

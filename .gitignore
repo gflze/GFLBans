@@ -10,3 +10,4 @@ __pycache__
 src/
 *.old
 *.vscode
+templates/configs/*.html
