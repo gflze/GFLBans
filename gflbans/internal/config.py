@@ -16,6 +16,7 @@ MEDIA_URL = config('MEDIA_URL', default='https://bans.gflclan.com/media/')
 STATIC_URL = config('STATIC_URL', default='https://bans.gflclan.com/static/')
 HOST = config('HOST', default='bans.gflclan.com')
 
+DISABLE_GUIDELINES = config('DISABLE_GUIDELINES', cast=bool, default=False)
 PRODUCTION = config('PRODUCTION', cast=bool, default=True)
 MAX_UPLOAD_SIZE = config('MAX_UPLOAD_SIZE', cast=int, default=(30 * 1024 * 1024))
 RETAIN_AUDIT_LOG_FOR = config('RETAIN_AUDIT_LOG_FOR', cast=int, default=3600 * 24 * 30)

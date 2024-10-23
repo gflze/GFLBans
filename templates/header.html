@@ -23,6 +23,12 @@
             <a href="/infractions" class="navbar-item {% if page == 'infractions' %}is-active{% endif %}"><i
                     class="fas fa-gavel nav-icon"></i>Infractions</a>
 
+            {% if user is not none and not DISABLE_GUIDELINES %}
+            <a href="/guidelines/" class="navbar-item {% if page == 'guidelines' %}is-active{% endif %}"><i
+                class="fas fa-file-alt nav-icon"></i>Guidelines
+            </a>
+            {% endif %}
+
             {% if user is not none and has_flag(user.permissions, bit_or(p_nodes['Manage Servers'], p_nodes['Manage Groups and Admins'], p_nodes['Manage API Keys'])) %}
             <div class="navbar-item has-dropdown is-hoverable">
                 <a href="/manage/" class="navbar-link is-arrowless is-hoverable is-hidden-touch {% if page == 'manage' %}is-active{% endif %}"><i
