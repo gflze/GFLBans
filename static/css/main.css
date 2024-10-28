@@ -218,7 +218,6 @@
     background-color: #121212;
 }
 
-
 .gt-image {
     width: 75%;
     max-width: 160px;
@@ -621,7 +620,7 @@ input::-webkit-inner-spin-button {
 }
 
 input[type=number] {
-  -moz-appearance: textfield;
+  appearance: textfield;
 }
 
 .card-rounded {
