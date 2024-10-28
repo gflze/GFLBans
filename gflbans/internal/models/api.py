@@ -206,8 +206,19 @@ class AdminInfo(BaseModel):
     admin_name: Optional[str]
     admin_id: PositiveIntIncl0
     avatar_id: Optional[str]
-    permissions: PositiveIntIncl0
+    permissions: Optional[PositiveIntIncl0]
+    groups: Optional[List[Group]]
 
+class FetchAdminInfo(BaseModel):
+    admin_name: Optional[str]
+    admin_id: Optional[PositiveIntIncl0]
+    permissions: Optional[PositiveIntIncl0]
+    group_id: Optional[int]
+
+class UpdateAdminInfo(BaseModel):
+    admin_name: Optional[str]
+    admin_id: str
+    groups: List[int]
 
 class AdminMinimal(BaseModel):
     admin_name: Optional[str]

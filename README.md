@@ -7,7 +7,7 @@ macOS: Working
 Linux: Working
 FreeBSD: Working
 
-## Development Instance
+## Setup
 
 1) Download and install [MongoDB](https://www.mongodb.com/try/download/community)
 2) Download and install [Python 3](https://www.python.org/downloads/)
@@ -20,9 +20,7 @@ FreeBSD: Working
 8) Activate your virtual environment
 9) Install dependencies using `pip install -r requirements.txt`
 10) Start gflbans using `python3 -m gflbans.main` and goto http://localhost:3335 and confirm that GFLBans is running
-11) Checkout a branch
-  - Use `git checkout branchname` to check out the branch you want to work on
-  - Use `git branch branchname` to create a branch (usually after having checked out `main`)
+11) Duplicate all html files in 'templates/configs' with .example removed and configure as desired.
 
 ## Gameserver Plugins
 

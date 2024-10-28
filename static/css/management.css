@@ -1,0 +1,185 @@
+/* Main list styling */
+#mgmt-add {
+    position:absolute;
+    right: 1.5rem;
+    top: 4.5rem;
+}
+
+#mgmt-table {
+    margin: 1.5rem auto;
+    width: fit-content;
+    min-width: 600px;
+}
+
+#mgmt-table th {
+    font-size: 20pt;
+    text-decoration: underline;
+}
+
+#header-server-enabled {
+    max-width: 80px;
+}
+
+#mgmt-table tbody tr:hover {
+    cursor: pointer;
+    background-color: var(--background-secondary);
+}
+
+@media only screen and (max-width: 600px) {
+    #mgmt-table {
+        margin: 55px auto 1.5rem auto;
+        width: 100%;
+        min-width: 250px;
+        overflow: hidden;
+    }
+
+    #header-admin {
+        width: 100px;
+        padding: 0;
+    }
+
+    #header-admin-groups {
+        width: 150px;
+        padding: 0;
+    }
+}
+
+@media only screen and (min-width: 601px) {
+    .group-list li {
+        display: inline;
+    }
+
+    .group-list li:not(:first-child)::before {
+        content: ", "
+    }
+}
+
+.mgmt-admin-av {
+    width: 42px;
+    height: 42px;
+    vertical-align: middle;
+    border-radius: 50%;
+    border: 1px solid var(--background-tertiary);
+}
+
+.group-list {
+    max-width: 50vw;
+}
+
+.group-row td:not(:first-child) {
+    padding-left: 25px;
+    border-left: 1px solid var(--background-tertiary);
+}
+
+.permission-list {
+    list-style: disc;
+}
+
+@media only screen and (min-width: 800px) {
+    .permission-list {
+        columns: 2;
+    }
+
+    .permission-list li {
+        padding-right: 1rem;
+    }
+}
+
+@media only screen and (min-width: 1200px) {
+    .permission-list {
+        columns: 3;
+    }
+}
+
+.fa-check-circle {
+    color: green;
+}
+
+.fa-minus-circle {
+    color: red;
+}
+
+
+/* Popout modal styling */
+.modal-card-body label {
+    text-decoration: underline;
+}
+
+#groupButtons,
+#permissionButtons {
+    display: grid;
+    grid-template-columns: 32% 32% 32%;
+    column-gap: 10px;
+    row-gap: 10px;
+}
+
+.gbtn {
+    text-wrap: balance;
+    height: fit-content;
+    height: 100%;
+    margin: 0;
+    overflow: hidden;
+}
+
+@media only screen and (max-width: 640px) {
+    #groupButtons,
+    #permissionButtons {
+        grid-template-columns: 49% 49%;
+    }
+}
+
+@media only screen and (max-width: 440px) {
+    #groupButtons,
+    #permissionButtons {
+        grid-template-columns: 100%;
+    }
+}
+
+.gbtn.is-outlined,
+.pbtn.is-outlined {
+    color: var(--text-primary);
+    border-color: var(--background-accent-primary);
+}
+
+.gbtn:not(.is-outlined),
+.pbtn:not(.is-outlined) {
+    color: #fff !important;
+}
+
+.gbtn:hover,
+.pbtn:hover,
+.button {
+    border-color: var(--background-accent-primary);
+}
+
+.gbtn:hover,
+.pbtn:hover {
+    background-color: var(--background-accent-secondary);
+}
+
+.buttons .button,
+.buttons .button:not(:last-child):not(.is-fullwidth) {
+    margin: 0;
+}
+
+.modal-card-foot {
+    flex-direction: row-reverse;
+}
+
+.modal-card-foot > button:first-child {
+    margin-left: 5px;
+    margin-right: 0 !important;
+}
+
+.modal-card-foot > button:last-child {
+    left: 20px;
+    position:absolute;
+}
+
+.button.is-danger.is-outlined:focus {
+    background-color: inherit;
+}
+
+.button.is-danger.is-outlined:hover {
+    background-color: #b42643;
+}

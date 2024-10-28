@@ -51,7 +51,7 @@ function addServer(server_hostname, ip, map, mod, os, player_text='0/0', id, is_
     if (map === '' || mod === '') {
         map_url = '/static/images/server.webp'
     } else {
-        map_url = '/api/v1/maps/' + mod + '/' + map;
+        map_url = '/api/maps/' + mod + '/' + map;
     }
 
     let map_subimage = document.createElement('img');
@@ -172,7 +172,7 @@ function serverDetails(server_id, mod, map, hostname, ip) {
 
     setLoading();
 
-    gbRequest('GET', '/api/v1/server/' + server_id + '/players').then(resp => {
+    gbRequest('GET', '/api/server/' + server_id + '/players').then(resp => {
         if (resp.ok) {
             resp.json().then(data => {
 
@@ -188,18 +188,12 @@ function serverDetails(server_id, mod, map, hostname, ip) {
                     showServerModal(mod, map, hostname, ip, data, server_id);
                 }
             });
-        } else if (resp.status === 503) {
-            showError('The server is offline.');
         } else {
-            showError('Failed to load player list');
+            const errorData = resp.json();
+            throw Error(errorData.detail || defaultAPIError);
         }
-    }).catch(reason => {
-        console.log(reason);
-        showError('Failed to load player list. Try refreshing the page or the host if the problem persists.')
-    });
+    }).catch(logException);
 }
-
-const PERMISSION_RPC_KICK = 1 << 26
 
 function showServerModal(mod, map, hostname, ip, players, id) {
     closeModals();
@@ -208,7 +202,7 @@ function showServerModal(mod, map, hostname, ip, players, id) {
 
     $('#htmlRoot').addClass('is-clipped');
 
-    $('#server_map').attr('src', '/api/v1/maps/' + mod + '/' + map);
+    $('#server_map').attr('src', '/api/maps/' + mod + '/' + map);
     console.log(hostname);
     console.log(ip);
     $('#server_hostname').text(hostname);
@@ -219,7 +213,7 @@ function showServerModal(mod, map, hostname, ip, players, id) {
     $(server_players).empty();
 
     //Do we have RPC_KICK permissions?
-    let can_rpc_kick = parseInt(getMeta('active_permissions')) & PERMISSION_RPC_KICK;
+    let can_rpc_kick = parseInt(getMeta('active_permissions')) & PERMISSION.RPC_KICK;
 
     if (players.length === 0) {
         let row = document.createElement('tr');
@@ -232,6 +226,10 @@ function showServerModal(mod, map, hostname, ip, players, id) {
 
         return;
     }
+
+    players.sort(function(a, b) {
+        return a.gs_name.toLowerCase() > b.gs_name.toLowerCase();
+    });
 
     for (let i = 0; i < players.length; i++) {
         let row = document.createElement('tr');
@@ -294,7 +292,7 @@ function showServerModal(mod, map, hostname, ip, players, id) {
 
             rpc_kick_btn.onclick = function () {
                 rpc_kick_btn.classList.add('is-loading')
-                gbRequest('POST', '/api/v1/rpc/kick', {
+                gbRequest('POST', '/api/rpc/kick', {
                     'server_id': id,
                     'player': {
                         'gs_service': players[i]['gs_service'],
@@ -305,15 +303,13 @@ function showServerModal(mod, map, hostname, ip, players, id) {
                     if (resp.ok) {
                         //Refresh the modal
                         serverDetails(id, mod, map, hostname, ip);
-                    } else if (resp.status === 504) {
-                        showError('The server did not respond in time. The player may still be kicked.');
                     } else {
-                        throw 'Received Non-OK response from the API'
+                        const errorData = resp.json();
+                        throw new Error(errorData.detail || defaultAPIError);
                     }
-                }).catch(function (r) {
-                    console.log(r);
+                }).catch(function (e) {
                     rpc_kick_btn.classList.remove('is-loading');
-                    showError('Failed to kick player. Check console for more information!')
+                    logException(e);
                 })
             }
 
@@ -377,43 +373,42 @@ $(document).ready(function () {
 
     setLoading();
 
-    gbRequest('GET', '/api/v1/server/?enabled_only=true').then(resp => {
+    gbRequest('GET', '/api/server/?enabled_only=true').then(resp => {
         function _loadS() {
-                unsetLoading();
-                if (resp.ok) {
+            unsetLoading();
+            if (resp.ok) {
                 resp.json().then(j => {
-                        if (j.length <= 0) {
-                            //Show a little message stating that there are no servers
-                            setupEmptySNotice();
-                            return;
+                    if (j.length <= 0) {
+                        //Show a little message stating that there are no servers
+                        setupEmptySNotice();
+                        return;
+                    }
+
+                    for (let i = 0; i < j.length; i++) {
+                        let item = j[i];
+
+                        let name = 'Unnamed Server';
+
+                        if (item.hasOwnProperty('friendly_name')) {
+                            name = item['friendly_name'];
                         }
 
-                        for (let i = 0; i < j.length; i++) {
-                            let item = j[i];
+                        let full_name = name;
 
-                            let name = 'Unnamed Server';
+                        if (item.hasOwnProperty('hostname')) {
+                            full_name = item['hostname'];
+                        }
 
-                            if (item.hasOwnProperty('friendly_name')) {
-                                name = item['friendly_name'];
-                            }
-
-                            let full_name = name;
-
-                            if (item.hasOwnProperty('hostname')) {
-                                full_name = item['hostname'];
-                            }
-
-                            if (!item['online']) {
-                                addServer(name, `${item['ip']}:${item['game_port']}`, '', '', '', 'Offline', item['id'],false, full_name);
-                            } else {
-                                addServer(name, `${item['ip']}:${item['game_port']}`, item['map'], item['mod'], item['os'], `${item['player_count']} / ${item['max_players']}`, item['id'], item['is_locked'], full_name);
-                            }
+                        if (!item['online']) {
+                            addServer(name, `${item['ip']}:${item['game_port']}`, '', '', '', 'Offline', item['id'],false, full_name);
+                        } else {
+                            addServer(name, `${item['ip']}:${item['game_port']}`, item['map'], item['mod'], item['os'], `${item['player_count']} / ${item['max_players']}`, item['id'], item['is_locked'], full_name);
                         }
                     }
-                );
-
+                });
             } else {
-                throw 'Non-OK response from the server'
+                const errorData = resp.json();
+                throw new Error(errorData.detail || defaultAPIError);
             }
         }
 
@@ -424,8 +419,7 @@ $(document).ready(function () {
         } else {
             _loadS();
         }
-    }).catch(err => {
-        console.log(err);
-        showError();
+    }).catch(e => {
+        logException(e)
     });
 });

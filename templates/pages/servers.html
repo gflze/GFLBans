@@ -7,13 +7,13 @@
     <title>{{BRANDING}} - Servers</title>
 </head>
 <body>
+{% include 'js_includes.html' %}
 {% include 'header.html' with context %}
 <div class="container is-max-desktop" id="server_root">
 </div>
 {% include 'server_info.html' %}
 {% include 'error.html' %}
 {% include 'loading.html' with context %}
-{% include 'js_includes.html' %}
 <script src="/static/js/servers.js"></script>
 {% include 'footer.html' with context %}
 </body>

@@ -8,7 +8,8 @@ from gflbans.web.login import login_router
 from gflbans.web.pages.index import index_router
 from gflbans.web.pages.infractions import infractions_router
 from gflbans.web.pages.servers import servers_router
-from gflbans.web.pages.manage import mgmt_router
+from gflbans.web.pages.manage import management_router
+from gflbans.web.pages.guidelines import guidelines_router
 
 web_router = APIRouter(dependencies=[Depends(csrf_prepare)])
 
@@ -16,7 +17,8 @@ web_router.include_router(index_router, prefix='')
 web_router.include_router(servers_router, prefix='/servers')
 web_router.include_router(infractions_router, prefix='/infractions')
 web_router.include_router(login_router, prefix='/login')
-web_router.include_router(mgmt_router, prefix='/manage')
+web_router.include_router(management_router, prefix='/manage')
+web_router.include_router(guidelines_router, prefix='/guidelines')
 
 
 class SetDark(BaseModel):

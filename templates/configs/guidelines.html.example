@@ -1,0 +1,95 @@
+<!--Rename this file to guidelines.html and edit as desired-->
+<style>
+h1 {
+    background-color: var(--background-accent-primary);
+    color: #fff;
+    padding: 10px;
+    font-size: 20px;
+    font-family: Arial;
+    font-weight: 700;
+}
+section {
+    padding: 20px;
+}
+
+section h1 {
+    position: relative;
+    left: -20px;
+    width: 100vw;
+}
+
+.infraction, .commandSection {
+    padding-top: 20px;
+}
+
+section h2 {
+    text-decoration: underline;
+}
+
+section h2::after {
+    content: ":";
+}
+
+.infraction p, .commandSection p {
+    padding-left: 10px;
+}
+
+.red {
+    color:#e74c3c;
+}
+
+.yellow {
+    color:#FFD700;
+}
+
+.green {
+    color:#2ecc71;
+}
+
+.red:not(:last-child)::after, .yellow:not(:last-child)::after, .green:not(:last-child)::after {
+    color: #ffffff;
+    content: " ->";
+}
+</style>
+<div style="right: 10px;position:absolute">
+    <strong class="text-secondary">Edited by Snowy on July 9, 2017</strong>
+</div>
+<div>
+    <br>
+    <p class="has-text-centered">
+        As a GFLClan ZE:GO Admin, you are the most important person and a key to create a good atmosphere on the server.
+    </p>
+    <section>
+        <h1>Player Punishments</h1>
+        <p><span class="red">Red</span> = </p>
+        <p><span class="yellow">Yellow</span> = </p>
+        <p><span class="green">Green</span> = </p>
+        <div class="infraction">
+            <h2>Mic Spamming</h2>
+            <p> Example: Screaming or Music spam. </p>
+            <p>
+                <span class="green">Warn/5 minutes mute</span>
+                <span class="green">60 Minutes mute</span>
+                <span class="yellow">1 Day mute</span>
+                <span class="red">1 Week mute</span>
+                <span class="red">Permanent mute</span>
+            </p>
+        </div>
+    </section>
+    <section>
+        <h1>Admin Commands</h1>
+        <p>Commands can be used in console preceeded by "sm_" or can be used in chat preceeded by an exclamation mark (shows to everyone) or a forward slash (hides the command)</p>
+        <p style="margin-left: 3rem;">All are acceptable, but it is recommended to use a forward slash in chat in case of typoes.</p>
+        <p style="margin-left: 3rem;">Examples: "sm_mute Ice" (console), "!mute Ice" (chat), "/mute Ice" (chat)</p>
+        <div class="commandSection">
+            <h2>Necessary Commands</h2>
+            <p>slay &lt;client&gt;</p>
+            <p>slap &lt;client&gt; &lt;amount&gt;</p>
+        </div>
+        <div class="commandSection">
+            <h2>Useful commands</h2>
+            <p>maphistory (use console)</p>
+            <p>who (use console)</p>
+        </div>
+    </section>
+</div>

@@ -81,6 +81,7 @@ function resetViewModal() {
     $('.edit-cell').addClass('is-hidden');
     $('.data-cell').removeClass('is-hidden');
     $('#idValue').empty();
+    $('#ipValue').empty();
     restrictionsCancel.addClass('is-hidden');
     $('#cancelRemoval').removeAttr('disabled');
     $('#removeButton').removeAttr('disabled').removeClass('is-loading');
@@ -88,10 +89,11 @@ function resetViewModal() {
 }
 
 async function setupViewModal(infraction) {
-    let gbServers = await gbRequest('GET', '/api/v1/server/?enabled_only=true');
+    let gbServers = await gbRequest('GET', '/api/server/?enabled_only=true');
 
     if (!gbServers.ok) {
-        throw 'NOT OK'
+        const errorData = await gbServers.json();
+        throw new Error(errorData.detail || defaultAPIError);
     }
 
     server_data = await gbServers.json();
@@ -122,29 +124,25 @@ async function setupViewModal(infraction) {
 
     //A couple of flags
 
-    //SYS
-    if (infraction['flags'] & (1 << 0)) {
+    if (infraction['flags'] & (INFRACTION.SYSTEM)) {
         systemTag.removeClass('is-hidden');
     }
 
-    //Removed
-    if (infraction['flags'] & (1 << 6)) {
+    if (infraction['flags'] & (INFRACTION.REMOVED)) {
         removedTag.removeClass('is-hidden');
     }
 
-    //VPN
-    if (infraction['flags'] & (1 << 4)) {
+    if (infraction['flags'] & (INFRACTION.VPN)) {
         vpnTag.removeClass('is-hidden');
     }
 
-    //Web
-    if (infraction['flags'] & (1 << 5)) {
+    if (infraction['flags'] & (INFRACTION.WEB)) {
         webTag.removeClass('is-hidden')
     }
 
    let isExpired = false;
 
-    if (infraction.hasOwnProperty('time_left') && infraction['time_left'] <= 0 && infraction['flag'] & (1 << 13)) {
+    if (infraction.hasOwnProperty('time_left') && infraction['time_left'] <= 0 && infraction['flag'] & (INFRACTION.DEC_ONLINE_ONLY)) {
         isExpired = true;
     } else if (infraction.hasOwnProperty('expires') && Date.now() / 1000 >= infraction['expires']) {
         isExpired = true;
@@ -159,22 +157,31 @@ async function setupViewModal(infraction) {
     if (infraction['player'].hasOwnProperty('gs_id')) {
         idLabel.text(infraction['player']['gs_service'].charAt(0).toUpperCase() + infraction['player']['gs_service'].slice(1) + ' ID');
         
-        if (infraction['player']['gs_service'] === 'steam') {
-            let xd = document.createElement('a')
-            xd.text = infraction['player']['gs_id'];
-            xd.setAttribute('href', 'http://steamcommunity.com/profiles/' + infraction['player']['gs_id']);
-            xd.setAttribute('target', '_blank')
+        let search = document.createElement('a');
+        search.text = infraction['player']['gs_id'];
+        search.setAttribute('href', '/infractions/?search=gs_id:"' + infraction['player']['gs_id'] + '"');
 
-            idValue.append(xd)
-        } else {
-            idValue.text(infraction['player']['gs_id']);
+        idValue.append(search);
+
+        if (infraction['player']['gs_service'] === 'steam') {
+            let steamProfile = document.createElement('a');
+            steamProfile.text = userName.text();
+            steamProfile.setAttribute('href', 'http://steamcommunity.com/profiles/' + infraction['player']['gs_id']);
+            steamProfile.setAttribute('target', '_blank');
+
+            userName.empty();
+            userName.append(steamProfile);
         }
     } else {
         idContainer.addClass('is-hidden');
     }
 
     if (infraction['player'].hasOwnProperty('ip')) {
-        ipValue.text(infraction['player']['ip']);
+        let search = document.createElement('a');
+        search.text = infraction['player']['ip'];
+        search.setAttribute('href', '/infractions/?search=ip:"' + infraction['player']['ip'] + '"');
+
+        ipValue.append(search);
     } else {
         ipContainer.addClass('is-hidden');
     }
@@ -182,11 +189,11 @@ async function setupViewModal(infraction) {
     // Setup the time
     timeValue.removeClass('has-tooltip-info');
     timeValue.removeAttr('data-tooltip');
-    if (infraction['flags'] & (1 << 3)) {
+    if (infraction['flags'] & (INFRACTION.PERMANENT)) {
         timeValue.text('Permanent');
-    } else if (infraction['flags'] & (1 << 12)) {
+    } else if (infraction['flags'] & (INFRACTION.SESSION)) {
         timeValue.text('Session');
-    } else if (infraction['flags'] & (1 << 13)) {
+    } else if (infraction['flags'] & (INFRACTION.DEC_ONLINE_ONLY)) {
         let s
         let tl = moment.duration(infraction['time_left'] * 1000);
 
@@ -201,14 +208,14 @@ async function setupViewModal(infraction) {
         }
 
         if (infraction['time_left'] <= 0) {
-            timeValue.text('Expired (Was ' + moment.duration(infraction['orig_length'] * 1000) + ')');
+            timeValue.text('Expired (Was ' + moment.duration(infraction['orig_length'] * 1000).humanize() + ')');
         }  else {
             if (infraction['time_left'] > 60) {
-                // Display minutes left in a tooltip for if exact time is needed
+                // Display exact minutes left in a tooltip
                 timeValue.addClass('has-tooltip-info');
-                minutesLeft = (Math.round(moment.duration(infraction['time_left']) / 60) + " minutes left")
+                minutesLeft = (Math.round(moment.duration(infraction['time_left']) / 60) + " minutes left");
                 timeValue.attr('data-tooltip', minutesLeft);
-            } 
+            }
             timeValue.text(s);
         }
     } else if (infraction.hasOwnProperty('expires')) {
@@ -220,44 +227,49 @@ async function setupViewModal(infraction) {
 
         let ol = moment.duration(exp - c);
 
-         let s;
+        let s;
 
-         s = d.humanize();
+        s = d.humanize();
 
-         s = s.charAt(0).toUpperCase() + s.slice(1);
+        s = s.charAt(0).toUpperCase() + s.slice(1);
 
-         timeValue.text(s + ' of ' + ol.humanize());
+        timeValue.text(s + ' of ' + ol.humanize());
 
-         if (exp - now <= 0) {
-             timeValue.text('Expired (Was ' + ol.humanize() + ')');
-         }
-
+        if (exp - now <= 0) {
+            timeValue.text('Expired (Was ' + ol.humanize() + ')');
+        } else {
+            // Display exact minutes left in a tooltip
+            timeValue.addClass('has-tooltip-info');
+            minutesLeft = Math.round(d / 60000) + " minutes left";
+            timeValue.attr('data-tooltip', minutesLeft);
+        }
     } else {
         timeValue.text('NO VALUE');
     }
 
-    if (!(infraction['flags'] & (1 << 0)) && infraction.hasOwnProperty('admin')) {
+    if (!(infraction['flags'] & (INFRACTION.SYSTEM)) && infraction.hasOwnProperty('admin')) {
         issuedValue.text((await get_admin(infraction['admin']))['admin_name']);
     } else {
         adminContainer.addClass('is-hidden');
     }
 
     // Global
-    if (infraction['flags'] & (1 << 1)) {
+    if (infraction['flags'] & (INFRACTION.GLOBAL)) {
         scopeValue.text('All Servers');
-    } else if (infraction['flags'] & (1 << 2)) { // Community
+    } else if (infraction['flags'] & (INFRACTION.SUPER_GLOBAL)) {
         scopeValue.text('Community');
     } else {
         scopeValue.text('Only Origin Server');
     }
 
-    if (infraction['flags'] & (1 << 5) || !infraction.hasOwnProperty('server')) {
+    if (infraction['flags'] & (INFRACTION.WEB) || !infraction.hasOwnProperty('server')) {
         serverValue.text('Web');
     } else {
-        let sv = await gbRequest('GET', '/api/v1/server/' + infraction['server'], null);
+        let sv = await gbRequest('GET', '/api/server/' + infraction['server'], null);
 
         if (!sv.ok) {
-            throw 'Not OK!'
+            const errorData = await sv.json();
+            throw new Error(errorData.detail || defaultAPIError);
         }
 
         sv = await sv.json()
@@ -281,17 +293,17 @@ async function setupViewModal(infraction) {
     }
 
     unhideIfTrue(infraction['flags'] & ALL_P_FLAGS === 0, warningFlag);
-    unhideIfTrue(infraction['flags'] & (1 << 7), voiceChatFlag);
-    unhideIfTrue(infraction['flags'] & (1 << 8), textChatFlag);
-    unhideIfTrue(infraction['flags'] & (1 << 9), banFlag);
-    unhideIfTrue(infraction['flags'] & (1 << 10), adminChatFlag);
-    unhideIfTrue(infraction['flags'] & (1 << 11), callAdminFlag);
+    unhideIfTrue(infraction['flags'] & (INFRACTION.VOICE_BLOCK), voiceChatFlag);
+    unhideIfTrue(infraction['flags'] & (INFRACTION.CHAT_BLOCK), textChatFlag);
+    unhideIfTrue(infraction['flags'] & (INFRACTION.BAN), banFlag);
+    unhideIfTrue(infraction['flags'] & (INFRACTION.ADMIN_CHAT_BLOCK), adminChatFlag);
+    unhideIfTrue(infraction['flags'] & (INFRACTION.CALL_ADMIN_BAN), callAdminFlag);
 
     if (!t) {
         unhideIfTrue(true, warningFlag);
     }
 
-    if (infraction['flags'] & (1 << 6)) {
+    if (infraction['flags'] & (INFRACTION.REMOVED)) {
         removedC.removeClass('is-hidden');
         rR.text(infraction['removal_reason']);
         rOn.text(moment.unix(infraction['removed_on']).format('LLL'));
@@ -427,7 +439,6 @@ function addComments(renderableComments) {
                 $(avatarImage).attr('src', '/file/uploads/' + adm['avatar_id'] + '/avatar.webp');
             })
         }
-
     }
 
     if (renderableComments.length <= 3) {
@@ -457,7 +468,7 @@ function wrapSetupView(j, start=0) {
                 } else {
                     _showModal();
                 }
-            }).catch(genericError);
+            }).catch(logException);
 }
 
 function _openInfraction(infraction_id, start, skip_push=false) {
@@ -466,11 +477,11 @@ function _openInfraction(infraction_id, start, skip_push=false) {
         setInfractionUri(infraction_id);
     }
 
-    gbRequest('GET', '/api/v1/infractions/' + infraction_id + '/info', null, false).then(function (r) {
+    gbRequest('GET', '/api/infractions/' + infraction_id + '/info', null, false).then(function (r) {
         r.json().then(function (j) {
             wrapSetupView(j, start)
-        }).catch(genericError);
-    }).catch(genericError);
+        }).catch(logException);
+    }).catch(logException);
 }
 
 function openInfraction(infraction_id, skip_push=false) {

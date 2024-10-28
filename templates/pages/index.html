@@ -6,26 +6,17 @@
     <title>{{BRANDING}} - Dashboard</title>
 </head>
 <body>
+{% include 'js_includes.html' %}
 {% include 'header.html' with context %}
 <div class="m-5">
     <div class="columns is-desktop">
         <div class="column is-three-quarters-fullhd is-three-fifths-desktop is-three-fifth-tablet">
-            <div class="panel">
-                <p class="panel-heading background-secondary text-primary">Welcome to
-                    {{BRANDING}}!</p>
-                <div class="panel-block text-primary background-secondary no-bottom-border">
-                    <p class="is-size-7 is-size-6-fullhd">If you've been banned/punished, you can use the search bar below
-                        to find information about your infraction. Once you've found your infraction, you can
-                        <a href="https://discord.gg/gflze">join our Discord</a>,
-                        and DM the <b>ZE ModMail</b> bot to submit an appeal. Please include your Steam ID, and why you
-                        think you should be unbanned. Response times may vary.</p>
+            <div class="panel text-primary background-secondary">
+                <p class="panel-heading">Welcome to {{BRANDING}}!</p>
+                <div class="panel-block no-bottom-border">
+                    {% include ('configs/' + page_index_info) with context %}
                 </div>
-                <div class="panel-block text-primary background-secondary no-bottom-border">
-                    <p class="is-size-7 is-size-6-fullhd">Alternatively, use
-                        <a href="https://discord.gg/Hmck6UnjWC">this Discord</a> if
-                        you're unable to join our main Discord due to an existing ban.</p>
-                </div>
-                <div class="panel-block text-primary background-secondary">
+                <div class="panel-block">
                     <form method="get" action="/infractions" class="index-search">
                         <div class="field has-addons">
                             <label class="control is-flex-grow-1">
@@ -110,22 +101,13 @@
                 <nav class="panel background-secondary text-primary">
                     <p class="panel-heading background-secondary text-primary">External
                         Links</p>
-                    <a href="//gflclan.com" class="panel-block text-primary">
-                        GFL ZE Website
-                    </a>
-                    <a href="//discord.gg/gflze" class="panel-block text-primary">
-                        GFL ZE Discord
-                    </a>
-                    <a href="//donate.gflclan.com" class="panel-block text-primary">
-                        Donate to GFL ZE
-                    </a>
+                    {% include ('configs/' + page_index_links) with context %}
                 </nav>
             </div>
         </div>
     </div>
 </div>
 {% include 'error.html' %}
-{% include 'js_includes.html' %}
 <script src="/static/3rdparty/js/chart.js"></script>
 <script src="/static/js/index.js"></script>
 {% include 'footer.html' with context %}

@@ -15,7 +15,7 @@ from starlette.templating import Jinja2Templates
 
 from gflbans.api import api
 from gflbans.file import file_router
-from gflbans.internal.config import SIGNING_KEY, PRODUCTION
+from gflbans.internal.config import SECRET_KEY, PRODUCTION
 from gflbans.internal.loader import gflbans_init, gflbans_unload
 from gflbans.internal.log import logger
 from gflbans.web import web_router
@@ -31,11 +31,11 @@ def new_app():
     app = FastAPI(redoc_url='/doc', default_response_class=ORJSONResponse)
 
     # Add our middleware
-    app.add_middleware(SessionMiddleware, secret_key=SIGNING_KEY, session_cookie='gb_session', https_only=PRODUCTION)
+    app.add_middleware(SessionMiddleware, secret_key=SECRET_KEY, session_cookie='gb_session', https_only=PRODUCTION)
     app.add_middleware(GZipMiddleware)
 
     app.include_router(web_router, prefix='')
-    app.include_router(api, prefix='/api/v1')
+    app.include_router(api, prefix='/api')
     app.include_router(file_router, prefix='/file')
 
     app.mount('/static', StaticFiles(directory='static'), name='static')
@@ -58,7 +58,7 @@ def new_app():
         app.state.templates.env.autoescape = select_autoescape(default=True, default_for_string=True)
         app.state.templates.env.globals.update(has_flag=has_flag, bit_or=bit_or, render_time=render_time, tostring=tostring)
 
-        if SIGNING_KEY == 'testing':
+        if SECRET_KEY == 'testing':
             logger.warning('SECRET_KEY is set to \'testing\'. This is fine for development purposes, but is unsuitable for'
                         ' usage in production environments.')
 
