@@ -392,7 +392,7 @@ async function loadAdminMenu(adminID) {
 
     $('#mgmt-add').removeClass('is-loading');
 
-    $('#manageDismiss').off('click').click(function () {
+    $('.manageDismiss').off('click').click(function () {
         resetAdminMenu();
         closeModals();
     });
@@ -579,7 +579,7 @@ async function loadGroupMenu(groupID) {
 
     $('#mgmt-add').removeClass('is-loading');
 
-    $('#manageDismiss').off('click').click(function () {
+    $('.manageDismiss').off('click').click(function () {
         resetGroupMenu();
         closeModals();
     });
@@ -728,7 +728,7 @@ async function loadServerMenu(serverID) {
 
     $('#mgmt-add').removeClass('is-loading');
 
-    $('#manageDismiss').off('click').click(function () {
+    $('.manageDismiss').off('click').click(function () {
         resetServerMenu();
         closeModals();
     });
