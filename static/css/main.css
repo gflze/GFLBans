@@ -726,7 +726,7 @@ img {
   max-height: none;
 }
 
-.button.is-accent {
+.button.is-accent:not(.is-outlined) {
     border-color: transparent;
 }
 
