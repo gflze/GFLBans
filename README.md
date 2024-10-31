@@ -27,5 +27,5 @@ FreeBSD: Working
 
 ## Gameserver Plugins
 
-- [Counter-Strike 2](https://github.com/Frozen-H2O/CS2_Fixes/tree/gflbans) - Requires [Metamod](https://www.sourcemm.net/downloads.php/?branch=master)
+- [Counter-Strike 2](https://github.com/Frozen-H2O/GFLBans/tree/gflbans) - Requires [Metamod](https://www.sourcemm.net/downloads.php/?branch=master)
 - [Source 1](https://github.com/GFLClan/sm_gflbans) - Requires [Metamod](https://www.sourcemm.net/downloads.php/?branch=master) and [Sourcemod](https://www.sourcemod.net/downloads.php)
