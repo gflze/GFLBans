@@ -56,14 +56,6 @@ async def current_user(request: Request) -> Optional[Admin]:
 
 @login_router.get('/')
 async def start_login(request: Request, dcl_token: str = None):
-    request.session['oauth_state'] = os.urandom(32).hex()
-    
-    if dcl_token:
-        request.session['dcl_state'] = {
-            'oauth_state': request.session['oauth_state'],
-            'dcl_token': dcl_token
-        }
-
     parameters ={
         'openid.ns=http://specs.openid.net/auth/2.0',
         'openid.mode=checkid_setup',
@@ -91,18 +83,18 @@ async def finish_login(request: Request):
     suffix_strings = str(response_data['openid.signed'][0]).split(',')
     data = {}
     for suffix in suffix_strings:
-        data['openid_' + suffix] = response_data['openid.' + suffix][0]
+        data['openid.' + suffix] = response_data['openid.' + suffix][0]
 
     id_regex = re.compile('^https?:\/\/steamcommunity.com\/openid\/id\/(7656119[0-9]{10})\/?$')
-    if data['openid_claimed_id'] != data['openid_identity'] or \
-        data['openid_op_endpoint'] != 'https://steamcommunity.com/openid/login' or \
-	    data['openid_return_to'] != f'http://{HOST}/login/finish' or \
-	    not id_regex.match(data['openid_identity']):
+    if data['openid.claimed_id'] != data['openid.identity'] or \
+        data['openid.op_endpoint'] != 'https://steamcommunity.com/openid/login' or \
+	    data['openid.return_to'] != f'http://{HOST}/login/finish' or \
+	    not id_regex.match(data['openid.identity']):
         raise HTTPException(status_code=502, detail='Login rejected')
-    steam_id = int(id_regex.findall(data['openid_identity'])[0])
-    data['openid_sig'] = response_data['openid.sig'][0]
-    data['openid_ns'] = 'http://specs.openid.net/auth/2.0'
-    data['openid_mode'] = 'check_authentication'
+    steam_id = int(id_regex.findall(data['openid.identity'])[0])
+    data['openid.sig'] = response_data['openid.sig'][0]
+    data['openid.ns'] = 'http://specs.openid.net/auth/2.0'
+    data['openid.mode'] = 'check_authentication'
 
     async with aiohttp.ClientSession() as session:
         async with session.post('https://steamcommunity.com/openid/login',
