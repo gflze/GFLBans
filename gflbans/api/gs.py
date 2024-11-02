@@ -49,8 +49,8 @@ async def _process_heartbeat_player(app, ply: PlayerObjIPOptional) -> DUserIP:
 
     try:
         user_info = await get_user_info(app, ply.gs_service, ply.gs_id)
-        avatar = DFile(**await process_avatar(app, user_info['avatar_url']))
         name = user_info['name']
+        avatar = DFile(**await process_avatar(app, user_info['avatar_url']))
     except Exception as e:
         logger.error('Failed to download avatar image or fetch user info.', exc_info=e)
 
