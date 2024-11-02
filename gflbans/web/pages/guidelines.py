@@ -15,7 +15,7 @@ async def guidelines(request: Request):
         raise HTTPException(detail='Page does not exist.', status_code=404)
     
     sc = await sctx(request)
-    if not ('user' in sc) or not (sc['user'].permissions & PERMISSION_CREATE_INFRACTION):
+    if sc['user'] is None or not (sc['user'].permissions & PERMISSION_CREATE_INFRACTION):
         raise HTTPException(detail='You do not have permission to view this page.', status_code=403)
     
     page_guidelines = 'guidelines.html.example'
