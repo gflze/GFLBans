@@ -105,7 +105,7 @@ async function setupViewModal(infraction) {
     if (infraction['player'].hasOwnProperty('gs_avatar')) {
         userAvatar.attr('src', '/file/uploads/' + infraction['player']['gs_avatar']['file_id'] + '/avatar.webp');
     } else {
-        userAvatar.attr('src', '/static/fallback_av.png')
+        userAvatar.attr('src', '/static/images/fallback_av.png')
     }
 
     //Name
