@@ -3,8 +3,7 @@ from os.path import exists
 from fastapi import APIRouter, HTTPException
 from starlette.requests import Request
 
-from gflbans.internal.flags import PERMISSION_MANAGE_GROUPS_AND_ADMINS, \
-                                   PERMISSION_MANAGE_SERVERS, PERMISSION_MANAGE_API_KEYS
+from gflbans.internal.flags import PERMISSION_CREATE_INFRACTION
 from gflbans.web.pages import sctx
 from gflbans.internal.config import DISABLE_GUIDELINES
 
@@ -16,7 +15,7 @@ async def guidelines(request: Request):
         raise HTTPException(detail='Page does not exist.', status_code=404)
     
     sc = await sctx(request)
-    if sc['user'] is None:
+    if not ('user' in sc) or not (sc['user'].permissions & PERMISSION_CREATE_INFRACTION):
         raise HTTPException(detail='You do not have permission to view this page.', status_code=403)
     
     page_guidelines = 'guidelines.html.example'

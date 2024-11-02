@@ -123,7 +123,7 @@ async def finish_login(request: Request):
                         pair[1] = pair[1] + ':' + text # There was a colon in text (ie. 'http://')
                 resp_keys[pair[0]] = pair[1]
 
-            if resp_keys['ns'] is None or resp_keys['ns'] != 'http://specs.openid.net/auth/2.0' or \
+            if not 'ns' in resp_keys or resp_keys['ns'] != 'http://specs.openid.net/auth/2.0' or \
                 resp_keys['is_valid'] is None or resp_keys['is_valid'] != 'true':
                 raise HTTPException(status_code=502, detail='Login rejected')
             ips_user = ips_get_member_id_from_gsid(steam_id)
