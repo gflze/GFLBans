@@ -154,7 +154,7 @@ function handleResponse(response, start) {
 
 function setupEmptyNotice() {
 
-    let i_root = document.getElementById('infractions_tab');
+    let i_root = document.getElementById('managementTab');
 
     $(i_root).empty();
 
@@ -165,11 +165,25 @@ function setupEmptyNotice() {
     icon.classList.add('fas', 'fa-question', 'mt-5', 'nf-icon');
 
     let text = document.createElement('h1');
-    text.innerText = 'No Infractions';
     text.classList.add('is-size-1');
 
     let subtext = document.createElement('p');
-    subtext.innerText = 'Your query matched no documents. Try a different search or add an infraction using the hammer icon in the top-left corner.';
+    
+    switch(MGMT_MODE) {
+        case MGMT.GROUP:
+            text.innerText = 'No Groups';
+            subtext.innerHTML = 'No groups were found in the current database. You may add a group with the <i class="fas fa-plus"></i> icon in the top right.';
+            break;
+        case MGMT.SERVER:
+            text.innerText = 'No Servers';
+            subtext.innerHTML = 'No servers were found in the current database. You may add a server with the <i class="fas fa-plus"></i> icon in the top right.';
+            break;
+        case MGMT.ADMIN:
+        default:
+            text.innerText = 'No Admins';
+            subtext.innerHTML = 'No admins were found in the current database. You may add an admin with the <i class="fas fa-plus"></i> icon in the top right.';
+            break;
+    }
     subtext.classList.add('mb-5');
 
     i_root.appendChild(icon);
