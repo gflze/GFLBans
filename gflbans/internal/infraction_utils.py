@@ -178,7 +178,14 @@ async def get_user_data(app, infraction_id: ObjectId, reschedule_on_fail=False):
 
         duser = dinf.user
         duser.gs_name = user_info['name']
-        duser.gs_avatar = DFile(**await process_avatar(app, user_info['avatar_url']))
+        try:
+            duser.gs_avatar = DFile(**await process_avatar(app, user_info['avatar_url']))
+        except Exception as e:
+            ''' If avatar failed but everything else was fine, just dont store an avatar in the infraction but store name
+                still. This should hopefully only happen in rare cases where Steam deletes the picture on the backend but
+                for some reason leaves the deleted URL as the person's steam avatar. '''
+            logger.warning('get_user_data failed to find an avatar. Leaving as empty in the infraction.', exc_info=e)
+            pass
 
         await dinf.update_field(app.state.db[MONGO_DB], 'user', duser)
 
