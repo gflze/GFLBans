@@ -15,26 +15,28 @@
 <div class="notification is-danger has-text-centered" style="margin-bottom: 0;">Servers cannot be deleted. They may only be disabled.</div>
 <style>#mgmt-add{top: 8.5rem;}</style>
 {% endif %}
-<table id="mgmt-table" class="table background-primary">
-    <thead>
-        <tr>
-            {% if mode == 'group' %}
-                <th id="header-group" class="has-text-centered min-250">Group</th>
-                <th id="header-group-privileges" class="has-text-centered min-500">Privileges</th>
-            {% elif mode == 'server' %}
-                <th id="header-server-enabled" class="has-text-centered is-hidden-mobile">Enabled</th>
-                <th id="header-server" class="has-text-centered min-250">Server</th>
-                <th id="header-server-ip" class="has-text-centered min-250">IP</th>
-            {% elif mode == 'apikey' %}
-                <th id="header-api" class="has-text-centered min-500">Key</th>
-            {% else %}
-                <th id="header-admin" class="has-text-centered min-250">Admin</th>
-                <th id="header-admin-groups" class="has-text-centered min-500">Groups</th>
-            {% endif %}
-        </tr>
-    </thead>
-    <tbody></tbody>
-</table>
+<div id="managementTab">
+    <table id="mgmt-table" class="table background-primary">
+        <thead>
+            <tr>
+                {% if mode == 'group' %}
+                    <th id="header-group" class="has-text-centered min-250">Group</th>
+                    <th id="header-group-privileges" class="has-text-centered min-500">Privileges</th>
+                {% elif mode == 'server' %}
+                    <th id="header-server-enabled" class="has-text-centered is-hidden-mobile">Enabled</th>
+                    <th id="header-server" class="has-text-centered min-250">Server</th>
+                    <th id="header-server-ip" class="has-text-centered min-250">IP</th>
+                {% elif mode == 'apikey' %}
+                    <th id="header-api" class="has-text-centered min-500">Key</th>
+                {% else %}
+                    <th id="header-admin" class="has-text-centered min-250">Admin</th>
+                    <th id="header-admin-groups" class="has-text-centered min-500">Groups</th>
+                {% endif %}
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+</div>
 {% include 'management_add.html' with context %}
 {% include 'error.html' %}
 {% if mode == 'server' %}
