@@ -128,7 +128,8 @@ function addInfractionRow(infraction) {
     //The time
     let date = new Date(infraction['created'] * 1000);
     let dateStr = date.getFullYear() + '/' + (date.getMonth() + 1) + '/' + date.getDate() + ' '
-        + date.getHours() + ':' + date.getMinutes() + ':' + date.getSeconds();
+        + (date.getHours() >= 10 ? date.getHours() : '0' + date.getHours()) + ':'
+        + (date.getMinutes() >= 10 ? date.getMinutes() : '0' + date.getMinutes());
 
     let date_cell = document.createElement('td');
     date_cell.classList.add('vertical-center', 'is-hidden-touch');
