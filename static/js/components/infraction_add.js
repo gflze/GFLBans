@@ -336,6 +336,8 @@ function submitInfraction() {
     if (!createCall[0]) {
         $('#infractionCreateErrorMsg').text(createCall[1]);
         $('#infractionCreateError').removeClass('is-hidden');
+        $('#loadingModal').removeClass('is-active');
+        $('#createModal .modal-card-body').get(0).scrollTo(0,0);
         return;
     }
 
