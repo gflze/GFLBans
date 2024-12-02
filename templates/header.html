@@ -69,14 +69,13 @@
                     </form>
                 </div>
             </div>
-
-            <a id="dark-mode-toggle"
-               data-modeset="{% if opposite_theme %}opposite{% endif %}"
-               class="navbar-item"><i class="far nav-icon-mobile"></i><span class="is-hidden-desktop">Toggle Dark Mode</span></a>
-
         </div>
 
         <div class="navbar-end">
+
+            <a id="dark-mode-toggle"
+               data-modeset="{% if opposite_theme %}opposite{% endif %}"
+               class="navbar-item"><i class="fas nav-icon-mobile"></i><span class="is-hidden-desktop">Toggle Dark Mode</span></a>
 
             {% if user is none %}
             <a id="login" class="navbar-item" href="/login"><img src="/static/images/steam_login.png" alt="Login with Steam"></a>
