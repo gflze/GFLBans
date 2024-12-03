@@ -42,7 +42,7 @@ from gflbans.internal.models.protocol import GetInfractionsReply, GetInfractions
     CreateInfractionUsingPolicy, RemoveInfractionsOfPlayerReply, RemoveInfractionsOfPlayer, ModifyInfraction, \
     AddComment, EditComment, DeleteComment, DeleteFile, UnlinkInfractionTieringPolicy, InfractionStatisticsReply
 from gflbans.internal.pyapi_utils import get_acting, load_admin
-from gflbans.internal.search import do_infraction_search
+from gflbans.internal.search import do_infraction_search, do_infraction_search_v2
 from gflbans.internal.utils import slugify
 
 infraction_router = APIRouter(default_response_class=ORJSONResponse)
@@ -95,7 +95,7 @@ async def search_infractions(request: Request, query: Search = Depends(Search), 
     incl_ip = should_include_ip(auth[0], auth[2])
 
     try:
-        cq, _ = await do_infraction_search(request.app, query.xql_string, include_ip=incl_ip, strict=query.strict_xql)
+        cq = await do_infraction_search_v2(request.app, query, include_ip=incl_ip)
     except SearchError:
         raise HTTPException(detail='Query failed to compile or took too long to execute', status_code=400)
 

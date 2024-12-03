@@ -43,7 +43,7 @@ strong {
 
 tr.infraction-row:hover,
 .menu-list a:hover,
-.pagination-link:hover,
+.pagination-link:not(.is-current):hover,
 .background-secondary a.panel-block:hover {
     background-color: var(--background-secondary);
 }
@@ -170,4 +170,8 @@ a.navbar-item:focus {
 
 .panel-block {
     display: block;
+}
+
+.radio[disabled]:hover {
+    color: #7a7a7a
 }

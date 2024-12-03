@@ -274,6 +274,7 @@ async function loadModal() {
 
     //Setup and show the error modal
     $('#createModal').addClass('is-active');
+    $('#createModal .modal-card-body').get(0).scrollTo(0,0);
 
     $('#htmlRoot').addClass('is-clipped');
 

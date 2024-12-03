@@ -35,9 +35,45 @@ class GetSingleInfractionReply(BaseModel):
 
 
 class Search(BaseModel):
-    xql_string: constr(min_length=1, max_length=256)
+    search: Optional[constr(min_length=1, max_length=256)]
+
+    created: Optional[int]
+    created_comparison_mode: Optional[constr(min_length=1, max_length=2)]
+    expires: Optional[int]
+    expires_comparison_mode: Optional[constr(min_length=1, max_length=2)]
+    time_left: Optional[int]
+    time_left_comparison_mode: Optional[constr(min_length=1, max_length=2)]
+    duration: Optional[int]
+    duration_comparison_mode: Optional[constr(min_length=1, max_length=2)]
+    gs_service: Optional[constr(min_length=1, max_length=7)]
+    gs_id: Optional[constr(min_length=1, max_length=256)]
+    gs_name: Optional[constr(min_length=1, max_length=30)]
+    ip: Optional[constr(min_length=1, max_length=15)]
+    admin_id: Optional[constr(min_length=1, max_length=256)]
+    admin: Optional[constr(min_length=1, max_length=30)]
+    server: Optional[constr(min_length=1, max_length=30)]
+    reason: Optional[constr(min_length=1, max_length=256)]
+    ureason: Optional[constr(min_length=1, max_length=256)]
+    # Bit Flags
+    is_stystem: Optional[bool]
+    is_server: Optional[bool]
+    is_global: Optional[bool]
+    is_super_global: Optional[bool]
+    is_permanent: Optional[bool]
+    is_decl_online_only: Optional[bool]
+    is_vpn: Optional[bool]
+    is_web: Optional[bool]
+    is_active: Optional[bool]
+    is_expired: Optional[bool]
+    is_removed: Optional[bool]
+    is_voice: Optional[bool]
+    is_text: Optional[bool]
+    is_ban: Optional[bool]
+    is_admin_chat: Optional[bool]
+    is_call_admin: Optional[bool]
+    is_session: Optional[bool]
+
     admin: Optional[Initiator]  # Omit -> SYSTEM, None -> Guest User (can't see IPs)
-    strict_xql: bool = False
 
     # Cursor control
     limit: conint(gt=0, le=50) = 50

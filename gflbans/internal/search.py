@@ -1,9 +1,9 @@
-import asyncio
 import os
 import re
 from concurrent.futures.process import ProcessPoolExecutor
-from functools import partial
+from typing import Any, Dict
 
+from bson import ObjectId
 from pymongo import MongoClient
 
 from defusedxml import ElementTree
@@ -14,6 +14,7 @@ from gflbans.internal.flags import INFRACTION_SYSTEM, INFRACTION_PERMANENT, INFR
     INFRACTION_VPN, INFRACTION_WEB, INFRACTION_REMOVED, INFRACTION_VOICE_BLOCK, INFRACTION_CHAT_BLOCK, INFRACTION_BAN, \
     INFRACTION_ADMIN_CHAT_BLOCK, INFRACTION_CALL_ADMIN_BAN, INFRACTION_SESSION
 from gflbans.internal.log import logger
+from gflbans.internal.models.protocol import Search
 
 executor = ProcessPoolExecutor(max_workers=3)
 
@@ -130,7 +131,7 @@ FIELD_MAP = {
     'ip': ('ip', str),
     'admin_id': ('admin', ips_id_to_mongo_object_id),
     'admin': ('admin', admin_name_mongo_ids),
-    'server': ('server', server_ip_port_to_mongo_id),
+    'server': ('server', str),
     'reason': ('reason', str),
     'ureason': ('ureason', str),
     # Bitflag fields use a custom type for easier detection
@@ -254,6 +255,64 @@ async def do_infraction_search(app, query: str, include_ip=False, strict=False):
         return build_plain_text_query(qs), False
 
     return compiled_query, True
+
+
+async def do_infraction_search_v2(app, query: Search, include_ip: bool = False) -> Dict[str, Any]:
+    logger.info(f"Performing search with: {query}")
+    
+    parsed_query = {}
+    if query.search:
+        if len(query.search) > 2048:
+            raise SearchError('Search too long!')
+        qs = query.search.strip(' \t\r\n')
+
+        # Check if we have a steamid
+        id64 = id64_or_none(app, qs)
+        if id64 is not None:
+            parsed_query = {'user.gs_service': 'steam', 'user.gs_id': id64}
+
+        # Fall back to a plain text search
+        parsed_query = build_plain_text_query(qs)
+
+    for field, (mongo_field, field_type, *flag_value) in FIELD_MAP.items():
+        value = getattr(query, field, None)
+
+        if value is None:
+            continue
+
+        if field == 'ip' and not include_ip:
+            continue
+
+        if field_type == 'bitflag':
+            if 'flags' not in parsed_query:
+                parsed_query['flags'] = {'$bitsAllSet': 0}
+            parsed_query['flags']['$bitsAllSet'] |= flag_value[0]
+        elif field == "server":
+            try:
+                parsed_query[mongo_field] = ObjectId(value)
+            except Exception:
+                raise SearchError(f"Invalid ObjectId format for server: {value}")
+        else:
+            if isinstance(value, str) and mongo_field == 'user.gs_name':
+                parsed_query[mongo_field] = {'$regex': re.escape(value), '$options': 'i'}
+            else:
+                parsed_query[mongo_field] = field_type(value)
+
+    # Handle comparison modes
+    for field, comparison_field in [
+        ("created", "created_comparison_mode"),
+        ("expires", "expires_comparison_mode"),
+        ("time_left", "time_left_comparison_mode"),
+        ("duration", "duration_comparison_mode"),
+    ]:
+        value = getattr(query, field, None)
+        comparison_mode = getattr(query, comparison_field, None)
+
+        if value is not None and comparison_mode in {"=", "<", "<=", ">", ">="}:
+            mongo_comparison = {"=": "$eq","<": "$lt", "<=": "$lte", ">": "$gt", ">=": "$gte"}[comparison_mode]
+            parsed_query[field] = {mongo_comparison: value}
+
+    return parsed_query
 
 
 # For VPN whitelist

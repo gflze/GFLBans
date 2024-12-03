@@ -1,3 +1,40 @@
+const searchParams = [
+    "search",
+    "created",
+    "created_comparison_mode",
+    "expires",
+    "expires_comparison_mode",
+    "time_left",
+    "time_left_comparison_mode",
+    "duration",
+    "duration_comparison_mode",
+    "gs_service",
+    "gs_id",
+    "gs_name",
+    "ip",
+    "admin_id",
+    "admin",
+    "server",
+    "reason",
+    "ureason",
+    "is_stystem",
+    "is_server",
+    "is_global",
+    "is_super_global",
+    "is_permanent",
+    "is_decl_online_only",
+    "is_vpn",
+    "is_web",
+    "is_active",
+    "is_expired",
+    "is_removed",
+    "is_voice",
+    "is_text",
+    "is_ban",
+    "is_admin_chat",
+    "is_call_admin",
+    "is_session"
+]
 const urlParams = new URLSearchParams(window.location.search);
 
 function handleResp(d, page, s, m) {
@@ -80,17 +117,27 @@ function loadInfractions(page = 1, s, m) {
     });
 }
 
-function doSearch(query, page = 1, s, m) {
-    if (query.length < 1 || query.length > 256) {
-        showError('The search query cannot be empty and may be no longer than 256 characters.');
-        return;
+function doSearch(page = 1, s, m) {
+    let query = '/api/infractions/search?skip=' + ((page - 1) * 30);
+    
+    for (let i = 0; i < searchParams.length; i++) {
+        if (urlParams.get(searchParams[i]) != null)
+            query = query.concat(`&${searchParams[i]}=${encodeURIComponent(urlParams.get(searchParams[i]))}`);
     }
 
-    gbRequest('GET', '/api/infractions/search?skip=' + ((page - 1) * 30) + '&xql_string=' + encodeURIComponent(query), null).then(function (a) {
+    gbRequest('GET', query, null).then(function (a) {
         handleResp(a, page, s, m);
     }).catch(e => {
         logException(e);
     });
+}
+
+function isSearch() {
+    for (let i = 0; i < searchParams.length; i++) {
+        if (urlParams.get(searchParams[i]) != null)
+            return true;
+    }
+    return false;
 }
 
 $(document).ready(function () {
@@ -115,10 +162,8 @@ $(document).ready(function () {
 
     let m = getMeta('load_infraction');
 
-    let q = urlParams.get('search');
-
-    if (q != null) {
-        doSearch(q, page, start, m);
+    if (isSearch) {
+        doSearch(page, start, m);
     } else {
         loadInfractions(page, start, m);
     }
