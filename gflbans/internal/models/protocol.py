@@ -45,6 +45,7 @@ class Search(BaseModel):
     time_left_comparison_mode: Optional[constr(min_length=1, max_length=2)]
     duration: Optional[int]
     duration_comparison_mode: Optional[constr(min_length=1, max_length=2)]
+
     gs_service: Optional[constr(min_length=1, max_length=7)]
     gs_id: Optional[constr(min_length=1, max_length=256)]
     gs_name: Optional[constr(min_length=1, max_length=30)]
@@ -54,8 +55,9 @@ class Search(BaseModel):
     server: Optional[constr(min_length=1, max_length=30)]
     reason: Optional[constr(min_length=1, max_length=256)]
     ureason: Optional[constr(min_length=1, max_length=256)]
-    # Bit Flags
-    is_stystem: Optional[bool]
+    # is_active: Optional[bool]
+    # is_expired: Optional[bool]
+    is_system: Optional[bool]
     is_server: Optional[bool]
     is_global: Optional[bool]
     is_super_global: Optional[bool]
@@ -72,8 +74,8 @@ class Search(BaseModel):
     is_admin_chat: Optional[bool]
     is_call_admin: Optional[bool]
     is_session: Optional[bool]
-
-    admin: Optional[Initiator]  # Omit -> SYSTEM, None -> Guest User (can't see IPs)
+    # is_server: Optional[bool]
+    # is_warning: Optional[bool]
 
     # Cursor control
     limit: conint(gt=0, le=50) = 50

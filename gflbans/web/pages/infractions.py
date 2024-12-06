@@ -8,7 +8,7 @@ from gflbans.internal.config import HOST, MONGO_DB
 from gflbans.internal.database.infraction import DInfraction
 from gflbans.internal.flags import PERMISSION_VIEW_IP_ADDR
 from gflbans.internal.models.protocol import Search
-from gflbans.internal.search import FIELD_MAP, do_infraction_search_v2
+from gflbans.internal.search import FIELD_MAP, do_infraction_search
 from gflbans.web.pages import sctx
 
 from gflbans.internal.errors import SearchError
@@ -53,9 +53,9 @@ async def preload_infraction(request: Request, infraction_id: str, query: Search
             incl_ip = sc['user'].permissions & PERMISSION_VIEW_IP_ADDR == PERMISSION_VIEW_IP_ADDR
 
         try:
-            cq = await do_infraction_search_v2(request.app, query, include_ip=incl_ip, strict=False)
-        except SearchError:
-            raise HTTPException(detail='Query failed to compile or took too long to execute', status_code=400)
+            cq = await do_infraction_search(request.app, query, include_ip=incl_ip, strict=False)
+        except SearchError as e:
+            raise HTTPException(detail=f'SearchError: {e.args[0]}', status_code=400)
 
         s_dict = {'$and': [s_dict, cq]}
 

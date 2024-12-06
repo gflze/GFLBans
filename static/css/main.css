@@ -842,8 +842,7 @@ img {
     padding-right: 10px;
 }
 
-#search-user-info > input:first-child,
-#search-admin-info > input {
+#search-user-info > input:first-child {
     width: 50%;
     flex: none;
 }

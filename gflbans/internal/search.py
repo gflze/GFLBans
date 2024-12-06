@@ -10,9 +10,10 @@ from defusedxml import ElementTree
 
 from gflbans.internal.config import MONGO_URI, MONGO_DB
 from gflbans.internal.errors import SearchError
-from gflbans.internal.flags import INFRACTION_SYSTEM, INFRACTION_PERMANENT, INFRACTION_SUPER_GLOBAL, INFRACTION_GLOBAL, \
+from gflbans.internal.flags import INFRACTION_DEC_ONLINE_ONLY, INFRACTION_SYSTEM, INFRACTION_PERMANENT, INFRACTION_SUPER_GLOBAL, INFRACTION_GLOBAL, \
     INFRACTION_VPN, INFRACTION_WEB, INFRACTION_REMOVED, INFRACTION_VOICE_BLOCK, INFRACTION_CHAT_BLOCK, INFRACTION_BAN, \
     INFRACTION_ADMIN_CHAT_BLOCK, INFRACTION_CALL_ADMIN_BAN, INFRACTION_SESSION
+from gflbans.internal.integrations.ips import ips_get_member_id_from_gsid
 from gflbans.internal.log import logger
 from gflbans.internal.models.protocol import Search
 
@@ -31,6 +32,28 @@ def ips_id_to_mongo_object_id(s: str):
         return str(os.urandom(32).hex())  # This should result in the search returning nothing.
 
     return r['_id']
+
+# Find admins given a generic steam id
+def steam_id_to_mongo_object_id(steam_id: str):
+    steam_id_type = wut(steam_id)
+
+    if steam_id_type is None:
+        raise SearchError('Invalid admin Steam ID')
+
+    typ, idt = steam_id_type
+
+    ips_id = None
+    if typ == 'id':
+        ips_id = ips_get_member_id_from_gsid(steamid_to_64(idt))
+    elif typ == 'id64':
+        ips_id = ips_get_member_id_from_gsid(idt)
+    elif typ == 'id32':
+        ips_id = int(idt)
+
+    if ips_id is None:
+        raise SearchError('Invalid admin Steam ID type')
+    
+    return ips_id_to_mongo_object_id(ips_id)
 
 
 def admin_name_mongo_ids(s: str):
@@ -68,6 +91,7 @@ REGEX_STEAM32 = re.compile('(?P<steamid32>(U):(\\d):(\\d+))')
 REGEX_STEAM64 = re.compile('(?P<steamid64>(\\d){17})')
 REGEX_IDLINK = re.compile('(http(s)?:\\/\\/)?(www\\.)?steamcommunity.com\\/profiles\\/(?P<steamid64>(\\d){17})')
 REGEX_CUSTOM_URL = re.compile('(http(s)?:\\/\\/)?(www\\.)?steamcommunity.com\\/id\\/(?P<profile_name>[^\\/]+)')
+REGEX_IS_NUMBER = re.compile('(\\d){17}')
 
 
 def wut(gs_id):
@@ -81,6 +105,8 @@ def wut(gs_id):
         return 'id64', REGEX_IDLINK.match(gs_id).groupdict()['steamid64']
     elif REGEX_CUSTOM_URL.match(gs_id):
         return 'custom', REGEX_CUSTOM_URL.match(gs_id).groupdict()['profile_name']
+    elif gs_id.isdigit() and len(str(int(gs_id) + 76561197960265728)) == 17:
+        return 'id32', ips_get_member_id_from_gsid(int(gs_id) + 76561197960265728)
     else:
         return None
 
@@ -104,7 +130,7 @@ async def id64_or_none(app, gs_id):
             id64 = idt
         elif typ == 'id32':
             id64 = str(int(idt) + 76561197960265728)
-        else:
+        elif typ == 'id':
             id64 = steamid_to_64(idt)
 
         if id64 is not None:
@@ -112,6 +138,23 @@ async def id64_or_none(app, gs_id):
 
     return None
 
+def id64_or_none_no_web(gs_id):
+    steam_id_type = wut(gs_id)
+
+    if steam_id_type is None:
+        raise SearchError('Invalid Steam ID')
+
+    typ, idt = steam_id_type
+
+    if typ == 'id':
+        return steamid_to_64(idt)
+    elif typ == 'id64':
+        return idt
+    elif typ == 'id32':
+        return str(int(idt) + 76561197960265728)
+
+    raise SearchError('Invalid Steam ID type')
+    
 
 def steamid_to_64(steamid):
     n = steamid[6:].split(':')
@@ -122,18 +165,17 @@ def steamid_to_64(steamid):
 
 
 FIELD_MAP = {
-    'created': ('created', int),
-    'expires': ('expires', int),
-    'time_left': ('time_left', int),
     'gs_service': ('user.gs_service', str),
-    'gs_id': ('user.gs_id', str),
+    'gs_id': ('user.gs_id', id64_or_none_no_web),
     'gs_name': ('user.gs_name', str),
     'ip': ('ip', str),
-    'admin_id': ('admin', ips_id_to_mongo_object_id),
+    'admin_id': ('admin', steam_id_to_mongo_object_id),
     'admin': ('admin', admin_name_mongo_ids),
-    'server': ('server', str),
+    'server': ('server', ObjectId),
     'reason': ('reason', str),
     'ureason': ('ureason', str),
+    # 'is_active': (),
+    # 'is_expired': (),
     # Bitflag fields use a custom type for easier detection
     'is_system': ('flags', 'bitflag', INFRACTION_SYSTEM),
     'is_global': ('flags', 'bitflag', INFRACTION_GLOBAL),
@@ -147,7 +189,12 @@ FIELD_MAP = {
     'is_ban': ('flags', 'bitflag', INFRACTION_BAN),
     'is_admin_chat': ('flags', 'bitflag', INFRACTION_ADMIN_CHAT_BLOCK),
     'is_call_admin': ('flags', 'bitflag', INFRACTION_CALL_ADMIN_BAN),
-    'is_session': ('flags', 'bitflag', INFRACTION_SESSION)
+    'is_session': ('flags', 'bitflag', INFRACTION_SESSION),
+    'is_decl_online_only': ('flags', 'bitflag', INFRACTION_DEC_ONLINE_ONLY)
+
+    # NOT Bitflags
+    # 'is_server': ('flags', 'notBitflag', INFRACTION_GLOBAL | INFRACTION_SUPER_GLOBAL),
+    # 'is_warning': ('flags', 'notBitflag', INFRACTION_VOICE_BLOCK | INFRACTION_CHAT_BLOCK | INFRACTION_BAN | INFRACTION_ADMIN_CHAT_BLOCK | INFRACTION_CALL_ADMIN_BAN)
 }
 
 
@@ -229,35 +276,7 @@ def build_plain_text_query(query_string):
         ]
     }
 
-
-async def do_infraction_search(app, query: str, include_ip=False, strict=False):
-    logger.info(f'XQL: compile and run {query}')
-
-    if len(query) > 2048:
-        raise SearchError('Query too long!')
-
-    try:
-        compiled_query = build_mongo_query(query, include_ip, strict)
-    except Exception as e:
-        if strict:
-            logger.error('Search failed!', exc_info=e)
-            raise SearchError('Query compilation failed') from e
-
-        qs = query.strip(' \t\r\n')
-
-        # Check if we have a steamid
-        id64 = await id64_or_none(app, qs)
-
-        if id64 is not None:
-            return {'user.gs_service': 'steam', 'user.gs_id': id64}, True
-
-        # Fall back to a plain text search
-        return build_plain_text_query(qs), False
-
-    return compiled_query, True
-
-
-async def do_infraction_search_v2(app, query: Search, include_ip: bool = False) -> Dict[str, Any]:
+async def do_infraction_search(app, query: Search, include_ip: bool = False) -> Dict[str, Any]:
     logger.info(f"Performing search with: {query}")
     
     parsed_query = {}
@@ -287,11 +306,11 @@ async def do_infraction_search_v2(app, query: Search, include_ip: bool = False) 
             if 'flags' not in parsed_query:
                 parsed_query['flags'] = {'$bitsAllSet': 0}
             parsed_query['flags']['$bitsAllSet'] |= flag_value[0]
-        elif field == "server":
-            try:
-                parsed_query[mongo_field] = ObjectId(value)
-            except Exception:
-                raise SearchError(f"Invalid ObjectId format for server: {value}")
+        elif callable(field_type) and field == 'admin':
+            possible_admin_ids = admin_name_mongo_ids(value)
+            parsed_query['$or'] = [
+                {mongo_field: admin_id} for admin_id in possible_admin_ids
+            ]
         else:
             if isinstance(value, str) and mongo_field == 'user.gs_name':
                 parsed_query[mongo_field] = {'$regex': re.escape(value), '$options': 'i'}
