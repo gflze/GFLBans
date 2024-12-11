@@ -38,13 +38,13 @@ class Search(BaseModel):
     search: Optional[constr(min_length=1, max_length=256)]
 
     created: Optional[int]
-    created_comparison_mode: Optional[constr(min_length=1, max_length=2)]
+    created_comparison_mode: Optional[constr(min_length=1, max_length=3)]
     expires: Optional[int]
-    expires_comparison_mode: Optional[constr(min_length=1, max_length=2)]
+    expires_comparison_mode: Optional[constr(min_length=1, max_length=3)]
     time_left: Optional[int]
-    time_left_comparison_mode: Optional[constr(min_length=1, max_length=2)]
+    time_left_comparison_mode: Optional[constr(min_length=1, max_length=3)]
     duration: Optional[int]
-    duration_comparison_mode: Optional[constr(min_length=1, max_length=2)]
+    duration_comparison_mode: Optional[constr(min_length=1, max_length=3)]
 
     gs_service: Optional[constr(min_length=1, max_length=7)]
     gs_id: Optional[constr(min_length=1, max_length=256)]
@@ -55,10 +55,9 @@ class Search(BaseModel):
     server: Optional[constr(min_length=1, max_length=30)]
     reason: Optional[constr(min_length=1, max_length=256)]
     ureason: Optional[constr(min_length=1, max_length=256)]
-    # is_active: Optional[bool]
-    # is_expired: Optional[bool]
+    is_active: Optional[bool]
+    is_expired: Optional[bool]
     is_system: Optional[bool]
-    is_server: Optional[bool]
     is_global: Optional[bool]
     is_super_global: Optional[bool]
     is_permanent: Optional[bool]
@@ -74,8 +73,6 @@ class Search(BaseModel):
     is_admin_chat: Optional[bool]
     is_call_admin: Optional[bool]
     is_session: Optional[bool]
-    # is_server: Optional[bool]
-    # is_warning: Optional[bool]
 
     # Cursor control
     limit: conint(gt=0, le=50) = 50

@@ -150,40 +150,93 @@
                     Warning
                 </button>
             </div>
-            
-            <h2 class="text-primary">Time</h2>
-            <div class="search-area">
-                <div id="search-session-check-field" class="control">
-                    <label class="checkbox">
-                        <input id="search-time-session-check" type="checkbox" name="isSession">
-                        Session
+
+            <h2 class="text-primary">Status</h2>
+            <div class="search-area control field">
+                    <label id="search-status-any-label" class="radio status-radio-button">
+                        <input id="search-status-any-check" type="radio" name="status-type">
+                        Any
                     </label>
-                </div>
-                <div id="search-perm-check-field" class="control">
-                    <label class="checkbox">
-                        <input id="search-time-permanent-check" type="checkbox" name="isPermanent">
+                    <label id="search-status-active-label" class="radio status-radio-button">
+                        <input id="search-status-active-check" type="radio" name="status-type">
+                        Active
+                    </label>
+                    <label id="search-status-expired-label" class="radio status-radio-button">
+                        <input id="search-status-expired-check" type="radio" name="status-type">
+                        Expired
+                    </label>
+                    <label id="search-status-removed-label" class="radio status-radio-button">
+                        <input id="search-status-removed-check" type="radio" name="status-type">
+                        Removed
+                    </label>
+            </div>
+
+            <h2 class="text-primary">Time</h2>
+            <div class="search-area ">
+                <div>
+                    <label id="earch-status-any-label" class="time-radio-button">
+                        <input id="search-time-any-check" type="radio" name="time-type">
+                        Any
+                    </label>
+                    <label id="search-time-permanent-label" class="time-radio-button">
+                        <input id="search-time-permanent-check" type="radio" name="time-type">
                         Permanent
                     </label>
+                    <label id="search-time-session-label" class="time-radio-button">
+                        <input id="search-time-session-check" type="radio" name="time-type">
+                        Session
+                    </label>
+                    <label id="search-time-game-timed-label" class="time-radio-button">
+                        <input id="search-time-game-timed-check" type="radio" name="time-type">
+                        Game Timed (time remaining only decreases while user is connected)
+                    </label>
+                    <label id="search-time-real-world-timed-label" class="time-radio-button">
+                        <input id="search-time-real-world-timed-check" type="radio" name="time-type">
+                        Real World Timed (time remaining decreases while user is not connected)
+                    </label>
                 </div>
-                <div id="search-game-timed-check-field" class="field">
-                    <div class="control">
-                        <label class="checkbox">
-                            <input id="search-time-game-timed-check" type="checkbox" name="isTimeDec">
-                            Game Timed (time remaining only decreases while user is connected)
-                        </label>
+
+                <div id="search-time-date-creation-field" class="time-field">
+                    <label>Creation Date:</label>
+                    <div class="field has-addons is-justify-content-center">
+                        <div class="control">
+                            <div class="select">
+                                <select id="search-time-date-creation-compare-selector">
+                                    <option value="eq" selected>On</option>
+                                    <option value="gt">After</option>
+                                    <option value="lt">Before</option>
+                                </select>
+                            </div>
+                        </div>
+                        <input id="search-time-date-creation" type="date" class="input">
                     </div>
                 </div>
+
+                <div id="search-time-date-expiration-field" class="time-field">
+                    <label>Expiration Date:</label>
+                    <div class="field has-addons is-justify-content-center">
+                        <div class="control">
+                            <div class="select">
+                                <select id="search-time-date-expiration-compare-selector">
+                                    <option value="eq" selected>On</option>
+                                    <option value="gt">After</option>
+                                    <option value="lt">Before</option>
+                                </select>
+                            </div>
+                        </div>
+                        <input id="search-time-date-expiration" type="date" class="input">
+                    </div>
+                </div>
+
                 <div id="search-time-duration-field" class="time-field">
                     <label>Total Time:</label>
                     <div class="field has-addons is-justify-content-center">
                         <div class="control">
                             <div class="select">
                                 <select id="search-time-duration-compare-selector">
-                                    <option value="=" selected>=</option>
-                                    <option value=">">&gt;</option>
-                                    <option value="<">&lt;</option>
-                                    <option value=">=">&gt;=</option>
-                                    <option value="<=">&lt;=</option>
+                                    <option value="eq" selected>=</option>
+                                    <option value="gt">&gt;</option>
+                                    <option value="lt">&lt;</option>
                                 </select>
                             </div>
                         </div>
@@ -211,11 +264,9 @@
                         <div class="control">
                             <div class="select">
                                 <select id="search-time-timeleft-compare-selector">
-                                    <option value="=" selected>=</option>
-                                    <option value=">">&gt;</option>
-                                    <option value="<">&lt;</option>
-                                    <option value=">=">&gt;=</option>
-                                    <option value="<=">&lt;=</option>
+                                    <option value="eq" selected>=</option>
+                                    <option value="gt">&gt;</option>
+                                    <option value="lt">&lt;</option>
                                 </select>
                             </div>
                         </div>
@@ -236,57 +287,6 @@
                         </div>
                     </div>
                 </div>
-
-                <div id="search-time-date-creation-field" class="time-field">
-                    <label>Creation Date:</label>
-                    <div class="field has-addons is-justify-content-center">
-                        <div class="control">
-                            <div class="select">
-                                <select id="search-time-date-creation-compare-selector">
-                                    <option value="=" selected>On</option>
-                                    <option value=">">After</option>
-                                    <option value="<">Before</option>
-                                </select>
-                            </div>
-                        </div>
-                        <input id="search-time-date-creation" type="date" class="input">
-                    </div>
-                </div>
-                <div id="search-time-date-expiration-field" class="time-field">
-                    <label>Expiration Date:</label>
-                    <div class="field has-addons is-justify-content-center">
-                        <div class="control">
-                            <div class="select">
-                                <select id="search-time-date-expiration-compare-selector">
-                                    <option value="=" selected>On</option>
-                                    <option value=">">After</option>
-                                    <option value="<">Before</option>
-                                </select>
-                            </div>
-                        </div>
-                        <input id="search-time-date-expiration" type="date" class="input">
-                    </div>
-                </div>
-            </div>
-
-            <h2 class="text-primary">Status</h2>
-            <div class="search-area control field">
-                    <label id="search-status-any-label" class="radio status-radio-button">
-                        <input id="search-status-any-check" type="radio" name="status-type">
-                        Any
-                    </label>
-                    <label id="search-status-active-label" class="radio status-radio-button">
-                        <input id="search-status-active-check" type="radio" name="status-type">
-                        Active
-                    </label>
-                    <label id="search-status-expired-label" class="radio status-radio-button">
-                        <input id="search-status-expired-check" type="radio" name="status-type">
-                        Expired
-                    </label>
-                    <label id="search-status-removed-label" class="radio status-radio-button">
-                        <input id="search-status-removed-check" type="radio" name="status-type">
-                        Removed
-                    </label>
             </div>
         </section>
         <footer class="modal-card-foot background-tertiary">

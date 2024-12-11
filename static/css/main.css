@@ -847,6 +847,10 @@ img {
     flex: none;
 }
 
+.time-radio-button {
+    display: block;
+}
+
 .time-field > .has-addons > .control:first-child select {
     width: 100px;
 }
@@ -856,7 +860,7 @@ img {
     width: 253px;
 }
 
-#search-time-date-creation-field {
+#search-time-duration-field {
     margin-top: 0.75rem;
 }
 

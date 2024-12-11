@@ -1,6 +1,8 @@
+from datetime import timedelta
 import os
 import re
 from concurrent.futures.process import ProcessPoolExecutor
+import time
 from typing import Any, Dict
 
 from bson import ObjectId
@@ -54,18 +56,6 @@ def steam_id_to_mongo_object_id(steam_id: str):
         raise SearchError('Invalid admin Steam ID type')
     
     return ips_id_to_mongo_object_id(ips_id)
-
-
-def admin_name_mongo_ids(s: str):
-    client = MongoClient(MONGO_URI)
-    col = client[MONGO_DB].admin_cache
-
-    r = [doc['_id'] for doc in col.find({'name': {'$regex': s, '$options': 'i'}})]
-
-    if len(r) <= 0:
-        return str(os.urandom(32).hex())
-
-    return r
 
 
 def server_ip_port_to_mongo_id(s: str):
@@ -164,174 +154,191 @@ def steamid_to_64(steamid):
     return str(w)
 
 
-FIELD_MAP = {
-    'gs_service': ('user.gs_service', str),
-    'gs_id': ('user.gs_id', id64_or_none_no_web),
-    'gs_name': ('user.gs_name', str),
-    'ip': ('ip', str),
-    'admin_id': ('admin', steam_id_to_mongo_object_id),
-    'admin': ('admin', admin_name_mongo_ids),
-    'server': ('server', ObjectId),
-    'reason': ('reason', str),
-    'ureason': ('ureason', str),
-    # 'is_active': (),
-    # 'is_expired': (),
-    # Bitflag fields use a custom type for easier detection
-    'is_system': ('flags', 'bitflag', INFRACTION_SYSTEM),
-    'is_global': ('flags', 'bitflag', INFRACTION_GLOBAL),
-    'is_super_global': ('flags', 'bitflag', INFRACTION_SUPER_GLOBAL),
-    'is_permanent': ('flags', 'bitflag', INFRACTION_PERMANENT),
-    'is_vpn': ('flags', 'bitflag', INFRACTION_VPN),
-    'is_web': ('flags', 'bitflag', INFRACTION_WEB),
-    'is_removed': ('flags', 'bitflag', INFRACTION_REMOVED),
-    'is_voice': ('flags', 'bitflag', INFRACTION_VOICE_BLOCK),
-    'is_text': ('flags', 'bitflag', INFRACTION_CHAT_BLOCK),
-    'is_ban': ('flags', 'bitflag', INFRACTION_BAN),
-    'is_admin_chat': ('flags', 'bitflag', INFRACTION_ADMIN_CHAT_BLOCK),
-    'is_call_admin': ('flags', 'bitflag', INFRACTION_CALL_ADMIN_BAN),
-    'is_session': ('flags', 'bitflag', INFRACTION_SESSION),
-    'is_decl_online_only': ('flags', 'bitflag', INFRACTION_DEC_ONLINE_ONLY)
+def contains_str(s: str):
+    return {'$regex': re.escape(s), '$options': 'i'}
 
-    # NOT Bitflags
-    # 'is_server': ('flags', 'notBitflag', INFRACTION_GLOBAL | INFRACTION_SUPER_GLOBAL),
-    # 'is_warning': ('flags', 'notBitflag', INFRACTION_VOICE_BLOCK | INFRACTION_CHAT_BLOCK | INFRACTION_BAN | INFRACTION_ADMIN_CHAT_BLOCK | INFRACTION_CALL_ADMIN_BAN)
-}
+async def plaintext_search(app, s: str):
+    if len(s) > 2048:
+        raise SearchError('Search too long!')
+    qs = s.strip(' \t\r\n')
 
-
-# Parses the input query and converts it into a MongoDB query.
-def build_mongo_query(query, include_ip, strict):
-    parsed_query = {}
-    
-    for field, (mongo_field, field_type, *flag_value) in FIELD_MAP.items():
-        if field in query:
-            if field == 'ip' and not include_ip:
-                continue
-            if field_type == 'bitflag':
-                if parsed_query['flags'] is None:
-                    parsed_query['flags'] = {'$bitsAllSet': flag_value}
-                else:
-                    parsed_query['flags'] = {'$bitsAllSet': parsed_query['flags']['$bitsAllSet'] | flag_value}
-            else:
-                value_list = query.split(f"{field}:")[-1].split()
-                value = ''
-                for val in value_list:
-                    val = val.strip(' ')
-                    if val[0] == '"' and val[len(val) - 1] == '"':
-                        value = val.strip('"')
-                        break
-                if len(value) == 0 or len(value.strip('"')) == 0:
-                    continue
-
-                if field == 'gs_name':
-                    # Special handling for steam_name - always use $regex to allow for non-exact name matching
-                    parsed_query[mongo_field] = {'$regex': re.escape(value), '$options': 'i'}
-                else:
-                    # Cast to the expected type or call the function on the value
-                    value = field_type(value)
-
-                    if mongo_field not in parsed_query:
-                        if type(value) == list:
-                            parsed_query[mongo_field] = list()
-                            parsed_query[mongo_field].append(value) # this is for parsing at end. list in a list means $or check it
-                        else:
-                            parsed_query[mongo_field] = value
-                    elif isinstance(parsed_query[mongo_field], list):
-                        parsed_query[mongo_field].append(value)
-                    else:
-                        parsed_query[mongo_field] = [parsed_query[mongo_field], value] # $and check these later
-
-    to_remove = list()
-    and_query = list()
-
-    for key, item in parsed_query.items():
-        if isinstance(item, list) and key != '$or' and key != '$and':
-            for value in item:
-                if type(value) == list:
-                    or_query = list()
-                    for val in value:
-                        or_query.append({key: val})
-                    and_query.append({'$or': or_query})
-                else:
-                    and_query.append({key: value})
-            to_remove.append(key)
-
-    if len(and_query) > 0:
-        parsed_query['$and'] = and_query
-        for key in to_remove:
-            del parsed_query[key]
-
-    if len(parsed_query) == 0 and len(query) > 0:
-        raise SearchError('No fields in query')
-    return parsed_query
+    id64 = await id64_or_none(app, qs)
+    if id64 is not None:
+        return {'user.gs_service': 'steam', 'user.gs_id': id64}
+    else:
+        return build_plain_text_query(qs)
 
 
 def build_plain_text_query(query_string):
+    search = contains_str(query_string)
     # Fallback to plain text search across multiple fields
-    return {
-        '$or': [
-            {'user.gs_id': {'$regex': re.escape(query_string), '$options': 'i'}},
-            {'user.gs_name': {'$regex': re.escape(query_string), '$options': 'i'}},
-            {'reason': {'$regex': re.escape(query_string), '$options': 'i'}},
-            {'ureason': {'$regex': re.escape(query_string), '$options': 'i'}}
-        ]
-    }
+    return {'$or': [{'user.gs_id': search}, {'user.gs_name': search}, {'reason': search}, {'ureason': search}]}
+
+
+def player_name_check(app, s: str):
+    return {'user.gs_name': {'$regex': re.escape(s), '$options': 'i'}}
+
+
+def admin_name_to_mongo_ids(app, s: str):
+    client = MongoClient(MONGO_URI)
+    col = client[MONGO_DB].admin_cache
+
+    r = [doc['_id'] for doc in col.find({'name': {'$regex': s, '$options': 'i'}})]
+
+    if len(r) <= 0:
+        return str(os.urandom(32).hex())
+
+    return {'$or': [{'admin': admin_id} for admin_id in r]}
+
+
+def expiration_check(app, b: bool):
+    if b:
+        return { "$and": [
+            {"flags": {"$bitsAllClear": INFRACTION_REMOVED}},
+            {"$or": [
+                {"$and": [
+                    {"expires": {"$exists": True}},
+                    {"expires": {"$lte": time.time()}}]},
+                {"$and": [
+                    {"time_left": {"$exists": True}},
+                    {"time_left": 0}]},
+                {"flags": {"$bitsAnySet": INFRACTION_SESSION}}]}]}
+    else:
+        return {"$and": [
+            {"$or": [
+                {"expires": {"$exists": False}},
+                {"expires": {"$gt": time.time()}}]},
+            {"$or": [
+                {"time_left": {"$exists": False}},
+                {"time_left": {"$gt": 0}}]},
+            {"flags": {"$bitsAllClear": INFRACTION_SESSION | INFRACTION_REMOVED}}]}
+
+
+def active_check(app, b: bool):
+    if b:
+        return {"$and": [
+            {"$or": [
+                {"expires": {"$exists": False}},
+                {"expires": {"$gt": time.time()}}]},
+            {"$or": [
+                {"time_left": {"$exists": False}},
+                {"time_left": {"$gt": 0}}]},
+            {"flags": {"$bitsAllClear": INFRACTION_SESSION | INFRACTION_REMOVED}}]}
+    else:
+        return {"$or": [
+            {"$and": [
+                {"expires": {"$exists": True}},
+                {"expires": {"$lte": time.time()}}]},
+            {"$and": [
+                {"time_left": {"$exists": True}},
+                {"time_left": 0}]},
+            {"flags": {"$bitsAnySet": INFRACTION_SESSION | INFRACTION_REMOVED}}]}
+
+
+FIELD_MAP = {
+    # Checks single mongodb document field
+    'gs_service':           ('user.gs_service', str),
+    'gs_id':                ('user.gs_id',      id64_or_none_no_web),
+    'ip':                   ('ip',              str),
+    'admin_id':             ('admin',           steam_id_to_mongo_object_id),
+    'server':               ('server',          ObjectId),
+    'reason':               ('reason',          contains_str),
+    'ureason':              ('ureason',         contains_str),
+
+    # Complex checks that can't simply be a value assigned to a key
+    'search':               ('computed', str,  plaintext_search),
+    'gs_name':              ('computed', str,  player_name_check),
+    'admin':                ('computed', str,  admin_name_to_mongo_ids),
+    'is_expired':           ('computed', bool, expiration_check),
+    'is_active':            ('computed', bool, active_check),
+
+    # Bitflag checks for 'flags' field in mongodb documents
+    'is_system':            ('bitflag', bool, INFRACTION_SYSTEM),
+    'is_global':            ('bitflag', bool, INFRACTION_GLOBAL),
+    'is_super_global':      ('bitflag', bool, INFRACTION_SUPER_GLOBAL),
+    'is_permanent':         ('bitflag', bool, INFRACTION_PERMANENT),
+    'is_vpn':               ('bitflag', bool, INFRACTION_VPN),
+    'is_web':               ('bitflag', bool, INFRACTION_WEB),
+    'is_removed':           ('bitflag', bool, INFRACTION_REMOVED),
+    'is_voice':             ('bitflag', bool, INFRACTION_VOICE_BLOCK),
+    'is_text':              ('bitflag', bool, INFRACTION_CHAT_BLOCK),
+    'is_ban':               ('bitflag', bool, INFRACTION_BAN),
+    'is_admin_chat':        ('bitflag', bool, INFRACTION_ADMIN_CHAT_BLOCK),
+    'is_call_admin':        ('bitflag', bool, INFRACTION_CALL_ADMIN_BAN),
+    'is_session':           ('bitflag', bool, INFRACTION_SESSION),
+    'is_decl_online_only':  ('bitflag', bool, INFRACTION_DEC_ONLINE_ONLY)
+}
 
 async def do_infraction_search(app, query: Search, include_ip: bool = False) -> Dict[str, Any]:
     logger.info(f"Performing search with: {query}")
-    
-    parsed_query = {}
-    if query.search:
-        if len(query.search) > 2048:
-            raise SearchError('Search too long!')
-        qs = query.search.strip(' \t\r\n')
 
-        # Check if we have a steamid
-        id64 = id64_or_none(app, qs)
-        if id64 is not None:
-            parsed_query = {'user.gs_service': 'steam', 'user.gs_id': id64}
+    parsed_query = []
+    set_bit_flags = 0
+    unset_bit_flags = 0
 
-        # Fall back to a plain text search
-        parsed_query = build_plain_text_query(qs)
-
-    for field, (mongo_field, field_type, *flag_value) in FIELD_MAP.items():
+    for field, (mongo_field, field_type, *special) in FIELD_MAP.items():
         value = getattr(query, field, None)
 
-        if value is None:
+        if (not include_ip and field == 'ip' and value is not None):
+            raise SearchError('Cannot search by IP without proper permissions.')
+
+        if value is None or not (callable(field_type) or isinstance(value, field_type)):
             continue
 
-        if field == 'ip' and not include_ip:
-            continue
-
-        if field_type == 'bitflag':
-            if 'flags' not in parsed_query:
-                parsed_query['flags'] = {'$bitsAllSet': 0}
-            parsed_query['flags']['$bitsAllSet'] |= flag_value[0]
-        elif callable(field_type) and field == 'admin':
-            possible_admin_ids = admin_name_mongo_ids(value)
-            parsed_query['$or'] = [
-                {mongo_field: admin_id} for admin_id in possible_admin_ids
-            ]
-        else:
-            if isinstance(value, str) and mongo_field == 'user.gs_name':
-                parsed_query[mongo_field] = {'$regex': re.escape(value), '$options': 'i'}
+        if mongo_field == 'bitflag':
+            if value:
+                set_bit_flags |= special[0]
             else:
-                parsed_query[mongo_field] = field_type(value)
+                unset_bit_flags |= special[0]
+        elif mongo_field == 'computed':
+            parsed_query.append(special[0](app, value))
+        else:
+            parsed_query.append({mongo_field: field_type(value)})
 
-    # Handle comparison modes
-    for field, comparison_field in [
-        ("created", "created_comparison_mode"),
-        ("expires", "expires_comparison_mode"),
-        ("time_left", "time_left_comparison_mode"),
-        ("duration", "duration_comparison_mode"),
-    ]:
+    # Handle comparisons for time based searches
+    for field, comparison_field in [("created", "created_comparison_mode"),
+                                    ("expires", "expires_comparison_mode"),
+                                    ("time_left", "time_left_comparison_mode"),
+                                    ("duration", "duration_comparison_mode")]:
         value = getattr(query, field, None)
         comparison_mode = getattr(query, comparison_field, None)
 
-        if value is not None and comparison_mode in {"=", "<", "<=", ">", ">="}:
-            mongo_comparison = {"=": "$eq","<": "$lt", "<=": "$lte", ">": "$gt", ">=": "$gte"}[comparison_mode]
-            parsed_query[field] = {mongo_comparison: value}
+        if value is not None and isinstance(value, int) and comparison_mode in {"eq", "lt", "lte", "gt", "gte"}:
+            unset_bit_flags |= INFRACTION_PERMANENT | INFRACTION_SESSION
+            mongo_comparison = {"eq": "$eq", "lt": "$lt", "lte": "$lte", "gt": "$gt", "gte": "$gte"}[comparison_mode]   
+            if field == "duration":
+                if comparison_mode == "eq":
+                    tolerance = 30  # tolerance in seconds for floating point calculation imprecision in equivalancy
+                    duration_query = {"$or": [
+                            {"orig_length": value},
+                            {"$and": [ {"expires": {"$exists": True}},{
+                                "$expr": { "$and": [
+                                    {"$gte": [{"$round": [{"$subtract": ["$expires", "$created"]}, 0]}, value - tolerance]},
+                                    {"$lte": [{"$round": [{"$subtract": ["$expires", "$created"]}, 0]}, value + tolerance]}]}}]}]}
+                else:
+                    duration_query = {"$or": [
+                        {"orig_length": {mongo_comparison: value}},
+                        { "$and": [{"expires": {"$exists": True}},
+                            {"$expr": { mongo_comparison: [ {"$round": [{"$subtract": ["$expires", "$created"]}, 0]}, value]}}]}]}
+                parsed_query.append(duration_query)
+            elif comparison_mode == "eq" and (field == "created" or field == "expires"):
+                parsed_query.append({field: {"$gte": value, "$lte": value + 24*60*60}})
+            else:
+                if "gt" in comparison_mode and (field == "created" or field == "expires"):
+                    value += 24*60*60 
+                parsed_query.append({field: {mongo_comparison: value}})
 
-    return parsed_query
+    if set_bit_flags > 0 and unset_bit_flags > 0:
+        parsed_query.append({'flags': {'$bitsAllSet': set_bit_flags, '$bitsAllClear': unset_bit_flags}})
+    elif set_bit_flags > 0:
+        parsed_query.append({'flags': {'$bitsAllSet': set_bit_flags}})
+    elif unset_bit_flags > 0:
+        parsed_query.append({'flags': {'$bitsAllClear': unset_bit_flags}})
+
+    if not parsed_query:
+        return {}
+    else:
+        return {'$and': parsed_query}
 
 
 # For VPN whitelist
@@ -340,9 +347,70 @@ async def do_whitelist_search(query: str):
         raise SearchError('Query too long!')
 
     try:
-        compiled_query = build_mongo_query(query, include_ip=False, strict=True)
+        parsed_query = {}
+    
+        for field, (mongo_field, field_type, *flag_value) in FIELD_MAP.items():
+            if field in query:
+                if field == 'ip':
+                    continue
+                if field_type == 'bitflag':
+                    if parsed_query['flags'] is None:
+                        parsed_query['flags'] = {'$bitsAllSet': flag_value}
+                    else:
+                        parsed_query['flags'] = {'$bitsAllSet': parsed_query['flags']['$bitsAllSet'] | flag_value}
+                else:
+                    value_list = query.split(f"{field}:")[-1].split()
+                    value = ''
+                    for val in value_list:
+                        val = val.strip(' ')
+                        if val[0] == '"' and val[len(val) - 1] == '"':
+                            value = val.strip('"')
+                            break
+                    if len(value) == 0 or len(value.strip('"')) == 0:
+                        continue
+
+                    if field == 'gs_name':
+                        # Special handling for steam_name - always use $regex to allow for non-exact name matching
+                        parsed_query[mongo_field] = {'$regex': re.escape(value), '$options': 'i'}
+                    else:
+                        # Cast to the expected type or call the function on the value
+                        value = field_type(value)
+
+                        if mongo_field not in parsed_query:
+                            if type(value) == list:
+                                parsed_query[mongo_field] = list()
+                                parsed_query[mongo_field].append(value) # this is for parsing at end. list in a list means $or check it
+                            else:
+                                parsed_query[mongo_field] = value
+                        elif isinstance(parsed_query[mongo_field], list):
+                            parsed_query[mongo_field].append(value)
+                        else:
+                            parsed_query[mongo_field] = [parsed_query[mongo_field], value] # $and check these later
+
+        to_remove = list()
+        and_query = list()
+
+        for key, item in parsed_query.items():
+            if isinstance(item, list) and key != '$or' and key != '$and':
+                for value in item:
+                    if type(value) == list:
+                        or_query = list()
+                        for val in value:
+                            or_query.append({key: val})
+                        and_query.append({'$or': or_query})
+                    else:
+                        and_query.append({key: value})
+                to_remove.append(key)
+
+        if len(and_query) > 0:
+            parsed_query['$and'] = and_query
+            for key in to_remove:
+                del parsed_query[key]
+
+        if len(parsed_query) == 0 and len(query) > 0:
+            raise SearchError('No fields in query')
     except Exception as e:
         logger.error('Search failed!', exc_info=e)
         raise SearchError('Query compilation failed') from e
 
-    return compiled_query
+    return parsed_query

@@ -1,8 +1,7 @@
 $(document).ready(function () {
     $('#search-scope-web-check').click(handleWebCheck);
-    $('#search-time-session-check').click(handleSessionCheck);
-    $('#search-time-permanent-check').click(handlePermanentCheck);
-    $('#search-time-game-timed-check').click(handleGameTimeCheck);
+    $('[name="time-type"]').click(handleTimeCheck);
+    $('[name="status-type"]').click(handleStatusCheck);
     $('#search-admin-admin-check').click(clickedAdminCheck);
     $('#advancedSearchToggle').click(openSearchModal);
 
@@ -76,25 +75,20 @@ function resetSearchModal() {
     $('.restriction-button').addClass('is-outlined');
 
     // Time/Duration
-    $('#search-time-session-check').prop('checked', false);
-    handleSessionCheck();
-    $('#search-time-permanent-check').prop('checked', false);
-    handlePermanentCheck();
-    $('#search-time-game-timed-check').prop('checked', false);
-    handleGameTimeCheck();
-    $('#search-time-duration-compare-selector').val('=');
+    $('[name="time-type"]').prop('checked', false);
+    $('#search-time-any-check').prop('checked', true);
+    handleTimeCheck();
+    $('#search-time-duration-compare-selector').val('eq');
     $('#search-time-duration-entry').val('');
     $('#search-time-duration-unit-selector').val('h');
-    $('#search-time-timeleft-compare-selector').val('=');
+    $('#search-time-timeleft-compare-selector').val('eq');
     $('#search-time-timeleft-entry').val('');
     $('#search-time-timeleft-unit-selector').val('h');
-    $('#search-perm-check-field').removeClass('is-hidden');
-    $('#search-game-timed-check-field').removeClass('is-hidden');
     $('#search-time-duration-field').removeClass('is-hidden');
 
     $('#search-time-date-creation').val('');
-    $('#search-time-date-creation-compare-selector').val('=');
-    $('#search-time-date-expiration-compare-selector').val('=');
+    $('#search-time-date-creation-compare-selector').val('eq');
+    $('#search-time-date-expiration-compare-selector').val('eq');
 
     // Status
     $('[name="status-type"]').prop('checked', false);
@@ -152,54 +146,38 @@ function clickedAdminCheck() {
     $('#search-admin-field').removeClass('is-hidden'); 
 }
 
-function handleSessionCheck() {
-    if ($('#search-time-session-check').prop('checked')) {
-        $('#search-time-game-timed-check').prop('checked', false);
-        $('#search-time-permanent-check').prop('checked', false);
-        $('#search-perm-check-field').addClass('is-hidden');
-        $('#search-game-timed-check-field').addClass('is-hidden');
+function handleTimeCheck() {
+    $('#search-time-duration-field').removeClass('is-hidden');
+    $('#search-time-timeleft-field').addClass('is-hidden');
+    $('#search-time-date-expiration-field').addClass('is-hidden');
+    $('#search-time-date-expiration-field').addClass('is-hidden');
+
+    if ($('#search-time-session-check').prop('checked') || $('#search-time-permanent-check').prop('checked'))
         $('#search-time-duration-field').addClass('is-hidden');
-        $('#search-time-timeleft-field').addClass('is-hidden');
-        $('#search-time-date-expiration-field').addClass('is-hidden');
-    } else {
-        $('#search-perm-check-field').removeClass('is-hidden');
-        $('#search-game-timed-check-field').removeClass('is-hidden');
-        $('#search-time-duration-field').removeClass('is-hidden');
+    else if ($('#search-time-game-timed-check').prop('checked'))
         $('#search-time-timeleft-field').removeClass('is-hidden');
+    else if ($('#search-time-real-world-timed-check').prop('checked'))
         $('#search-time-date-expiration-field').removeClass('is-hidden');
-    }
 }
 
-function handlePermanentCheck() {
-    if ($('#search-time-permanent-check').prop('checked')) {
-        $('#search-time-session-check').prop('checked', false);
-        $('#search-time-game-timed-check').prop('checked', false);
-        $('#search-session-check-field').addClass('is-hidden');
-        $('#search-game-timed-check-field').addClass('is-hidden');
-        $('#search-time-duration-field').addClass('is-hidden');
-        $('#search-time-timeleft-field').addClass('is-hidden');
-        $('#search-time-date-expiration-field').addClass('is-hidden');
-    } else {
-        $('#search-session-check-field').removeClass('is-hidden');
-        $('#search-game-timed-check-field').removeClass('is-hidden');
-        $('#search-time-duration-field').removeClass('is-hidden');
-        $('#search-time-timeleft-field').removeClass('is-hidden');
-        $('#search-time-date-expiration-field').removeClass('is-hidden');
-    }
-}
+function handleStatusCheck() {
+    $('#search-time-permanent-label').removeClass('is-hidden');
+    $('#search-time-session-label').removeClass('is-hidden');
 
-function handleGameTimeCheck() {
-    if ($('#search-time-game-timed-check').prop('checked')) {
-        $('#search-time-session-check').prop('checked', false);
-        $('#search-time-permanent-check').prop('checked', false);
-        $('#search-session-check-field').addClass('is-hidden');
-        $('#search-perm-check-field').addClass('is-hidden');
-        $('#search-time-date-expiration-field').addClass('is-hidden');
-    } else {
-        $('#search-session-check-field').removeClass('is-hidden');
-        $('#search-perm-check-field').removeClass('is-hidden');
-        $('#search-time-date-expiration-field').removeClass('is-hidden');
+    if ($('#search-status-active-check').prop('checked')) {
+        if ($('#search-time-session-check').prop('checked')) {
+            $('#search-time-session-check').prop('checked', false);
+            $('#search-time-any-check').prop('checked', true);
+        }
+        $('#search-time-session-label').addClass('is-hidden');
+    } else if ($('#search-status-expired-check').prop('checked')) {
+        if ($('#search-time-permanent-check').prop('checked')) {
+            $('#search-time-permanent-check').prop('checked', false);
+            $('#search-time-any-check').prop('checked', true);
+        }
+        $('#search-time-permanent-label').addClass('is-hidden');
     }
+    handleTimeCheck()
 }
 
 async function loadSearchModal() {
@@ -270,7 +248,6 @@ async function loadSearchModal() {
         serverSel.append(el);
     }
 
-    //Setup and show the error modal
     $('#advanced-search-modal').addClass('is-active');
     $('#advanced-search-modal .modal-card-body').get(0).scrollTo(0,0);
 
@@ -310,6 +287,7 @@ function beginSearch() {
     if (!createSearch[0]) {
         $('#search-create-error-msg').text(createSearch[1]);
         $('#search-create-error').removeClass('is-hidden');
+        $('#advanced-search-modal .modal-card-body').get(0).scrollTo(0,0);
         return;
     }
 
@@ -362,7 +340,7 @@ function createSearchQuery() {
     else if ($('#search-scope-community-check').prop('checked'))
         query = query.concat('&is_super_global=true');
     else if ($('#search-scope-server-check').prop('checked'))
-        query = query.concat('&is_server=true');
+        query = query.concat('&is_global=false&is_super_global=false');
 
     // Reason
     if ($('#search-reason-creation').val().trim().length > 0)
@@ -373,7 +351,7 @@ function createSearchQuery() {
 
     // Restriction
     if (!$('#search-restriction-warning').hasClass('is-outlined'))
-        query = query.concat('&is_warning=true');
+        query = query.concat('&is_voice=false&is_text=false&is_ban=false&is_admin_chat=false&is_call_admin=false');
     else {
         if (!$('#search-restriction-voice').hasClass('is-outlined'))
             query = query.concat('&is_voice=true');
@@ -399,34 +377,48 @@ function createSearchQuery() {
     else if ($('#search-time-game-timed-check').prop('checked'))
         query = query.concat('&is_decl_online_only=true');
 
+    if (!$('#search-time-date-creation-field').hasClass('is-hidden') && $('#search-time-date-creation').val().length > 0 &&
+        !$('#search-time-date-expiration-field').hasClass('is-hidden') && $('#search-time-date-expiration').val().length > 0 &&
+        $('#search-time-date-creation').val() >= $('#search-time-date-expiration').val()) {
+            return [false, 'Expiration Date must be after Creation Date']
+    }
+
+    if (!$('#search-time-date-creation-field').hasClass('is-hidden') && $('#search-time-date-creation').val().length > 0) {
+        const dateParts = $('#search-time-date-creation').val().split('-');
+        const localDate = new Date(parseInt(dateParts[0], 10), parseInt(dateParts[1], 10) - 1, parseInt(dateParts[2], 10));
+        query = query.concat(`&created=${localDate.getTime()/1000}`);
+        query = query.concat(`&created_comparison_mode=${$('#search-time-date-creation-compare-selector').val()}`);
+    }
+
+    if (!$('#search-time-date-expiration-field').hasClass('is-hidden') && $('#search-time-date-expiration').val().length > 0) {
+        const dateParts = $('#search-time-date-expiration').val().split('-');
+        const localDate = new Date(parseInt(dateParts[0], 10), parseInt(dateParts[1], 10) - 1, parseInt(dateParts[2], 10));
+        query = query.concat(`&expires=${localDate.getTime()/1000}`);
+        query = query.concat(`&expires_comparison_mode=${$('#search-time-date-expiration-compare-selector').val()}`);
+    }
+
     if (!$('#search-time-duration-field').hasClass('is-hidden') && $('#search-time-duration-entry').val().trim().length > 0) {
-        let n = parseInt($('#search-time-duration-unit-selector').val())
+        let n = parseInt($('#search-time-duration-entry').val())
 
         if (Number.isNaN(n))
             return [false, 'Total Time must be a number']
+        else if (n <= 0)
+            return [false, 'Total Time greater than zero']
 
         query = query.concat(`&duration=${n * timeMultipliers[$('#search-time-duration-unit-selector').val()]}`);
         query = query.concat(`&duration_comparison_mode=${$('#search-time-duration-compare-selector').val()}`);
     }
 
     if (!$('#search-time-timeleft-field').hasClass('is-hidden') && $('#search-time-timeleft-entry').val().trim().length > 0) {
-        let n = parseInt($('#search-time-timeleft-unit-selector').val())
+        let n = parseInt($('#search-time-timeleft-entry').val())
 
         if (Number.isNaN(n))
             return [false, 'Time Left must be a number']
+        else if (n <= 0)
+            return [false, 'Total Time greater than zero']
 
         query = query.concat(`&time_left=${n * timeMultipliers[$('#search-time-timeleft-unit-selector').val()]}`);
         query = query.concat(`&time_left_comparison_mode=${$('#search-time-timeleft-compare-selector').val()}`);
-    }
-
-    if (!$('#search-time-date-creation-field').hasClass('is-hidden') && $('#search-time-date-creation').val().length > 0) {
-        query = query.concat(`&created=${Date.parse($('#search-time-date-creation').val())/1000}`);
-        query = query.concat(`&created_comparison_mode=${$('#search-time-date-creation-compare-selector').val()}`);
-    }
-
-    if (!$('#search-time-date-expiration-field').hasClass('is-hidden') && $('#search-time-date-expiration').val().length > 0) {
-        query = query.concat(`&expires=${Date.parse($('#search-time-date-expiration').val())/1000}`);
-        query = query.concat(`&expires_comparison_mode=${$('#search-time-date-expiration-compare-selector').val()}`);
     }
 
     // Status
