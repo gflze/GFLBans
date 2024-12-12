@@ -48,6 +48,46 @@ const INFRACTION = Object.freeze({
     AUTO_TIER: 1 << 16 // This infraction is considered for tiering purposes.
 });
 
+const searchParams = [
+    "created",
+    "created_comparison_mode",
+    "expires",
+    "expires_comparison_mode",
+    "time_left",
+    "time_left_comparison_mode",
+    "duration",
+    "duration_comparison_mode",
+    
+    "gs_service",
+    "gs_id",
+    "gs_name",
+    "ip",
+    "admin_id",
+    "server",
+    "reason",
+    "ureason",
+
+    "search",
+    "admin",
+    "is_expired",
+    "is_active",
+
+    "is_system",
+    "is_global",
+    "is_super_global",
+    "is_permanent",
+    "is_vpn",
+    "is_web",
+    "is_removed",
+    "is_voice",
+    "is_text",
+    "is_ban",
+    "is_admin_chat",
+    "is_call_admin",
+    "is_session",
+    "is_decl_online_only"
+]
+
 const defaultError = 'An error occurred while loading this page. Try again in a few minutes or contact the host if the problem persists.';
 const defaultAPIError = 'Received not OK response from the API.';
 

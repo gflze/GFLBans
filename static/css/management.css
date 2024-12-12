@@ -162,20 +162,6 @@
     margin: 0;
 }
 
-.modal-card-foot {
-    flex-direction: row-reverse;
-}
-
-.modal-card-foot > button:first-child {
-    margin-left: 5px;
-    margin-right: 0 !important;
-}
-
-.modal-card-foot > button:last-child {
-    left: 20px;
-    position:absolute;
-}
-
 .button.is-danger.is-outlined:focus {
     background-color: inherit;
 }

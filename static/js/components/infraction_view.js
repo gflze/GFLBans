@@ -159,7 +159,7 @@ async function setupViewModal(infraction) {
         
         let search = document.createElement('a');
         search.text = infraction['player']['gs_id'];
-        search.setAttribute('href', '/infractions/?search=gs_id:"' + infraction['player']['gs_id'] + '"');
+        search.setAttribute('href', `/infractions/?gs_id=${infraction['player']['gs_id']}`);
 
         idValue.append(search);
 
@@ -179,7 +179,7 @@ async function setupViewModal(infraction) {
     if (infraction['player'].hasOwnProperty('ip')) {
         let search = document.createElement('a');
         search.text = infraction['player']['ip'];
-        search.setAttribute('href', '/infractions/?search=ip:"' + infraction['player']['ip'] + '"');
+        search.setAttribute('href', `/infractions/?ip=${infraction['player']['ip']}`);
 
         ipValue.append(search);
     } else {
@@ -269,15 +269,16 @@ async function setupViewModal(infraction) {
 
         if (!sv.ok) {
             const errorData = await sv.json();
-            throw new Error(errorData.detail || defaultAPIError);
-        }
-
-        sv = await sv.json()
-
-        if (sv.hasOwnProperty('friendly_name')) {
-            serverValue.text(sv['friendly_name'] + ' (' + sv['ip'] + ')');
+            console.log(errorData.detail || defaultAPIError);
+            serverValue.text('Unknown Server');
         } else {
-            serverValue.text(sv['ip']);
+            sv = await sv.json()
+
+            if (sv.hasOwnProperty('friendly_name')) {
+                serverValue.text(sv['friendly_name'] + ' (' + sv['ip'] + ')');
+            } else {
+                serverValue.text(sv['ip']);
+            }
         }
     }
 
@@ -503,7 +504,6 @@ function setInfractionUri(infraction_id) {
         nurl = '/infractions/';
     }
 
-
     let a = false;
 
     function nc() {
@@ -515,13 +515,9 @@ function setInfractionUri(infraction_id) {
         }
     }
 
-    if (urlParams.has('page')) {
-        nurl = nurl + nc() + 'page=' + urlParams.get('page');
-    }
-
-    if (urlParams.has('search')) {
-        nurl = nurl + nc() + 'search=' + urlParams.get('search');
-    }
+    urlParams.forEach((value, key) => {
+        nurl = nurl + nc() + key + '=' + value;
+    });
 
     let state = 'Infraction'
 

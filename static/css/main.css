@@ -1,6 +1,6 @@
 :root {
-    --bans-color: rgba(241,70,104, 1);
-    --voice-color: rgba(50,115,220, 1);
+    --bans-color: rgba(241, 70, 104, 1);
+    --voice-color: rgba(50, 115, 220, 1);
     --text-color: #b19cd9;
     --admin-chat-color: #48c774;
     --call-admin-color: #d3be05;
@@ -133,12 +133,17 @@
     background-color: var(--background-tertiary);
 }
 
-.text-primary, .text-primary:hover {
+.text-primary,
+.text-primary:hover {
     color: var(--text-primary);
 }
 
 .text-secondary {
     color: var(--text-secondary);
+}
+
+.text-link {
+    color: var(--link);
 }
 
 .user-avatar {
@@ -152,9 +157,9 @@
 }
 
 @media screen and (max-width: 1024px) {
-  .nav-icon-mobile {
-    margin-right: 5px;
-  }
+    .nav-icon-mobile {
+        margin-right: 5px;
+    }
 }
 
 @media screen and (min-width: 1024px) {
@@ -196,6 +201,7 @@
     0% {
         opacity: 100%;
     }
+
     100% {
         opacity: 80%;
     }
@@ -247,22 +253,22 @@
 }
 
 .tile-hoverable.has-background-danger {
-    background-color: rgba(241,70,104, 1) !important;
+    background-color: rgba(241, 70, 104, 1) !important;
     transition: 0.3s;
 }
 
 .tile-hoverable.has-background-danger:hover {
-    background-color: rgba(242,88,119, 1) !important;
+    background-color: rgba(242, 88, 119, 1) !important;
 }
 
 
 .tile-hoverable.has-background-link {
-    background-color: rgba(50,115,220, 1) !important;
+    background-color: rgba(50, 115, 220, 1) !important;
     transition: 0.3s;
 }
 
 .tile-hoverable.has-background-link:hover {
-    background-color: rgba(70,129,223,1) !important;
+    background-color: rgba(70, 129, 223, 1) !important;
 }
 
 .tile.server-card {
@@ -331,7 +337,8 @@
     vertical-align: middle !important;
 }
 
-.is-borderless > tr > td, th {
+.is-borderless > tr > td,
+th {
     border: none !important;
 }
 
@@ -441,9 +448,9 @@
 }
 
 @media screen and (max-width: 475px) {
-  .is-hidden-mobile-tiny {
-    display: none !important;
-  }
+    .is-hidden-mobile-tiny {
+        display: none !important;
+    }
 }
 
 .is-ban {
@@ -534,6 +541,20 @@
     border-top: none !important;
 }
 
+.modal-card-foot {
+    flex-direction: row-reverse;
+}
+
+.modal-card-foot > button:nth-child(1 of :not(.is-hidden)) {
+    margin-left: 5px;
+    margin-right: 0 !important;
+}
+
+.modal-card-foot > button:nth-last-child(1 of :not(.is-hidden)) {
+    left: 20px;
+    position: absolute;
+}
+
 .select-exp {
     width: 600px;
 }
@@ -544,83 +565,97 @@
 
 .button.is-text-btn,
 .button.is-text-btn:hover {
-  background-color: var(--text-color);
-  border-color: transparent;
-  color: #fff;
+    background-color: var(--text-color);
+    border-color: transparent;
+    color: #fff;
 }
 
 .button.is-text-btn.is-outlined,
 .button.is-text-btn.is-outlined:hover {
-  background-color: transparent;
-  border-color: var(--text-color);
-  color: var(--text-color);
+    background-color: transparent;
+    border-color: var(--text-color);
+    color: var(--text-color);
 }
 
 
 .button.is-call-admin-btn.is-outlined,
 .button.is-call-admin-btn.is-outlined:hover {
-  background-color: transparent;
-  border-color: var(--call-admin-color);
-  color: var(--call-admin-color);
+    background-color: transparent;
+    border-color: var(--call-admin-color);
+    color: var(--call-admin-color);
 }
 
 .button.is-call-admin-btn,
 .button.is-call-admin-btn:hover {
-  background-color: var(--call-admin-color);
-  border-color: #fad339;
-  color: #fff;
+    background-color: var(--call-admin-color);
+    border-color: #fad339;
+    color: #fff;
 }
 
 .button.is-admin-chat-btn,
 .button.is-admin-chat-btn:hover {
-  background-color: #48c774;
-  border-color: transparent;
-  color: #fff;
+    background-color: #48c774;
+    border-color: transparent;
+    color: #fff;
 }
 
 .button.is-admin-chat-btn.is-outlined,
 .button.is-admin-chat-btn.is-outlined:hover {
-  background-color: transparent;
-  border-color: #48c774;
-  color: #48c774;
+    background-color: transparent;
+    border-color: #48c774;
+    color: #48c774;
 }
 
 .button.is-ban-btn,
 .button.is-ban-btn:hover {
-  background-color: var(--bans-color);
-  border-color: transparent;
-  color: #fff;
+    background-color: var(--bans-color);
+    border-color: transparent;
+    color: #fff;
 }
 
 .button.is-ban-btn.is-outlined,
 .button.is-ban-btn.is-outlined:hover {
-  background-color: transparent;
-  border-color: var(--bans-color);
-  color: var(--bans-color);
+    background-color: transparent;
+    border-color: var(--bans-color);
+    color: var(--bans-color);
 }
 
 .button.is-voice-btn,
 .button.is-voice-btn:hover {
-  background-color: var(--voice-color);
-  border-color: transparent;
-  color: #fff;
+    background-color: var(--voice-color);
+    border-color: transparent;
+    color: #fff;
 }
 
 .button.is-voice-btn.is-outlined,
 .button.is-voice-btn.is-outlined:hover {
-  background-color: transparent;
-  border-color: var(--voice-color);
-  color: var(--voice-color);
+    background-color: transparent;
+    border-color: var(--voice-color);
+    color: var(--voice-color);
+}
+
+.button.is-warning-btn,
+.button.is-warning-btn:hover {
+    background-color: var(--warning-color);
+    border-color: transparent;
+    color: #fff;
+}
+
+.button.is-warning-btn.is-outlined,
+.button.is-warning-btn.is-outlined:hover {
+    background-color: transparent;
+    border-color: var(--warning-color);
+    color: var(--warning-color);
 }
 
 input::-webkit-outer-spin-button,
 input::-webkit-inner-spin-button {
-  -webkit-appearance: none;
-  margin: 0;
+    -webkit-appearance: none;
+    margin: 0;
 }
 
 input[type=number] {
-  appearance: textfield;
+    -moz-appearance: textfield;
 }
 
 .card-rounded {
@@ -632,7 +667,7 @@ table.has-background-darkm > tbody > tr.infraction-row:hover {
 }
 
 table.has-background-white > tbody > tr.infraction-row:hover {
-    background: hsl(0, 0%, 90%) ;
+    background: hsl(0, 0%, 90%);
 }
 
 .edit {
@@ -674,7 +709,8 @@ img {
     cursor: pointer;
 }
 
-#iComments, .wrappable {
+#iComments,
+.wrappable {
     word-wrap: anywhere;
 }
 
@@ -693,9 +729,9 @@ img {
 }
 
 .animated {
-  image-rendering: -moz-crisp-edges;
-  image-rendering: crisp-edges;
-  -ms-interpolation-mode: nearest-neighbor;
+    image-rendering: -moz-crisp-edges;
+    image-rendering: crisp-edges;
+    -ms-interpolation-mode: nearest-neighbor;
 }
 
 .loader-emote {
@@ -716,14 +752,14 @@ img {
 }
 
 #login {
-  padding: 0;
-  margin: 0.5rem 0.75rem;
-  width: fit-content;
-  height: fit-content;
+    padding: 0;
+    margin: 0.5rem 0.75rem;
+    width: fit-content;
+    height: fit-content;
 }
 
 #login > img {
-  max-height: none;
+    max-height: none;
 }
 
 .button.is-accent:not(.is-outlined) {
@@ -765,4 +801,107 @@ img {
 
 .is-accent .panel-block:hover {
     background-color: var(--background-accent-secondary);
+}
+
+/* MARK: Advanced Search */
+#advancedSearchToggle {
+    position: absolute;
+    left: 50vw;
+    top: 75px;
+    transform: translateX(-50%);
+}
+
+#infraction-pages {
+    height: 48px;
+}
+
+#advancedSearchBlock {
+    padding: 1rem;
+    width: 640px !important;
+    margin: auto;
+    border: 1px solid var(--background-tertiary);
+    border-radius: 1rem;
+}
+
+@media screen and (min-width: 1024px) {
+    .search {
+        width: 60%;
+    }
+}
+
+#advancedSearchBlock form {
+    margin: 0 1rem;
+}
+
+#advancedSearchBlock .field {
+    align-items: center;
+}
+
+#advancedSearchBlock .field > label {
+    flex-shrink: 0;
+    padding-right: 10px;
+}
+
+#search-user-info > input:first-child {
+    width: 50%;
+    flex: none;
+}
+
+.time-radio-button {
+    display: block;
+}
+
+.time-field > .has-addons > .control:first-child select {
+    width: 100px;
+}
+
+#search-time-duration-field > .has-addons > .control:nth-child(2),
+#search-time-timeleft-field > .has-addons > .control:nth-child(2) {
+    width: 253px;
+}
+
+#search-time-duration-field {
+    margin-top: 0.75rem;
+}
+
+.time-field {
+    display: flex;
+    position: relative;
+    line-height: 40px;
+    height: 40px;
+}
+
+.time-field label {
+    width: 112px;
+    text-align: right;
+}
+
+.time-field > .has-addons {
+    padding-left: 5px;
+}
+
+#search-time-date-creation,
+#search-time-date-expiration {
+    position: absolute;
+    flex: 1;
+    --indent-amount: 215px;
+    left: var(--indent-amount);
+    width: calc(100% - var(--indent-amount));
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+}
+
+#advanced-search-modal h2 {
+    font-weight: bold;
+}
+
+.search-area {
+    border-left: 2px solid var(--background-tertiary);
+    border-bottom-left-radius: 10px;
+    padding-left: 20px;
+    padding-top: 5px;
+}
+
+.search-area:not(:last-child) {
+    margin-bottom: 10px;
 }
