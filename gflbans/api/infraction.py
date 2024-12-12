@@ -95,9 +95,9 @@ async def search_infractions(request: Request, query: Search = Depends(Search), 
     incl_ip = should_include_ip(auth[0], auth[2])
 
     try:
-        cq, _ = await do_infraction_search(request.app, query.xql_string, include_ip=incl_ip, strict=query.strict_xql)
-    except SearchError:
-        raise HTTPException(detail='Query failed to compile or took too long to execute', status_code=400)
+        cq = await do_infraction_search(request.app, query, include_ip=incl_ip)
+    except SearchError as e:
+        raise HTTPException(detail=f'SearchError: {e.args[0]}', status_code=400)
 
     infs = []
 

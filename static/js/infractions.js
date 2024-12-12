@@ -2,8 +2,11 @@ const urlParams = new URLSearchParams(window.location.search);
 
 function handleResp(d, page, s, m) {
     if (!d.ok) {
-        const errorData = d.json();
-        throw new Error(errorData.detail || defaultAPIError);
+        d.json().then(data => {
+            if (data.detail)
+                logException(data.detail);
+        });
+        throw new Error(defaultAPIError);
     }
 
     d.json().then(data => {
@@ -73,24 +76,33 @@ function setupEmptyINotice() {
 }
 
 function loadInfractions(page = 1, s, m) {
-    gbRequest('GET', '/api/infractions?skip=' + ((page - 1) * 30), null).then(function (a) {
+    gbRequest('GET', '/api/infractions?limit=30&skip=' + ((page - 1) * 30), null).then(function (a) {
         handleResp(a, page, s, m);
     }).catch(e => {
         logException(e);
     });
 }
 
-function doSearch(query, page = 1, s, m) {
-    if (query.length < 1 || query.length > 256) {
-        showError('The search query cannot be empty and may be no longer than 256 characters.');
-        return;
+function doSearch(page = 1, s, m) {
+    let query = '/api/infractions/search?limit=30&skip=' + ((page - 1) * 30);
+    
+    for (let i = 0; i < searchParams.length; i++) {
+        if (urlParams.get(searchParams[i]) != null)
+            query = query.concat(`&${searchParams[i]}=${encodeURIComponent(urlParams.get(searchParams[i]))}`);
     }
-
-    gbRequest('GET', '/api/infractions/search?skip=' + ((page - 1) * 30) + '&xql_string=' + encodeURIComponent(query), null).then(function (a) {
+    gbRequest('GET', query, null).then(function (a) {
         handleResp(a, page, s, m);
     }).catch(e => {
         logException(e);
     });
+}
+
+function isSearch() {
+    for (let i = 0; i < searchParams.length; i++) {
+        if (urlParams.get(searchParams[i]) != null)
+            return true;
+    }
+    return false;
 }
 
 $(document).ready(function () {
@@ -115,10 +127,8 @@ $(document).ready(function () {
 
     let m = getMeta('load_infraction');
 
-    let q = urlParams.get('search');
-
-    if (q != null) {
-        doSearch(q, page, start, m);
+    if (isSearch) {
+        doSearch(page, start, m);
     } else {
         loadInfractions(page, start, m);
     }

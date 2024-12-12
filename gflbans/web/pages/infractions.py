@@ -1,18 +1,16 @@
-import math
 
 import bson
 from bson import ObjectId
-from fastapi import APIRouter, HTTPException
-from pydantic.types import constr
+from fastapi import APIRouter, Depends, HTTPException
 from starlette.requests import Request
 
 from gflbans.internal.config import HOST, MONGO_DB
 from gflbans.internal.database.infraction import DInfraction
 from gflbans.internal.flags import PERMISSION_VIEW_IP_ADDR
-from gflbans.internal.search import do_infraction_search
+from gflbans.internal.models.protocol import Search
+from gflbans.internal.search import FIELD_MAP, do_infraction_search
 from gflbans.web.pages import sctx
 
-from gflbans.internal.log import logger
 from gflbans.internal.errors import SearchError
 
 infractions_router = APIRouter()
@@ -25,7 +23,7 @@ async def infractions(request: Request):
 
 
 @infractions_router.get('/{infraction_id}/')
-async def preload_infraction(request: Request, infraction_id: str, search: constr(min_length=1, max_length=256) = None):
+async def preload_infraction(request: Request, infraction_id: str, query: Search = Depends(Search)):
     sc = await sctx(request)
     
     try:
@@ -41,17 +39,23 @@ async def preload_infraction(request: Request, infraction_id: str, search: const
     # Determine what page dinf is on
 
     s_dict = {'created': {'$gt': dinf.created}}
+    do_search = False
+    for field, (mongo_field, field_type, *flag_value) in FIELD_MAP.items():
+        if field in query:
+            do_search = True
+            break
 
-    if search:
+    if do_search:
+
         incl_ip = False
 
         if sc['user'] is not None:
             incl_ip = sc['user'].permissions & PERMISSION_VIEW_IP_ADDR == PERMISSION_VIEW_IP_ADDR
 
         try:
-            cq, _ = await do_infraction_search(request.app, search, include_ip=incl_ip, strict=False)
-        except SearchError:
-            raise HTTPException(detail='Query failed to compile or took too long to execute', status_code=400)
+            cq = await do_infraction_search(request.app, query, include_ip=incl_ip, strict=False)
+        except SearchError as e:
+            raise HTTPException(detail=f'SearchError: {e.args[0]}', status_code=400)
 
         s_dict = {'$and': [s_dict, cq]}
 

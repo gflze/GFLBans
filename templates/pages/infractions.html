@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" class="{% if opposite_theme %}theme-opposite {% endif %}background-primary">
+<html id="htmlRoot" lang="en" class="{% if opposite_theme %}theme-opposite {% endif %}background-primary">
 <head>
     {% include 'meta.html' with context %}
     <link rel="stylesheet" href="/static/3rdparty/css/chart.css">
@@ -15,6 +15,7 @@
 {% include 'error.html' %}
 <script src="/static/js/infractions.js"></script>
 {% include 'create_infraction.html' with context %}
+{% include 'advanced_search.html' with context %}
 {% include 'view_infraction.html' with context %}
 {% include 'loading.html' with context %}
 {% include 'footer.html' with context %}

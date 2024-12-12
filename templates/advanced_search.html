@@ -1,0 +1,310 @@
+<div id="advanced-search-modal" class="modal">
+    <div class="modal-background"></div>
+    <div class="modal-card">
+        <header class="modal-card-head background-tertiary">
+            <h1 class="modal-card-title text-primary">Advanced Search</h1>
+            <button class="delete search-dismiss"></button>
+        </header>
+        <section class="modal-card-body background-secondary">
+            <div id="search-create-error" class="notification is-danger is-hidden">
+                <button class="delete search-dismiss-error"></button>
+                <span id="search-create-error-msg"></span>
+            </div>
+
+            <h2 class="text-primary">User</h2>
+            <div class="search-area">
+                {% if user is not none and has_flag(user.permissions, p_nodes['Can See IP Addresses']) %}
+                <div class="control field">
+                    <label class="checkbox">
+                        <input id="search-user-vpn-check" type="checkbox" name="isWebInfract">
+                        VPN
+                    </label>
+                </div>
+                {% endif %}
+                <div id="search-user-info" class="field is-grouped">
+                    <input id="search-user-name" class="input" type="text" maxlength="30" placeholder="Name">
+                    <div class="field has-addons">
+                        <div class="control">
+                            <input id="search-user-gsid" class="input" type="text" maxlength="256" placeholder="Game ID">
+                        </div>
+                        <div class="control">
+                            <div class="select">
+                                <select id="search-user-service-selector">
+                                    <option value="steam" selected>Steam</option>
+                                    <option value="discord">Discord</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% if user is not none and has_flag(user.permissions, p_nodes['Can See IP Addresses']) %}
+                <div class="field">
+                    <input id="search-user-ip" class="input" type="text" maxlength="15" placeholder="IP Address">
+                </div>
+                {% endif %}
+            </div>
+
+            <h2 class="text-primary">Admin</h2>
+            <div class="search-area">
+                <div class="control field">
+                    <label class="radio scope-radio-button">
+                        <input id="search-admin-system-check" type="radio" name="admin-type">
+                        System
+                    </label>
+                    <label class="radio scope-radio-button">
+                        <input id="search-admin-admin-check" type="radio" name="admin-type">
+                        Admin
+                    </label>
+                    <label class="radio scope-radio-button">
+                        <input id="search-admin-demoted-check" type="radio" name="admin-type">
+                        Manual Input
+                    </label>
+                </div>
+                <div id="search-admin-field" class="select">
+                    <select id="search-admin-selector" class="select-exp"></select>
+                </div>
+                <div id="search-admin-info">
+                    <input id="search-admin-name" class="input" type="text" maxlength="30" placeholder="Name">
+                    <input id="search-admin-id" class="input" type="text" maxlength="256" placeholder="Steam ID">
+                </div>
+            </div>
+
+            <h2 class="text-primary">Scope</h2>
+            <div class="search-area">
+                <div class="control">
+                    <label class="checkbox">
+                        <input id="search-scope-web-check" type="checkbox" name="isWebInfract">
+                        Web
+                    </label>
+                </div>
+                <div class="field" id="search-server-field">
+                    <p>Target Server</p>
+                    <div class="control">
+                        <div class="select">
+                            <select id="search-scope-server-selector" class="select-exp"></select>
+                        </div>
+                    </div>
+                </div>
+                <div class="control field">
+                    <label id="search-scope-any-label" class="radio scope-radio-button">
+                        <input id="search-scope-any-check" type="radio" name="scope-type">
+                        Any
+                    </label>
+                    <label id="search-scope-server-label" class="radio scope-radio-button">
+                        <input id="search-scope-server-check" type="radio" name="scope-type">
+                        Server
+                    </label>
+                    <label id="search-scope-global-label" class="radio scope-radio-button">
+                        <input id="search-scope-global-check" type="radio" name="scope-type">
+                        Global
+                    </label>
+                    <label id="search-scope-community-label" class="radio scope-radio-button">
+                        <input id="search-scope-community-check" type="radio" name="scope-type">
+                        Community
+                    </label>
+                </div>
+            </div>
+            
+            <h2 class="text-primary">Restriction</h2>
+            <div class="search-area buttons is-flex is-justify-content-center">
+                <button type="button" id="search-restriction-voice" class="restriction-button button is-voice-btn is-outlined">
+                    <span class="icon is-small ricon">
+                        <i class="fas fa-volume-mute ricon"></i>
+                    </span>
+                    Voice
+                </button>
+                <button type="button" id="search-restriction-text" class="restriction-button button is-text-btn is-outlined">
+                    <span class="icon is-small ricon">
+                        <i class="fas fa-comment-slash ricon"></i>
+                    </span>
+                    Text
+                </button>
+                <button type="button" id="search-restriction-join" class="restriction-button button is-ban-btn is-outlined">
+                    <span class="icon is-small ricon">
+                        <i class="fas fa-ban ricon"></i>
+                    </span>
+                    Ban
+                </button>
+                <button type="button" id="search-restriction-admin-chat" class="restriction-button button is-admin-chat-btn is-outlined">
+                    <span class="icon is-small ricon">
+                        <i class="fas fa-hands-helping ricon"></i>
+                    </span>
+                    Admin Chat
+                </button>
+                <button type="button" id="search-restriction-call-admin" class="restriction-button button is-call-admin-btn is-outlined">
+                    <span class="icon is-small ricon">
+                        <i class="fas fa-phone-slash ricon"></i>
+                    </span>
+                    Call Admin
+                </button>
+                <button type="button" id="search-restriction-warning" class="restriction-button button is-warning-btn is-outlined">
+                    <span class="icon is-small ricon">
+                        <i class="fas fa-exclamation-triangle ricon"></i>
+                    </span>
+                    Warning
+                </button>
+            </div>
+
+            <h2 class="text-primary">Status</h2>
+            <div class="search-area control field">
+                    <label id="search-status-any-label" class="radio status-radio-button">
+                        <input id="search-status-any-check" type="radio" name="status-type">
+                        Any
+                    </label>
+                    <label id="search-status-active-label" class="radio status-radio-button">
+                        <input id="search-status-active-check" type="radio" name="status-type">
+                        Active
+                    </label>
+                    <label id="search-status-expired-label" class="radio status-radio-button">
+                        <input id="search-status-expired-check" type="radio" name="status-type">
+                        Expired
+                    </label>
+                    <label id="search-status-removed-label" class="radio status-radio-button">
+                        <input id="search-status-removed-check" type="radio" name="status-type">
+                        Removed
+                    </label>
+            </div>
+            
+            <h2 class="text-primary">Reason</h2>
+            <div class="search-area">
+                <input id="search-reason-creation" class="input field" maxlength="256" placeholder="Creation Reason">
+                <input id="search-reason-removal" class="input field" maxlength="256" placeholder="Removal Reason">
+            </div>
+
+            <h2 class="text-primary">Time</h2>
+            <div class="search-area ">
+                <div>
+                    <label id="earch-status-any-label" class="time-radio-button">
+                        <input id="search-time-any-check" type="radio" name="time-type">
+                        Any
+                    </label>
+                    <label id="search-time-permanent-label" class="time-radio-button">
+                        <input id="search-time-permanent-check" type="radio" name="time-type">
+                        Permanent
+                    </label>
+                    <label id="search-time-session-label" class="time-radio-button">
+                        <input id="search-time-session-check" type="radio" name="time-type">
+                        Session
+                    </label>
+                    <label id="search-time-game-timed-label" class="time-radio-button">
+                        <input id="search-time-game-timed-check" type="radio" name="time-type">
+                        Game Timed (time remaining only decreases while user is connected)
+                    </label>
+                    <label id="search-time-real-world-timed-label" class="time-radio-button">
+                        <input id="search-time-real-world-timed-check" type="radio" name="time-type">
+                        Real World Timed (time remaining decreases while user is not connected)
+                    </label>
+                </div>
+
+                <div id="search-time-date-creation-field" class="time-field">
+                    <label>Creation Date:</label>
+                    <div class="field has-addons is-justify-content-center">
+                        <div class="control">
+                            <div class="select">
+                                <select id="search-time-date-creation-compare-selector">
+                                    <option value="eq" selected>On</option>
+                                    <option value="gt">After</option>
+                                    <option value="lt">Before</option>
+                                </select>
+                            </div>
+                        </div>
+                        <input id="search-time-date-creation" type="date" class="input">
+                    </div>
+                </div>
+
+                <div id="search-time-date-expiration-field" class="time-field">
+                    <label>Expiration Date:</label>
+                    <div class="field has-addons is-justify-content-center">
+                        <div class="control">
+                            <div class="select">
+                                <select id="search-time-date-expiration-compare-selector">
+                                    <option value="eq" selected>On</option>
+                                    <option value="gt">After</option>
+                                    <option value="lt">Before</option>
+                                </select>
+                            </div>
+                        </div>
+                        <input id="search-time-date-expiration" type="date" class="input">
+                    </div>
+                </div>
+
+                <div id="search-time-duration-field" class="time-field">
+                    <label>Total Time:</label>
+                    <div class="field has-addons is-justify-content-center">
+                        <div class="control">
+                            <div class="select">
+                                <select id="search-time-duration-compare-selector">
+                                    <option value="eq" selected>=</option>
+                                    <option value="gt">&gt;</option>
+                                    <option value="lt">&lt;</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="control">
+                            <input id="search-time-duration-entry" class="input" type="number" min="1" placeholder="Time">
+                        </div>
+                        <div class="control">
+                            <div class="select">
+                                <select id="search-time-duration-unit-selector">
+                                    <option value="m">Minutes</option>
+                                    <option value="h" selected>Hours</option>
+                                    <option value="d">Days</option>
+                                    <option value="w">Weeks</option>
+                                    <option value="mo">Months</option>
+                                    <option value="y">Years</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="search-time-timeleft-field" class="time-field">
+                    <label>Time Left:</label>
+                    <div class="field has-addons is-justify-content-center">
+                        <div class="control">
+                            <div class="select">
+                                <select id="search-time-timeleft-compare-selector">
+                                    <option value="eq" selected>=</option>
+                                    <option value="gt">&gt;</option>
+                                    <option value="lt">&lt;</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="control">
+                            <input id="search-time-timeleft-entry" class="input" type="number" min="1" placeholder="Time">
+                        </div>
+                        <div class="control">
+                            <div class="select">
+                                <select id="search-time-timeleft-unit-selector">
+                                    <option value="m">Minutes</option>
+                                    <option value="h" selected>Hours</option>
+                                    <option value="d">Days</option>
+                                    <option value="w">Weeks</option>
+                                    <option value="mo">Months</option>
+                                    <option value="y">Years</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <footer class="modal-card-foot background-tertiary">
+            <button id="search-submit" class="button is-accent"><i class="fas fa-search mr-2"></i>Search</button>
+            <button class="button is-danger search-dismiss">Cancel</button>
+        </footer>
+    </div>
+</div>
+
+<div id="search-loading-modal" class="modal">
+    <div class="modal-background"></div>
+    <div class="modal-card">
+        <section class="modal-card-body background-secondary card-rounded">
+            <p class="has-text-centered">Loading the search...</p>
+            <br>
+            <progress class="progress is-accent" max="100">30%</progress>
+        </section>
+    </div>
+</div>
+
+<script src="/static/js/components/advanced_search.js"></script>
