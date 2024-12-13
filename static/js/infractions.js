@@ -87,7 +87,7 @@ function doSearch(page = 1, s, m) {
     let query = '/api/infractions/search?limit=30&skip=' + ((page - 1) * 30);
     
     for (let i = 0; i < searchParams.length; i++) {
-        if (urlParams.get(searchParams[i]) != null)
+        if (urlParams.has(searchParams[i]) && urlParams.get(searchParams[i]).length > 0)
             query = query.concat(`&${searchParams[i]}=${encodeURIComponent(urlParams.get(searchParams[i]))}`);
     }
     gbRequest('GET', query, null).then(function (a) {
@@ -99,7 +99,7 @@ function doSearch(page = 1, s, m) {
 
 function isSearch() {
     for (let i = 0; i < searchParams.length; i++) {
-        if (urlParams.get(searchParams[i]) != null)
+        if (urlParams.has(searchParams[i]) && urlParams.get(searchParams[i]).length > 0)
             return true;
     }
     return false;
