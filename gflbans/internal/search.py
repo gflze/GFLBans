@@ -310,14 +310,16 @@ async def do_infraction_search(app, query: Search, include_ip: bool = False) -> 
                 if comparison_mode == "eq":
                     tolerance = 30  # tolerance in seconds for floating point calculation imprecision in equivalancy
                     duration_query = {"$or": [
-                        {"orig_length": value},
-                        {"$and": [ {"expires": {"$exists": True}},{
-                            "$expr": { "$and": [
+                        {"$and": [ {"original_time": {"$exists": True}},
+                            {"original_time": {"$gte": (value - tolerance)}},
+                            {"original_time": {"$lte": (value + tolerance)}}]},
+                        {"$and": [ {"expires": {"$exists": True}},
+                            {"$expr": { "$and": [
                                 {"$gte": [{"$round": [{"$subtract": ["$expires", "$created"]}, 0]}, value - tolerance]},
                                 {"$lte": [{"$round": [{"$subtract": ["$expires", "$created"]}, 0]}, value + tolerance]}]}}]}]}
                 else:
                     duration_query = {"$or": [
-                        {"orig_length": {mongo_comparison: value}},
+                        {"original_time": {mongo_comparison: value}},
                         { "$and": [{"expires": {"$exists": True}},
                             {"$expr": { mongo_comparison: [ {"$round": [{"$subtract": ["$expires", "$created"]}, 0]}, value]}}]}]}
                 parsed_query.append(duration_query)
