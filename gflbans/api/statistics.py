@@ -12,7 +12,7 @@ from gflbans.internal.config import MONGO_DB
 from gflbans.internal.database.infraction import DInfraction
 from gflbans.internal.database.server import DServer
 from gflbans.internal.flags import INFRACTION_REMOVED, INFRACTION_PERMANENT, INFRACTION_CALL_ADMIN_BAN, \
-    INFRACTION_ADMIN_CHAT_BLOCK, INFRACTION_BAN, INFRACTION_CHAT_BLOCK, INFRACTION_VOICE_BLOCK
+    INFRACTION_ADMIN_CHAT_BLOCK, INFRACTION_BAN, INFRACTION_CHAT_BLOCK, INFRACTION_VOICE_BLOCK, INFRACTION_ITEM_BLOCK
 from gflbans.internal.models.api import InfractionDay
 from gflbans.internal.models.protocol import ServerStats
 
@@ -46,7 +46,8 @@ async def generate_statistics(request: Request):
                                                                                 INFRACTION_CHAT_BLOCK |
                                                                                 INFRACTION_BAN |
                                                                                 INFRACTION_ADMIN_CHAT_BLOCK |
-                                                                                INFRACTION_CALL_ADMIN_BAN}}),
+                                                                                INFRACTION_CALL_ADMIN_BAN |
+                                                                                INFRACTION_ITEM_BLOCK}}),
 
     ]
 
@@ -91,7 +92,11 @@ async def generate_statistics(request: Request):
         if doc.flags & INFRACTION_CALL_ADMIN_BAN == INFRACTION_CALL_ADMIN_BAN:
             hist[dk].call_admin_blocks += 1
 
-        af = INFRACTION_BAN | INFRACTION_VOICE_BLOCK | INFRACTION_CHAT_BLOCK | INFRACTION_ADMIN_CHAT_BLOCK | INFRACTION_CALL_ADMIN_BAN
+        if doc.flags & INFRACTION_ITEM_BLOCK == INFRACTION_ITEM_BLOCK:
+            hist[dk].item_blocks += 1
+
+        af = INFRACTION_BAN | INFRACTION_VOICE_BLOCK | INFRACTION_CHAT_BLOCK | \
+             INFRACTION_ADMIN_CHAT_BLOCK | INFRACTION_CALL_ADMIN_BAN | INFRACTION_ITEM_BLOCK
 
         if doc.flags & af == 0:
             hist[dk].warnings += 1

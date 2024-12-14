@@ -31,7 +31,8 @@ from gflbans.internal.flags import PERMISSION_ADMIN_CHAT_BLOCK, PERMISSION_BAN, 
                                    PERMISSION_MANAGE_POLICY, str2pflag, PERMISSION_EDIT_ALL_INFRACTIONS, \
                                    PERMISSION_COMMENT, PERMISSION_WEB_MODERATOR, PERMISSION_ATTACH_FILE, \
                                    PERMISSION_ASSIGN_TO_SERVER, INFRACTION_VOICE_BLOCK, INFRACTION_CHAT_BLOCK, \
-                                   INFRACTION_BAN, INFRACTION_ADMIN_CHAT_BLOCK, INFRACTION_CALL_ADMIN_BAN
+                                   INFRACTION_BAN, INFRACTION_ADMIN_CHAT_BLOCK, INFRACTION_CALL_ADMIN_BAN, \
+                                   PERMISSION_BLOCK_ITEMS, INFRACTION_ITEM_BLOCK
 from gflbans.internal.infraction_utils import check_immunity, create_dinfraction, get_permissions, get_user_data, get_vpn_data, \
     create_dinfraction_with_policy, modify_infraction, push_state_to_nodes, filter_badchars
 from gflbans.internal.log import logger
@@ -158,19 +159,22 @@ async def infraction_stats(request: Request, query: CheckInfractions = Depends(C
     qb = {'$and': [q, {'flags': {'$bitsAllSet': INFRACTION_BAN}}]}
     qa = {'$and': [q, {'flags': {'$bitsAllSet': INFRACTION_ADMIN_CHAT_BLOCK}}]}
     qc = {'$and': [q, {'flags': {'$bitsAllSet': INFRACTION_CALL_ADMIN_BAN}}]}
+    qi = {'$and': [q, {'flags': {'$bitsAllSet': INFRACTION_ITEM_BLOCK}}]}
     qw = {'$and': [q, {'flags': {'#bitsAllClear': INFRACTION_CALL_ADMIN_BAN | INFRACTION_ADMIN_CHAT_BLOCK |
-                                                  INFRACTION_BAN | INFRACTION_CHAT_BLOCK | INFRACTION_VOICE_BLOCK}}]}
+                                                  INFRACTION_BAN | INFRACTION_CHAT_BLOCK | INFRACTION_VOICE_BLOCK | 
+                                                  INFRACTION_ITEM_BLOCK}}]}
 
     r = await asyncio.gather(request.app.state.db[MONGO_DB].infractions.count_documents(qv),
                              request.app.state.db[MONGO_DB].infractions.count_documents(qt),
                              request.app.state.db[MONGO_DB].infractions.count_documents(qb),
                              request.app.state.db[MONGO_DB].infractions.count_documents(qa),
                              request.app.state.db[MONGO_DB].infractions.count_documents(qc),
-                             request.app.state.db[MONGO_DB].infractions.count_documents(qw))
+                             request.app.state.db[MONGO_DB].infractions.count_documents(qw),
+                             request.app.state.db[MONGO_DB].infractions.count_documents(qi),)
 
     return InfractionStatisticsReply(voice_block_count=r[0], text_block_count=r[1], ban_count=r[2],
                                      admin_chat_block_count=r[3], call_admin_block_count=[4],
-                                     warnings_count=r[5])
+                                     warnings_count=r[5], item_block_count=r[6])
 
 
 @infraction_router.post('/register_policy', response_model=RegisterInfractionTieringPolicyReply,
@@ -529,6 +533,13 @@ async def edit_infraction(request: Request, infraction_id: str, query: ModifyInf
                 query.punishments.remove('call_admin_block')
             elif not adding_punishment and dinf.flags & INFRACTION_CALL_ADMIN_BAN == INFRACTION_CALL_ADMIN_BAN:
                 query.punishments.append('call_admin_block')
+
+        if acting_admin.permissions & PERMISSION_BLOCK_ITEMS != PERMISSION_BLOCK_ITEMS:
+            adding_punishment = 'item_block' in query.punishments
+            if adding_punishment and dinf.flags & INFRACTION_ITEM_BLOCK != INFRACTION_ITEM_BLOCK:
+                query.punishments.remove('item_block')
+            elif not adding_punishment and dinf.flags & INFRACTION_ITEM_BLOCK == INFRACTION_ITEM_BLOCK:
+                query.punishments.append('item_block')
     
     a = query.admin
 

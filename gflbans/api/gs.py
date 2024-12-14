@@ -214,7 +214,8 @@ async def run_signatures(request: Request,
                         cinfsum_cmp_sef(initial_chk.chat_block, chk.chat_block) or \
                         cinfsum_cmp_sef(initial_chk.ban, chk.ban) or \
                         cinfsum_cmp_sef(initial_chk.admin_chat_block, chk.admin_chat_block) or \
-                        cinfsum_cmp_sef(initial_chk.call_admin_block, chk.call_admin_block):
+                        cinfsum_cmp_sef(initial_chk.call_admin_block, chk.call_admin_block) or \
+                        cinfsum_cmp_sef(initial_chk.item_block, chk.item_block):
                     v = []
 
                     for fn in str2pflag.keys():

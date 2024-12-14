@@ -28,9 +28,11 @@ from gflbans.internal.database.rpc import DRPCPlayerUpdated
 from gflbans.internal.database.server import DServer
 from gflbans.internal.database.task import DTask
 from gflbans.internal.database.tiering_policy import DTieringPolicy
-from gflbans.internal.flags import INFRACTION_ADMIN_CHAT_BLOCK, INFRACTION_CALL_ADMIN_BAN, INFRACTION_CHAT_BLOCK, INFRACTION_VOICE_BLOCK, PERMISSION_CREATE_INFRACTION, PERMISSION_SCOPE_GLOBAL, PERMISSION_SCOPE_SUPER_GLOBAL, scope_to_flag, str2pflag, INFRACTION_SESSION, INFRACTION_PERMANENT, \
+from gflbans.internal.flags import INFRACTION_ADMIN_CHAT_BLOCK, INFRACTION_CALL_ADMIN_BAN, \
+    INFRACTION_CHAT_BLOCK, INFRACTION_VOICE_BLOCK, PERMISSION_CREATE_INFRACTION, PERMISSION_SCOPE_GLOBAL, \
+    PERMISSION_SCOPE_SUPER_GLOBAL, scope_to_flag, str2pflag, INFRACTION_SESSION, INFRACTION_PERMANENT, \
     INFRACTION_DEC_ONLINE_ONLY, INFRACTION_WEB, INFRACTION_AUTO_TIER, INFRACTION_SYSTEM, INFRACTION_REMOVED, \
-    INFRACTION_VPN, INFRACTION_GLOBAL, INFRACTION_SUPER_GLOBAL, INFRACTION_BAN, str2pflag
+    INFRACTION_VPN, INFRACTION_GLOBAL, INFRACTION_SUPER_GLOBAL, INFRACTION_BAN, str2pflag, INFRACTION_ITEM_BLOCK
 from gflbans.internal.integrations.games import get_user_info, validate_id_ex
 from gflbans.internal.log import logger
 from gflbans.internal.models.api import Initiator, PlayerObjSimple, PositiveIntIncl0, PlayerObjNoIp
@@ -134,7 +136,7 @@ async def create_dinfraction_with_policy(app, actor_type: int, player: PlayerObj
             {'flags': {'$bitsAllClear': INFRACTION_SESSION | INFRACTION_REMOVED}},
             {'created': {'$gte': datetime.now(tz=UTC).timestamp() - policy.tier_ttl}},
             {'$or': {
-                    {'flags': {'$bitsAnySet': INFRACTION_BAN | INFRACTION_VOICE_BLOCK | INFRACTION_CHAT_BLOCK | INFRACTION_CALL_ADMIN_BAN | INFRACTION_ADMIN_CHAT_BLOCK}},
+                    {'flags': {'$bitsAnySet': INFRACTION_BAN | INFRACTION_VOICE_BLOCK | INFRACTION_CHAT_BLOCK | INFRACTION_CALL_ADMIN_BAN | INFRACTION_ADMIN_CHAT_BLOCK | INFRACTION_ITEM_BLOCK}},
                     {'$or': {
                         {'flags': {'$bitsAllSet': INFRACTION_PERMANENT}},
                         {'time_left': {'$gt': 0}},
@@ -434,6 +436,8 @@ async def modify_infraction(app, target: ObjectId, author: Union[ObjectId, str, 
             return 'Admin Chat Block'
         elif a == 'call_admin_block':
             return 'Call Admin Block'
+        elif a == 'item_block':
+            return 'Item Block'
         else:
             return '[OMG YOU FORGOT TO UPDATE THIS]'
 
@@ -549,17 +553,18 @@ _nouns = {
     INFRACTION_BAN: 'Ban',
     INFRACTION_ADMIN_CHAT_BLOCK: 'Admin Chat Block',
     INFRACTION_CALL_ADMIN_BAN: 'Call Admin Block',
-    INFRACTION_VOICE_BLOCK | INFRACTION_CHAT_BLOCK: 'Silence'
+    INFRACTION_VOICE_BLOCK | INFRACTION_CHAT_BLOCK: 'Silence',
+    INFRACTION_ITEM_BLOCK: 'Item Block'
 }
 
 def punishment_noun(dinf: DInfraction) -> str:
     for k, v in _nouns.items():
-        others = (INFRACTION_VOICE_BLOCK | INFRACTION_CHAT_BLOCK | INFRACTION_BAN | INFRACTION_ADMIN_CHAT_BLOCK | INFRACTION_CALL_ADMIN_BAN) & ~k
+        others = (INFRACTION_VOICE_BLOCK | INFRACTION_CHAT_BLOCK | INFRACTION_BAN | INFRACTION_ADMIN_CHAT_BLOCK | INFRACTION_CALL_ADMIN_BAN | INFRACTION_ITEM_BLOCK) & ~k
 
         if dinf.flags & k == k and dinf.flags & others == 0:
             return v
         
-        if dinf.flags & (INFRACTION_VOICE_BLOCK | INFRACTION_CHAT_BLOCK | INFRACTION_BAN | INFRACTION_ADMIN_CHAT_BLOCK | INFRACTION_CALL_ADMIN_BAN) == 0:
+        if dinf.flags & (INFRACTION_VOICE_BLOCK | INFRACTION_CHAT_BLOCK | INFRACTION_BAN | INFRACTION_ADMIN_CHAT_BLOCK | INFRACTION_CALL_ADMIN_BAN | INFRACTION_ITEM_BLOCK) == 0:
             return 'Warning'
         
     return 'Infraction'

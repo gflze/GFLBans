@@ -314,4 +314,5 @@ def cim(c1: CheckInfractionsReply, c2: CheckInfractionsReply) -> CheckInfraction
         ban=cinfsum_cmp(c1.ban, c2.ban),
         admin_chat_block=cinfsum_cmp(c1.admin_chat_block, c2.admin_chat_block),
         call_admin_block=cinfsum_cmp(c1.call_admin_block, c2.call_admin_block),
+        item_block=cinfsum_cmp(c1.item_block, c2.item_block),
     )

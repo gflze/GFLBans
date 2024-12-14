@@ -1,9 +1,10 @@
 :root {
-    --bans-color: rgba(241, 70, 104, 1);
-    --voice-color: rgba(50, 115, 220, 1);
+    --bans-color: #f14668;
+    --voice-color: #3273dc;
     --text-color: #b19cd9;
     --admin-chat-color: #48c774;
-    --call-admin-color: #d3be05;
+    --call-admin-color: #ffdd57;
+    --item-color: #a600ff;
     --warning-color: orange;
 
     /* light mode color scheme */
@@ -172,14 +173,6 @@
     opacity: 0.8;
     text-align: center;
     font-size: 8pt;
-}
-
-.has-background-orange {
-    background-color: orange;
-}
-
-.has-background-purple {
-    background-color: purple;
 }
 
 .has-background-pink {
@@ -473,43 +466,55 @@ th {
     color: var(--call-admin-color);
 }
 
+.is-item {
+    color: var(--item-color);
+}
+
 .is-warning {
     color: var(--warning-color);
 }
 
+.has-background-ban,
+.has-background-voice,
+.has-background-text,
+.has-background-warning,
+.has-background-calladmin,
+.has-background-adminchat,
+.has-background-item,
+.has-background.adminchat {
+    color: white !important;
+}
+
 .has-background-ban {
     background-color: var(--bans-color) !important;
-    color: white !important;
 }
 
 .has-background-voice {
     background-color: var(--voice-color) !important;
-    color: white !important;
 }
 
 .has-background-text {
     background-color: var(--text-color) !important;
-    color: white !important;
 }
 
 .has-background-warning {
     background-color: var(--warning-color) !important;
-    color: white !important;
 }
 
 .has-background-calladmin {
     background-color: var(--call-admin-color) !important;
-    color: white !important;
 }
 
 .has-background-adminchat {
     background-color: var(--admin-chat-color) !important;
-    color: white !important;
+}
+
+.has-background-item {
+    background-color: var(--item-color) !important;
 }
 
 .has-background.adminchat {
     background-color: var(--bans-color) !important;
-    color: white;
 }
 
 .has-text-orange {
@@ -594,7 +599,7 @@ th {
 
 .button.is-admin-chat-btn,
 .button.is-admin-chat-btn:hover {
-    background-color: #48c774;
+    background-color: var(--admin-chat-color);
     border-color: transparent;
     color: #fff;
 }
@@ -602,8 +607,22 @@ th {
 .button.is-admin-chat-btn.is-outlined,
 .button.is-admin-chat-btn.is-outlined:hover {
     background-color: transparent;
-    border-color: #48c774;
-    color: #48c774;
+    border-color: var(--admin-chat-color);
+    color: var(--admin-chat-color);
+}
+
+.button.is-item-btn,
+.button.is-item-btn:hover {
+    background-color: var(--item-color);
+    border-color: transparent;
+    color: #fff;
+}
+
+.button.is-item-btn.is-outlined,
+.button.is-item-btn.is-outlined:hover {
+    background-color: transparent;
+    border-color: var(--item-color);
+    color: var(--item-color);
 }
 
 .button.is-ban-btn,
@@ -655,7 +674,7 @@ input::-webkit-inner-spin-button {
 }
 
 input[type=number] {
-    -moz-appearance: textfield;
+    appearance: textfield;
 }
 
 .card-rounded {

@@ -30,6 +30,7 @@ const cBanBtn = document.getElementById('restrictJoin');
 const cTextBtn = document.getElementById('restrictText');
 const cAdminChatBtn = document.getElementById('restrictAdminChat');
 const cCallAdminBtn = document.getElementById('restrictCallAdmin');
+const cItemBtn = document.getElementById('restrictItem');
 //Expiration
 const cExpirationSection = document.getElementById('cExpirationSection');
 const cPermanentCheck = document.getElementById('permanentCheck');
@@ -461,6 +462,10 @@ function createAndValidateInfraction() {
 
     if ($(cAdminChatBtn).length && !$(cAdminChatBtn).hasClass('is-outlined')) {
         infraction['punishments'].push('admin_chat_block');
+    }
+
+    if ($(cItemBtn).length && !$(cItemBtn).hasClass('is-outlined')) {
+        infraction['punishments'].push('item_block');
     }
 
     //Duration

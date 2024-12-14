@@ -250,6 +250,7 @@ class InfractionDay(BaseModel):
     chat_blocks: int = 0
     admin_chat_blocks: int = 0
     call_admin_blocks: int = 0
+    item_blocks: int = 0
     warnings: int = 0
     total: int = 0
 

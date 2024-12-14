@@ -12,9 +12,11 @@ from defusedxml import ElementTree
 
 from gflbans.internal.config import MONGO_URI, MONGO_DB
 from gflbans.internal.errors import SearchError
-from gflbans.internal.flags import INFRACTION_DEC_ONLINE_ONLY, INFRACTION_SYSTEM, INFRACTION_PERMANENT, INFRACTION_SUPER_GLOBAL, INFRACTION_GLOBAL, \
-    INFRACTION_VPN, INFRACTION_WEB, INFRACTION_REMOVED, INFRACTION_VOICE_BLOCK, INFRACTION_CHAT_BLOCK, INFRACTION_BAN, \
-    INFRACTION_ADMIN_CHAT_BLOCK, INFRACTION_CALL_ADMIN_BAN, INFRACTION_SESSION
+from gflbans.internal.flags import INFRACTION_DEC_ONLINE_ONLY, INFRACTION_SYSTEM, \
+    INFRACTION_PERMANENT, INFRACTION_SUPER_GLOBAL, INFRACTION_GLOBAL, INFRACTION_VPN, \
+    INFRACTION_WEB, INFRACTION_REMOVED, INFRACTION_VOICE_BLOCK, INFRACTION_CHAT_BLOCK, \
+    INFRACTION_BAN, INFRACTION_ADMIN_CHAT_BLOCK, INFRACTION_CALL_ADMIN_BAN, \
+    INFRACTION_SESSION, INFRACTION_ITEM_BLOCK
 from gflbans.internal.integrations.ips import ips_get_member_id_from_gsid
 from gflbans.internal.log import logger
 from gflbans.internal.models.protocol import Search
@@ -265,6 +267,7 @@ FIELD_MAP = {
     'is_ban':               ('bitflag', bool, INFRACTION_BAN),
     'is_admin_chat':        ('bitflag', bool, INFRACTION_ADMIN_CHAT_BLOCK),
     'is_call_admin':        ('bitflag', bool, INFRACTION_CALL_ADMIN_BAN),
+    'is_item':              ('bitflag', bool, INFRACTION_ITEM_BLOCK),
     'is_session':           ('bitflag', bool, INFRACTION_SESSION),
     'is_decl_online_only':  ('bitflag', bool, INFRACTION_DEC_ONLINE_ONLY)
 }

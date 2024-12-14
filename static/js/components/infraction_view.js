@@ -29,6 +29,7 @@ const scopeValue = $('#scopeValue');
 
 const reasonValue = $('#reasonValue')
 
+const itemFlag = $('#itemFlag');
 const callAdminFlag = $('#callAdminFlag');
 const adminChatFlag = $('#adminChatFlag');
 const textChatFlag = $('#textChatFlag');
@@ -49,6 +50,7 @@ const ALL_P_FLAGS = 3968
 
 let callAdminFlagEdit = $('#callAdminFlagEdit')
 let adminChatFlagEdit = $('#adminChatFlagEdit')
+let itemFlagEdit = $('#itemFlagEdit')
 let textChatFlagEdit = $('#textChatFlagEdit')
 let voiceChatFlagEdit = $('#voiceChatFlagEdit')
 let banFlagEdit = $('#banFlagEdit')
@@ -299,6 +301,7 @@ async function setupViewModal(infraction) {
     unhideIfTrue(infraction['flags'] & (INFRACTION.BAN), banFlag);
     unhideIfTrue(infraction['flags'] & (INFRACTION.ADMIN_CHAT_BLOCK), adminChatFlag);
     unhideIfTrue(infraction['flags'] & (INFRACTION.CALL_ADMIN_BAN), callAdminFlag);
+    unhideIfTrue(infraction['flags'] & (INFRACTION.ITEM_BLOCK), itemFlag);
 
     if (!t) {
         unhideIfTrue(true, warningFlag);

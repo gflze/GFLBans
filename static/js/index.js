@@ -83,20 +83,26 @@ $(document).ready(function () {
                     }, {
                         label: "Text Blocks",
                         fill: false,
-                        backgroundColor: 'purple',
-                        borderColor: 'purple',
+                        backgroundColor: '#b19cd9',
+                        borderColor: '#b19cd9',
                         data: []
                     }, {
                         label: "Admin Chat Blocks",
                         fill: false,
-                        backgroundColor: 'mediumseagreen',
-                        borderColor: 'mediumseagreen',
+                        backgroundColor: '#48c774',
+                        borderColor: '#48c774',
                         data: []
                     }, {
                         label: "Call Admin Blocks",
                         fill: false,
                         backgroundColor: '#ffdd57',
                         borderColor: '#ffdd57',
+                        data: []
+                    }, {
+                        label: "Item Blocks",
+                        fill: false,
+                        backgroundColor: '#a600ff',
+                        borderColor: '#a600ff',
                         data: []
                     }, {
                         label: "Warnings",
@@ -119,8 +125,9 @@ $(document).ready(function () {
                     chartOpts.data.datasets[2].data.push(decoded.history[labels[i]].chat_blocks);
                     chartOpts.data.datasets[3].data.push(decoded.history[labels[i]].admin_chat_blocks);
                     chartOpts.data.datasets[4].data.push(decoded.history[labels[i]].call_admin_blocks);
-                    chartOpts.data.datasets[5].data.push(decoded.history[labels[i]].warnings);
-                    chartOpts.data.datasets[6].data.push(decoded.history[labels[i]].total);
+                    chartOpts.data.datasets[5].data.push(decoded.history[labels[i]].item_blocks);
+                    chartOpts.data.datasets[6].data.push(decoded.history[labels[i]].warnings);
+                    chartOpts.data.datasets[7].data.push(decoded.history[labels[i]].total);
                 }
 
 
@@ -142,8 +149,8 @@ $(document).ready(function () {
                 $('#count_servers').text(decoded.total_servers);
                 $('#count_total_players').text(decoded.online_players);
                 $('#count_total_bans').text(decoded.total_bans);
-                $('#count_total_gags').text(decoded.total_voice_blocks);
-                $('#count_total_mutes').text(decoded.total_chat_blocks);
+                $('#count_total_mutes').text(decoded.total_voice_blocks);
+                $('#count_total_gags').text(decoded.total_chat_blocks);
                 $('#count_total_warnings').text(decoded.total_warnings);
 
                 $('.is-loading').removeClass('is-loading')

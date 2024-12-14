@@ -72,6 +72,7 @@ class Search(BaseModel):
     is_ban: Optional[bool]
     is_admin_chat: Optional[bool]
     is_call_admin: Optional[bool]
+    is_item: Optional[bool]
     is_session: Optional[bool]
 
     # Cursor control
@@ -95,6 +96,7 @@ class CheckInfractionsReply(BaseModel):
     ban: Optional[CInfractionSummary]
     admin_chat_block: Optional[CInfractionSummary]
     call_admin_block: Optional[CInfractionSummary]
+    item_block: Optional[CInfractionSummary]
 
 
 class InfractionStatisticsReply(BaseModel):
@@ -103,6 +105,7 @@ class InfractionStatisticsReply(BaseModel):
     ban_count: PositiveIntIncl0
     admin_chat_block_count: PositiveIntIncl0
     call_admin_block_count: PositiveIntIncl0
+    item_block_count: PositiveIntIncl0
     warnings_count: PositiveIntIncl0
 
 
@@ -547,7 +550,7 @@ class ServerStats(BaseModel):
     total_servers: int
     online_players: int
 
-    # Specific types, excluding admin chat / call admin bc those are kinda boring
+    # Specific types, excluding admin chat, call admin, and item blocks bc those are kinda boring
     total_bans: int
     total_chat_blocks: int
     total_voice_blocks: int
