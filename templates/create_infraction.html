@@ -107,7 +107,7 @@
                 </label>
             </div>
             <br>
-            {% if user is not none and has_flag(user.permissions, bit_or(p_nodes['Restrict Text'], p_nodes['Restrict Voice'], p_nodes['Restrict Admin Chat'], p_nodes['Restrict Call Admin'], p_nodes['Ban'])) %}
+            {% if user is not none and has_flag(user.permissions, bit_or(p_nodes['Restrict Text'], p_nodes['Restrict Voice'], p_nodes['Restrict Admin Chat'], p_nodes['Restrict Call Admin'], p_nodes['Ban'], p_nodes['Restrict Map Items'])) %}
             <div id="cRestrictionsSection">
                 <label class="label text-primary">Restrictions</label>
                 <p>To issue a warning, deselect all restrictions.</p>
@@ -152,6 +152,14 @@
                                 <i class="fas fa-phone-slash ricon"></i>
                             </span>
                             Call Admin
+                        </button>
+                        {% endif %}
+                        {% if user is not none and has_flag(user.permissions, p_nodes['Restrict Map Items']) %}
+                        <button id="restrictItem" class="rbtn button is-item-btn is-outlined">
+                            <span class="icon is-small ricon">
+                                <i class="fas fa-virus-slash ricon"></i>
+                            </span>
+                            Items
                         </button>
                         {% endif %}
                     </div>

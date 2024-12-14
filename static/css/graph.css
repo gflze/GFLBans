@@ -33,35 +33,40 @@
 
 /* Series A is Bans */
 .ct-series-a > .ct-bar {
-  stroke: #f14668;
+  stroke: var(--bans-color);
 }
 
 /* Series B is Gags */
 .ct-series-b > .ct-bar {
-  stroke: #3273dc;
+  stroke: var(--text-color);
 }
 
 /* Series C is Mutes */
 .ct-series-c > .ct-bar {
-  stroke: purple;
+  stroke: var(--voice-color);
 }
 
 /* Series D is admin chat blocks */
 .ct-series-d > .ct-bar {
-  stroke: mediumseagreen;
+  stroke: var(--admin-chat-color);
 }
 
 /* Series E is call admin blocks */
 .ct-series-e > .ct-bar {
-  stroke: #ffdd57;
+  stroke: var(--call-admin-color);
 }
 
-/* Series F is Warnings */
+/* Series F is Total Infractions */
 .ct-series-f > .ct-bar {
-  stroke: orange;
+  stroke: var(--item-color);
 }
 
-/* Series G is Total Infractions */
+/* Series G is Warnings */
 .ct-series-g > .ct-bar {
+  stroke: var(--warning-color);
+}
+
+/* Series H is Total Infractions */
+.ct-series-h > .ct-bar {
   stroke: hotpink;
 }

@@ -15,7 +15,7 @@ PERMISSION_PRUNE_INFRACTIONS = 1 << 10
 PERMISSION_VIEW_AUDIT_LOG = 1 << 11
 PERMISSION_MANAGE_GROUPS_AND_ADMINS = 1 << 12
 PERMISSION_MANAGE_API_KEYS = 1 << 13
-# PERMISSION_ACP_BLOCK_EDITOR = 1 << 14 # Deprecated
+PERMISSION_BLOCK_ITEMS = 1 << 14  # Add map item restrictions to infractions
 PERMISSION_BLOCK_VOICE = 1 << 15  # Add voice blocks to infractions
 PERMISSION_BLOCK_CHAT = 1 << 16  # Add chat blocks to infractions
 PERMISSION_BAN = 1 << 17  # Add bans to infractions
@@ -37,7 +37,7 @@ PERMISSION_MANAGE_MAP_ICONS = 1 << 28  # Upload and delete map icons
 # (The server key perms are checked first, then the user's)
 SERVER_KEY_PERMISSIONS = PERMISSION_COMMENT | PERMISSION_VIEW_IP_ADDR | PERMISSION_CREATE_INFRACTION | \
                          PERMISSION_EDIT_ALL_INFRACTIONS | PERMISSION_ATTACH_FILE | \
-                         PERMISSION_BLOCK_CHAT | PERMISSION_BLOCK_VOICE | PERMISSION_BAN | \
+                         PERMISSION_BLOCK_CHAT | PERMISSION_BLOCK_VOICE | PERMISSION_BAN | PERMISSION_BLOCK_ITEMS | \
                          PERMISSION_ADMIN_CHAT_BLOCK | PERMISSION_CALL_ADMIN_BLOCK | PERMISSION_SCOPE_GLOBAL | \
                          PERMISSION_SCOPE_SUPER_GLOBAL | PERMISSION_MANAGE_POLICY | PERMISSION_SKIP_IMMUNITY
 
@@ -59,6 +59,7 @@ INFRACTION_ADMIN_CHAT_BLOCK = 1 << 10  # The player may not use admin chat
 INFRACTION_CALL_ADMIN_BAN = 1 << 11  # The player may not call an admin (using !calladmin)
 INFRACTION_SESSION = 1 << 12
 INFRACTION_DEC_ONLINE_ONLY = 1 << 13  # Only reduces infraction time when player is online. Invalid for bans and web
+INFRACTION_ITEM_BLOCK = 1 << 14 # The player may not use map spawned items
 INFRACTION_AUTO_TIER = 1 << 16  # This infraction is considered for tiering purposes.
 
 str2pflag = {
@@ -66,7 +67,8 @@ str2pflag = {
     'chat_block': INFRACTION_CHAT_BLOCK,
     'ban': INFRACTION_BAN,
     'admin_chat_block': INFRACTION_ADMIN_CHAT_BLOCK,
-    'call_admin_block': INFRACTION_CALL_ADMIN_BAN
+    'call_admin_block': INFRACTION_CALL_ADMIN_BAN,
+    'item_block': INFRACTION_ITEM_BLOCK
 }
 
 scope_to_flag = {
@@ -93,7 +95,8 @@ str2permflag = {
     'chat_block': PERMISSION_BLOCK_CHAT,
     'ban': PERMISSION_BAN,
     'admin_chat_block': PERMISSION_ADMIN_CHAT_BLOCK,
-    'call_admin_block': PERMISSION_CALL_ADMIN_BLOCK
+    'call_admin_block': PERMISSION_CALL_ADMIN_BLOCK,
+    'item_block': PERMISSION_BLOCK_ITEMS
 }
 
 name2perms = {
@@ -123,5 +126,6 @@ name2perms = {
     'Overrides Immunity': PERMISSION_SKIP_IMMUNITY,
     'RPC Kick': PERMISSION_RPC_KICK,
     'Assign an Infraction to a Specific Server': PERMISSION_ASSIGN_TO_SERVER,
-    'Upload and Delete Map Icons': PERMISSION_MANAGE_MAP_ICONS
+    'Upload and Delete Map Icons': PERMISSION_MANAGE_MAP_ICONS,
+    'Restrict Map Items': PERMISSION_BLOCK_ITEMS
 }

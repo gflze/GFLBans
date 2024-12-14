@@ -537,6 +537,10 @@ function editRestrictions(infraction) {
         callAdminFlagEdit.removeClass('half-opacity');
     }
 
+    if (infraction['flags'] & (INFRACTION.ITEM_BLOCK)) {
+        itemFlagEdit.removeClass('half-opacity');
+    }
+
     function handleUWU() {
         if (this.hasAttribute('disabled')) {
             return;

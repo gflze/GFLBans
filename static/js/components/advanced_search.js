@@ -249,7 +249,8 @@ function loadUrlParams() {
         && urlParams.has('is_text') && urlParams.get('is_text') === 'false'
         && urlParams.has('is_ban') && urlParams.get('is_ban') === 'false'
         && urlParams.has('is_admin_chat') && urlParams.get('is_admin_chat') === 'false'
-        && urlParams.has('is_call_admin') && urlParams.get('is_call_admin') === 'false') {
+        && urlParams.has('is_call_admin') && urlParams.get('is_call_admin') === 'false'
+        && urlParams.has('is_item') && urlParams.get('is_item') === 'false') {
         $('#search-restriction-warning').trigger("click");
     } else {
         if (urlParams.has('is_voice'))
@@ -262,6 +263,8 @@ function loadUrlParams() {
             $('#search-restriction-admin-chat').trigger("click");
         if (urlParams.has('is_call_admin'))
             $('#search-restriction-call-admin').trigger("click");
+        if (urlParams.has('is_item'))
+            $('#search-restriction-item').trigger("click");
     }
 
     // Status
@@ -466,7 +469,7 @@ function createSearchQuery() {
 
     // Restriction
     if (!$('#search-restriction-warning').hasClass('is-outlined'))
-        query = query.concat('&is_voice=false&is_text=false&is_ban=false&is_admin_chat=false&is_call_admin=false');
+        query = query.concat('&is_voice=false&is_text=false&is_ban=false&is_admin_chat=false&is_call_admin=false&is_item=false');
     else {
         if (!$('#search-restriction-voice').hasClass('is-outlined'))
             query = query.concat('&is_voice=true');
@@ -482,6 +485,9 @@ function createSearchQuery() {
 
         if (!$('#search-restriction-call-admin').hasClass('is-outlined'))
             query = query.concat('&is_call_admin=true');
+
+        if (!$('#search-restriction-item').hasClass('is-outlined'))
+            query = query.concat('&is_item=true');
     }
     
     // Time

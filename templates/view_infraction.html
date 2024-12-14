@@ -216,6 +216,12 @@
                                                     </span>
                                                     Call Admin
                                                 </span>
+                                                <span id="itemFlag" class="ptag tag has-background-item">
+                                                    <span class="icon is-small ricon">
+                                                        <i class="fas fa-virus-slash ricon"></i>
+                                                    </span>
+                                                    Item
+                                                </span>
                                                 <span id="warningFlag" class="ptag tag has-background-warning">
                                                     <span class="icon is-small ricon">
                                                         <i class="fas fa-exclamation-triangle ricon"></i>
@@ -264,6 +270,14 @@
                                                         <i class="fas fa-phone-slash ricon"></i>
                                                     </span>
                                                     Call Admin
+                                                </a>
+                                                {% endif %}
+                                                {% if user is not none and has_flag(user.permissions, p_nodes['Restrict Map Items']) %}
+                                                <a id="itemFlagEdit" data-punishment="item_block" data-target="itemFlag" class="tag etag has-background-item">
+                                                    <span class="icon is-small ricon">
+                                                        <i class="fas fa-virus-slash ricon"></i>
+                                                    </span>
+                                                    Item
                                                 </a>
                                                 {% endif %}
                                             </div>

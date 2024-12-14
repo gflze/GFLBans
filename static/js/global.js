@@ -13,7 +13,7 @@ const PERMISSION = Object.freeze({
     VIEW_AUDIT_LOG: 1 << 11,
     MANAGE_GROUPS_AND_ADMINS: 1 << 12,
     MANAGE_API_KEYS: 1 << 13,
-    ACP_BLOCK_EDITOR: 1 << 14, // Deprecated
+    BLOCK_ITEMS: 1 << 14, // Add item blocks to infractions
     BLOCK_VOICE: 1 << 15,  // Add voice blocks to infractions
     BLOCK_CHAT: 1 << 16,  // Add chat blocks to infractions
     BAN: 1 << 17,  // Add bans to infractions
@@ -45,6 +45,7 @@ const INFRACTION = Object.freeze({
     CALL_ADMIN_BAN: 1 << 11, // The player may not call an admin (using !calladmin)
     SESSION: 1 << 12,
     DEC_ONLINE_ONLY: 1 << 13, // Only reduces infraction time when player is online. Invalid for bans and web
+    ITEM_BLOCK: 1 << 14, // The player may not use map spawned items
     AUTO_TIER: 1 << 16 // This infraction is considered for tiering purposes.
 });
 
@@ -84,6 +85,7 @@ const searchParams = [
     "is_ban",
     "is_admin_chat",
     "is_call_admin",
+    "is_item",
     "is_session",
     "is_decl_online_only"
 ]

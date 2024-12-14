@@ -80,6 +80,7 @@ const restrictions = {
     'text': ['fas', 'fa-comment-slash', 'is-text'],
     'call-admin': ['fas', 'fa-phone-slash', 'is-call-admin'],
     'admin-chat': ['fas', 'fa-hands-helping', 'is-admin-chat'],
+    'item': ['fas', 'fa-virus-slash', 'is-item'],
     'warning': ['fas', 'fa-exclamation-triangle', 'is-warning'],
 }
 
@@ -90,6 +91,7 @@ flags_to_str.set(INFRACTION.CHAT_BLOCK, 'text');
 flags_to_str.set(INFRACTION.BAN, 'ban');
 flags_to_str.set(INFRACTION.CALL_ADMIN_BAN, 'call-admin');
 flags_to_str.set(INFRACTION.ADMIN_CHAT_BLOCK, 'admin-chat');
+flags_to_str.set(INFRACTION.ITEM_BLOCK, 'item');
 
 function addInfractionRow(infraction) {
     let unixNow = Date.now() / 1000
