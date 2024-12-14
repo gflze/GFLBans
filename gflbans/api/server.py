@@ -21,7 +21,7 @@ from gflbans.internal.utils import generate_api_key
 server_router = APIRouter(default_response_class=ORJSONResponse)
 
 
-def dserver_to_server(dsrv: DServer) -> Server:
+def dserver_to_server(dsrv: DServer, indicate_webhooks: bool) -> Server:
     mf = Server(id=str(dsrv.id), ip=dsrv.ip, game_port=dsrv.game_port, enabled=dsrv.enabled,
                 friendly_name=dsrv.friendly_name, online=False)
 
@@ -35,6 +35,13 @@ def dserver_to_server(dsrv: DServer) -> Server:
         mf.mod = dsrv.server_info.mod
         mf.map = dsrv.server_info.map
         mf.is_locked = dsrv.server_info.locked
+    
+    if indicate_webhooks:
+        mf.discord_staff_tag = dsrv.discord_staff_tag
+        if getattr(dsrv, 'discord_webhook', None) is not None:
+            mf.has_discord_webhook = True
+        if getattr(dsrv, 'infract_webhook', None) is not None:
+            mf.has_infract_webhook = True
 
     return mf
 
@@ -50,7 +57,8 @@ def _duserip_to_ply(ply: DUserIP) -> PlayerObj:
 
 @server_router.get('/', response_model_exclude_unset=True, response_model_exclude_none=True,
                    response_model=List[Server])
-async def get_servers(request: Request, enabled_only: bool = False):
+async def get_servers(request: Request, enabled_only: bool = False,
+                      auth: Tuple[int, Optional[ObjectId], int] = Depends(check_access)):
     q = {}
 
     if enabled_only:
@@ -58,20 +66,29 @@ async def get_servers(request: Request, enabled_only: bool = False):
 
     svs = []
 
+    indicate_webhooks = False
+    if auth[2] & PERMISSION_MANAGE_SERVERS == PERMISSION_MANAGE_SERVERS:
+        indicate_webhooks = True
+
     async for dsv in DServer.from_query_ex(request.app.state.db[MONGO_DB], q):
-        svs.append(dserver_to_server(dsv))
+        svs.append(dserver_to_server(dsv, indicate_webhooks))
 
     return svs
 
 
 @server_router.get('/{server_id}', response_model_exclude_none=True, response_model_exclude_unset=True,
                    response_model=Server)
-async def get_server(request: Request, server_id: str):
+async def get_server(request: Request, server_id: str,
+                     auth: Tuple[int, Optional[ObjectId], int] = Depends(check_access)):
     sv = await DServer.from_id(request.app.state.db[MONGO_DB], server_id)
 
     if sv is None: raise HTTPException(status_code=404, detail='No such server')
 
-    return dserver_to_server(sv)
+    indicate_webhooks = False
+    if auth[2] & PERMISSION_MANAGE_SERVERS == PERMISSION_MANAGE_SERVERS:
+        indicate_webhooks = True
+
+    return dserver_to_server(sv, indicate_webhooks)
 
 
 @server_router.get('/{server_id}/players', response_model_exclude_unset=True, response_model_exclude_none=True,
@@ -183,15 +200,24 @@ async def edit_server(request: Request, e: EditServer, server_id: str,
         srv.allow_unknown = e.allow_unknown
         modifications += f', enforce_security = {srv.allow_unknown}'
 
-    if e.discord_webhook is not None:
+    if e.discord_webhook == '':
+        srv.discord_webhook = None
+        modifications += f', discord_webhook = None'
+    elif e.discord_webhook is not None:
         srv.discord_webhook = e.discord_webhook
         modifications += f', discord_webhook = (CENSORED)'
     
-    if e.infract_webhook is not None:
+    if e.infract_webhook == '':
+        srv.infract_webhook = None
+        modifications += f', infract_webhook = (None)'
+    elif e.infract_webhook is not None:
         srv.infract_webhook = e.infract_webhook
         modifications += f', infract_webhook = (CENSORED)'
 
-    if e.discord_staff_tag is not None:
+    if e.discord_webhook == '':
+        srv.discord_staff_tag = None
+        modifications += f', discord_staff_tag = (None)'
+    elif e.discord_staff_tag is not None:
         srv.discord_staff_tag = e.discord_staff_tag
         modifications += f', discord_staff_tag = {srv.discord_staff_tag}'
 
