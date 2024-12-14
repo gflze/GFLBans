@@ -41,7 +41,7 @@ async def preload_infraction(request: Request, infraction_id: str, query: Search
     s_dict = {'created': {'$gt': dinf.created}}
     do_search = False
     for field, (mongo_field, field_type, *flag_value) in FIELD_MAP.items():
-        if field in query:
+        if getattr(query, field, None) is not None:
             do_search = True
             break
 
@@ -53,7 +53,7 @@ async def preload_infraction(request: Request, infraction_id: str, query: Search
             incl_ip = sc['user'].permissions & PERMISSION_VIEW_IP_ADDR == PERMISSION_VIEW_IP_ADDR
 
         try:
-            cq = await do_infraction_search(request.app, query, include_ip=incl_ip, strict=False)
+            cq = await do_infraction_search(request.app, query, include_ip=incl_ip)
         except SearchError as e:
             raise HTTPException(detail=f'SearchError: {e.args[0]}', status_code=400)
 
