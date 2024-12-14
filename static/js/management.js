@@ -721,6 +721,9 @@ async function loadServerMenu(serverID) {
         $('#nameEntry').val(server.hasOwnProperty('friendly_name') ? server['friendly_name'] : '');
         $('#ipEntry').val(server.hasOwnProperty('ip') ? server['ip'] : '');
         $('#portEntry').val(server.hasOwnProperty('game_port') ? Number(server['game_port']) : '');
+        $('#calladminEntry').val(server.hasOwnProperty('has_discord_webhook') ? '●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●' : '');
+        $('#infractionEntry').val(server.hasOwnProperty('has_infract_webhook') ? '●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●' : '');
+        $('#roleIDEntry').val(server.hasOwnProperty('discord_staff_tag') ? server['discord_staff_tag'] : '');
 
         $('.modal-card-title').text('Update ' + (server.hasOwnProperty('friendly_name') ? server['friendly_name'] : 'Server'));
         $('#manageSubmit').text('Update Server');
@@ -918,11 +921,17 @@ function createAndValidateServer() {
     else
         return [false, 'You must enter a port.'];
 
-    if ($('#infractionEntry').val().trim() !== '') {
+    if ($('#infractionEntry').val().trim() !== '' && $('#infractionEntry').val().indexOf('●') == -1) {
         server['infract_webhook'] = $('#infractionEntry').val().trim();
-    }
+    } else if ($('#infractionEntry').val().trim() === '')
+        server['infract_webhook'] = '';
 
-    if ($('#calladminEntry').val().trim() !== '' && $('#roleIDEntry').val().trim() !== '') {
+    if ($('#calladminEntry').val().trim() === '' && $('#roleIDEntry').val().trim() === '') {
+        server['discord_webhook'] = '';
+        server['discord_staff_tag'] = '';
+    } else if ($('#calladminEntry').val().indexOf('●') > -1 && $('#roleIDEntry').val().trim() !== '') {
+        server['discord_staff_tag'] = $('#roleIDEntry').val().trim();
+    } else if ($('#calladminEntry').val().trim() !== '' && $('#roleIDEntry').val().trim() !== '') {
         server['discord_webhook'] = $('#calladminEntry').val().trim();
         server['discord_staff_tag'] = $('#roleIDEntry').val().trim();
     } else if (($('#calladminEntry').val().trim() !== '' || $('#roleIDEntry').val().trim() !== ''))

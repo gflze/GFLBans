@@ -183,6 +183,10 @@ class Server(BaseModel):
     map: Optional[str]
     is_locked: bool = False
 
+    has_discord_webhook: Optional[bool]
+    has_infract_webhook: Optional[bool]
+    discord_staff_tag: Optional[str]
+
 
 class ServerInternal(BaseModel):
     id: str
