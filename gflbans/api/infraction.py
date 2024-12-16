@@ -635,12 +635,11 @@ async def _update_or_delete_comment(request: Request, infraction_id: str, query:
         raise HTTPException(detail='No such infraction exists!', status_code=404)
 
     try:
-        if (acting_admin.permissions & PERMISSION_COMMENT != PERMISSION_COMMENT or
-            dinf.comments[query.comment_index].author != acting_admin_id or auth[2] & PERMISSION_COMMENT !=
-            PERMISSION_COMMENT) and (acting_admin.permissions
-                                     & PERMISSION_WEB_MODERATOR != PERMISSION_WEB_MODERATOR or auth[
-                                         2] & PERMISSION_WEB_MODERATOR
-                                     != PERMISSION_WEB_MODERATOR):
+        if (acting_admin.permissions & PERMISSION_COMMENT != PERMISSION_COMMENT
+            or dinf.comments[query.comment_index].author != acting_admin_id
+            or auth[2] & PERMISSION_COMMENT != PERMISSION_COMMENT) \
+            and (acting_admin.permissions & PERMISSION_WEB_MODERATOR != PERMISSION_WEB_MODERATOR
+                 or auth[2] & PERMISSION_WEB_MODERATOR != PERMISSION_WEB_MODERATOR):
             raise HTTPException(detail='You do not have permission to do that!', status_code=403)
 
         if isinstance(query, DeleteComment):
