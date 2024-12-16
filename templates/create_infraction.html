@@ -113,7 +113,7 @@
                 <p>To issue a warning, deselect all restrictions.</p>
                 <br>
                 <div class="is-flex is-justify-content-center">
-                    <div class="buttons">
+                    <div class="buttons is-justify-content-center">
                         {% if user is not none and has_flag(user.permissions, p_nodes['Restrict Voice']) %}
                         <button id="restrictVoice" class="rbtn button is-voice-btn is-outlined">
                             <span class="icon is-small ricon">
@@ -159,7 +159,7 @@
                             <span class="icon is-small ricon">
                                 <i class="fas fa-virus-slash ricon"></i>
                             </span>
-                            Items
+                            Item
                         </button>
                         {% endif %}
                     </div>
