@@ -1,20 +1,21 @@
 <!DOCTYPE html>
-<html id="htmlRoot" lang="en" class="{% if opposite_theme %}theme-opposite {% endif %}background-primary">
-<head>
-    {% include 'meta.html' with context %}
-    <!--This page requires tooltips-->
-    <link rel="stylesheet" href="/static/3rdparty/css/bulma-tooltips.css">
-    <title>{{BRANDING}} - Servers</title>
-</head>
-<body>
-{% include 'js_includes.html' %}
-{% include 'header.html' with context %}
-<div class="container is-max-desktop" id="server_root">
-</div>
-{% include 'server_info.html' %}
-{% include 'error.html' %}
-{% include 'loading.html' with context %}
-<script src="/static/js/servers.js"></script>
-{% include 'footer.html' with context %}
-</body>
+<html id="htmlRoot"
+      lang="en"
+      class="{% if opposite_theme %}theme-opposite {% endif %}background-primary">
+    <head>
+        {% include 'meta.html' with context %}
+        <!--This page requires tooltips-->
+        <link rel="stylesheet" href="/static/3rdparty/css/bulma-tooltips.css">
+        <title>{{ BRANDING }} - Servers</title>
+    </head>
+    <body>
+        {% include 'js_includes.html' %}
+        {% include 'header.html' with context %}
+        <div class="container is-max-desktop" id="server_root"></div>
+        {% include 'server_info.html' %}
+        {% include 'error.html' %}
+        {% include 'loading.html' with context %}
+        <script src="/static/js/servers.js"></script>
+        {% include 'footer.html' with context %}
+    </body>
 </html>

@@ -1,15 +1,22 @@
 from datetime import datetime
-from typing import Optional, Union, Dict
+from typing import Dict, Optional, Union
 
 from bson import ObjectId
 from dateutil.tz import UTC
-from pydantic import BaseModel, PositiveInt, constr, conlist, conint
+from pydantic import BaseModel, PositiveInt, conint, conlist, constr
 
 from gflbans.internal.constants import SERVER_KEY
-from gflbans.internal.flags import INFRACTION_SUPER_GLOBAL, INFRACTION_PERMANENT, INFRACTION_DEC_ONLINE_ONLY, \
-    INFRACTION_SESSION, INFRACTION_VPN, INFRACTION_REMOVED, INFRACTION_GLOBAL
 from gflbans.internal.database.base import DBase
 from gflbans.internal.database.common import DFile, DUser
+from gflbans.internal.flags import (
+    INFRACTION_DEC_ONLINE_ONLY,
+    INFRACTION_GLOBAL,
+    INFRACTION_PERMANENT,
+    INFRACTION_REMOVED,
+    INFRACTION_SESSION,
+    INFRACTION_SUPER_GLOBAL,
+    INFRACTION_VPN,
+)
 
 
 class DComment(BaseModel):
@@ -37,9 +44,15 @@ def _branch(f, new_cond):
 
 
 # At least it's not SQL
-def build_query_dict(actor_type: int, actor_id: str = None, gs_service: Optional[str] = None,
-                     gs_id: Optional[str] = None,
-                     ip: Optional[str] = None, ignore_others: bool = False, active_only: bool = False):
+def build_query_dict(
+    actor_type: int,
+    actor_id: str = None,
+    gs_service: Optional[str] = None,
+    gs_id: Optional[str] = None,
+    ip: Optional[str] = None,
+    ignore_others: bool = False,
+    active_only: bool = False,
+):
     f = {}
 
     if gs_service is not None and gs_id is not None:
@@ -51,13 +64,7 @@ def build_query_dict(actor_type: int, actor_id: str = None, gs_service: Optional
 
     # Convert into an $or if all are set
     if gs_id is not None and gs_service is not None and ip is not None:
-        f['$or'] = [
-            {'ip': ip},
-            {'$and': [
-                {'user.gs_service': gs_service},
-                {'user.gs_id': gs_id}
-            ]}
-        ]
+        f['$or'] = [{'ip': ip}, {'$and': [{'user.gs_service': gs_service}, {'user.gs_id': gs_id}]}]
         del f['user.gs_service']
         del f['user.gs_id']
         del f['ip']
@@ -67,8 +74,7 @@ def build_query_dict(actor_type: int, actor_id: str = None, gs_service: Optional
         if actor_type != SERVER_KEY:
             raise ValueError('The `ignore_others` option is only valid for servers.')
 
-        _super_or_server = [{'server': ObjectId(actor_id)},
-                            {'flags': {'$bitsAllSet': INFRACTION_SUPER_GLOBAL}}]
+        _super_or_server = [{'server': ObjectId(actor_id)}, {'flags': {'$bitsAllSet': INFRACTION_SUPER_GLOBAL}}]
 
         # If ignore_others is set, $or already exists
         cond2 = {'$or': _super_or_server}
@@ -76,24 +82,31 @@ def build_query_dict(actor_type: int, actor_id: str = None, gs_service: Optional
 
     # Filter out expired bans, vpn bans (on ip only), removed bans, session
     if active_only:
-        w = [{'expires': {'$gt': datetime.now(tz=UTC).timestamp()}},
-             {'$and': [{'flags': {'$bitsAllSet': INFRACTION_PERMANENT}},
-                       {'flags': {'$bitsAllClear': INFRACTION_SESSION}}]},
-             {'$and': [
-                 {
-                     'flags': {'$bitsAllSet': INFRACTION_DEC_ONLINE_ONLY},
-                 },
-                 {
-                     'time_left': {'$gt': 0}
-                 }
-             ]}]
+        w = [
+            {'expires': {'$gt': datetime.now(tz=UTC).timestamp()}},
+            {
+                '$and': [
+                    {'flags': {'$bitsAllSet': INFRACTION_PERMANENT}},
+                    {'flags': {'$bitsAllClear': INFRACTION_SESSION}},
+                ]
+            },
+            {
+                '$and': [
+                    {
+                        'flags': {'$bitsAllSet': INFRACTION_DEC_ONLINE_ONLY},
+                    },
+                    {'time_left': {'$gt': 0}},
+                ]
+            },
+        ]
 
         cond2 = {'$or': w}
         _branch(f, cond2)
 
-        vpnf = [{'$and':
-                     [{'flags': {'$bitsAllClear': INFRACTION_VPN}}, {'user.gs_service': None}, {'user.gs_id': None}]},
-                {'$and': [{'user.gs_service': {'$ne': None}}, {'user.gs_id': {'$ne': None}}]}]
+        vpnf = [
+            {'$and': [{'flags': {'$bitsAllClear': INFRACTION_VPN}}, {'user.gs_service': None}, {'user.gs_id': None}]},
+            {'$and': [{'user.gs_service': {'$ne': None}}, {'user.gs_id': {'$ne': None}}]},
+        ]
 
         # Once again, $or might already exist
         cond2 = {'$or': vpnf}
@@ -103,9 +116,15 @@ def build_query_dict(actor_type: int, actor_id: str = None, gs_service: Optional
 
     # Filter out server only bans that do not match our server
     if actor_type == SERVER_KEY:
-        a = [{'$or': [{'flags': {'$bitsAllSet': INFRACTION_SUPER_GLOBAL}},
-                      {'flags': {'$bitsAllSet': INFRACTION_GLOBAL}}]},
-             {'server': ObjectId(actor_id)}]
+        a = [
+            {
+                '$or': [
+                    {'flags': {'$bitsAllSet': INFRACTION_SUPER_GLOBAL}},
+                    {'flags': {'$bitsAllSet': INFRACTION_GLOBAL}},
+                ]
+            },
+            {'server': ObjectId(actor_id)},
+        ]
 
         # same deal here
         cond2 = {'$or': a}
@@ -144,5 +163,3 @@ class DInfraction(DBase):
 
     # Tiering
     policy_id: Optional[ObjectId]
-
-

@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Tuple, Optional, List
+from typing import List, Optional, Tuple
 
 from bson import ObjectId
 from dateutil.tz import UTC
@@ -9,8 +9,13 @@ from starlette.requests import Request
 
 from gflbans.api.auth import check_access, csrf_protect
 from gflbans.internal.config import MONGO_DB
-from gflbans.internal.constants import NOT_AUTHED_USER, AUTHED_USER
-from gflbans.internal.database.audit_log import EVENT_ADD_GROUP, EVENT_DELETE_GROUP, DAuditLog, EVENT_SET_GROUP_PERMISSIONS
+from gflbans.internal.constants import AUTHED_USER, NOT_AUTHED_USER
+from gflbans.internal.database.audit_log import (
+    EVENT_ADD_GROUP,
+    EVENT_DELETE_GROUP,
+    EVENT_SET_GROUP_PERMISSIONS,
+    DAuditLog,
+)
 from gflbans.internal.database.dadmin import DAdmin
 from gflbans.internal.database.group import DGroup
 from gflbans.internal.flags import PERMISSION_MANAGE_GROUPS_AND_ADMINS
@@ -22,22 +27,22 @@ from gflbans.internal.models.protocol import UpdateGroup
 group_router = APIRouter(default_response_class=ORJSONResponse)
 
 
-@group_router.get('/', response_model_exclude_unset=True, response_model_exclude_none=True,
-                  response_model=List[Group])
+@group_router.get('/', response_model_exclude_unset=True, response_model_exclude_none=True, response_model=List[Group])
 async def get_groups(request: Request):
     groups = await py_get_groups(request.app)
 
     results = []
 
     for group in groups:
-        results.append(Group(group_name=group['name'], group_id=group['ips_group'],
-                             permissions=group['privileges']))
+        results.append(Group(group_name=group['name'], group_id=group['ips_group'], permissions=group['privileges']))
 
     return results
 
-@group_router.get('/{ips_group}', response_model_exclude_unset=True, response_model_exclude_none=True,
-                  response_model=Group)
-async def get_groups(request: Request, ips_group: PositiveIntIncl0):
+
+@group_router.get(
+    '/{ips_group}', response_model_exclude_unset=True, response_model_exclude_none=True, response_model=Group
+)
+async def get_group(request: Request, ips_group: PositiveIntIncl0):
     group = await request.app.state.db[MONGO_DB]['groups'].find_one({'ips_group': ips_group})
 
     if group is None:
@@ -45,10 +50,13 @@ async def get_groups(request: Request, ips_group: PositiveIntIncl0):
 
     return Group(group_name=group['name'], group_id=group['ips_group'], permissions=group['privileges'])
 
-@group_router.post('/', dependencies=[Depends(csrf_protect)],
-                  response_model_exclude_unset=True, response_model_exclude_none=True)
-async def update_group(request: Request, ug_query: UpdateGroup,
-                       auth: Tuple[int, Optional[ObjectId], int] = Depends(check_access)):
+
+@group_router.post(
+    '/', dependencies=[Depends(csrf_protect)], response_model_exclude_unset=True, response_model_exclude_none=True
+)
+async def update_group(
+    request: Request, ug_query: UpdateGroup, auth: Tuple[int, Optional[ObjectId], int] = Depends(check_access)
+):
     if auth[0] == NOT_AUTHED_USER:
         raise HTTPException(status_code=401, detail='You must be authenticated to do this!')
 
@@ -56,7 +64,7 @@ async def update_group(request: Request, ug_query: UpdateGroup,
         raise HTTPException(detail='You do not have permission to do this!', status_code=403)
     # Try to find lowest unused value to set new ips_group to
     groups = await py_get_groups(request.app)
-    available_groups = list(range(len(groups)+1))
+    available_groups = list(range(len(groups) + 1))
     for grp in groups:
         if grp['ips_group'] in available_groups:
             available_groups.remove(grp['ips_group'])
@@ -69,17 +77,27 @@ async def update_group(request: Request, ug_query: UpdateGroup,
 
     i = auth[1] if auth[1] == AUTHED_USER else None
 
-    await DAuditLog(time=datetime.now(tz=UTC), event_type=EVENT_ADD_GROUP, initiator=i,
-                    message=ev_string, key_pair=(auth[0], auth[1])).commit(request.app.state.db[MONGO_DB])
+    await DAuditLog(
+        time=datetime.now(tz=UTC),
+        event_type=EVENT_ADD_GROUP,
+        initiator=i,
+        message=ev_string,
+        key_pair=(auth[0], auth[1]),
+    ).commit(request.app.state.db[MONGO_DB])
 
     await new_group.commit(request.app.state.db[MONGO_DB])
-    await py_get_groups(request.app, True) # Update redis cache
+    await py_get_groups(request.app, True)  # Update redis cache
 
 
-@group_router.delete('/{ips_group}', dependencies=[Depends(csrf_protect)],
-                     response_model_exclude_unset=True, response_model_exclude_none=True)
-async def delete_group(request: Request, ips_group: int,
-                       auth: Tuple[int, Optional[ObjectId], int] = Depends(check_access)):
+@group_router.delete(
+    '/{ips_group}',
+    dependencies=[Depends(csrf_protect)],
+    response_model_exclude_unset=True,
+    response_model_exclude_none=True,
+)
+async def delete_group(
+    request: Request, ips_group: int, auth: Tuple[int, Optional[ObjectId], int] = Depends(check_access)
+):
     if auth[0] == NOT_AUTHED_USER:
         raise HTTPException(status_code=401, detail='You must be authenticated to do this!')
 
@@ -89,7 +107,7 @@ async def delete_group(request: Request, ips_group: int,
 
     if dg is None:
         raise HTTPException(detail='No group exists with ips_group: {ips_group}', status_code=404)
-    
+
     mongodb_query = {'groups': {'$exists': True, '$all': [ips_group]}}
 
     async for admin in DAdmin.from_query(request.app.state.db[MONGO_DB], mongodb_query):
@@ -104,17 +122,30 @@ async def delete_group(request: Request, ips_group: int,
 
     i = auth[1] if auth[1] == AUTHED_USER else None
 
-    await DAuditLog(time=datetime.now(tz=UTC), event_type=EVENT_DELETE_GROUP, initiator=i,
-                    message=ev_string, key_pair=(auth[0], auth[1])).commit(request.app.state.db[MONGO_DB])
+    await DAuditLog(
+        time=datetime.now(tz=UTC),
+        event_type=EVENT_DELETE_GROUP,
+        initiator=i,
+        message=ev_string,
+        key_pair=(auth[0], auth[1]),
+    ).commit(request.app.state.db[MONGO_DB])
 
     await request.app.state.db[MONGO_DB][DGroup.__collection__].delete_one({'ips_group': ips_group})
-    await py_get_groups(request.app, True) # Update redis cache
+    await py_get_groups(request.app, True)  # Update redis cache
 
 
-@group_router.patch('/{ips_group}', dependencies=[Depends(csrf_protect)],
-                    response_model_exclude_unset=True, response_model_exclude_none=True)
-async def update_group(request: Request, ips_group: int, ug_query: UpdateGroup,
-                       auth: Tuple[int, Optional[ObjectId], int] = Depends(check_access)):
+@group_router.patch(
+    '/{ips_group}',
+    dependencies=[Depends(csrf_protect)],
+    response_model_exclude_unset=True,
+    response_model_exclude_none=True,
+)
+async def patch_group(
+    request: Request,
+    ips_group: int,
+    ug_query: UpdateGroup,
+    auth: Tuple[int, Optional[ObjectId], int] = Depends(check_access),
+):
     if auth[0] == NOT_AUTHED_USER:
         raise HTTPException(status_code=401, detail='You must be authenticated to do this!')
 
@@ -134,8 +165,13 @@ async def update_group(request: Request, ips_group: int, ug_query: UpdateGroup,
 
     i = auth[1] if auth[1] == AUTHED_USER else None
 
-    await DAuditLog(time=datetime.now(tz=UTC), event_type=EVENT_SET_GROUP_PERMISSIONS, initiator=i,
-                    message=ev_string, key_pair=(auth[0], auth[1])).commit(request.app.state.db[MONGO_DB])
+    await DAuditLog(
+        time=datetime.now(tz=UTC),
+        event_type=EVENT_SET_GROUP_PERMISSIONS,
+        initiator=i,
+        message=ev_string,
+        key_pair=(auth[0], auth[1]),
+    ).commit(request.app.state.db[MONGO_DB])
 
     await dg.commit(request.app.state.db[MONGO_DB])
-    await py_get_groups(request.app, True) # Update redis cache
+    await py_get_groups(request.app, True)  # Update redis cache

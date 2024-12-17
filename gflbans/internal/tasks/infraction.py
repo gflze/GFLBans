@@ -1,4 +1,4 @@
-from gflbans.internal.infraction_utils import get_vpn_data, get_user_data
+from gflbans.internal.infraction_utils import get_user_data, get_vpn_data
 from gflbans.internal.tasks.task import TaskBase
 
 

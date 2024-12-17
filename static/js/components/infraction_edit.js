@@ -1,9 +1,9 @@
 $(document).ready(function () {
     $('#commentText').on('change keyup paste', function () {
-        let cv = $('#commentText').val()
+        const cv = $('#commentText').val();
 
         if (cv.length <= 0) {
-            $('#doPost').prop('disabled', true)
+            $('#doPost').prop('disabled', true);
         } else {
             $('#doPost').prop('disabled', false);
         }
@@ -18,7 +18,7 @@ $(document).ready(function () {
         $('#timeEditCell').addClass('is-hidden');
         $('#timeValue').removeClass('is-hidden');
         $('#editTime').removeClass('is-hidden');
-    })
+    });
 
     $('#cancelEditServer').click(function () {
         if (this.hasAttribute('disabled')) {
@@ -28,7 +28,7 @@ $(document).ready(function () {
         $('#serverEditCell').addClass('is-hidden');
         $('#serverValue').removeClass('is-hidden');
         $('#editServer').removeClass('is-hidden');
-    })
+    });
 
     $('#cancelEditScope').click(function () {
         if (this.hasAttribute('disabled')) {
@@ -38,7 +38,7 @@ $(document).ready(function () {
         $('#scopeEditCell').addClass('is-hidden');
         $('#scopeValue').removeClass('is-hidden');
         $('#editScope').removeClass('is-hidden');
-    })
+    });
 
     $('#cancelEditReason').click(function () {
         if (this.hasAttribute('disabled')) {
@@ -48,28 +48,28 @@ $(document).ready(function () {
         $('#reasonEditCell').addClass('is-hidden');
         $('#reasonValue').removeClass('is-hidden');
         $('#editReason').removeClass('is-hidden');
-    })
+    });
 
     restrictionsCancel.click(function () {
         if (this.hasAttribute('disabled')) {
-            return
+            return;
         }
 
         restrictionsEditCell.addClass('is-hidden');
         $('#restrictionsValue').removeClass('is-hidden');
         restrictionsEdit.removeClass('is-hidden');
         restrictionsCancel.addClass('is-hidden');
-    })
+    });
 
     $('#editTimePerm').click(editTogglePerm);
     $('#editTimeTimeDec').click(editToggleTimeDec);
-})
+});
 
 
 function submit_comment(infraction) {
-    let text = $('#commentText').val()
-    let is_private = $('#privateCheck').prop('checked');
-    let target = infraction['id'];
+    const text = $('#commentText').val();
+    const is_private = $('#privateCheck').prop('checked');
+    const target = infraction['id'];
 
     gbRequest('POST', '/api/infractions/' + target + '/comment', {
         'content': text,
@@ -82,20 +82,20 @@ function submit_comment(infraction) {
 
         repl.json().then(function (j) {
             //Redo the comment section
-            commentContainer.empty()
+            commentContainer.empty();
 
             addComments(mergeCommentFiles(j));
 
             $('#commentText').prop('disabled', false).val('');
             $('#doPost').removeClass('is-loading');
         }).catch(logException);
-    }).catch(logException)
+    }).catch(logException);
 }
 
 function prepareEditor(infraction) {
     //Comment field and upload buttons will not exist when permissions are insufficient
 
-    let postComment = document.getElementById('doPost');
+    const postComment = document.getElementById('doPost');
 
     if (postComment) {
         $(postComment).off('click');
@@ -103,26 +103,31 @@ function prepareEditor(infraction) {
             $(postComment).addClass('is-loading');
             $('#commentText').prop('disabled', true);
             submit_comment(infraction);
-        })
+        });
     }
 
-    let attachFile = document.getElementById('doFileUpload');
+    const attachFile = document.getElementById('doFileUpload');
 
     if (attachFile) {
         $(attachFile).off('change');
 
         $(attachFile).change(function () {
             if (attachFile.files.length > 0) {
-                $("#FileButton").addClass("is-loading");
-                $("#doFileUpload").prop("disabled", true);
+                $('#FileButton').addClass('is-loading');
+                $('#doFileUpload').prop('disabled', true);
 
-                uploadAttachment(infraction["id"], attachFile.files[0].name, attachFile.files[0], $('#privateCheck').prop("checked")).then(function () {
-                    gbRequest('GET', '/api/infractions/' + infraction["id"] + "/info", null, true).then(function (r) {
+                uploadAttachment(
+                    infraction['id'],
+                    attachFile.files[0].name,
+                    attachFile.files[0],
+                    $('#privateCheck').prop('checked')
+                ).then(function () {
+                    gbRequest('GET', '/api/infractions/' + infraction['id'] + '/info', null, true).then(function (r) {
                         r.json().then(function (j) {
-                            commentContainer.empty()
+                            commentContainer.empty();
                             addComments(mergeCommentFiles(j));
-                            $("#FileButton").removeClass("is-loading");
-                            $("#doFileUpload").prop("disabled", false);
+                            $('#FileButton').removeClass('is-loading');
+                            $('#doFileUpload').prop('disabled', false);
                         });
                     }).catch(logException);
                 }).catch(logException);
@@ -134,11 +139,17 @@ function prepareEditor(infraction) {
         return;
     }
 
-    let current_user = parseInt(getMeta('current_user'));
-    let active_perms = parseInt(getMeta('active_permissions'));
+    const current_user = parseInt(getMeta('current_user'));
+    const active_perms = parseInt(getMeta('active_permissions'));
 
-    if ((infraction.hasOwnProperty('admin') && infraction['admin'] === current_user && (active_perms & PERMISSION.CREATE_INFRACTION)) || active_perms & (PERMISSION.EDIT_ALL_INFRACTIONS)) {
-        prepareEdits(infraction)
+    if (
+        (infraction.hasOwnProperty('admin')
+            && infraction['admin'] === current_user
+            && active_perms & PERMISSION.CREATE_INFRACTION
+        )
+        || active_perms & PERMISSION.EDIT_ALL_INFRACTIONS
+    ) {
+        prepareEdits(infraction);
     }
 }
 
@@ -157,7 +168,7 @@ function prepareEdits(infraction) {
     });
 
     $('#editScope').click(function () {
-        editScope(infraction)
+        editScope(infraction);
     });
 
     $('#editReason').click(function () {
@@ -172,31 +183,31 @@ function prepareEdits(infraction) {
 
     restrictionsEdit.click(function () {
         editRestrictions(infraction);
-    })
+    });
 
-    let rem = $('#triggerRemoveVis')
+    const rem = $('#triggerRemoveVis');
 
     $('#triggerRemove').off('click').click(function () {
         startRemove(infraction);
-    })
+    });
 
-    let reinst = $('#triggerReinstVis');
+    const reinst = $('#triggerReinstVis');
 
     $('#triggerReinstate').off('click').click(function () {
-        setLoading()
+        setLoading();
 
-        let mod = {
+        const mod = {
             'set_removal_state': false
-        }
+        };
 
         submit_edit(infraction['id'], mod).then(function (d) {
             unsetLoading();
             wrapSetupView(d);
         }).catch(function (e) {
-            unsetLoading()
-            logException(e)
-        })
-    })
+            unsetLoading();
+            logException(e);
+        });
+    });
 
     rem.addClass('is-hidden');
     reinst.addClass('is-hidden');
@@ -222,7 +233,7 @@ function editTogglePerm() {
         $(this).addClass('is-light');
         $('#editTimeTimeDec').removeAttr('disabled');
         $('#editTimeTime').prop('disabled', false);
-        $('#editTimeUnitSelect').prop('disabled', false)
+        $('#editTimeUnitSelect').prop('disabled', false);
     }
 }
 
@@ -243,34 +254,34 @@ function editToggleTimeDec() {
 }
 
 async function submit_edit(id, mod) {
-    resp = await gbRequest('PATCH', '/api/infractions/' + id, mod, true)
+    resp = await gbRequest('PATCH', '/api/infractions/' + id, mod, true);
 
     if (!resp.ok) {
         const errorData = await resp.json();
         throw new Error(errorData.detail || defaultAPIError);
     }
 
-    return await resp.json()
+    return await resp.json();
 }
 
 function process_time_edit(infraction) {
-    let tde = $('#editTimeTimeDec');
-    let ett = $('#editTimeTime');
-    let etp = $('#editTimePerm');
-    let ets = $('#editTimeUnitSelect');
+    const tde = $('#editTimeTimeDec');
+    const ett = $('#editTimeTime');
+    const etp = $('#editTimePerm');
+    const ets = $('#editTimeUnitSelect');
 
     etp.attr('disabled', 1);
     tde.attr('disabled', 1);
     ett.prop('disabled', true);
     ets.prop('disabled', true);
 
-    let unit = ets.val()
-    let mult = multipliers[unit];
+    const unit = ets.val();
+    const mult = multipliers[unit];
 
     $('#cancelEditTime').attr('disabled', 1);
     $('#submitEditTime').addClass('is-loading');
 
-    let mod = {};
+    const mod = {};
 
     if (!tde.hasClass('is-light')) {
         mod['time_left'] = parseInt(ett.val()) * mult;
@@ -290,31 +301,31 @@ function editTime(infraction) {
     $('#timeValue').addClass('is-hidden');
     $('#editTime').addClass('is-hidden');
 
-    let perm = $('#editTimePerm')
-    let td = $('#editTimeTimeDec')
-    let ett = $('#editTimeTime')
-    let ets = $('#editTimeUnitSelect')
+    const perm = $('#editTimePerm');
+    const td = $('#editTimeTimeDec');
+    const ett = $('#editTimeTime');
+    const ets = $('#editTimeUnitSelect');
 
     perm.removeAttr('disabled').addClass('is-light');
     td.removeAttr('disabled').addClass('is-light').removeAttr('data-disable-ban', '1');
     ett.prop('disabled', false).val('');
-    ets.prop('disabled', false).val('m')
+    ets.prop('disabled', false).val('m');
     $('#cancelEditTime').removeAttr('disabled');
 
-    console.log(infraction)
+    console.log(infraction);
 
     // Permanent
     if (infraction['flags'] & (INFRACTION.PERMANENT)) {
         perm.removeClass('is-light');
         td.attr('disabled', '1');
         ett.prop('disabled', true);
-        ets.prop('disabled', true)
+        ets.prop('disabled', true);
     } else if (infraction['flags'] & (INFRACTION.DEC_ONLINE_ONLY)) {
-        perm.attr('disabled', '1')
+        perm.attr('disabled', '1');
         td.removeClass('is-light');
         ett.val(Math.ceil(infraction['orig_length'] / 60).toString());
     } else {
-        ett.val(Math.ceil((infraction['expires'] - infraction['created']) / 60))
+        ett.val(Math.ceil((infraction['expires'] - infraction['created']) / 60));
     }
 
 
@@ -333,9 +344,9 @@ function editServer(infraction) {
     $('#editServer').addClass('is-hidden');
 
     //Load all the server names into the server box
-    let ess = $('#editServerServer');
-    let essub = $('#submitEditServer');
-    let ces = $('#cancelEditServer');
+    const ess = $('#editServerServer');
+    const essub = $('#submitEditServer');
+    const ces = $('#cancelEditServer');
 
     ces.removeAttr('disabled');
     ess.prop('disabled', false);
@@ -344,24 +355,27 @@ function editServer(infraction) {
 
     //First the web option
 
-    let web = document.createElement('option');
+    const web = document.createElement('option');
     web.setAttribute('value', 'web');
-    $(web).text('Web')
+    $(web).text('Web');
     ess.append(web);
 
     // Is Web?
     if (infraction['flags'] & (INFRACTION.WEB)) {
-        $(web).prop('selected', true)
+        $(web).prop('selected', true);
     }
 
     for (let i = 0; i < server_data.length; i++) {
-        let nd = document.createElement('option')
-        nd.setAttribute('value', server_data[i]['id'])
+        const nd = document.createElement('option');
+        nd.setAttribute('value', server_data[i]['id']);
 
         if (server_data[i].hasOwnProperty('friendly_name')) {
-            $(nd).text(server_data[i]['friendly_name'] + ' (' + server_data[i]['ip'] + ':' + server_data[i]['game_port'] + ')')
+            $(nd).text(
+                server_data[i]['friendly_name']
+                + ' (' + server_data[i]['ip'] + ':' + server_data[i]['game_port'] + ')'
+            );
         } else {
-            $(nd).text(server_data[i]['ip'] + ':' + server_data[i]['game_port'])
+            $(nd).text(server_data[i]['ip'] + ':' + server_data[i]['game_port']);
         }
 
         if (!(infraction['flags'] & (INFRACTION.WEB)) && infraction['server'] === server_data[i]['id']) {
@@ -376,7 +390,7 @@ function editServer(infraction) {
         if (ess.val() && !this.hasAttribute('disabled')) {
             essub.attr('disabled', '1').addClass('is-loading');
             ces.attr('disabled', '1');
-            ess.prop('disabled', true)
+            ess.prop('disabled', true);
 
             process_server_edit(infraction, ess.val());
         }
@@ -400,23 +414,23 @@ function process_server_edit(infraction, new_val) {
         return;
     }
 
-    let mod = {}
+    const mod = {};
 
     if (new_val === 'web') {
-        mod['make_web'] = true
+        mod['make_web'] = true;
     } else {
         mod['server'] = new_val;
     }
 
     submit_edit(infraction['id'], mod).then(function (j) {
-        wrapSetupView(j, 0)
-    }).catch(logException)
+        wrapSetupView(j, 0);
+    }).catch(logException);
 }
 
 function editScope(infraction) {
-    let ess = $('#editScopeScope');
+    const ess = $('#editScopeScope');
 
-    let ces = $('#cancelEditScope');
+    const ces = $('#cancelEditScope');
 
     ces.removeAttr('disabled');
     ess.prop('disabled', false);
@@ -431,10 +445,10 @@ function editScope(infraction) {
     } else if (infraction['flags'] & (INFRACTION.SUPER_GLOBAL)) {
         ess.val('community');
     } else {
-        ess.val('server')
+        ess.val('server');
     }
 
-    let essub = $('#submitEditScope');
+    const essub = $('#submitEditScope');
 
     essub.off('click').click(function () {
         if ($(this).attr('disabled')) {
@@ -451,7 +465,7 @@ function editScope(infraction) {
 }
 
 function process_scope_edit(infraction, new_val) {
-    let mod = {}
+    const mod = {};
 
     if (new_val === 'server') {
         mod['scope'] = 'server';
@@ -462,7 +476,7 @@ function process_scope_edit(infraction, new_val) {
     }
 
     submit_edit(infraction['id'], mod).then(function (j) {
-        wrapSetupView(j, 0)
+        wrapSetupView(j, 0);
     }).catch(logException);
 }
 
@@ -471,9 +485,9 @@ function editReason(infraction) {
     $('#reasonValue').addClass('is-hidden');
     $('#editReason').addClass('is-hidden');
 
-    let ess = $('#editReasonReason');
-    let essub = $('#submitEditReason');
-    let ces = $('#cancelEditReason');
+    const ess = $('#editReasonReason');
+    const essub = $('#submitEditReason');
+    const ces = $('#cancelEditReason');
 
     ess.val(infraction['reason']).prop('disabled', false);
     ces.removeAttr('disabled');
@@ -494,21 +508,21 @@ function editReason(infraction) {
 }
 
 function process_reason_edit(infraction, val) {
-    let mod = {
+    const mod = {
         'reason': val
-    }
+    };
 
     submit_edit(infraction['id'], mod).then(function (j) {
-        wrapSetupView(j, 0)
+        wrapSetupView(j, 0);
     }).catch(logException);
 }
 
 function editRestrictions(infraction) {
-    let ic = $('#restrictionsCancelIcon');
+    const ic = $('#restrictionsCancelIcon');
 
     ic.removeClass('fa-hourglass-half').addClass('fa-undo');
 
-    let et = $('.etag')
+    const et = $('.etag');
     et.removeClass('is-hidden').addClass('half-opacity').off('click');
     et.removeAttr('disabled');
 
@@ -518,7 +532,7 @@ function editRestrictions(infraction) {
     restrictionsCancel.removeClass('is-hidden');
 
     if (infraction['flags'] & (INFRACTION.VOICE_BLOCK)) {
-        voiceChatFlagEdit.removeClass('half-opacity')
+        voiceChatFlagEdit.removeClass('half-opacity');
     }
 
     if (infraction['flags'] & (INFRACTION.CHAT_BLOCK)) {
@@ -530,7 +544,7 @@ function editRestrictions(infraction) {
     }
 
     if (infraction['flags'] & (INFRACTION.ADMIN_CHAT_BLOCK)) {
-        adminChatFlagEdit.removeClass('half-opacity')
+        adminChatFlagEdit.removeClass('half-opacity');
     }
 
     if (infraction['flags'] & (INFRACTION.CALL_ADMIN_BAN)) {
@@ -551,7 +565,7 @@ function editRestrictions(infraction) {
         ic.addClass('fa-hourglass-half').removeClass('fa-undo');
 
         if (this.classList.contains('half-opacity')) {
-            this.classList.remove('half-opacity')
+            this.classList.remove('half-opacity');
         } else {
             this.classList.add('half-opacity');
         }
@@ -564,18 +578,18 @@ function editRestrictions(infraction) {
             wrapSetupView(d);
 
             editRestrictions(d);
-        }).catch(logException)
+        }).catch(logException);
     }
 
-    et.click(handleUWU)
+    et.click(handleUWU);
 }
 
 async function process_edit_restriction(infraction) {
-    let mod = {
+    const mod = {
         'punishments': []
-    }
+    };
 
-    let et = $('.etag');
+    const et = $('.etag');
 
     for (let i = 0; i < et.length; i++) {
         if (!et[i].classList.contains('half-opacity')) {
@@ -583,16 +597,16 @@ async function process_edit_restriction(infraction) {
         }
     }
 
-    return await submit_edit(infraction['id'], mod)
+    return await submit_edit(infraction['id'], mod);
 }
 
-let cr = $('#cancelRemoval')
+const cr = $('#cancelRemoval');
 
 function startRemove(infraction) {
-    let rm = $('#removeModal')
+    const rm = $('#removeModal');
 
     rm.addClass('is-active');
-    let rb = $('#removeButton')
+    const rb = $('#removeButton');
 
 
     rb.off('click').click(function () {
@@ -600,7 +614,7 @@ function startRemove(infraction) {
             return;
         }
 
-        let reason = $('#removalReason').val()
+        const reason = $('#removalReason').val();
 
         if (reason.length < 1 || reason.length > 240) {
             return;
@@ -609,10 +623,10 @@ function startRemove(infraction) {
         cr.attr('disabled', '1');
         rb.attr('disabled', '1').addClass('is-loading');
 
-        let mod = {
+        const mod = {
             'set_removal_state': true,
             'removal_reason': reason
-        }
+        };
 
         submit_edit(infraction['id'], mod).then(function (d) {
             cr.removeAttr('disabled');
@@ -623,10 +637,10 @@ function startRemove(infraction) {
         }).catch(function (e) {
             rm.removeClass('is-active');
 
-            logException(e)
-        })
+            logException(e);
+        });
 
-    })
+    });
 }
 
 cr.click(function () {
@@ -635,4 +649,4 @@ cr.click(function () {
     }
 
     $('#removeModal').removeClass('is-active');
-})
+});

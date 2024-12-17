@@ -7,7 +7,7 @@ const MGMT = Object.freeze({
 
 let MGMT_MODE = 0;
 
-let perms2name = {};
+const perms2name = {};
 perms2name[PERMISSION.LOGIN] = 'Can Login';
 perms2name[PERMISSION.COMMENT] = 'Can Comment';
 perms2name[PERMISSION.VIEW_IP_ADDR] = 'Can See IP Addresses';
@@ -39,26 +39,31 @@ perms2name[PERMISSION.ASSIGN_TO_SERVER] = 'Assign an Infraction to a Specific Se
 perms2name[PERMISSION.MANAGE_MAP_ICONS] = 'Upload and Delete Map Icons';
 
 $(document).ready(function () {
-    let start = new Date().getTime();
+    const start = new Date().getTime();
 
     setLoading();
-    let mode = $('html').attr('data-mode');
+    const mode = $('html').attr('data-mode');
 
     if (mode === 'GROUP') {
         MGMT_MODE = MGMT.GROUP;
-        $('#mgmt-add').click(function(){openGroupMenu(0)});
+        $('#mgmt-add').click(function(){
+            openGroupMenu(0);
+        });
     } else if (mode === 'SERVER') {
         MGMT_MODE = MGMT.SERVER;
-        $('#mgmt-add').click(function(){openServerMenu(0)});
+        $('#mgmt-add').click(function(){
+            openServerMenu(0);
+        });
     } else if (mode === 'APIKEY') {
         MGMT_MODE = MGMT.APIKEY;
         $('#mgmt-table').html($('<div style="text-align: center; font-size: 40pt">WORK IN PROGRESS</div>'));
         unsetLoading();
         return;
-    }
-    else {
+    } else {
         MGMT_MODE = MGMT.ADMIN;
-        $('#mgmt-add').click(function(){openAdminMenu(0)});
+        $('#mgmt-add').click(function(){
+            openAdminMenu(0);
+        });
     }
 
     loadMgmt(start);
@@ -70,16 +75,16 @@ function loadMgmt(start) {
     $('#mgmt-table > tbody').empty();
     let endpoint = '';
     switch(MGMT_MODE) {
-        case MGMT.GROUP:
-            endpoint = '/api/group'
-            break;
-        case MGMT.SERVER:
-            endpoint = '/api/server'
-            break;
-        case MGMT.ADMIN:
-        default:
-            endpoint = '/api/admin';
-            break;
+    case MGMT.GROUP:
+        endpoint = '/api/group';
+        break;
+    case MGMT.SERVER:
+        endpoint = '/api/server';
+        break;
+    case MGMT.ADMIN:
+    default:
+        endpoint = '/api/admin';
+        break;
     }
 
     gbRequest('GET', endpoint, null).then(function (response) {
@@ -96,41 +101,41 @@ function handleResponse(response, start) {
     }
 
     response.json().then(data => {
-        let dur = 200 - (new Date().getTime() - start);
+        const dur = 200 - (new Date().getTime() - start);
 
         function _loadMgmt() {
             switch(MGMT_MODE) {
-                case MGMT.GROUP:
-                    var addRow = addGroupRow;
-                    data.sort(sortGroups);
-                    break;
-                case MGMT.SERVER:
-                    var addRow = addServerRow;
-                    data.sort(function(a, b) {
-                        // Put disabled servers at bottom
-                        if (!a.hasOwnProperty('enabled') && !b.hasOwnProperty('enabled'))
-                            return 0;
-                        else if (!a.hasOwnProperty('enabled'))
-                            return 1;
-                        else if (!b.hasOwnProperty('enabled'))
-                            return -1;
-                        else if (a['enabled'] !== b['enabled'])
-                            return a['enabled'] ? -1 : 1;
-                        
-                        let aName = a.hasOwnProperty('group_name') ? a['group_name'].toLowerCase() : 'unnamed server';
-                        let bName = b.hasOwnProperty('group_name') ? b['group_name'].toLowerCase() : 'unnamed server';
-                        return ((aName < bName) ? -1 : ((aName > bName) ? 1 : 0));
-                    });
-                    break;
-                case MGMT.ADMIN:
-                default:
-                    var addRow = addAdminRow;
-                    data.sort(function(a, b) {
-                        let aName = a.hasOwnProperty('admin_name') ? a['admin_name'].toLowerCase() : 'unnamed admin';
-                        let bName = b.hasOwnProperty('admin_name') ? b['admin_name'].toLowerCase() : 'unnamed admin';
-                        return ((aName < bName) ? -1 : ((aName > bName) ? 1 : 0));
-                    });
-                    break;
+            case MGMT.GROUP:
+                var addRow = addGroupRow;
+                data.sort(sortGroups);
+                break;
+            case MGMT.SERVER:
+                var addRow = addServerRow;
+                data.sort(function(a, b) {
+                    // Put disabled servers at bottom
+                    if (!a.hasOwnProperty('enabled') && !b.hasOwnProperty('enabled'))
+                        return 0;
+                    else if (!a.hasOwnProperty('enabled'))
+                        return 1;
+                    else if (!b.hasOwnProperty('enabled'))
+                        return -1;
+                    else if (a['enabled'] !== b['enabled'])
+                        return a['enabled'] ? -1 : 1;
+
+                    const aName = a.hasOwnProperty('group_name') ? a['group_name'].toLowerCase() : 'unnamed server';
+                    const bName = b.hasOwnProperty('group_name') ? b['group_name'].toLowerCase() : 'unnamed server';
+                    return ((aName < bName) ? -1 : ((aName > bName) ? 1 : 0));
+                });
+                break;
+            case MGMT.ADMIN:
+            default:
+                var addRow = addAdminRow;
+                data.sort(function(a, b) {
+                    const aName = a.hasOwnProperty('admin_name') ? a['admin_name'].toLowerCase() : 'unnamed admin';
+                    const bName = b.hasOwnProperty('admin_name') ? b['admin_name'].toLowerCase() : 'unnamed admin';
+                    return ((aName < bName) ? -1 : ((aName > bName) ? 1 : 0));
+                });
+                break;
             }
 
             for (let i = 0; i < data.length; i++) {
@@ -154,35 +159,38 @@ function handleResponse(response, start) {
 
 function setupEmptyNotice() {
 
-    let i_root = document.getElementById('managementTab');
+    const i_root = document.getElementById('managementTab');
 
     $(i_root).empty();
 
-    i_root.classList.add('has-text-centered')
+    i_root.classList.add('has-text-centered');
     i_root.classList.remove('table-container');
 
-    let icon = document.createElement('i');
+    const icon = document.createElement('i');
     icon.classList.add('fas', 'fa-question', 'mt-5', 'nf-icon');
 
-    let text = document.createElement('h1');
+    const text = document.createElement('h1');
     text.classList.add('is-size-1');
 
-    let subtext = document.createElement('p');
-    
+    const subtext = document.createElement('p');
+
     switch(MGMT_MODE) {
-        case MGMT.GROUP:
-            text.innerText = 'No Groups';
-            subtext.innerHTML = 'No groups were found in the current database. You may add a group with the <i class="fas fa-plus"></i> icon in the top right.';
-            break;
-        case MGMT.SERVER:
-            text.innerText = 'No Servers';
-            subtext.innerHTML = 'No servers were found in the current database. You may add a server with the <i class="fas fa-plus"></i> icon in the top right.';
-            break;
-        case MGMT.ADMIN:
-        default:
-            text.innerText = 'No Admins';
-            subtext.innerHTML = 'No admins were found in the current database. You may add an admin with the <i class="fas fa-plus"></i> icon in the top right.';
-            break;
+    case MGMT.GROUP:
+        text.innerText = 'No Groups';
+        /* eslint-disable-next-line max-len */
+        subtext.innerHTML = 'No groups were found in the current database. You may add a group with the <i class="fas fa-plus"></i> icon in the top right.';
+        break;
+    case MGMT.SERVER:
+        text.innerText = 'No Servers';
+        /* eslint-disable-next-line max-len */
+        subtext.innerHTML = 'No servers were found in the current database. You may add a server with the <i class="fas fa-plus"></i> icon in the top right.';
+        break;
+    case MGMT.ADMIN:
+    default:
+        text.innerText = 'No Admins';
+        /* eslint-disable-next-line max-len */
+        subtext.innerHTML = 'No admins were found in the current database. You may add an admin with the <i class="fas fa-plus"></i> icon in the top right.';
+        break;
     }
     subtext.classList.add('mb-5');
 
@@ -192,15 +200,15 @@ function setupEmptyNotice() {
 }
 
 function addAdminRow(admin) {
-    let row = $('<tr>').addClass('mgmt-item admin-row');
+    const row = $('<tr>').addClass('mgmt-item admin-row');
 
     // Picture + Name
-    let identity_cell = $('<td>').addClass('vertical-center has-text-left');
+    const identity_cell = $('<td>').addClass('vertical-center has-text-left');
 
-    let identity_image = $('<img>').addClass('mgmt-admin-av mr-2').attr('src', '/static/images/fallback_av.png');
+    const identity_image = $('<img>').addClass('mgmt-admin-av mr-2').attr('src', '/static/images/fallback_av.png');
     identity_cell.append(identity_image);
 
-    let identity_name = $('<span>').text('Unnamed Admin');
+    const identity_name = $('<span>').text('Unnamed Admin');
     identity_cell.append(identity_name);
 
     if (admin.hasOwnProperty('admin_name')) // Check for no name added (messed up manual mongodb entry)
@@ -209,9 +217,9 @@ function addAdminRow(admin) {
         identity_image.attr('src', '/file/uploads/' + admin['avatar_id'] + '/avatar.webp');
 
     // Groups
-    let group_cell = $('<td>').addClass('vertical-center has-text-centered');
+    const group_cell = $('<td>').addClass('vertical-center has-text-centered');
 
-    let group_list = $('<ul>').addClass('group-list');
+    const group_list = $('<ul>').addClass('group-list');
 
     group_cell.append(group_list);
 
@@ -227,7 +235,7 @@ function addAdminRow(admin) {
     row.append(group_cell);
 
     row.attr('data-admin', admin['admin_id']);
-    
+
     row.click(function () {
         openAdminMenu(this.getAttribute('data-admin'));
     });
@@ -236,24 +244,24 @@ function addAdminRow(admin) {
 }
 
 function addGroupRow(group) {
-    let row = $('<tr>').addClass('mgmt-item group-row');
+    const row = $('<tr>').addClass('mgmt-item group-row');
 
     // Name
-    let name_cell = $('<td>').addClass('vertical-center has-text-centered').text('Unnamed Group');
+    const name_cell = $('<td>').addClass('vertical-center has-text-centered').text('Unnamed Group');
 
     if (group.hasOwnProperty('group_name')) // Check for no name added (messed up manual mongodb entry)
         name_cell.text(group['group_name']);
 
     // Permissions
-    let perms_cell = $('<td>').addClass('vertical-center has-text-left');
+    const perms_cell = $('<td>').addClass('vertical-center has-text-left');
 
-    let perms_list = $('<ol>').addClass('permission-list');
+    const perms_list = $('<ol>').addClass('permission-list');
 
     perms_cell.append(perms_list);
     if (!group.hasOwnProperty('permissions') || group['permissions'] === 0)
         perms_list.append($('<li>').text('NONE'));
     else {
-        let perms = getFlagsFromBitFlag(group['permissions']);
+        const perms = getFlagsFromBitFlag(group['permissions']);
         for (let i = 0; i < perms.length; i++) {
             perms_list.append($('<li>').text(perms2name[perms[i]]));
         }
@@ -263,7 +271,7 @@ function addGroupRow(group) {
     row.append(perms_cell);
 
     row.attr('data-group', group['group_id']);
-    
+
     row.click(function () {
         openGroupMenu(this.getAttribute('data-group'));
     });
@@ -272,11 +280,11 @@ function addGroupRow(group) {
 }
 
 function addServerRow(server) {
-    let row = $('<tr>').addClass('mgmt-item server-row');
+    const row = $('<tr>').addClass('mgmt-item server-row');
 
     // Enabled
-    let enabled_cell = $('<td>').addClass('vertical-center has-text-centered is-hidden-mobile');
-    let enabled_icon = $('<i>').addClass('fas fa-question-circle');
+    const enabled_cell = $('<td>').addClass('vertical-center has-text-centered is-hidden-mobile');
+    const enabled_icon = $('<i>').addClass('fas fa-question-circle');
     if (server.hasOwnProperty('enabled')) {
         enabled_icon.removeClass('fa-question-circle');
         if (server['enabled'])
@@ -287,13 +295,13 @@ function addServerRow(server) {
     enabled_cell.append(enabled_icon);
 
     // Name
-    let name_cell = $('<td>').addClass('vertical-center has-text-centered').text('Unnamed Server');
+    const name_cell = $('<td>').addClass('vertical-center has-text-centered').text('Unnamed Server');
 
     if (server.hasOwnProperty('friendly_name')) // Check for no name added (manual mongodb entry)
         name_cell.text(server['friendly_name']);
 
     // IP
-    let ip_cell = $('<td>').addClass('vertical-center has-text-centered');
+    const ip_cell = $('<td>').addClass('vertical-center has-text-centered');
     ip_cell.text('Unset IP');
     if (server.hasOwnProperty('ip')) { // Check for no IP added (manual mongodb entry)
         ip_cell.text(server['ip']);
@@ -305,7 +313,7 @@ function addServerRow(server) {
     row.append(ip_cell);
 
     row.attr('data-server', server['id']);
-    
+
     row.click(function () {
         openServerMenu(this.getAttribute('data-server'));
     });
@@ -314,14 +322,14 @@ function addServerRow(server) {
 }
 
 function sortGroups(a, b) {
-    let aName = a.hasOwnProperty('group_name') ? a['group_name'].toLowerCase() : 'unnamed group';
-    let bName = b.hasOwnProperty('group_name') ? b['group_name'].toLowerCase() : 'unnamed group';
+    const aName = a.hasOwnProperty('group_name') ? a['group_name'].toLowerCase() : 'unnamed group';
+    const bName = b.hasOwnProperty('group_name') ? b['group_name'].toLowerCase() : 'unnamed group';
     return ((aName < bName) ? -1 : ((aName > bName) ? 1 : 0));
 }
 
 function getFlagsFromBitFlag(bitFlag) {
-    let base2 = (bitFlag).toString(2);
-    let bitFlags = [];
+    const base2 = (bitFlag).toString(2);
+    const bitFlags = [];
     for (let i = 0; i < base2.length; i++)
         if (base2[i] === '1') bitFlags.push(1 << (base2.length - i - 1));
     return bitFlags;
@@ -347,7 +355,7 @@ async function loadAdminMenu(adminID) {
         $('.modal-card-title').text('Create Admin');
         $('#manageSubmit').text('Add Admin');
     } else {
-        let adminInfo = await gbRequest('GET', '/api/admin/?admin_id=' + adminID, null);
+        const adminInfo = await gbRequest('GET', '/api/admin/?admin_id=' + adminID, null);
         if (!adminInfo.ok) {
             throw adminInfo.error();
         }
@@ -368,36 +376,48 @@ async function loadAdminMenu(adminID) {
         $('#manageSubmit').text('Update ' + (admin.hasOwnProperty('admin_name') ? admin['admin_name'] : 'Admin'));
         $('#manageDelete').click(deleteAdmin);
     }
-    
+
     closeModals();
 
     //Setup groups
-    let groupsRequest = await gbRequest('GET', '/api/group/', null);
+    const groupsRequest = await gbRequest('GET', '/api/group/', null);
 
     if (!groupsRequest.ok) {
         throw groupsRequest.error();
     }
 
-    let groups = await groupsRequest.json()
+    const groups = await groupsRequest.json();
     groups.sort(sortGroups);
-    let groupButtons = $('#groupButtons');
+    const groupButtons = $('#groupButtons');
 
-    groupButtons.empty()
+    groupButtons.empty();
 
     for (let i = 0; i < groups.length; i++) {
         let classes = 'gbtn button';
         if (!group_list.includes(groups[i]['group_id']))
             classes = 'gbtn button is-outlined';
 
-        if (groups[i].hasOwnProperty('group_name')) // Check for no name added (messed up manual mongodb entry)
-            groupButtons.append($('<button>').addClass(classes).text(groups[i]['group_name']).val(groups[i]['group_id']));
-        else
-            groupButtons.append($('<button>').addClass(classes).text('Unnamed Group').val(groups[i]['group_id']));
+        // Check for no name added (messed up manual mongodb entry)
+        if (groups[i].hasOwnProperty('group_name')) {
+            groupButtons.append(
+                $('<button>')
+                    .addClass(classes)
+                    .text(groups[i]['group_name'])
+                    .val(groups[i]['group_id'])
+            );
+        } else {
+            groupButtons.append(
+                $('<button>')
+                    .addClass(classes)
+                    .text('Unnamed Group')
+                    .val(groups[i]['group_id'])
+            );
+        }
     }
 
     $('.gbtn').click(function (ev) {
         toggleButton(ev.target);
-    })
+    });
 
     //Setup and show the error AddMenu
     $('#createAddMenu').addClass('is-active');
@@ -413,9 +433,9 @@ async function loadAdminMenu(adminID) {
 
     $('.cDismissError').click(function () {
         $('#createError').addClass('is-hidden');
-    })
+    });
 
-    $('#manageSubmit').click(submitNewAdmin)
+    $('#manageSubmit').click(submitNewAdmin);
 }
 
 function resetAdminMenu() {
@@ -428,7 +448,7 @@ function resetAdminMenu() {
 }
 
 function toggleButton(target) {
-    let t = $(target)
+    const t = $(target);
 
     console.log(t);
 
@@ -452,10 +472,10 @@ function toggleButton(target) {
 }
 
 function submitNewAdmin() {
-    setLoading()
+    setLoading();
 
     // First request
-    let adminCall = createAndValidateAdmin();
+    const adminCall = createAndValidateAdmin();
 
     //Failure, the second index is the error
     if (!adminCall[0]) {
@@ -467,7 +487,7 @@ function submitNewAdmin() {
 
     //Success, the second index is the request type and the third is the actual request struct
 
-    let route = '/api/admin/'
+    const route = '/api/admin/';
 
     gbRequest('PUT', route, adminCall[1], true).then(handleAdminSubmission).catch(logException);
 }
@@ -483,12 +503,12 @@ function deleteAdmin() {
         return;
     }
 
-    let admin = {
+    const admin = {
         'admin_id': $('#steamIdEntry').val().trim(),
         'groups': [] // 'Deleting' an admin is just emptying their groups
     };
 
-    let route = '/api/admin/';
+    const route = '/api/admin/';
 
     gbRequest('PUT', route, admin, true).then(handleAdminSubmission).catch(logException);
 }
@@ -497,9 +517,9 @@ function handleAdminSubmission(resp) {
     if (!resp.ok) {
         console.log(resp);
         resp.text().then(function (t) {
-            console.log(t)
-        })
-        throw 'Server returned a non-OK error code.'
+            console.log(t);
+        });
+        throw 'Server returned a non-OK error code.';
     }
 
     closeModals();
@@ -507,7 +527,7 @@ function handleAdminSubmission(resp) {
 }
 
 function createAndValidateAdmin() {
-    let admin = {
+    const admin = {
         'groups': []
     };
 
@@ -519,7 +539,7 @@ function createAndValidateAdmin() {
     if ($('#steamIdEntry').val().trim() !== '')
         admin['admin_id'] = $('#steamIdEntry').val().trim();
     else
-        return [false, 'You must enter a Steam64 ID.']
+        return [false, 'You must enter a Steam64 ID.'];
 
     $('.gbtn:not(.is-outlined)').each(function(i, obj) {
         admin['groups'].push($(obj).val());
@@ -549,11 +569,11 @@ async function loadGroupMenu(groupID) {
         $('#manageSubmit').text('Add Group');
         $('#manageDelete').addClass('is-hidden');
     } else {
-        let groupInfo = await gbRequest('GET', '/api/group/' + groupID, null);
+        const groupInfo = await gbRequest('GET', '/api/group/' + groupID, null);
         if (!groupInfo.ok) {
             throw groupInfo.error();
         }
-        let group = await groupInfo.json();
+        const group = await groupInfo.json();
         $('#manageDelete').removeClass('is-hidden');
 
         // Use existing group identity
@@ -566,15 +586,15 @@ async function loadGroupMenu(groupID) {
         $('#manageSubmit').attr('data-group', groupID);
         $('#manageDelete').click(deleteGroup);
     }
-    
+
     closeModals();
 
     // Setup permissions
-    let permissionButtons = $('#permissionButtons');
+    const permissionButtons = $('#permissionButtons');
 
     permissionButtons.empty();
 
-    for (let [flag, name] of Object.entries(perms2name)) {
+    for (const [flag, name] of Object.entries(perms2name)) {
         let classes = 'gbtn button';
         if (!permission_list.includes(Number(flag)))
             classes = 'gbtn button is-outlined';
@@ -584,7 +604,7 @@ async function loadGroupMenu(groupID) {
 
     $('.gbtn').click(function (ev) {
         toggleButton(ev.target);
-    })
+    });
 
     //Setup and show the error AddMenu
     $('#createAddMenu').addClass('is-active');
@@ -600,9 +620,9 @@ async function loadGroupMenu(groupID) {
 
     $('.cDismissError').click(function () {
         $('#createError').addClass('is-hidden');
-    })
+    });
 
-    $('#manageSubmit').click(submitGroupChange)
+    $('#manageSubmit').click(submitGroupChange);
 }
 
 function resetGroupMenu() {
@@ -617,10 +637,10 @@ function resetGroupMenu() {
 function submitGroupChange() {
     setLoading();
 
-    let groupID = $('#manageSubmit').attr('data-group');
+    const groupID = $('#manageSubmit').attr('data-group');
 
     // First request
-    let groupCall = createAndValidateGroup();
+    const groupCall = createAndValidateGroup();
 
     // Failure, the second index is the error
     if (!groupCall[0]) {
@@ -632,18 +652,18 @@ function submitGroupChange() {
 
     if (typeof groupID === 'undefined' || groupID === false) {
         // Adding new group
-        let route = '/api/group/';
+        const route = '/api/group/';
         gbRequest('POST', route, groupCall[1], true).then(handleGroupSubmission).catch(logException);
     } else {
         // Patching existing group
-        let route = '/api/group/' + groupID;
+        const route = '/api/group/' + groupID;
         gbRequest('PATCH', route, groupCall[1], true).then(handleGroupSubmission).catch(logException);
     }
 }
 
 function deleteGroup() {
     setLoading();
-    let groupID = $('#manageSubmit').attr('data-group');
+    const groupID = $('#manageSubmit').attr('data-group');
 
     // First request
     if (typeof groupID === 'undefined' || groupID === false) {
@@ -653,7 +673,7 @@ function deleteGroup() {
         return;
     }
 
-    let route = '/api/group/' + groupID;
+    const route = '/api/group/' + groupID;
 
     gbRequest('DELETE', route, null, true).then(handleGroupSubmission).catch(logException);
 }
@@ -662,9 +682,9 @@ function handleGroupSubmission(resp) {
     if (!resp.ok) {
         console.log(resp);
         resp.text().then(function (t) {
-            console.log(t)
-        })
-        throw 'Server returned a non-OK error code.'
+            console.log(t);
+        });
+        throw 'Server returned a non-OK error code.';
     }
 
     closeModals();
@@ -672,7 +692,7 @@ function handleGroupSubmission(resp) {
 }
 
 function createAndValidateGroup() {
-    let group = {};
+    const group = {};
 
     if ($('#nameEntry').val().trim() !== '')
         group['name'] = $('#nameEntry').val().trim();
@@ -704,11 +724,11 @@ async function loadServerMenu(serverID) {
         $('#manageSubmit').text('Add Server');
         $('#manageDelete').addClass('is-hidden');
     } else {
-        let serverInfo = await gbRequest('GET', '/api/server/' + serverID, null);
+        const serverInfo = await gbRequest('GET', '/api/server/' + serverID, null);
         if (!serverInfo.ok) {
             throw serverInfo.error();
         }
-        let server = await serverInfo.json();
+        const server = await serverInfo.json();
         $('#generateToken').removeClass('is-hidden');
         $('#manageDelete').removeClass('is-hidden');
 
@@ -721,11 +741,22 @@ async function loadServerMenu(serverID) {
         $('#nameEntry').val(server.hasOwnProperty('friendly_name') ? server['friendly_name'] : '');
         $('#ipEntry').val(server.hasOwnProperty('ip') ? server['ip'] : '');
         $('#portEntry').val(server.hasOwnProperty('game_port') ? Number(server['game_port']) : '');
-        $('#calladminEntry').val(server.hasOwnProperty('has_discord_webhook') ? '●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●' : '');
-        $('#infractionEntry').val(server.hasOwnProperty('has_infract_webhook') ? '●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●' : '');
+        $('#calladminEntry').val(
+            server.hasOwnProperty('has_discord_webhook')
+                ? '●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●'
+                : ''
+        );
+        $('#infractionEntry').val(
+            server.hasOwnProperty('has_infract_webhook')
+                ? '●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●'
+                : ''
+        );
         $('#roleIDEntry').val(server.hasOwnProperty('discord_staff_tag') ? server['discord_staff_tag'] : '');
 
-        $('.modal-card-title').text('Update ' + (server.hasOwnProperty('friendly_name') ? server['friendly_name'] : 'Server'));
+        $('.modal-card-title').text(
+            'Update '
+            + (server.hasOwnProperty('friendly_name') ? server['friendly_name'] : 'Server')
+        );
         $('#manageSubmit').text('Update Server');
 
         $('#manageSubmit').attr('data-server', serverID);
@@ -733,9 +764,9 @@ async function loadServerMenu(serverID) {
 
         $('#generateToken').click(function (ev) {
             toggleButton(ev.target);
-        })
+        });
     }
-    
+
     closeModals();
 
     //Setup and show the error AddMenu
@@ -752,9 +783,9 @@ async function loadServerMenu(serverID) {
 
     $('.cDismissError').click(function () {
         $('#createError').addClass('is-hidden');
-    })
+    });
 
-    $('#manageSubmit').click(submitServerChange)
+    $('#manageSubmit').click(submitServerChange);
 }
 
 function resetServerMenu() {
@@ -775,10 +806,10 @@ function resetServerMenu() {
 async function submitServerChange() {
     setLoading();
 
-    let serverID = $('#manageSubmit').attr('data-server');
+    const serverID = $('#manageSubmit').attr('data-server');
 
     // First request
-    let serverCall = createAndValidateServer();
+    const serverCall = createAndValidateServer();
 
     // Failure, the second index is the error
     if (!serverCall[0]) {
@@ -791,8 +822,8 @@ async function submitServerChange() {
     if (typeof serverID === 'undefined' || serverID === false) {
         // Adding new server
         serverCall[1]['enabled'] = true;
-        let route = '/api/server/';
-        let serverInfo = await gbRequest('POST', route, serverCall[1], true);
+        const route = '/api/server/';
+        const serverInfo = await gbRequest('POST', route, serverCall[1], true);
 
         if (!serverInfo.ok) {
             const errorData = await serverInfo.json();
@@ -831,7 +862,7 @@ async function submitServerChange() {
 
 function toggleServer() {
     setLoading();
-    let serverID = $('#manageSubmit').attr('data-server');
+    const serverID = $('#manageSubmit').attr('data-server');
 
     if (typeof serverID === 'undefined' || serverID === false) {
         $('#createErrorMsg').text('Something went wrong. This server does not have an associated id.');
@@ -840,9 +871,9 @@ function toggleServer() {
         return;
     }
 
-    let server = {};
+    const server = {};
     server['enabled'] = $('#manageDelete').hasClass('is-success');
-    let route = '/api/server/' + serverID;
+    const route = '/api/server/' + serverID;
 
     // We disable servers rather than deleting so we dont mess up infractions tied to them
     gbRequest('PATCH', route, server, true).then(handleServerSubmission).catch(logException);
@@ -852,9 +883,9 @@ function handleServerSubmission(resp) {
     if (!resp.ok) {
         console.log(resp);
         resp.text().then(function (t) {
-            console.log(t)
-        })
-        throw 'Server returned a non-OK error code.'
+            console.log(t);
+        });
+        throw 'Server returned a non-OK error code.';
     }
 
     closeModals();
@@ -865,9 +896,9 @@ function handleServerSubmissionDoublePatch(resp) {
     if (!resp.ok) {
         console.log(resp);
         resp.text().then(function (t) {
-            console.log(t)
-        })
-        throw 'Server returned a non-OK error code.'
+            console.log(t);
+        });
+        throw 'Server returned a non-OK error code.';
     }
 }
 
@@ -887,7 +918,7 @@ function showNewToken(serverInfo) {
     $('#setupClipboard').click(function () {
         let text = '';
         $('#setupModal section p').each(function(i, obj) {
-            let convar = $(obj);
+            const convar = $(obj);
             text = text + convar.text() + '\n';
         });
         navigator.clipboard.writeText(text);
@@ -896,21 +927,21 @@ function showNewToken(serverInfo) {
     $('#setupModal').addClass('is-active');
     $('#htmlRoot').addClass('is-clipped');
 
-    $(".modal-background").click(function () {
+    $('.modal-background').click(function () {
         closeModals();
         window.location.reload();
     });
 }
 
 function createAndValidateServer() {
-    let server = {};
+    const server = {};
 
     if ($('#nameEntry').val().trim() !== '')
         server['friendly_name'] = $('#nameEntry').val().trim();
     else
         return [false, 'You must enter a name.'];
 
-    let ip = $('#ipEntry').val().trim();
+    const ip = $('#ipEntry').val().trim();
     if (ip !== '' && /^((25[0-5]|(2[0-4]|1\d|[1-9]|)\d)\.?\b){4}$/.test(ip))
         server['ip'] = ip;
     else

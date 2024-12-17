@@ -1,101 +1,118 @@
 <!--Global Navbar-->
-<nav class="navbar is-accent" role="navigation" aria-label="main navigation">
+<nav class="navbar is-accent"
+     role="navigation"
+     aria-label="main navigation">
     <div class="navbar-brand">
         <a class="navbar-item" href="/">
             <i class="fas fa-gavel fa-2x mr-1"></i>
-            <h2 class="ab-title is-size-4 has-text-white">{{BRANDING}}</h2>
+            <h2 class="ab-title is-size-4 has-text-white">{{ BRANDING }}</h2>
         </a>
-
-        <a role="button" class="navbar-burger is-accent" aria-label="menu" aria-expanded="false" data-target="navbarContents">
+        <a role="button"
+           class="navbar-burger is-accent"
+           aria-label="menu"
+           aria-expanded="false"
+           data-target="navbarContents">
             <span aria-hidden="true"></span>
             <span aria-hidden="true"></span>
             <span aria-hidden="true"></span>
         </a>
     </div>
-
     <div id="navbarContents" class="navbar-menu is-accent">
         <div class="navbar-start">
-            <a href="/" class="navbar-item {% if page == 'index' %}is-active{% endif %}"><i
-                    class="fas fa-tachometer-alt nav-icon"></i>Dashboard</a>
-
-            <a href="/servers" class="navbar-item {% if page == 'servers' %}is-active{% endif %}"><i class="fas fa-server nav-icon"></i>Servers</a>
-
-            <a href="/infractions" class="navbar-item {% if page == 'infractions' %}is-active{% endif %}"><i
-                    class="fas fa-gavel nav-icon"></i>Infractions</a>
-
+            <a href="/"
+               class="navbar-item {% if page == 'index' %}is-active{% endif %}"><i class="fas fa-tachometer-alt nav-icon"></i>Dashboard</a>
+            <a href="/servers"
+               class="navbar-item {% if page == 'servers' %}is-active{% endif %}"><i class="fas fa-server nav-icon"></i>Servers</a>
+            <a href="/infractions"
+               class="navbar-item {% if page == 'infractions' %}is-active{% endif %}"><i class="fas fa-gavel nav-icon"></i>Infractions</a>
             {% if user is not none and not DISABLE_GUIDELINES %}
-            <a href="/guidelines/" class="navbar-item {% if page == 'guidelines' %}is-active{% endif %}"><i
-                class="fas fa-file-alt nav-icon"></i>Guidelines
-            </a>
-            {% endif %}
-
-            {% if user is not none and has_flag(user.permissions, bit_or(p_nodes['Manage Servers'], p_nodes['Manage Groups and Admins'], p_nodes['Manage API Keys'])) %}
-            <div class="navbar-item has-dropdown is-hoverable">
-                <a href="/manage/" class="navbar-link is-arrowless is-hoverable is-hidden-touch {% if page == 'manage' %}is-active{% endif %}"><i
-                    class="fas fa-user-shield nav-icon"></i>Manage
+                <a href="/guidelines/"
+                   class="navbar-item {% if page == 'guidelines' %}is-active{% endif %}"><i class="fas fa-file-alt nav-icon"></i>Guidelines
                 </a>
-                <div class="navbar-dropdown is-paddingless is-accent">
-                    <div class="has-addons">
-                        <div class="is-flex-grow-1">
-                            {% if user is not none and has_flag(user.permissions, p_nodes['Manage Groups and Admins']) %}
-                                <a id="admin-mgmt" href="/manage/admin/" class="panel-block{% if mode == 'admin' %} is-active{% endif %}">Admins</a>
-                                <a id="group-mgmt" href="/manage/group/" class="panel-block{% if mode == 'group' %} is-active{% endif %}">Groups</a>
-                            {% endif %}
-                            {% if user is not none and has_flag(user.permissions, p_nodes['Manage Servers']) %}
-                                <a id="server-mgmt" href="/manage/server/" class="panel-block{% if mode == 'server' %} is-active{% endif %}">Servers</a>
-                            {% endif %}
-                            {% if user is not none and has_flag(user.permissions, p_nodes['Manage API Keys']) %}
-                                <a id="API-mgmt" href="/manage/apikey/" class="panel-block{% if mode == 'apikey' %} is-active{% endif %}">API Keys</a>
-                            {% endif %}
+            {% endif %}
+            {% if user is not none and has_flag(user.permissions, bit_or(p_nodes['Manage Servers'], p_nodes['Manage Groups and Admins'], p_nodes['Manage API Keys'])) %}
+                <div class="navbar-item has-dropdown is-hoverable">
+                    <a href="/manage/"
+                       class="navbar-link is-arrowless is-hoverable is-hidden-touch {% if page == 'manage' %}is-active{% endif %}"><i class="fas fa-user-shield nav-icon"></i>Manage
+                    </a>
+                    <div class="navbar-dropdown is-paddingless is-accent">
+                        <div class="has-addons">
+                            <div class="is-flex-grow-1">
+                                {% if user is not none and has_flag(user.permissions, p_nodes['Manage Groups and Admins']) %}
+                                    <a id="admin-mgmt"
+                                       href="/manage/admin/"
+                                       class="panel-block{% if mode == 'admin' %} is-active{% endif %}">Admins</a>
+                                    <a id="group-mgmt"
+                                       href="/manage/group/"
+                                       class="panel-block{% if mode == 'group' %} is-active{% endif %}">Groups</a>
+                                {% endif %}
+                                {% if user is not none and has_flag(user.permissions, p_nodes['Manage Servers']) %}
+                                    <a id="server-mgmt"
+                                       href="/manage/server/"
+                                       class="panel-block{% if mode == 'server' %} is-active{% endif %}">Servers</a>
+                                {% endif %}
+                                {% if user is not none and has_flag(user.permissions, p_nodes['Manage API Keys']) %}
+                                    <a id="API-mgmt"
+                                       href="/manage/apikey/"
+                                       class="panel-block{% if mode == 'apikey' %} is-active{% endif %}">API Keys</a>
+                                {% endif %}
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
             {% endif %}
-
             <div class="navbar-item has-dropdown is-hoverable">
-                <div class="navbar-link is-arrowless is-hoverable is-hidden-touch"><i class="fa fa-search nav-icon-mobile"></i></div>
+                <div class="navbar-link is-arrowless is-hoverable is-hidden-touch">
+                    <i class="fa fa-search nav-icon-mobile"></i>
+                </div>
                 <div class="navbar-dropdown background-secondary">
                     <form method="get" action="/infractions">
                         <div class="field search has-addons px-2">
                             <div class="control is-flex-grow-1">
-                                <input class="input is-small" name="search" aria-label="search" type="text" maxlength="256" placeholder="Search"/>
+                                <input class="input is-small"
+                                       name="search"
+                                       aria-label="search"
+                                       type="text"
+                                       maxlength="256"
+                                       placeholder="Search" />
                             </div>
                             <div class="control">
-                                <button class="button is-small is-accent"><i class="fas fa-search"></i></button>
+                                <button class="button is-small is-accent">
+                                    <i class="fas fa-search"></i>
+                                </button>
                             </div>
                         </div>
                     </form>
                 </div>
             </div>
         </div>
-
         <div class="navbar-end">
-
             <a id="dark-mode-toggle"
                data-modeset="{% if opposite_theme %}opposite{% endif %}"
                class="navbar-item"><i class="fas nav-icon-mobile"></i><span class="is-hidden-desktop">Toggle Dark Mode</span></a>
-
             {% if user is none %}
-            <a id="login" class="navbar-item" href="/login"><img src="/static/images/steam_login.png" alt="Login with Steam"></a>
+                <a id="login" class="navbar-item" href="/login">
+                    <img src="/static/images/steam_login.png" alt="Login with Steam">
+                </a>
             {% else %}
-            <div class="navbar-item user-button">
-                <div class="is-hidden-touch">
-                    {% if user.avatar %}
-                    <img class="user-avatar" src="/file/uploads/{{user.avatar.gridfs_file}}/avatar.webp" alt="">
-                    {% else %}
-                    <img class="user-avatar" src="/static/images/fallback_av.png" alt="">
-                    {% endif %}
+                <div class="navbar-item user-button">
+                    <div class="is-hidden-touch">
+                        {% if user.avatar %}
+                            <img class="user-avatar"
+                                 src="/file/uploads/{{ user.avatar.gridfs_file }}/avatar.webp"
+                                 alt="">
+                        {% else %}
+                            <img class="user-avatar" src="/static/images/fallback_av.png" alt="">
+                        {% endif %}
+                    </div>
+                    <i class="is-hidden-desktop nav-icon fas fa-user"></i>
+                    <span>{{ user.name }}</span>
                 </div>
-                <i class="is-hidden-desktop nav-icon fas fa-user"></i>
-                <span>{{user.name}}</span>
+                <a class="navbar-item" href="/login/logout">
+                    <i class="fas fa-sign-out-alt nav-icon-mobile"></i>
+                    <span class="is-hidden-desktop">Sign Out</span>
+                </a>
             </div>
-
-            <a class="navbar-item" href="/login/logout">
-                <i class="fas fa-sign-out-alt nav-icon-mobile"></i>
-                <span class="is-hidden-desktop">Sign Out</span>
-            </a>
-        </div>
         {% endif %}
     </div>
 </nav>

@@ -8,13 +8,10 @@ from dateutil.tz import UTC
 from gflbans.internal.config import MONGO_DB
 from gflbans.internal.database.task import DTask
 from gflbans.internal.log import logger
-from gflbans.internal.tasks.infraction import GetVPNData, GetUserData
+from gflbans.internal.tasks.infraction import GetUserData, GetVPNData
 from gflbans.internal.tasks.task import TaskBase
 
-TASK_HANDLERS: Dict[str, TaskBase] = {
-    'get_vpn_data': GetVPNData,
-    'get_user_data': GetUserData
-}
+TASK_HANDLERS: Dict[str, TaskBase] = {'get_vpn_data': GetVPNData, 'get_user_data': GetUserData}
 
 
 async def exec_loop(app_ref):

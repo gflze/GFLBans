@@ -57,9 +57,10 @@ function resetModal() {
     //Default user info
     setSelection(cUserService, 'steam');
     $(cUserId).val('');
-    $(cIpEntry).val('')
+    $(cIpEntry).val('');
 
-    //By default, we do not make web infractions, so we should show the target server box, enable the 'server' tick, and the automation section
+    // By default, we do not make web infractions, so we should show the target server box,
+    // enable the 'server' tick, and the automation section
     $(cWebCheck).prop('checked', false);
     $(cServerRadio).prop('disabled', false);
     cServerLabel.removeAttribute('disabled');
@@ -67,33 +68,34 @@ function resetModal() {
     $(cAutomationSection).removeClass('is-hidden');
 
     //For both the global and community checks, we should only enable them if we have permission to use them
-    let gp = $(cGlobalRadio).attr('data-has-permissions') !== '1'
+    const gp = $(cGlobalRadio).attr('data-has-permissions') !== '1';
     $(cGlobalRadio).prop('disabled', gp);
     if (gp) {
-        cGlobalLabel.setAttribute('disabled', '1')
-        $('#globalLabel').addClass('is-hidden')
+        cGlobalLabel.setAttribute('disabled', '1');
+        $('#globalLabel').addClass('is-hidden');
     } else {
-        cGlobalLabel.removeAttribute('disabled')
-        $('#globalLabel').removeClass('is-hidden')
+        cGlobalLabel.removeAttribute('disabled');
+        $('#globalLabel').removeClass('is-hidden');
     }
 
 
-    let cp = $(cCommunityRadio).attr('data-has-permissions') !== '1'
+    const cp = $(cCommunityRadio).attr('data-has-permissions') !== '1';
     $(cCommunityRadio).prop('disabled', cp);
     if (cp) {
-        cCommunityLabel.setAttribute('disabled', '1')
-        $('#communityLabel').addClass('is-hidden')
+        cCommunityLabel.setAttribute('disabled', '1');
+        $('#communityLabel').addClass('is-hidden');
     } else {
-        cCommunityLabel.removeAttribute('disabled')
-        $('#communityLabel').removeClass('is-hidden')
+        cCommunityLabel.removeAttribute('disabled');
+        $('#communityLabel').removeClass('is-hidden');
     }
 
-    $('.scope-check').prop('checked', false)
+    $('.scope-check').prop('checked', false);
 
-    $(serverOnlyCheck).prop('checked', true)
+    $(serverOnlyCheck).prop('checked', true);
 
-    //The automation check is not checked by default, so the offense chooser should be hidden and the restrictions / expiration sections should both be visible
-    $(cAutomaticCheck).prop('checked', false)
+    // The automation check is not checked by default, so the offense chooser
+    // should be hidden and the restrictions / expiration sections should both be visible
+    $(cAutomaticCheck).prop('checked', false);
     $(cOffenseField).addClass('is-hidden');
     $(cRestrictionSection).removeClass('is-hidden');
     $(cExpirationSection).removeClass('is-hidden');
@@ -101,19 +103,19 @@ function resetModal() {
     $(autoMessage).addClass('is-hidden');
 
     //Clear evidence / reasoning text boxes
-    $(cReasonEntry).val('')
+    $(cReasonEntry).val('');
     cFileInput.value = '';
     $(cFileName).text('No file uploaded.');
 
-    $('.rbtn').addClass('is-outlined')
+    $('.rbtn').addClass('is-outlined');
 
-    $(cTimeDecCheckField).removeClass('is-hidden')
+    $(cTimeDecCheckField).removeClass('is-hidden');
     $(cDurationField).removeClass('is-hidden');
 
     $(cPermanentCheck).prop('checked', false);
     $(cTimeDecCheck).prop('checked', false);
     $(cDurationEntry).val('');
-    setSelection(cDurationUnit, 'h')
+    setSelection(cDurationUnit, 'h');
     $('#cInfractionSubmit').off('click');
 
 }
@@ -159,7 +161,7 @@ function handleAutoChanged() {
 }
 
 function toggleButton(target) {
-    let t = $(target)
+    const t = $(target);
 
     console.log(t);
 
@@ -196,8 +198,8 @@ function handlePermCheck() {
 
 function handleTimeDecCheck() {
     if ($(cTimeDecCheck).prop('checked')) {
-        $(cPermanentCheck).prop('checked', false)
-        handlePermCheck()
+        $(cPermanentCheck).prop('checked', false);
+        handlePermCheck();
         $(cPermCheckField).addClass('is-hidden');
     } else {
         $(cPermCheckField).removeClass('is-hidden');
@@ -205,15 +207,15 @@ function handleTimeDecCheck() {
 }
 
 async function setServer(id) {
-    let policies = await gbRequest('GET', '/api/infractions/policies?server=' + id, null);
+    const policies = await gbRequest('GET', '/api/infractions/policies?server=' + id, null);
 
     $(cOffense).empty();
 
     if (!policies.ok) {
-        throw policies.error()
+        throw policies.error();
     }
 
-    let pol_list = await policies.json()
+    const pol_list = await policies.json();
 
     if (pol_list.length === 0) {
         $(autoMessage).removeClass('is-hidden');
@@ -224,7 +226,7 @@ async function setServer(id) {
     }
 
     for (let i = 0; i < pol_list.length; i++) {
-        let opt = document.createElement('option');
+        const opt = document.createElement('option');
         opt.innerText = pol_list[i]['name'];
         opt.setAttribute('value', pol_list[i]['id']);
 
@@ -241,26 +243,26 @@ async function loadModal() {
     closeModals();
 
     //Setup servers
-    let servers_req = await gbRequest('GET', '/api/server/', null);
+    const servers_req = await gbRequest('GET', '/api/server/', null);
 
     if (!servers_req.ok) {
         throw servers_req.error();
     }
 
-    let servers = await servers_req.json()
+    const servers = await servers_req.json();
 
-    let serverSel = $('#serverSelector');
+    const serverSel = $('#serverSelector');
 
-    serverSel.empty()
+    serverSel.empty();
 
     for (let i = 0; i < servers.length; i++) {
         if (!servers[i]['enabled'])
             continue;
-        let el = document.createElement('option');
-        el.setAttribute('value', servers[i]['id'])
+        const el = document.createElement('option');
+        el.setAttribute('value', servers[i]['id']);
 
         if (servers[i].hasOwnProperty('friendly_name')) {
-            el.innerText = servers[i]['friendly_name']
+            el.innerText = servers[i]['friendly_name'];
         } else {
             el.innerText = servers[i]['ip'];
         }
@@ -288,14 +290,14 @@ async function loadModal() {
 
     $('.cDismissError').click(function () {
         $('#infractionCreateError').addClass('is-hidden');
-    })
+    });
 
-    $('#cInfractionSubmit').click(submitInfraction)
+    $('#cInfractionSubmit').click(submitInfraction);
 }
 
 function openModal() {
 
-    let cl = $('#createInfractionLoader');
+    const cl = $('#createInfractionLoader');
 
     if (cl.hasClass('is-loading')) {
         return;
@@ -309,30 +311,30 @@ function openModal() {
 $(document).ready(function () {
     $(cWebCheck).click(handleWebCheckChanged);
     $(cAutomaticCheck).click(handleAutoChanged);
-    $(cPermanentCheck).click(handlePermCheck)
-    $(cTimeDecCheck).click(handleTimeDecCheck)
+    $(cPermanentCheck).click(handlePermCheck);
+    $(cTimeDecCheck).click(handleTimeDecCheck);
     $('.rbtn').click(function (ev) {
         toggleButton(ev.target);
-    })
+    });
 
     $(cFileInput).change(function () {
-        let fn = $(cFileInput)[0].files[0].name;
+        const fn = $(cFileInput)[0].files[0].name;
         $(cFileName).text(fn);
-    })
+    });
 
     $(cTargetServer).change(function () {
         setServer($(cTargetServer).val()).catch(logException);
-    })
+    });
 
     $('#createInfractionLoader').click(openModal);
-})
+});
 
 function submitInfraction() {
-    setLoading()
+    setLoading();
 
     //First request
 
-    let createCall = createAndValidateInfraction();
+    const createCall = createAndValidateInfraction();
 
     //Failure, the second index is the error
     if (!createCall[0]) {
@@ -345,10 +347,10 @@ function submitInfraction() {
 
     //Success, the second index is the request type and the third is the actual request struct
 
-    let route = '/api/infractions/'
+    let route = '/api/infractions/';
 
     if (createCall[1]) {
-        route = '/api/infractions/using_policy'
+        route = '/api/infractions/using_policy';
     }
 
     gbRequest('POST', route, createCall[2], true).then(handleInfractionSubmission).catch(logException);
@@ -358,32 +360,32 @@ function handleInfractionSubmission(resp) {
     if (!resp.ok) {
         console.log(resp);
         resp.text().then(function (t) {
-            console.log(t)
-        })
-        throw 'Server returned a non-OK error code.'
+            console.log(t);
+        });
+        throw 'Server returned a non-OK error code.';
     }
 
     if ($(cFileInput).val() !== '') {
         resp.json().then(function (j) {
             uploadAttachment(j['id'], cFileInput.files[0].name, cFileInput.files[0]).then(function () {
                 closeModals();
-                window.location.reload()
-            })
+                window.location.reload();
+            });
         }).catch(function (e) {
-            throw e
-        })
+            throw e;
+        });
 
-        return
+        return;
     }
 
-    closeModals()
+    closeModals();
 
     window.location.reload();
 
 }
 
 function createAndValidateInfraction() {
-    let infraction = {
+    const infraction = {
         'player': {},
         'do_full_infraction': true
     };
@@ -400,7 +402,7 @@ function createAndValidateInfraction() {
     }
 
     if (!infraction['player'].hasOwnProperty('gs_id') && !infraction['player'].hasOwnProperty('ip')) {
-        return [false, 'You must target either an IP address, a player, or both!']
+        return [false, 'You must target either an IP address, a player, or both!'];
     }
 
     // Assign server
@@ -412,13 +414,17 @@ function createAndValidateInfraction() {
     // Scope
     if ($(cCommunityRadio).prop('checked') && $(cCommunityRadio).attr('data-has-permissions') === '1')
         infraction['scope'] = 'community';
-    else if (($(cWebCheck).prop('checked') || $(cGlobalRadio).prop('checked')) && $(cGlobalRadio).attr('data-has-permissions') === '1')
+    else if (
+        ($(cWebCheck).prop('checked')
+            || $(cGlobalRadio).prop('checked'))
+        && $(cGlobalRadio).attr('data-has-permissions') === '1'
+    )
         infraction['scope'] = 'global';
 
     //Reason
 
     if ($(cReasonEntry).val().trim() === '' && !$(cAutomaticCheck).prop('checked')) {
-        return [false, 'You must enter a reason!']
+        return [false, 'You must enter a reason!'];
     }
 
     infraction['reason'] = $(cReasonEntry).val().trim();
@@ -481,7 +487,7 @@ function createAndValidateInfraction() {
             infraction['duration'] = getInfractionSeconds();
         }
     } catch (e) {
-        return [false, e]
+        return [false, e];
     }
 
 
@@ -496,16 +502,16 @@ const multipliers = {
     'w': 3600 * 24 * 7,
     'mo': 3600 * 24 * 30,
     'y': 3600 * 24 * 365
-}
+};
 
 function getInfractionSeconds() {
-    let n = parseInt($(cDurationEntry).val())
+    const n = parseInt($(cDurationEntry).val());
 
     if (Number.isNaN((n))) {
-        throw 'Duration must be a number!'
+        throw 'Duration must be a number!';
     }
 
-    return n * multipliers[$(cDurationUnit).val()]
+    return n * multipliers[$(cDurationUnit).val()];
 }
 
 function setLoadingModal() {

@@ -1,11 +1,9 @@
-from bson import json_util
-from datetime import datetime
-from dateutil.tz import UTC
 import json
-
 from contextlib import suppress
+from datetime import datetime
 
-from pymongo import ASCENDING
+from bson import json_util
+from dateutil.tz import UTC
 from redis.exceptions import RedisError
 
 from gflbans.internal.avatar import process_avatar
@@ -19,8 +17,11 @@ async def get_member_id_from_token(app, access_token: str):
     response = await user_cache.find_one({'access_token': access_token})
     if response is None:
         return None
-    elif (datetime.now(tz=UTC).replace(tzinfo=None) - response['created']).total_seconds() > STEAM_OPENID_ACCESS_TOKEN_LIFETIME or \
-        (datetime.now(tz=UTC).replace(tzinfo=None) - response['last_validated']).total_seconds() > STEAM_OPENID_ACCESS_TOKEN_LIFETIME:
+    elif (
+        datetime.now(tz=UTC).replace(tzinfo=None) - response['created']
+    ).total_seconds() > STEAM_OPENID_ACCESS_TOKEN_LIFETIME or (
+        datetime.now(tz=UTC).replace(tzinfo=None) - response['last_validated']
+    ).total_seconds() > STEAM_OPENID_ACCESS_TOKEN_LIFETIME:
         user_cache.delete_one({'_id': response['_id']})
         logger.error('Entry expired', exc_info=True)
         raise
@@ -48,10 +49,10 @@ async def get_member_by_id_nc(app, member_id: int):
     json_response = json.loads(json_util.dumps(response))
 
     with suppress(Exception):
-            await app.state.ips_cache.set(str(member_id), json_response, 'user_cache',
-                                expire_time=10 * 60)
+        await app.state.ips_cache.set(str(member_id), json_response, 'user_cache', expire_time=10 * 60)
 
     return json_response
+
 
 # Wrapper around process_avatar for IPS photoUrl results
 # as sometimes photoUrl doesn't return an HTTP url
@@ -69,11 +70,13 @@ async def ips_process_avatar(app, avatar_url):
 
 # Gets an IPS member id from a game server id
 def ips_get_member_id_from_gsid(gs_id):
-    return int(gs_id) - 76561197960265728 # Convert Steam64 ID to 32, since mongodb doesnt like 64 bit numbers
+    return int(gs_id) - 76561197960265728  # Convert Steam64 ID to 32, since mongodb doesnt like 64 bit numbers
+
 
 # Gets a game server id from an IPS member id
 def ips_get_gsid_from_member_id(member_id: int):
     return member_id + 76561197960265728
+
 
 async def _get_groups(app):
     groups = await app.state.db[MONGO_DB]['groups'].find().to_list(None)
@@ -84,7 +87,8 @@ async def _get_groups(app):
 
     return json.loads(json_util.dumps(groups))
 
-async def get_groups(app, force_update = False):
+
+async def get_groups(app, force_update=False):
     if not force_update:
         with suppress(RedisError):
             a = await app.state.ips_cache.get('GROUPS', 'GLOBAL_GROUPS')

@@ -1,4 +1,3 @@
-
 import bson
 from bson import ObjectId
 from fastapi import APIRouter, Depends, HTTPException
@@ -6,26 +5,26 @@ from starlette.requests import Request
 
 from gflbans.internal.config import HOST, MONGO_DB
 from gflbans.internal.database.infraction import DInfraction
+from gflbans.internal.errors import SearchError
 from gflbans.internal.flags import PERMISSION_VIEW_IP_ADDR
 from gflbans.internal.models.protocol import Search
 from gflbans.internal.search import FIELD_MAP, do_infraction_search
 from gflbans.web.pages import sctx
-
-from gflbans.internal.errors import SearchError
 
 infractions_router = APIRouter()
 
 
 @infractions_router.get('/')
 async def infractions(request: Request):
-    return request.app.state.templates.TemplateResponse('pages/infractions.html',
-                                                        {**await sctx(request), 'page': 'infractions'})
+    return request.app.state.templates.TemplateResponse(
+        'pages/infractions.html', {**await sctx(request), 'page': 'infractions'}
+    )
 
 
 @infractions_router.get('/{infraction_id}/')
 async def preload_infraction(request: Request, infraction_id: str, query: Search = Depends(Search)):
     sc = await sctx(request)
-    
+
     try:
         obj_id = ObjectId(infraction_id)
     except bson.errors.InvalidId:
@@ -46,7 +45,6 @@ async def preload_infraction(request: Request, infraction_id: str, query: Search
             break
 
     if do_search:
-
         incl_ip = False
 
         if sc['user'] is not None:
@@ -67,8 +65,7 @@ async def preload_infraction(request: Request, infraction_id: str, query: Search
     # doc_pos / docs_per_page floored + 1 is the page number that the document is on
     doc_page = (doc_pos // 30) + 1
 
-
-    return request.app.state.templates.TemplateResponse('pages/infractions.html',
-                                                        {**sc, 'page': 'infractions',
-                                                         'infraction': dinf, 'set_page': doc_page,
-                                                         'GB_HOST': HOST})
+    return request.app.state.templates.TemplateResponse(
+        'pages/infractions.html',
+        {**sc, 'page': 'infractions', 'infraction': dinf, 'set_page': doc_page, 'GB_HOST': HOST},
+    )

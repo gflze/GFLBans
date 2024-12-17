@@ -1,17 +1,20 @@
 #! /usr/bin/env python3
 
 import asyncio
+import math
 from datetime import datetime
+
 import aiohttp
 import aiomysql
-import math
 from pytz import UTC
+
 
 def default(v, d):
     if v == '':
         return d
     else:
         return v
+
 
 gflbans_instance = default(input('GFLBans Instance [https://bans.gflclan.com/]: '), 'https://bans.gflclan.com/')
 gflbans_api_key_id = default(input('GFLBans API Key ID [no default]: '), 'no default')
@@ -28,28 +31,27 @@ checkpoint_comms = int(default(input('Comms import checkpoint [0]'), '0'))
 
 session = aiohttp.ClientSession()
 
+
 def id_to_64(steamid):
-
     if steamid == 'STEAM_ID_SERVER':
-            return None
+        return None
 
-    steamid = steamid[6:].split(':') # remove STEAM_ and split into 3 components
+    steamid = steamid[6:].split(':')  # remove STEAM_ and split into 3 components
 
     if len(steamid) != 3:
         return None  # invalid
 
     y = int(steamid[1])
     z = int(steamid[2])
-    
+
     return (z * 2) + y + 0x0110000100000000
 
 
 def slash_fix(url: str) -> str:
     if not url.endswith('/'):
         return url + '/'
-    
-    return url
 
+    return url
 
 
 # don't want to overwhelm the server by running 200k+ requests at the same time
@@ -62,9 +64,9 @@ async def batched(coros):
             if len(coros) > idx:
                 d.append(coros[idx])
                 processed += 1
-        
+
         await asyncio.gather(*d)
-    
+
     return processed
 
 
@@ -80,24 +82,19 @@ async def process_ban(adminid64, ban):
             'player': {},
             'punishments': ['ban'],
             'import_mode': True,
-            'scope': 'global'  # all sourcebans were global
+            'scope': 'global',  # all sourcebans were global
         }
 
         if adminid64:
-            api_req['admin'] = {
-                'gs_admin': {
-                    'gs_service': 'steam',
-                    'gs_id': adminid64
-                }
-            }
-        
+            api_req['admin'] = {'gs_admin': {'gs_service': 'steam', 'gs_id': adminid64}}
+
         if ban[2] and ban[2] != '' and id_to_64(ban[2]):
             api_req['player']['gs_service'] = 'steam'
             api_req['player']['gs_id'] = id_to_64(ban[2])
-        
+
         if ban[1] and ban[1] != '':
             api_req['player']['ip'] = ban[1]
-        
+
         if 'ip' not in api_req['player'] and ('gs_id' not in api_req['player'] or not api_req['player']['gs_id']):
             print(f'could not find a valid player id, skipping {ban[0]}')
             return
@@ -112,12 +109,19 @@ async def process_ban(adminid64, ban):
         else:
             api_req['duration'] = ban[5] - ban[4]  # sets the duration to the time remaining
 
-        async with session.post(f'{slash_fix(gflbans_instance)}api/infractions/', headers={'Authorization': f'API {gflbans_api_key_id} {gflbans_api_key_secret}', 'Content-Type': 'application/json'}, json=api_req) as resp:
+        async with session.post(
+            f'{slash_fix(gflbans_instance)}api/infractions/',
+            headers={
+                'Authorization': f'API {gflbans_api_key_id} {gflbans_api_key_secret}',
+                'Content-Type': 'application/json',
+            },
+            json=api_req,
+        ) as resp:
             if resp.status >= 400:
                 print(f'failed to create infraction (HTTP {resp.status}): {await resp.text()}, api request:')
                 print(api_req)
                 return
-            
+
             j = await resp.json()
 
             print(f'created infraction {j["id"]}')
@@ -125,7 +129,7 @@ async def process_ban(adminid64, ban):
         print(f'processed ban {ban[0]}')
     except Exception as e:
         print(f'could not process ban {ban[0]}: {e}')
-    
+
 
 async def process_comm(adminid64, comm):
     try:
@@ -136,12 +140,9 @@ async def process_comm(adminid64, comm):
 
         api_req = {
             'created': comm[3],
-            'player': {
-                'gs_service': 'steam',
-                'gs_id': id_to_64(comm[1])
-            },
+            'player': {'gs_service': 'steam', 'gs_id': id_to_64(comm[1])},
             'import_mode': True,
-            'scope': 'global'  # all sourcebans were global
+            'scope': 'global',  # all sourcebans were global
         }
 
         if not api_req['player']['gs_id']:
@@ -149,12 +150,7 @@ async def process_comm(adminid64, comm):
             return
 
         if adminid64:
-            api_req['admin'] = {
-                'gs_admin': {
-                    'gs_service': 'steam',
-                    'gs_id': adminid64
-                }
-            }
+            api_req['admin'] = {'gs_admin': {'gs_service': 'steam', 'gs_id': adminid64}}
 
         if comm[6] and comm[6] != '' and len(comm[6]) <= 120:
             api_req['reason'] = comm[6][:279]
@@ -173,11 +169,18 @@ async def process_comm(adminid64, comm):
         else:
             api_req['punishments'] = ['chat_block']
 
-        async with session.post(f'{slash_fix(gflbans_instance)}api/infractions/', headers={'Authorization': f'API {gflbans_api_key_id} {gflbans_api_key_secret}', 'Content-Type': 'application/json'}, json=api_req) as resp:
+        async with session.post(
+            f'{slash_fix(gflbans_instance)}api/infractions/',
+            headers={
+                'Authorization': f'API {gflbans_api_key_id} {gflbans_api_key_secret}',
+                'Content-Type': 'application/json',
+            },
+            json=api_req,
+        ) as resp:
             if resp.status >= 400:
                 print(f'failed to create infraction (HTTP {resp.status}): {await resp.text()}')
                 return
-            
+
             j = await resp.json()
 
             print(f'created infraction {j["id"]}')
@@ -185,11 +188,17 @@ async def process_comm(adminid64, comm):
         print(f'processed comm {comm[0]}')
     except Exception as e:
         print(f'could not process ban {comm[0]}: {e}')
-    
 
 
 async def moin():
-    conn = await aiomysql.connect(host=mysql_host, port=mysql_port, user=mysql_user, password=mysql_pass, db=mysql_db, loop=asyncio.get_running_loop())
+    conn = await aiomysql.connect(
+        host=mysql_host,
+        port=mysql_port,
+        user=mysql_user,
+        password=mysql_pass,
+        db=mysql_db,
+        loop=asyncio.get_running_loop(),
+    )
 
     print('fetch admins')
 
@@ -205,7 +214,6 @@ async def moin():
             admin_steamid = admin[2]  # authid
 
             adminid_to_steamid64[admin[0]] = id_to_64(admin_steamid)
-
 
     print(f'fetched {len(adminid_to_steamid64)} admins')
 
@@ -228,7 +236,7 @@ async def moin():
             else:
                 adm = None
             b.append(process_ban(adm, ban))
-        
+
         print(f'processed {await batched(b)} bans')
 
     print('converting comms')
@@ -252,13 +260,14 @@ async def moin():
             adm = None
 
         c.append(process_comm(adm, comm))
-    
+
     print(f'processed {await batched(c)} comms')
 
     print('all done!')
 
     print(f'ban checkpoint: {ban[0]}')
     print(f'comms checkpoint: {comm[0]}')
+
 
 if __name__ == '__main__':
     asyncio.get_event_loop().run_until_complete(moin())

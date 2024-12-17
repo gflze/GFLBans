@@ -10,22 +10,29 @@
                 <button class="delete search-dismiss-error"></button>
                 <span id="search-create-error-msg"></span>
             </div>
-
             <h2 class="text-primary">User</h2>
             <div class="search-area">
                 {% if user is not none and has_flag(user.permissions, p_nodes['Can See IP Addresses']) %}
-                <div class="control field">
-                    <label class="checkbox">
-                        <input id="search-user-vpn-check" type="checkbox" name="isWebInfract">
-                        VPN
-                    </label>
-                </div>
+                    <div class="control field">
+                        <label class="checkbox">
+                            <input id="search-user-vpn-check" type="checkbox" name="isWebInfract">
+                            VPN
+                        </label>
+                    </div>
                 {% endif %}
                 <div id="search-user-info" class="field is-grouped">
-                    <input id="search-user-name" class="input" type="text" maxlength="30" placeholder="Name">
+                    <input id="search-user-name"
+                           class="input"
+                           type="text"
+                           maxlength="30"
+                           placeholder="Name">
                     <div class="field has-addons">
                         <div class="control">
-                            <input id="search-user-gsid" class="input" type="text" maxlength="256" placeholder="Game ID">
+                            <input id="search-user-gsid"
+                                   class="input"
+                                   type="text"
+                                   maxlength="256"
+                                   placeholder="Game ID">
                         </div>
                         <div class="control">
                             <div class="select">
@@ -38,12 +45,15 @@
                     </div>
                 </div>
                 {% if user is not none and has_flag(user.permissions, p_nodes['Can See IP Addresses']) %}
-                <div class="field">
-                    <input id="search-user-ip" class="input" type="text" maxlength="15" placeholder="IP Address">
-                </div>
+                    <div class="field">
+                        <input id="search-user-ip"
+                               class="input"
+                               type="text"
+                               maxlength="15"
+                               placeholder="IP Address">
+                    </div>
                 {% endif %}
             </div>
-
             <h2 class="text-primary">Admin</h2>
             <div class="search-area">
                 <div class="control field">
@@ -64,11 +74,18 @@
                     <select id="search-admin-selector" class="select-exp"></select>
                 </div>
                 <div id="search-admin-info">
-                    <input id="search-admin-name" class="input" type="text" maxlength="30" placeholder="Name">
-                    <input id="search-admin-id" class="input" type="text" maxlength="256" placeholder="Steam ID">
+                    <input id="search-admin-name"
+                           class="input"
+                           type="text"
+                           maxlength="30"
+                           placeholder="Name">
+                    <input id="search-admin-id"
+                           class="input"
+                           type="text"
+                           maxlength="256"
+                           placeholder="Steam ID">
                 </div>
             </div>
-
             <h2 class="text-primary">Scope</h2>
             <div class="search-area">
                 <div class="control">
@@ -104,79 +121,95 @@
                     </label>
                 </div>
             </div>
-            
             <h2 class="text-primary">Restriction</h2>
             <div class="search-area buttons is-flex is-justify-content-center">
-                <button type="button" id="search-restriction-voice" class="restriction-button button is-voice-btn is-outlined">
+                <button type="button"
+                        id="search-restriction-voice"
+                        class="restriction-button button is-voice-btn is-outlined">
                     <span class="icon is-small ricon">
                         <i class="fas fa-volume-mute ricon"></i>
                     </span>
                     Voice
                 </button>
-                <button type="button" id="search-restriction-text" class="restriction-button button is-text-btn is-outlined">
+                <button type="button"
+                        id="search-restriction-text"
+                        class="restriction-button button is-text-btn is-outlined">
                     <span class="icon is-small ricon">
                         <i class="fas fa-comment-slash ricon"></i>
                     </span>
                     Text
                 </button>
-                <button type="button" id="search-restriction-join" class="restriction-button button is-ban-btn is-outlined">
+                <button type="button"
+                        id="search-restriction-join"
+                        class="restriction-button button is-ban-btn is-outlined">
                     <span class="icon is-small ricon">
                         <i class="fas fa-ban ricon"></i>
                     </span>
                     Ban
                 </button>
-                <button type="button" id="search-restriction-admin-chat" class="restriction-button button is-admin-chat-btn is-outlined">
+                <button type="button"
+                        id="search-restriction-admin-chat"
+                        class="restriction-button button is-admin-chat-btn is-outlined">
                     <span class="icon is-small ricon">
                         <i class="fas fa-hands-helping ricon"></i>
                     </span>
                     Admin Chat
                 </button>
-                <button type="button" id="search-restriction-call-admin" class="restriction-button button is-call-admin-btn is-outlined">
+                <button type="button"
+                        id="search-restriction-call-admin"
+                        class="restriction-button button is-call-admin-btn is-outlined">
                     <span class="icon is-small ricon">
                         <i class="fas fa-phone-slash ricon"></i>
                     </span>
                     Call Admin
                 </button>
-                <button type="button" id="search-restriction-item" class="restriction-button button is-item-btn is-outlined">
+                <button type="button"
+                        id="search-restriction-item"
+                        class="restriction-button button is-item-btn is-outlined">
                     <span class="icon is-small ricon">
                         <i class="fas fa-virus-slash ricon"></i>
                     </span>
                     Item
                 </button>
-                <button type="button" id="search-restriction-warning" class="restriction-button button is-warning-btn is-outlined">
+                <button type="button"
+                        id="search-restriction-warning"
+                        class="restriction-button button is-warning-btn is-outlined">
                     <span class="icon is-small ricon">
                         <i class="fas fa-exclamation-triangle ricon"></i>
                     </span>
                     Warning
                 </button>
             </div>
-
             <h2 class="text-primary">Status</h2>
             <div class="search-area control field">
-                    <label id="search-status-any-label" class="radio status-radio-button">
-                        <input id="search-status-any-check" type="radio" name="status-type">
-                        Any
-                    </label>
-                    <label id="search-status-active-label" class="radio status-radio-button">
-                        <input id="search-status-active-check" type="radio" name="status-type">
-                        Active
-                    </label>
-                    <label id="search-status-expired-label" class="radio status-radio-button">
-                        <input id="search-status-expired-check" type="radio" name="status-type">
-                        Expired
-                    </label>
-                    <label id="search-status-removed-label" class="radio status-radio-button">
-                        <input id="search-status-removed-check" type="radio" name="status-type">
-                        Removed
-                    </label>
+                <label id="search-status-any-label" class="radio status-radio-button">
+                    <input id="search-status-any-check" type="radio" name="status-type">
+                    Any
+                </label>
+                <label id="search-status-active-label" class="radio status-radio-button">
+                    <input id="search-status-active-check" type="radio" name="status-type">
+                    Active
+                </label>
+                <label id="search-status-expired-label" class="radio status-radio-button">
+                    <input id="search-status-expired-check" type="radio" name="status-type">
+                    Expired
+                </label>
+                <label id="search-status-removed-label" class="radio status-radio-button">
+                    <input id="search-status-removed-check" type="radio" name="status-type">
+                    Removed
+                </label>
             </div>
-            
             <h2 class="text-primary">Reason</h2>
             <div class="search-area">
-                <input id="search-reason-creation" class="input field" maxlength="256" placeholder="Creation Reason">
-                <input id="search-reason-removal" class="input field" maxlength="256" placeholder="Removal Reason">
+                <input id="search-reason-creation"
+                       class="input field"
+                       maxlength="256"
+                       placeholder="Creation Reason">
+                <input id="search-reason-removal"
+                       class="input field"
+                       maxlength="256"
+                       placeholder="Removal Reason">
             </div>
-
             <h2 class="text-primary">Time</h2>
             <div class="search-area ">
                 <div>
@@ -201,7 +234,6 @@
                         Real World Timed (time remaining decreases while user is not connected)
                     </label>
                 </div>
-
                 <div id="search-time-date-creation-field" class="time-field">
                     <label>Creation Date:</label>
                     <div class="field has-addons is-justify-content-center">
@@ -217,7 +249,6 @@
                         <input id="search-time-date-creation" type="date" class="input">
                     </div>
                 </div>
-
                 <div id="search-time-date-expiration-field" class="time-field">
                     <label>Expiration Date:</label>
                     <div class="field has-addons is-justify-content-center">
@@ -233,7 +264,6 @@
                         <input id="search-time-date-expiration" type="date" class="input">
                     </div>
                 </div>
-
                 <div id="search-time-duration-field" class="time-field">
                     <label>Total Time:</label>
                     <div class="field has-addons is-justify-content-center">
@@ -247,7 +277,11 @@
                             </div>
                         </div>
                         <div class="control">
-                            <input id="search-time-duration-entry" class="input" type="number" min="1" placeholder="Time">
+                            <input id="search-time-duration-entry"
+                                   class="input"
+                                   type="number"
+                                   min="1"
+                                   placeholder="Time">
                         </div>
                         <div class="control">
                             <div class="select">
@@ -263,7 +297,6 @@
                         </div>
                     </div>
                 </div>
-
                 <div id="search-time-timeleft-field" class="time-field">
                     <label>Time Left:</label>
                     <div class="field has-addons is-justify-content-center">
@@ -277,7 +310,11 @@
                             </div>
                         </div>
                         <div class="control">
-                            <input id="search-time-timeleft-entry" class="input" type="number" min="1" placeholder="Time">
+                            <input id="search-time-timeleft-entry"
+                                   class="input"
+                                   type="number"
+                                   min="1"
+                                   placeholder="Time">
                         </div>
                         <div class="control">
                             <div class="select">
@@ -296,12 +333,13 @@
             </div>
         </section>
         <footer class="modal-card-foot background-tertiary">
-            <button id="search-submit" class="button is-accent"><i class="fas fa-search mr-2"></i>Search</button>
+            <button id="search-submit" class="button is-accent">
+                <i class="fas fa-search mr-2"></i>Search
+            </button>
             <button class="button is-danger search-dismiss">Cancel</button>
         </footer>
     </div>
 </div>
-
 <div id="search-loading-modal" class="modal">
     <div class="modal-background"></div>
     <div class="modal-card">
@@ -312,5 +350,4 @@
         </section>
     </div>
 </div>
-
 <script src="/static/js/components/advanced_search.js"></script>

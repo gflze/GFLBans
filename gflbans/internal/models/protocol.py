@@ -1,17 +1,34 @@
 # This file defines both the WebSocket and HTTP API protocol
 from datetime import datetime
-from typing import Optional, List, Union, Dict
+from typing import Dict, List, Optional, Union
 
 from fastapi import Depends, Query
-from pydantic import BaseModel, conint, PositiveInt, constr, validator, root_validator, Field, IPvAnyAddress
-
+from pydantic import BaseModel, Field, IPvAnyAddress, PositiveInt, conint, constr, root_validator, validator
 
 # Infraction related API calls
 from gflbans.internal.config import MAX_UPLOAD_SIZE
 from gflbans.internal.flags import valid_types_regex
-from gflbans.internal.models.api import FetchAdminInfo, PlayerObjNoIpOptional, PositiveIntIncl0, Infraction, Initiator, \
-    CInfractionSummary, PlayerObjNoIp, InfractionTieringPolicyTier, PlayerObjSimple, Signature, AdminInfo, Server, \
-    ServerInternal, Group, AdminMinimal, VPNInfo, InfractionDay, PlayerObjIPOptional, RawSignature
+from gflbans.internal.models.api import (
+    AdminInfo,
+    AdminMinimal,
+    CInfractionSummary,
+    FetchAdminInfo,
+    Group,
+    Infraction,
+    InfractionDay,
+    InfractionTieringPolicyTier,
+    Initiator,
+    PlayerObjIPOptional,
+    PlayerObjNoIp,
+    PlayerObjNoIpOptional,
+    PlayerObjSimple,
+    PositiveIntIncl0,
+    RawSignature,
+    Server,
+    ServerInternal,
+    Signature,
+    VPNInfo,
+)
 
 
 class GetInfractions(BaseModel):
@@ -113,6 +130,7 @@ class InfractionStatisticsReply(BaseModel):
 #    punishments: List[constr(regex=valid_types_regex)]
 #    duration: Optional[conint(gt=0)]
 #    dec_online: bool = False
+
 
 class RegisterInfractionTieringPolicy(BaseModel):
     name: str
@@ -352,9 +370,11 @@ class ExecuteCallAdminReply(BaseModel):
 class ClaimCallAdmin(BaseModel):
     admin_name: str
 
+
 class ClaimCallAdminReply(BaseModel):
     success: bool
     msg: Optional[str]
+
 
 class QueryAdminInfo(BaseModel):
     admin: Initiator
@@ -362,6 +382,7 @@ class QueryAdminInfo(BaseModel):
 
 class QueryAdminInfoReply(BaseModel):
     admin: AdminInfo
+
 
 # Server related routes
 
@@ -395,7 +416,9 @@ class AddServer(BaseModel):
 
     @root_validator(pre=True)
     def check_discord(cls, values):
-        if ('discord_webhook' in values and 'discord_staff_tag' not in values) or ('discord_staff_tag' in values and 'discord_webhook' not in values):
+        if ('discord_webhook' in values and 'discord_staff_tag' not in values) or (
+            'discord_staff_tag' in values and 'discord_webhook' not in values
+        ):
             raise ValueError('Must give either both discord_webhook and discord_staff_tag or neither')
 
         return values
@@ -438,6 +461,7 @@ class DeleteServerReply(BaseModel):
 
 
 # Group APIs
+
 
 class UpdateGroup(BaseModel):
     name: str
@@ -513,6 +537,7 @@ class RemoveVPN(BaseModel):
 class RemoveVPNReply(BaseModel):
     success: bool
 
+
 # Server to client communications, often called RPC.
 
 
@@ -558,6 +583,7 @@ class ServerStats(BaseModel):
 
     # History
     history: Dict[str, InfractionDay]
+
 
 class GetAdmins(BaseModel):
     admin: FetchAdminInfo = Depends(FetchAdminInfo)

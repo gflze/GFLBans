@@ -1,10 +1,8 @@
 from datetime import datetime
-from inspect import signature
-from typing import Optional, List, Union, Dict
-from bson.objectid import ObjectId
 from hashlib import sha256
+from typing import Dict, List, Optional, Union
 
-from pydantic import BaseModel, constr, PositiveInt, root_validator, conint
+from pydantic import BaseModel, PositiveInt, conint, constr, root_validator
 
 from gflbans.internal.flags import valid_types_regex
 
@@ -12,6 +10,7 @@ PositiveIntIncl0 = conint(ge=0)
 
 
 # These are objects commonly used in the API, but they do not define the protocol in itself
+
 
 class PlayerObjNoIp(BaseModel):
     gs_service: str
@@ -128,7 +127,6 @@ class Initiator(BaseModel):
     mongo_id: Optional[str]
     gs_admin: Optional[PlayerObjNoIp]
 
-
     class Config:
         arbitrary_types_allowed = True
 
@@ -213,16 +211,19 @@ class AdminInfo(BaseModel):
     permissions: Optional[PositiveIntIncl0]
     groups: Optional[List[Group]]
 
+
 class FetchAdminInfo(BaseModel):
     admin_name: Optional[str]
     admin_id: Optional[PositiveIntIncl0]
     permissions: Optional[PositiveIntIncl0]
     group_id: Optional[int]
 
+
 class UpdateAdminInfo(BaseModel):
     admin_name: Optional[str]
     admin_id: str
     groups: List[int]
+
 
 class AdminMinimal(BaseModel):
     admin_name: Optional[str]
@@ -253,5 +254,3 @@ class InfractionDay(BaseModel):
     item_blocks: int = 0
     warnings: int = 0
     total: int = 0
-
-

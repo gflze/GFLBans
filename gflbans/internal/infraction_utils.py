@@ -1,51 +1,80 @@
 import asyncio
 from datetime import datetime, timedelta
-from gflbans.internal.database.admin import Admin
-from gflbans.internal.errors import NoSuchAdminError
-from gflbans.internal.integrations.ips import ips_get_gsid_from_member_id
-from gflbans.internal.kv import get_var
-from gflbans.internal.pyapi_utils import load_admin_from_initiator
-from typing import List, Union, Optional
-from gflbans.internal.flags import PERMISSION_IMMUNE, PERMISSION_SKIP_IMMUNITY, str2permflag
+from typing import List, Optional, Union
+
+from aiohttp import ClientResponseError
 from bson import ObjectId
 from dateutil.tz import UTC
-from pydantic import PositiveInt
-from aiohttp import ClientResponseError
 from fastapi import HTTPException
+from humanize import naturaldelta
+from pydantic import PositiveInt
 
 # This function does no permission checks. It merely constructs a DInfraction object without saving it
 # with the desired parameters
-from starlette.requests import Request
-
 from gflbans.api_util import construct_ci_resp
-from gflbans.internal.asn import check_vpn, VPN_YES, VPN_CLOUD
+from gflbans.internal.asn import VPN_CLOUD, VPN_YES, check_vpn
 from gflbans.internal.avatar import process_avatar
-from gflbans.internal.config import HOST, MONGO_DB, GLOBAL_INFRACTION_WEBHOOK, GFLBANS_ICON, COMMUNITY_ICON
+from gflbans.internal.config import COMMUNITY_ICON, GFLBANS_ICON, GLOBAL_INFRACTION_WEBHOOK, HOST, MONGO_DB
 from gflbans.internal.constants import SERVER_KEY
+from gflbans.internal.database.admin import Admin
 from gflbans.internal.database.common import DFile
 from gflbans.internal.database.infraction import DInfraction, DUser, build_query_dict
 from gflbans.internal.database.rpc import DRPCPlayerUpdated
 from gflbans.internal.database.server import DServer
 from gflbans.internal.database.task import DTask
 from gflbans.internal.database.tiering_policy import DTieringPolicy
-from gflbans.internal.flags import INFRACTION_ADMIN_CHAT_BLOCK, INFRACTION_CALL_ADMIN_BAN, \
-    INFRACTION_CHAT_BLOCK, INFRACTION_VOICE_BLOCK, PERMISSION_CREATE_INFRACTION, PERMISSION_SCOPE_GLOBAL, \
-    PERMISSION_SCOPE_SUPER_GLOBAL, scope_to_flag, str2pflag, INFRACTION_SESSION, INFRACTION_PERMANENT, \
-    INFRACTION_DEC_ONLINE_ONLY, INFRACTION_WEB, INFRACTION_AUTO_TIER, INFRACTION_SYSTEM, INFRACTION_REMOVED, \
-    INFRACTION_VPN, INFRACTION_GLOBAL, INFRACTION_SUPER_GLOBAL, INFRACTION_BAN, str2pflag, INFRACTION_ITEM_BLOCK
+from gflbans.internal.errors import NoSuchAdminError
+from gflbans.internal.flags import (
+    INFRACTION_ADMIN_CHAT_BLOCK,
+    INFRACTION_AUTO_TIER,
+    INFRACTION_BAN,
+    INFRACTION_CALL_ADMIN_BAN,
+    INFRACTION_CHAT_BLOCK,
+    INFRACTION_DEC_ONLINE_ONLY,
+    INFRACTION_GLOBAL,
+    INFRACTION_ITEM_BLOCK,
+    INFRACTION_PERMANENT,
+    INFRACTION_REMOVED,
+    INFRACTION_SESSION,
+    INFRACTION_SUPER_GLOBAL,
+    INFRACTION_SYSTEM,
+    INFRACTION_VOICE_BLOCK,
+    INFRACTION_VPN,
+    INFRACTION_WEB,
+    PERMISSION_CREATE_INFRACTION,
+    PERMISSION_IMMUNE,
+    PERMISSION_SCOPE_GLOBAL,
+    PERMISSION_SCOPE_SUPER_GLOBAL,
+    PERMISSION_SKIP_IMMUNITY,
+    scope_to_flag,
+    str2permflag,
+    str2pflag,
+)
 from gflbans.internal.integrations.games import get_user_info, validate_id_ex
+from gflbans.internal.integrations.ips import ips_get_gsid_from_member_id
+from gflbans.internal.kv import get_var
 from gflbans.internal.log import logger
-from gflbans.internal.models.api import Initiator, PlayerObjSimple, PositiveIntIncl0, PlayerObjNoIp
-from humanize import naturaldelta
+from gflbans.internal.models.api import Initiator, PlayerObjNoIp, PlayerObjSimple, PositiveIntIncl0
+from gflbans.internal.pyapi_utils import load_admin_from_initiator
+
 
 def filter_badchars(s):
     return s.replace('\n', ' ')
 
 
-def create_dinfraction(player: PlayerObjSimple, reason: str, scope: str, punishments: List,
-                       session: bool = False,
-                       created: int = None, duration: int = None, admin: ObjectId = None, policy_id: str = None,
-                       dec_online: bool = False, server: ObjectId = None) -> DInfraction:
+def create_dinfraction(
+    player: PlayerObjSimple,
+    reason: str,
+    scope: str,
+    punishments: List,
+    session: bool = False,
+    created: int = None,
+    duration: int = None,
+    admin: ObjectId = None,
+    policy_id: str = None,
+    dec_online: bool = False,
+    server: ObjectId = None,
+) -> DInfraction:
     dinf = DInfraction.construct()
 
     if player.gs_service is not None:
@@ -99,10 +128,18 @@ def create_dinfraction(player: PlayerObjSimple, reason: str, scope: str, punishm
 
 
 # Do the policy thing and call the above function
-async def create_dinfraction_with_policy(app, actor_type: int, player: PlayerObjSimple, scope: str,
-                                         policy_id: str, admin: ObjectId = None, reason_override: str = None,
-                                         actor_id: ObjectId = None, other_pol: List[str] = None,
-                                         server_override: Optional[ObjectId] = None) -> DInfraction:
+async def create_dinfraction_with_policy(
+    app,
+    actor_type: int,
+    player: PlayerObjSimple,
+    scope: str,
+    policy_id: str,
+    admin: ObjectId = None,
+    reason_override: str = None,
+    actor_id: ObjectId = None,
+    other_pol: List[str] = None,
+    server_override: Optional[ObjectId] = None,
+) -> DInfraction:
     # load the policy object
     policy = await DTieringPolicy.from_id(app.state.db[MONGO_DB], policy_id)
 
@@ -111,39 +148,63 @@ async def create_dinfraction_with_policy(app, actor_type: int, player: PlayerObj
 
     # Build a dict and get the tier
     if server_override is None:
-        q = build_query_dict(actor_type, str(actor_id), player.gs_service, player.gs_id, player.ip,
-                             not policy.include_other_servers, False)
+        q = build_query_dict(
+            actor_type,
+            str(actor_id),
+            player.gs_service,
+            player.gs_id,
+            player.ip,
+            not policy.include_other_servers,
+            False,
+        )
     else:
-        q = build_query_dict(SERVER_KEY, str(server_override), player.gs_service, player.gs_id, player.ip,
-                             not policy.include_other_servers, False)
+        q = build_query_dict(
+            SERVER_KEY,
+            str(server_override),
+            player.gs_service,
+            player.gs_id,
+            player.ip,
+            not policy.include_other_servers,
+            False,
+        )
 
     oj = {'policy_id': ObjectId(policy_id)}
 
     if other_pol is not None:
-        oj = {'$or': [
-            oj
-        ]}
+        oj = {'$or': [oj]}
 
         for op in other_pol:
             oj['$or'].append({'policy_id': ObjectId(op)})
 
     # Special case: I don't want to consider expired warns in the tier because it confused some people
     q = {
-        '$and': [   
+        '$and': [
             q,
             {'flags': {'$bitsAllSet': INFRACTION_AUTO_TIER}},
             oj,
             {'flags': {'$bitsAllClear': INFRACTION_SESSION | INFRACTION_REMOVED}},
             {'created': {'$gte': datetime.now(tz=UTC).timestamp() - policy.tier_ttl}},
-            {'$or': {
-                    {'flags': {'$bitsAnySet': INFRACTION_BAN | INFRACTION_VOICE_BLOCK | INFRACTION_CHAT_BLOCK | INFRACTION_CALL_ADMIN_BAN | INFRACTION_ADMIN_CHAT_BLOCK | INFRACTION_ITEM_BLOCK}},
-                    {'$or': {
-                        {'flags': {'$bitsAllSet': INFRACTION_PERMANENT}},
-                        {'time_left': {'$gt': 0}},
-                        {'expires': {'$gt': datetime.now(tz=UTC).timestamp()}}
-                    }}
+            {
+                '$or': {
+                    {
+                        'flags': {
+                            '$bitsAnySet': INFRACTION_BAN
+                            | INFRACTION_VOICE_BLOCK
+                            | INFRACTION_CHAT_BLOCK
+                            | INFRACTION_CALL_ADMIN_BAN
+                            | INFRACTION_ADMIN_CHAT_BLOCK
+                            | INFRACTION_ITEM_BLOCK
+                        }
+                    },
+                    {
+                        '$or': {
+                            {'flags': {'$bitsAllSet': INFRACTION_PERMANENT}},
+                            {'time_left': {'$gt': 0}},
+                            {'expires': {'$gt': datetime.now(tz=UTC).timestamp()}},
+                        }
+                    },
                 }
-            }
+            },
         ]
     }
 
@@ -162,8 +223,17 @@ async def create_dinfraction_with_policy(app, actor_type: int, player: PlayerObj
     else:
         server = None
 
-    return create_dinfraction(player, r, scope, tier.punishments, duration=tier.duration, admin=admin,
-                              dec_online=tier.dec_online, server=server, policy_id=policy_id)
+    return create_dinfraction(
+        player,
+        r,
+        scope,
+        tier.punishments,
+        duration=tier.duration,
+        admin=admin,
+        dec_online=tier.dec_online,
+        server=server,
+        policy_id=policy_id,
+    )
 
 
 async def get_user_data(app, infraction_id: ObjectId, reschedule_on_fail=False):
@@ -183,9 +253,10 @@ async def get_user_data(app, infraction_id: ObjectId, reschedule_on_fail=False):
         try:
             duser.gs_avatar = DFile(**await process_avatar(app, user_info['avatar_url']))
         except Exception as e:
-            ''' If avatar failed but everything else was fine, just dont store an avatar in the infraction but store name
-                still. This should hopefully only happen in rare cases where Steam deletes the picture on the backend but
-                for some reason leaves the deleted URL as the person's steam avatar. '''
+            """ If avatar failed but everything else was fine, just dont store an avatar in the
+                infraction but store name still. This should hopefully only happen in rare cases
+                where Steam deletes the picture on the backend but for some reason leaves the
+                deleted URL as the person's steam avatar. """
             logger.warning('get_user_data failed to find an avatar. Leaving as empty in the infraction.', exc_info=e)
             pass
 
@@ -196,8 +267,11 @@ async def get_user_data(app, infraction_id: ObjectId, reschedule_on_fail=False):
         logger.error('get_user_data failed!', exc_info=e)
         if reschedule_on_fail:
             logger.info(f'Rescheduling get_user_data call for {str(infraction_id)})...')
-            dt = DTask(run_at=datetime.now(tz=UTC).timestamp() + 5, task_data={'i_id': infraction_id},
-                       ev_handler='get_user_data')
+            dt = DTask(
+                run_at=datetime.now(tz=UTC).timestamp() + 5,
+                task_data={'i_id': infraction_id},
+                ev_handler='get_user_data',
+            )
             await dt.commit(app.state.db[MONGO_DB])
         raise
 
@@ -222,8 +296,11 @@ async def get_vpn_data(app, infraction_id: ObjectId, reschedule_on_fail=False):
         logger.error('get_vpn_data failed!', exc_info=e)
         if reschedule_on_fail:
             logger.info(f'Rescheduling get_vpn_data call for {str(infraction_id)})...')
-            dt = DTask(run_at=datetime.now(tz=UTC).timestamp() + 5, task_data={'i_id': infraction_id},
-                       ev_handler='get_vpn_data')
+            dt = DTask(
+                run_at=datetime.now(tz=UTC).timestamp() + 5,
+                task_data={'i_id': infraction_id},
+                ev_handler='get_vpn_data',
+            )
             await dt.commit(app.state.db[MONGO_DB])
         raise
 
@@ -245,10 +322,10 @@ async def policy_name(app, pol_ref: Optional[ObjectId]) -> str:
         return 'No Policy'
 
     dpol = await DTieringPolicy.from_id(app.state.db[MONGO_DB], pol_ref)
-    
+
     if dpol is None:
         return 'UNKNOWN'
-    
+
     return dpol.name
 
 
@@ -268,15 +345,27 @@ async def _embed_host(db_ref, dsrv_ref: Optional[ObjectId]):
         return f'{srv.ip}:{srv.game_port}'
 
 
-async def modify_infraction(app, target: ObjectId, author: Union[ObjectId, str, None] = None,
-                            make_session: bool = False, make_permanent: bool = False,
-                            expiration: Optional[PositiveInt] = None, time_left: Optional[PositiveIntIncl0] = None,
-                            policy_id: Union[ObjectId, None, bool] = None, server: Optional[ObjectId] = None,
-                            reason: Optional[str] = None, set_removal_state: Optional[bool] = None,
-                            removed_by: Optional[ObjectId] = None,
-                            removal_reason: Optional[str] = None, punishments: Optional[List] = None,
-                            scope: Optional[str] = None, vpn: Optional[bool] = None, make_web: bool = False,
-                            reuse_dinf: DInfraction = None, actor: Optional[ObjectId] = None):
+async def modify_infraction(
+    app,
+    target: ObjectId,
+    author: Union[ObjectId, str, None] = None,
+    make_session: bool = False,
+    make_permanent: bool = False,
+    expiration: Optional[PositiveInt] = None,
+    time_left: Optional[PositiveIntIncl0] = None,
+    policy_id: Union[ObjectId, None, bool] = None,
+    server: Optional[ObjectId] = None,
+    reason: Optional[str] = None,
+    set_removal_state: Optional[bool] = None,
+    removed_by: Optional[ObjectId] = None,
+    removal_reason: Optional[str] = None,
+    punishments: Optional[List] = None,
+    scope: Optional[str] = None,
+    vpn: Optional[bool] = None,
+    make_web: bool = False,
+    reuse_dinf: DInfraction = None,
+    actor: Optional[ObjectId] = None,
+):
     if reuse_dinf is not None and reuse_dinf.id == target:
         dinf = reuse_dinf
     else:
@@ -292,10 +381,7 @@ async def modify_infraction(app, target: ObjectId, author: Union[ObjectId, str, 
     removed = None
 
     def uwu(var, old, new):
-        changes[var] = {
-            'old': old,
-            'new': new
-        }
+        changes[var] = {'old': old, 'new': new}
 
     # async with await app.state.db.start_session() as session:
     # async with session.start_transaction():
@@ -311,12 +397,16 @@ async def modify_infraction(app, target: ObjectId, author: Union[ObjectId, str, 
             commit_list.append(dinf.unset_field(db, 'admin'))
             commit_list.append(dinf.add_bit_flag(db, 'flags', INFRACTION_SYSTEM))
         elif isinstance(author, ObjectId):
-            
             if dinf.flags & INFRACTION_SYSTEM == INFRACTION_SYSTEM:
                 uwu('Owner', 'System', await load_admin_from_initiator(app, Initiator(mongo_id=str(author))).name)
             else:
-                uwu('Owner', await load_admin_from_initiator(app, Initiator(mongo_id=str(dinf.admin) if dinf.admin is not None else None)).name,
-                             await load_admin_from_initiator(app, Initiator(mongo_id=str(author))).name)
+                uwu(
+                    'Owner',
+                    await load_admin_from_initiator(
+                        app, Initiator(mongo_id=str(dinf.admin) if dinf.admin is not None else None)
+                    ).name,
+                    await load_admin_from_initiator(app, Initiator(mongo_id=str(author))).name,
+                )
 
             commit_list.append(dinf.update_field(db, 'admin', author))
             commit_list.append(dinf.remove_bit_flag(db, 'flags', INFRACTION_SYSTEM))
@@ -335,7 +425,7 @@ async def modify_infraction(app, target: ObjectId, author: Union[ObjectId, str, 
             v |= flag
         if v != 0:
             commit_list.append(dinf.remove_bit_flag(db, 'flags', v))
-    
+
     def exp_orig_value():
         if dinf.flags & INFRACTION_PERMANENT == INFRACTION_PERMANENT:
             return 'Permanent'
@@ -395,7 +485,11 @@ async def modify_infraction(app, target: ObjectId, author: Union[ObjectId, str, 
         commit_list.append(dinf.unset_field(db, 'server'))
         commit_list.append(dinf.add_bit_flag(db, 'flags', INFRACTION_WEB))
     elif server is not None:
-        uwu('Server', await _embed_host(app.state.db[MONGO_DB], dinf.server), await _embed_host(app.state.db[MONGO_DB], server))
+        uwu(
+            'Server',
+            await _embed_host(app.state.db[MONGO_DB], dinf.server),
+            await _embed_host(app.state.db[MONGO_DB], server),
+        )
         commit_list.append(dinf.remove_bit_flag(db, 'flags', INFRACTION_WEB))
         commit_list.append(dinf.update_field(db, 'server', server))
 
@@ -432,7 +526,7 @@ async def modify_infraction(app, target: ObjectId, author: Union[ObjectId, str, 
             return 'Text Block'
         elif a == 'ban':
             return 'Ban'
-        elif a  == 'admin_chat_block':
+        elif a == 'admin_chat_block':
             return 'Admin Chat Block'
         elif a == 'call_admin_block':
             return 'Call Admin Block'
@@ -444,7 +538,7 @@ async def modify_infraction(app, target: ObjectId, author: Union[ObjectId, str, 
     def _uwu2(a):
         if not a:
             return 'Warning'
-        
+
         return ', '.join([_lang(b) for b in a])
 
     if punishments is not None:
@@ -491,7 +585,7 @@ async def modify_infraction(app, target: ObjectId, author: Union[ObjectId, str, 
 
     for coro in commit_list:
         await coro
-    
+
     if removed is None:
         await discord_notify_edit_infraction(app, dinf, actor, changes)
     elif removed:
@@ -508,18 +602,25 @@ async def push_state_to_nodes(app, dinf: DInfraction):
     async def load_user(s, user):
         logger.debug('enter load_user')
 
-        local = build_query_dict(SERVER_KEY, str(s.id), gs_service=user.gs_service, gs_id=user.gs_id,
-                                 ignore_others=True, active_only=True)
+        local = build_query_dict(
+            SERVER_KEY, str(s.id), gs_service=user.gs_service, gs_id=user.gs_id, ignore_others=True, active_only=True
+        )
 
-        glob = build_query_dict(SERVER_KEY, str(s.id), gs_service=user.gs_service, gs_id=user.gs_id,
-                                ignore_others=False, active_only=True)
+        glob = build_query_dict(
+            SERVER_KEY, str(s.id), gs_service=user.gs_service, gs_id=user.gs_id, ignore_others=False, active_only=True
+        )
 
         ci_resp_local = await construct_ci_resp(app.state.db[MONGO_DB], local)
         ci_resp_global = await construct_ci_resp(app.state.db[MONGO_DB], glob)
 
-        r = DRPCPlayerUpdated(target_type='player', target_payload=PlayerObjNoIp(gs_service=user.gs_service,
-                                                                                 gs_id=user.gs_id), local=ci_resp_local,
-                              glob=ci_resp_global, time=datetime.now(tz=UTC), target=s.id)
+        r = DRPCPlayerUpdated(
+            target_type='player',
+            target_payload=PlayerObjNoIp(gs_service=user.gs_service, gs_id=user.gs_id),
+            local=ci_resp_local,
+            glob=ci_resp_global,
+            time=datetime.now(tz=UTC),
+            target=s.id,
+        )
 
         await r.commit(app.state.db[MONGO_DB])
 
@@ -533,8 +634,14 @@ async def push_state_to_nodes(app, dinf: DInfraction):
         ci_resp_local = await construct_ci_resp(app.state.db[MONGO_DB], local)
         ci_resp_global = await construct_ci_resp(app.state.db[MONGO_DB], glob)
 
-        r = DRPCPlayerUpdated(target_type='ip', target_payload=ip, local=ci_resp_local,
-                              glob=ci_resp_global, time=datetime.now(tz=UTC), target=s.id)
+        r = DRPCPlayerUpdated(
+            target_type='ip',
+            target_payload=ip,
+            local=ci_resp_local,
+            glob=ci_resp_global,
+            time=datetime.now(tz=UTC),
+            target=s.id,
+        )
 
         await r.commit(app.state.db[MONGO_DB])
 
@@ -547,6 +654,7 @@ async def push_state_to_nodes(app, dinf: DInfraction):
 
     await asyncio.gather(*gathers)
 
+
 _nouns = {
     INFRACTION_VOICE_BLOCK: 'Voice Chat Block',
     INFRACTION_CHAT_BLOCK: 'Text Chat Block',
@@ -554,19 +662,38 @@ _nouns = {
     INFRACTION_ADMIN_CHAT_BLOCK: 'Admin Chat Block',
     INFRACTION_CALL_ADMIN_BAN: 'Call Admin Block',
     INFRACTION_VOICE_BLOCK | INFRACTION_CHAT_BLOCK: 'Silence',
-    INFRACTION_ITEM_BLOCK: 'Item Block'
+    INFRACTION_ITEM_BLOCK: 'Item Block',
 }
+
 
 def punishment_noun(dinf: DInfraction) -> str:
     for k, v in _nouns.items():
-        others = (INFRACTION_VOICE_BLOCK | INFRACTION_CHAT_BLOCK | INFRACTION_BAN | INFRACTION_ADMIN_CHAT_BLOCK | INFRACTION_CALL_ADMIN_BAN | INFRACTION_ITEM_BLOCK) & ~k
+        others = (
+            INFRACTION_VOICE_BLOCK
+            | INFRACTION_CHAT_BLOCK
+            | INFRACTION_BAN
+            | INFRACTION_ADMIN_CHAT_BLOCK
+            | INFRACTION_CALL_ADMIN_BAN
+            | INFRACTION_ITEM_BLOCK
+        ) & ~k
 
         if dinf.flags & k == k and dinf.flags & others == 0:
             return v
-        
-        if dinf.flags & (INFRACTION_VOICE_BLOCK | INFRACTION_CHAT_BLOCK | INFRACTION_BAN | INFRACTION_ADMIN_CHAT_BLOCK | INFRACTION_CALL_ADMIN_BAN | INFRACTION_ITEM_BLOCK) == 0:
+
+        if (
+            dinf.flags
+            & (
+                INFRACTION_VOICE_BLOCK
+                | INFRACTION_CHAT_BLOCK
+                | INFRACTION_BAN
+                | INFRACTION_ADMIN_CHAT_BLOCK
+                | INFRACTION_CALL_ADMIN_BAN
+                | INFRACTION_ITEM_BLOCK
+            )
+            == 0
+        ):
             return 'Warning'
-        
+
     return 'Infraction'
 
 
@@ -594,14 +721,13 @@ async def embed_author(app, admin_id: Optional[ObjectId]):
 
         return {
             'name': adm.name,
-            'icon_url': f'http://{HOST}/static/images/fallback_av.png' if adm.avatar is None else f'http://{HOST}/file/uploads/{adm.avatar.gridfs_file}/avatar.webp',
-            'url': f'https://steamcommunity.com/profiles/{ips_get_gsid_from_member_id(adm.ips_id)}/'
+            'icon_url': f'http://{HOST}/static/images/fallback_av.png'
+            if adm.avatar is None
+            else f'http://{HOST}/file/uploads/{adm.avatar.gridfs_file}/avatar.webp',
+            'url': f'https://steamcommunity.com/profiles/{ips_get_gsid_from_member_id(adm.ips_id)}/',
         }
     else:
-        return {
-            'name': 'System',
-            'icon_url': f'http://{HOST}/static/images/fallback_av.png'
-        }
+        return {'name': 'System', 'icon_url': f'http://{HOST}/static/images/fallback_av.png'}
 
 
 def target_avatar(dinf: DInfraction):
@@ -614,7 +740,7 @@ def target_avatar(dinf: DInfraction):
 def target_link(dinf: DInfraction):
     if dinf.user is None:
         return 'IP Address'
-    
+
     name = 'Unknown Player' if dinf.user.gs_name is None else dinf.user.gs_name
 
     if dinf.user.gs_service == 'steam':
@@ -637,7 +763,10 @@ def embed_duration(dinf: DInfraction):
 
 
 async def discord_notify_create_infraction(app, dinf: DInfraction):
-    bot_name, bot_avatar = await get_var(app.state.db[MONGO_DB], 'bot.name', 'GFLBans Bot'), await get_var(app.state.db[MONGO_DB], 'bot.avatar', COMMUNITY_ICON)
+    bot_name, bot_avatar = (
+        await get_var(app.state.db[MONGO_DB], 'bot.name', 'GFLBans Bot'),
+        await get_var(app.state.db[MONGO_DB], 'bot.avatar', COMMUNITY_ICON),
+    )
 
     embed = {
         'username': bot_name,
@@ -648,48 +777,36 @@ async def discord_notify_create_infraction(app, dinf: DInfraction):
                 'color': 9371903,
                 'author': await embed_author(app, dinf.admin),
                 'url': f'http://{HOST}/infractions/{str(dinf.id)}/',
-                'thumbnail': {
-                    'url': target_avatar(dinf)
-                },
-                'footer': {
-                    'icon_url': GFLBANS_ICON,
-                    'text': await _embed_host(app.state.db[MONGO_DB], dinf.server)
-                },
+                'thumbnail': {'url': target_avatar(dinf)},
+                'footer': {'icon_url': GFLBANS_ICON, 'text': await _embed_host(app.state.db[MONGO_DB], dinf.server)},
                 'timestamp': datetime.fromtimestamp(dinf.created, tz=UTC).strftime('%Y-%m-%dT%H:%M:%SZ'),
                 'fields': [
-                    {
-                        'name': 'Player',
-                        'value': target_link(dinf),
-                        'inline': True
-                    },
-                    {
-                        'name': 'Duration',
-                        'value': embed_duration(dinf),
-                        'inline': True
-                    },
-                    {
-                        'name': 'Reason',
-                        'value': dinf.reason
-                    }
-                ]
+                    {'name': 'Player', 'value': target_link(dinf), 'inline': True},
+                    {'name': 'Duration', 'value': embed_duration(dinf), 'inline': True},
+                    {'name': 'Reason', 'value': dinf.reason},
+                ],
             }
-        ]
+        ],
     }
 
     if dinf.server is not None:
         srv = await DServer.from_id(app.state.db[MONGO_DB], dinf.server)
     else:
         srv = None
-    
+
     if srv is not None and srv.infract_webhook is not None:
-        async with app.state.aio_session.post(srv.infract_webhook + '?wait=true', headers={'User-Agent': 'gflbans (gflclan.com, 1.0)'}, json=embed) as resp:
+        async with app.state.aio_session.post(
+            srv.infract_webhook + '?wait=true', headers={'User-Agent': 'gflbans (gflclan.com, 1.0)'}, json=embed
+        ) as resp:
             try:
                 resp.raise_for_status()
             except Exception:
                 logger.error('Failed to post infraction to srv infract webhook', exc_info=True)
-    
+
     if GLOBAL_INFRACTION_WEBHOOK is not None:
-        async with app.state.aio_session.post(GLOBAL_INFRACTION_WEBHOOK + '?wait=true', headers={'User-Agent': 'gflbans (gflclan.com, 1.0)'}, json=embed) as resp:
+        async with app.state.aio_session.post(
+            GLOBAL_INFRACTION_WEBHOOK + '?wait=true', headers={'User-Agent': 'gflbans (gflclan.com, 1.0)'}, json=embed
+        ) as resp:
             try:
                 resp.raise_for_status()
             except Exception:
@@ -697,7 +814,10 @@ async def discord_notify_create_infraction(app, dinf: DInfraction):
 
 
 async def discord_notify_edit_infraction(app, dinf: DInfraction, editor: Optional[ObjectId], changes):
-    bot_name, bot_avatar = await get_var(app.state.db[MONGO_DB], 'bot.name', 'GFLBans Bot'), await get_var(app.state.db[MONGO_DB], 'bot.avatar', COMMUNITY_ICON)
+    bot_name, bot_avatar = (
+        await get_var(app.state.db[MONGO_DB], 'bot.name', 'GFLBans Bot'),
+        await get_var(app.state.db[MONGO_DB], 'bot.avatar', COMMUNITY_ICON),
+    )
 
     embed = {
         'username': bot_name,
@@ -708,39 +828,35 @@ async def discord_notify_edit_infraction(app, dinf: DInfraction, editor: Optiona
                 'color': 1104124,
                 'author': await embed_author(app, editor),
                 'url': f'http://{HOST}/infractions/{str(dinf.id)}/',
-                'thumbnail': {
-                    'url': target_avatar(dinf)
-                },
-                'footer': {
-                    'icon_url': GFLBANS_ICON,
-                    'text': await _embed_host(app.state.db[MONGO_DB], dinf.server)
-                },
+                'thumbnail': {'url': target_avatar(dinf)},
+                'footer': {'icon_url': GFLBANS_ICON, 'text': await _embed_host(app.state.db[MONGO_DB], dinf.server)},
                 'timestamp': datetime.fromtimestamp(dinf.created, tz=UTC).strftime('%Y-%m-%dT%H:%M:%SZ'),
-                'fields': []
+                'fields': [],
             }
-        ]
+        ],
     }
 
     for k, v in changes.items():
-        embed['embeds'][0]['fields'].append({
-            'name': k,
-            'value': f'~~{v["old"]}~~ → {v["new"]}'
-        })
+        embed['embeds'][0]['fields'].append({'name': k, 'value': f'~~{v["old"]}~~ → {v["new"]}'})
 
     if dinf.server is not None:
         srv = await DServer.from_id(app.state.db[MONGO_DB], dinf.server)
     else:
         srv = None
-    
+
     if srv is not None and srv.infract_webhook is not None:
-        async with app.state.aio_session.post(srv.infract_webhook + '?wait=true', headers={'User-Agent': 'gflbans (gflclan.com, 1.0)'}, json=embed) as resp:
+        async with app.state.aio_session.post(
+            srv.infract_webhook + '?wait=true', headers={'User-Agent': 'gflbans (gflclan.com, 1.0)'}, json=embed
+        ) as resp:
             try:
                 resp.raise_for_status()
             except Exception:
                 logger.error('Failed to post infraction to srv infract webhook', exc_info=True)
-    
+
     if GLOBAL_INFRACTION_WEBHOOK is not None:
-        async with app.state.aio_session.post(GLOBAL_INFRACTION_WEBHOOK + '?wait=true', headers={'User-Agent': 'gflbans (gflclan.com, 1.0)'}, json=embed) as resp:
+        async with app.state.aio_session.post(
+            GLOBAL_INFRACTION_WEBHOOK + '?wait=true', headers={'User-Agent': 'gflbans (gflclan.com, 1.0)'}, json=embed
+        ) as resp:
             try:
                 resp.raise_for_status()
             except Exception:
@@ -748,7 +864,10 @@ async def discord_notify_edit_infraction(app, dinf: DInfraction, editor: Optiona
 
 
 async def discord_notify_revoke_infraction(app, dinf: DInfraction, actor: Optional[ObjectId]):
-    bot_name, bot_avatar = await get_var(app.state.db[MONGO_DB], 'bot.name', 'GFLBans Bot'), await get_var(app.state.db[MONGO_DB], 'bot.avatar', COMMUNITY_ICON)
+    bot_name, bot_avatar = (
+        await get_var(app.state.db[MONGO_DB], 'bot.name', 'GFLBans Bot'),
+        await get_var(app.state.db[MONGO_DB], 'bot.avatar', COMMUNITY_ICON),
+    )
 
     embed = {
         'username': bot_name,
@@ -759,52 +878,37 @@ async def discord_notify_revoke_infraction(app, dinf: DInfraction, actor: Option
                 'color': 16711792,
                 'author': await embed_author(app, actor),
                 'url': f'http://{HOST}/infractions/{str(dinf.id)}/',
-                'thumbnail': {
-                    'url': target_avatar(dinf)
-                },
-                'footer': {
-                    'icon_url': GFLBANS_ICON,
-                    'text': await _embed_host(app.state.db[MONGO_DB], dinf.server)
-                },
+                'thumbnail': {'url': target_avatar(dinf)},
+                'footer': {'icon_url': GFLBANS_ICON, 'text': await _embed_host(app.state.db[MONGO_DB], dinf.server)},
                 'timestamp': datetime.fromtimestamp(dinf.removed, tz=UTC).strftime('%Y-%m-%dT%H:%M:%SZ'),
                 'fields': [
-                    {
-                        'name': 'Player',
-                        'value': target_link(dinf),
-                        'inline': True
-                    },
-                    {
-                        'name': 'Duration',
-                        'value': embed_duration(dinf),
-                        'inline': True
-                    },
-                    {
-                        'name': 'Reason',
-                        'value': dinf.reason
-                    },
-                    {
-                        "name": "Removal Reason",
-                        "value": dinf.ureason
-                    }
-                ]
+                    {'name': 'Player', 'value': target_link(dinf), 'inline': True},
+                    {'name': 'Duration', 'value': embed_duration(dinf), 'inline': True},
+                    {'name': 'Reason', 'value': dinf.reason},
+                    {'name': 'Removal Reason', 'value': dinf.ureason},
+                ],
             }
-        ]
+        ],
     }
 
     if dinf.server is not None:
         srv = await DServer.from_id(app.state.db[MONGO_DB], dinf.server)
     else:
         srv = None
-    
+
     if srv is not None and srv.infract_webhook is not None:
-        async with app.state.aio_session.post(srv.infract_webhook + '?wait=true', headers={'User-Agent': 'gflbans (gflclan.com, 1.0)'}, json=embed) as resp:
+        async with app.state.aio_session.post(
+            srv.infract_webhook + '?wait=true', headers={'User-Agent': 'gflbans (gflclan.com, 1.0)'}, json=embed
+        ) as resp:
             try:
                 resp.raise_for_status()
             except Exception:
                 logger.error('Failed to post infraction to srv infract webhook', exc_info=True)
-    
+
     if GLOBAL_INFRACTION_WEBHOOK is not None:
-        async with app.state.aio_session.post(GLOBAL_INFRACTION_WEBHOOK + '?wait=true', headers={'User-Agent': 'gflbans (gflclan.com, 1.0)'}, json=embed) as resp:
+        async with app.state.aio_session.post(
+            GLOBAL_INFRACTION_WEBHOOK + '?wait=true', headers={'User-Agent': 'gflbans (gflclan.com, 1.0)'}, json=embed
+        ) as resp:
             try:
                 resp.raise_for_status()
             except Exception:
@@ -812,7 +916,10 @@ async def discord_notify_revoke_infraction(app, dinf: DInfraction, actor: Option
 
 
 async def discord_notify_reinst_infraction(app, dinf: DInfraction, actor: Optional[ObjectId]):
-    bot_name, bot_avatar = await get_var(app.state.db[MONGO_DB], 'bot.name', 'GFLBans Bot'), await get_var(app.state.db[MONGO_DB], 'bot.avatar', COMMUNITY_ICON)
+    bot_name, bot_avatar = (
+        await get_var(app.state.db[MONGO_DB], 'bot.name', 'GFLBans Bot'),
+        await get_var(app.state.db[MONGO_DB], 'bot.avatar', COMMUNITY_ICON),
+    )
 
     embed = {
         'username': bot_name,
@@ -823,52 +930,41 @@ async def discord_notify_reinst_infraction(app, dinf: DInfraction, actor: Option
                 'color': 7339950,
                 'author': await embed_author(app, actor),
                 'url': f'http://{HOST}/infractions/{str(dinf.id)}/',
-                'thumbnail': {
-                    'url': target_avatar(dinf)
-                },
-                'footer': {
-                    'icon_url': GFLBANS_ICON,
-                    'text': await _embed_host(app.state.db[MONGO_DB], dinf.server)
-                },
+                'thumbnail': {'url': target_avatar(dinf)},
+                'footer': {'icon_url': GFLBANS_ICON, 'text': await _embed_host(app.state.db[MONGO_DB], dinf.server)},
                 'timestamp': datetime.now(tz=UTC).strftime('%Y-%m-%dT%H:%M:%SZ'),
                 'fields': [
-                    {
-                        'name': 'Player',
-                        'value': target_link(dinf),
-                        'inline': True
-                    },
-                    {
-                        'name': 'Duration',
-                        'value': embed_duration(dinf),
-                        'inline': True
-                    },
-                    {
-                        'name': 'Reason',
-                        'value': dinf.reason
-                    }
-                ]
+                    {'name': 'Player', 'value': target_link(dinf), 'inline': True},
+                    {'name': 'Duration', 'value': embed_duration(dinf), 'inline': True},
+                    {'name': 'Reason', 'value': dinf.reason},
+                ],
             }
-        ]
+        ],
     }
 
     if dinf.server is not None:
         srv = await DServer.from_id(app.state.db[MONGO_DB], dinf.server)
     else:
         srv = None
-    
+
     if srv is not None and srv.infract_webhook is not None:
-        async with app.state.aio_session.post(srv.infract_webhook + '?wait=true', headers={'User-Agent': 'gflbans (gflclan.com, 1.0)'}, json=embed) as resp:
+        async with app.state.aio_session.post(
+            srv.infract_webhook + '?wait=true', headers={'User-Agent': 'gflbans (gflclan.com, 1.0)'}, json=embed
+        ) as resp:
             try:
                 resp.raise_for_status()
             except Exception:
                 logger.error('Failed to post infraction to srv infract webhook', exc_info=True)
-    
+
     if GLOBAL_INFRACTION_WEBHOOK is not None:
-        async with app.state.aio_session.post(GLOBAL_INFRACTION_WEBHOOK + '?wait=true', headers={'User-Agent': 'gflbans (gflclan.com, 1.0)'}, json=embed) as resp:
+        async with app.state.aio_session.post(
+            GLOBAL_INFRACTION_WEBHOOK + '?wait=true', headers={'User-Agent': 'gflbans (gflclan.com, 1.0)'}, json=embed
+        ) as resp:
             try:
                 resp.raise_for_status()
             except Exception:
                 logger.error('Failed to post infraction to global infract webhook', exc_info=True)
+
 
 # If true, the target is immune!
 async def check_immunity(app, dinf: DInfraction, initiator_admin: Admin = None) -> bool:
@@ -876,17 +972,20 @@ async def check_immunity(app, dinf: DInfraction, initiator_admin: Admin = None) 
         return False
 
     try:
-        target_admin = await load_admin_from_initiator(app, Initiator(gs_admin=PlayerObjNoIp(
-            gs_service=dinf.user.gs_service, gs_id=dinf.user.gs_id)))
+        target_admin = await load_admin_from_initiator(
+            app, Initiator(gs_admin=PlayerObjNoIp(gs_service=dinf.user.gs_service, gs_id=dinf.user.gs_id))
+        )
     except NoSuchAdminError:
         return False
     except ClientResponseError as e:
         logger.error('Error whilst communicating with the forums', exc_info=e)
         raise HTTPException(detail='Internal Server Error', status_code=500)
 
-    if target_admin.permissions & PERMISSION_IMMUNE == PERMISSION_IMMUNE and \
-            initiator_admin is not None and \
-            initiator_admin.permissions & PERMISSION_SKIP_IMMUNITY != PERMISSION_SKIP_IMMUNITY:
+    if (
+        target_admin.permissions & PERMISSION_IMMUNE == PERMISSION_IMMUNE
+        and initiator_admin is not None
+        and initiator_admin.permissions & PERMISSION_SKIP_IMMUNITY != PERMISSION_SKIP_IMMUNITY
+    ):
         return True
 
     return False
