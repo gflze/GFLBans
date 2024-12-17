@@ -5,7 +5,7 @@ $(document).ready(function () {
 });
 
 function openSearchModal() {
-    let cl = $('#search-loading-modal');
+    const cl = $('#search-loading-modal');
 
     if (cl.hasClass('is-loading'))
         return;
@@ -13,7 +13,7 @@ function openSearchModal() {
     cl.addClass('is-loading');
 
     loadSearchModal().catch(logException);
-    
+
     cl.removeClass('is-loading');
 }
 
@@ -27,7 +27,7 @@ async function loadSearchModal() {
         $('#search-admin-admin-check').click(clickedAdminCheck);
         $('#search-admin-demoted-check').click(function() {
             $('#search-admin-info').removeClass('is-hidden');
-            $('#search-admin-field').addClass('is-hidden'); 
+            $('#search-admin-field').addClass('is-hidden');
         });
         $('#search-admin-system-check').click(function() {
             $('#search-admin-info').addClass('is-hidden');
@@ -59,15 +59,15 @@ async function loadSearchModal() {
         resetSearchModal();
 
         //Setup admins
-        let admins_req = await gbRequest('GET', '/api/admin/', null);
+        const admins_req = await gbRequest('GET', '/api/admin/', null);
 
         if (!admins_req.ok) {
             throw admins_req.error();
         }
 
-        let admins = await admins_req.json()
+        const admins = await admins_req.json();
 
-        let adminSel = $('#search-admin-selector');
+        const adminSel = $('#search-admin-selector');
 
         adminSel.empty();
 
@@ -76,7 +76,7 @@ async function loadSearchModal() {
         for (let i = 0; i < admins.length; i++) {
             if (admins[i]['permissions'] <= 0)
                 continue;
-            let el = $('<option>');
+            const el = $('<option>');
             if (admins[i]['admin_id'])
                 el.attr('value', admins[i]['admin_id']);
 
@@ -89,15 +89,15 @@ async function loadSearchModal() {
         }
 
         //Setup servers
-        let servers_req = await gbRequest('GET', '/api/server/', null);
+        const servers_req = await gbRequest('GET', '/api/server/', null);
 
         if (!servers_req.ok) {
             throw servers_req.error();
         }
 
-        let servers = await servers_req.json()
+        const servers = await servers_req.json();
 
-        let serverSel = $('#search-scope-server-selector');
+        const serverSel = $('#search-scope-server-selector');
 
         serverSel.empty();
 
@@ -106,7 +106,7 @@ async function loadSearchModal() {
         for (let i = 0; i < servers.length; i++) {
             if (!servers[i]['enabled'] || !servers[i]['id'])
                 continue;
-            let el = $('<option>');
+            const el = $('<option>');
             if (servers[i]['id'])
                 el.attr('value', servers[i]['id']);
 
@@ -135,7 +135,7 @@ async function loadSearchModal() {
 
     $('.search-dismiss-error').click(function () {
         $('#search-create-error').addClass('is-hidden');
-    })
+    });
 }
 
 function resetSearchModal() {
@@ -147,17 +147,17 @@ function resetSearchModal() {
     $('#search-user-ip').val('');
 
     // Admin
-    $('#search-admin-admin-check').trigger("click");
+    $('#search-admin-admin-check').trigger('click');
     $('#search-admin-name').val('');
     $('#search-admin-name').removeClass('is-hidden');
     $('#search-admin-id').val('');
     $('#search-admin-id').removeClass('is-hidden');
 
     // Scope
-    $('#search-scope-web-check').prop('checked', true).trigger("click");
+    $('#search-scope-web-check').prop('checked', true).trigger('click');
     $('#search-scope-server-check').prop('disabled', false);
     $('#search-scope-server-label').removeClass('is-hidden');
-    $('#search-scope-any-check').trigger("click");
+    $('#search-scope-any-check').trigger('click');
 
     // Reasons
     $('#search-reason-creation').val('');
@@ -168,10 +168,10 @@ function resetSearchModal() {
     $('.restriction-button').addClass('is-outlined');
 
     // Status
-    $('#search-status-any-check').trigger("click");
+    $('#search-status-any-check').trigger('click');
 
     // Time/Duration
-    $('#search-time-any-check').trigger("click");
+    $('#search-time-any-check').trigger('click');
     $('#search-time-duration-compare-selector').val('eq');
     $('#search-time-duration-entry').val('');
     $('#search-time-duration-unit-selector').val('h');
@@ -187,7 +187,7 @@ function resetSearchModal() {
 }
 
 function loadUrlParams() {
-    let getParams = new URLSearchParams(window.location.search);
+    const getParams = new URLSearchParams(window.location.search);
 
     // Quick search
     if (urlParams.has('search'))
@@ -195,48 +195,48 @@ function loadUrlParams() {
 
     // User
     if ($('#search-user-vpn-check').length && urlParams.has('is_vpn'))
-        $('#search-user-vpn-check').trigger("click");
+        $('#search-user-vpn-check').trigger('click');
     if (urlParams.has('gs_name'))
         $('#search-user-name').val(urlParams.get('gs_name'));
     if (urlParams.has('gs_id'))
         $('#search-user-gsid').val(urlParams.get('gs_id'));
     if (urlParams.has('gs_service'))
-        $('#search-user-service-selector').val(urlParams.get('gs_service')).trigger("click");
+        $('#search-user-service-selector').val(urlParams.get('gs_service')).trigger('click');
     if ($('#search-user-ip').length && urlParams.has('ip'))
         $('#search-user-ip').val(urlParams.get('ip'));
 
     // Admin
     if (urlParams.has('is_system'))
-        $('#search-admin-system-check').trigger("click");
+        $('#search-admin-system-check').trigger('click');
     else {
         if (urlParams.has('admin_id')) {
             if($(`#search-admin-selector [value="${urlParams.get('admin_id')}"]`).length) {
-                $('#search-admin-admin-check').trigger("click");
+                $('#search-admin-admin-check').trigger('click');
                 $('#search-admin-selector').val(urlParams.get('admin_id'));
             } else {
-                $('#search-admin-demoted-check').trigger("click");
+                $('#search-admin-demoted-check').trigger('click');
                 $('#search-admin-id').val(urlParams.get('admin_id')).trigger('input');
             }
         }
         if (urlParams.has('admin')) {
-            $('#search-admin-demoted-check').trigger("click");
+            $('#search-admin-demoted-check').trigger('click');
             $('#search-admin-name').val(urlParams.get('admin')).trigger('input');
         }
     }
 
     // Scope
     if (urlParams.has('is_web'))
-        $('#search-scope-web-check').trigger("click");
+        $('#search-scope-web-check').trigger('click');
     else if (urlParams.has('server'))
         $('#search-scope-server-selector').val(urlParams.get('server'));
 
     if (urlParams.has('is_global') && urlParams.get('is_global') === 'false'
         && urlParams.has('is_super_global') && urlParams.get('is_super_global') === 'false')
-        $('#search-scope-server-check').trigger("click");
+        $('#search-scope-server-check').trigger('click');
     else if (urlParams.has('is_global'))
-        $('#search-scope-global-check').trigger("click");
+        $('#search-scope-global-check').trigger('click');
     else if (urlParams.has('is_super_global'))
-        $('#search-scope-community-check').trigger("click");
+        $('#search-scope-community-check').trigger('click');
 
     // Reasons
     if (urlParams.has('reason'))
@@ -251,39 +251,39 @@ function loadUrlParams() {
         && urlParams.has('is_admin_chat') && urlParams.get('is_admin_chat') === 'false'
         && urlParams.has('is_call_admin') && urlParams.get('is_call_admin') === 'false'
         && urlParams.has('is_item') && urlParams.get('is_item') === 'false') {
-        $('#search-restriction-warning').trigger("click");
+        $('#search-restriction-warning').trigger('click');
     } else {
         if (urlParams.has('is_voice'))
-            $('#search-restriction-voice').trigger("click");
+            $('#search-restriction-voice').trigger('click');
         if (urlParams.has('is_text'))
-            $('#search-restriction-text').trigger("click");
+            $('#search-restriction-text').trigger('click');
         if (urlParams.has('is_ban'))
-            $('#search-restriction-join').trigger("click");
+            $('#search-restriction-join').trigger('click');
         if (urlParams.has('is_admin_chat'))
-            $('#search-restriction-admin-chat').trigger("click");
+            $('#search-restriction-admin-chat').trigger('click');
         if (urlParams.has('is_call_admin'))
-            $('#search-restriction-call-admin').trigger("click");
+            $('#search-restriction-call-admin').trigger('click');
         if (urlParams.has('is_item'))
-            $('#search-restriction-item').trigger("click");
+            $('#search-restriction-item').trigger('click');
     }
 
     // Status
     if (urlParams.has('is_expired'))
-        $('#search-status-expired-check').trigger("click");
+        $('#search-status-expired-check').trigger('click');
     else if (urlParams.has('is_active'))
-        $('#search-status-active-check').trigger("click");
+        $('#search-status-active-check').trigger('click');
     else if (urlParams.has('is_removed'))
-        $('#search-status-removed-check').trigger("click");
+        $('#search-status-removed-check').trigger('click');
 
     // Time/Duration
     if (urlParams.has('is_permanent'))
-        $('#search-time-permanent-check').trigger("click");
+        $('#search-time-permanent-check').trigger('click');
     else if (urlParams.has('is_session'))
-        $('#search-time-session-check').trigger("click");
+        $('#search-time-session-check').trigger('click');
     else if (urlParams.has('is_decl_online_only') && urlParams.get('is_decl_online_only') === 'false')
-        $('#search-time-real-world-timed-check').trigger("click");
+        $('#search-time-real-world-timed-check').trigger('click');
     else if (urlParams.has('is_decl_online_only'))
-        $('#search-time-game-timed-check').trigger("click");
+        $('#search-time-game-timed-check').trigger('click');
     if (urlParams.has('created')) {
         const timestamp = parseInt(getParams.get('created'), 10) * 1000;
         const date = new Date(timestamp);
@@ -333,7 +333,7 @@ function handleWebCheck() {
 }
 
 function toggleRestriction(target) {
-    let t = $(target);
+    const t = $(target);
 
     if (t.hasClass('ricon') && (t.hasClass('icon') || t.hasClass('fas'))) {
         toggleRestriction(target.parentNode);
@@ -359,7 +359,7 @@ function toggleRestriction(target) {
 
 function clickedAdminCheck() {
     $('#search-admin-info').addClass('is-hidden');
-    $('#search-admin-field').removeClass('is-hidden'); 
+    $('#search-admin-field').removeClass('is-hidden');
 }
 
 function handleTimeCheck() {
@@ -396,11 +396,11 @@ function handleStatusCheck() {
         $('#search-reason-removal').addClass('is-hidden');
     } else
         $('#search-reason-removal').removeClass('is-hidden');
-    handleTimeCheck()
+    handleTimeCheck();
 }
 
 function beginSearch() {
-    let createSearch = createSearchQuery();
+    const createSearch = createSearchQuery();
 
     // Failure, the second index is the error
     if (!createSearch[0]) {
@@ -423,7 +423,7 @@ function createSearchQuery() {
 
     if ($('#search-user-name').val().trim().length > 0)
         query = query.concat(`&gs_name=${$('#search-user-name').val().trim()}`);
-    
+
     if ($('#search-user-gsid').val().trim().length > 0) {
         query = query.concat(`&gs_id=${$('#search-user-gsid').val().trim()}`);
         query = query.concat(`&gs_service=${$('#search-user-service-selector').val()}`);
@@ -441,8 +441,7 @@ function createSearchQuery() {
 
         if ($('#search-admin-id').val().trim().length > 0)
             query = query.concat(`&admin_id=${$('#search-admin-id').val()}`);
-    }
-    else if ($('#search-admin-admin-check').prop('checked')) {
+    } else if ($('#search-admin-admin-check').prop('checked')) {
         if ($('#search-admin-selector').val().length > 1)
             query = query.concat(`&admin_id=${$('#search-admin-selector').val()}`);
     }
@@ -469,7 +468,14 @@ function createSearchQuery() {
 
     // Restriction
     if (!$('#search-restriction-warning').hasClass('is-outlined'))
-        query = query.concat('&is_voice=false&is_text=false&is_ban=false&is_admin_chat=false&is_call_admin=false&is_item=false');
+        query = query.concat(
+            '&is_voice=false'
+            + '&is_text=false'
+            + '&is_ban=false&'
+            + 'is_admin_chat=false&'
+            + 'is_call_admin=false'
+            + '&is_item=false'
+        );
     else {
         if (!$('#search-restriction-voice').hasClass('is-outlined'))
             query = query.concat('&is_voice=true');
@@ -489,9 +495,9 @@ function createSearchQuery() {
         if (!$('#search-restriction-item').hasClass('is-outlined'))
             query = query.concat('&is_item=true');
     }
-    
+
     // Time
-    if ($('#search-time-session-check').prop('checked')) 
+    if ($('#search-time-session-check').prop('checked'))
         query = query.concat('&is_session=true');
     else if ($('#search-time-permanent-check').prop('checked'))
         query = query.concat('&is_permanent=true');
@@ -500,50 +506,80 @@ function createSearchQuery() {
     else if ($('#search-time-real-world-timed-check').prop('checked'))
         query = query.concat('&is_decl_online_only=false');
 
-    if (!$('#search-time-date-creation-field').hasClass('is-hidden') && $('#search-time-date-creation').val().length > 0 &&
-        !$('#search-time-date-expiration-field').hasClass('is-hidden') && $('#search-time-date-expiration').val().length > 0 &&
-        $('#search-time-date-creation').val() >= $('#search-time-date-expiration').val()) {
-            return [false, 'Expiration Date must be after Creation Date']
+    if (
+        !$('#search-time-date-creation-field').hasClass('is-hidden')
+        && $('#search-time-date-creation').val().length > 0
+        && !$('#search-time-date-expiration-field').hasClass('is-hidden')
+        && $('#search-time-date-expiration').val().length > 0
+        && $('#search-time-date-creation').val() >= $('#search-time-date-expiration').val()
+    ) {
+        return [false, 'Expiration Date must be after Creation Date'];
     }
 
-    if (!$('#search-time-date-creation-field').hasClass('is-hidden') && $('#search-time-date-creation').val().length > 0) {
+    if (
+        !$('#search-time-date-creation-field').hasClass('is-hidden')
+        && $('#search-time-date-creation').val().length > 0
+    ) {
         const dateParts = $('#search-time-date-creation').val().split('-');
-        const localDate = new Date(parseInt(dateParts[0], 10), parseInt(dateParts[1], 10) - 1, parseInt(dateParts[2], 10));
+        const localDate = (
+            new Date(
+                parseInt(dateParts[0], 10),
+                parseInt(dateParts[1], 10) - 1,
+                parseInt(dateParts[2], 10)
+            )
+        );
         query = query.concat(`&created=${localDate.getTime()/1000}`);
         query = query.concat(`&created_comparison_mode=${$('#search-time-date-creation-compare-selector').val()}`);
     }
 
-    if (!$('#search-time-date-expiration-field').hasClass('is-hidden') && $('#search-time-date-expiration').val().length > 0) {
+    if (
+        !$('#search-time-date-expiration-field').hasClass('is-hidden')
+        && $('#search-time-date-expiration').val().length > 0
+    ) {
         const dateParts = $('#search-time-date-expiration').val().split('-');
-        const localDate = new Date(parseInt(dateParts[0], 10), parseInt(dateParts[1], 10) - 1, parseInt(dateParts[2], 10));
+        const localDate = new Date(
+            parseInt(dateParts[0], 10),
+            parseInt(dateParts[1], 10) - 1,
+            parseInt(dateParts[2], 10)
+        );
         query = query.concat(`&expires=${localDate.getTime()/1000}`);
         query = query.concat(`&expires_comparison_mode=${$('#search-time-date-expiration-compare-selector').val()}`);
     }
 
-    if (!$('#search-time-duration-field').hasClass('is-hidden') && $('#search-time-duration-entry').val().trim().length > 0) {
-        let n = parseInt($('#search-time-duration-entry').val())
+    if (
+        !$('#search-time-duration-field').hasClass('is-hidden')
+        && $('#search-time-duration-entry').val().trim().length > 0
+    ) {
+        const n = parseInt($('#search-time-duration-entry').val());
 
         if (Number.isNaN(n))
-            return [false, 'Total Time must be a number']
+            return [false, 'Total Time must be a number'];
         else if (n <= 0)
-            return [false, 'Total Time must be greater than zero']
+            return [false, 'Total Time must be greater than zero'];
 
         query = query.concat(`&duration=${n * timeMultipliers[$('#search-time-duration-unit-selector').val()]}`);
         query = query.concat(`&duration_comparison_mode=${$('#search-time-duration-compare-selector').val()}`);
     }
 
-    if (!$('#search-time-timeleft-field').hasClass('is-hidden') && $('#search-time-timeleft-entry').val().trim().length > 0) {
-        let n = parseInt($('#search-time-timeleft-entry').val())
+    if (
+        !$('#search-time-timeleft-field').hasClass('is-hidden')
+        && $('#search-time-timeleft-entry').val().trim().length > 0
+    ) {
+        const n = parseInt($('#search-time-timeleft-entry').val());
 
         if (Number.isNaN(n))
-            return [false, 'Time Left must be a number']
+            return [false, 'Time Left must be a number'];
         else if (n <= 0)
-            return [false, 'Time Left must be greater than zero']
-        
-        let dur = parseInt($('#search-time-duration-entry').val())
+            return [false, 'Time Left must be greater than zero'];
 
-        if (!Number.isNaN(dur) && n * timeMultipliers[$('#search-time-timeleft-unit-selector').val()] > dur * timeMultipliers[$('#search-time-duration-unit-selector').val()])
-            return [false, 'Time Left cannot be greater than Total Time']
+        const dur = parseInt($('#search-time-duration-entry').val());
+
+        if (
+            !Number.isNaN(dur)
+            && n * timeMultipliers[$('#search-time-timeleft-unit-selector').val()]
+                > dur * timeMultipliers[$('#search-time-duration-unit-selector').val()]
+        )
+            return [false, 'Time Left cannot be greater than Total Time'];
 
         query = query.concat(`&time_left=${n * timeMultipliers[$('#search-time-timeleft-unit-selector').val()]}`);
         query = query.concat(`&time_left_comparison_mode=${$('#search-time-timeleft-compare-selector').val()}`);
@@ -559,7 +595,7 @@ function createSearchQuery() {
 
 
     if (query.length == 0)
-        return [false, 'You must give at least 1 search parameter']
+        return [false, 'You must give at least 1 search parameter'];
     else
         return [true, '?' + query.trim().substring(1)];
 }
@@ -571,4 +607,4 @@ const timeMultipliers = {
     'w':  3600 * 24 * 7,
     'mo': 3600 * 24 * 30,
     'y':  3600 * 24 * 365
-}
+};

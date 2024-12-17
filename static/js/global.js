@@ -3,7 +3,7 @@ const PERMISSION = Object.freeze({
     COMMENT: 1 << 1,
     VIEW_IP_ADDR: 1 << 2,
     CREATE_INFRACTION: 1 << 3,
-    EDIT_OWN_INFRACTIONS: 1 << 4, // Deprecated, all admins with PERMISSION.CREATE_INFRACTION can edit their own punishments.
+    EDIT_OWN_INFRACTIONS: 1 << 4, // Deprecated, if admin can create, they can edit their own
     EDIT_ALL_INFRACTIONS: 1 << 5,
     ATTACH_FILE: 1 << 6,
     WEB_MODERATOR: 1 << 7, // Can edit or delete comments/files on infractions
@@ -50,46 +50,47 @@ const INFRACTION = Object.freeze({
 });
 
 const searchParams = [
-    "created",
-    "created_comparison_mode",
-    "expires",
-    "expires_comparison_mode",
-    "time_left",
-    "time_left_comparison_mode",
-    "duration",
-    "duration_comparison_mode",
-    
-    "gs_service",
-    "gs_id",
-    "gs_name",
-    "ip",
-    "admin_id",
-    "server",
-    "reason",
-    "ureason",
+    'created',
+    'created_comparison_mode',
+    'expires',
+    'expires_comparison_mode',
+    'time_left',
+    'time_left_comparison_mode',
+    'duration',
+    'duration_comparison_mode',
 
-    "search",
-    "admin",
-    "is_expired",
-    "is_active",
+    'gs_service',
+    'gs_id',
+    'gs_name',
+    'ip',
+    'admin_id',
+    'server',
+    'reason',
+    'ureason',
 
-    "is_system",
-    "is_global",
-    "is_super_global",
-    "is_permanent",
-    "is_vpn",
-    "is_web",
-    "is_removed",
-    "is_voice",
-    "is_text",
-    "is_ban",
-    "is_admin_chat",
-    "is_call_admin",
-    "is_item",
-    "is_session",
-    "is_decl_online_only"
-]
+    'search',
+    'admin',
+    'is_expired',
+    'is_active',
 
+    'is_system',
+    'is_global',
+    'is_super_global',
+    'is_permanent',
+    'is_vpn',
+    'is_web',
+    'is_removed',
+    'is_voice',
+    'is_text',
+    'is_ban',
+    'is_admin_chat',
+    'is_call_admin',
+    'is_item',
+    'is_session',
+    'is_decl_online_only'
+];
+
+/* eslint-disable-next-line max-len */
 const defaultError = 'An error occurred while loading this page. Try again in a few minutes or contact the host if the problem persists.';
 const defaultAPIError = 'Received not OK response from the API.';
 
@@ -120,13 +121,13 @@ async function gbRequest(method='GET', url='', data={}, send_token=false) {
 
 $(document).ready(function () {
     //Toggle the burger for mobile mode
-    $(".navbar-burger").click(function () {
-        $(".navbar-burger").toggleClass("is-active");
-        $(".navbar-menu").toggleClass("is-active");
+    $('.navbar-burger').click(function () {
+        $('.navbar-burger').toggleClass('is-active');
+        $('.navbar-menu').toggleClass('is-active');
     });
 
     //Switch between light and dark mode
-    $("#dark-mode-toggle").click(function () {
+    $('#dark-mode-toggle').click(function () {
 
         gbRequest('GET', '/toggle_theme').then(resp => {
             if (resp.ok) {
@@ -140,11 +141,11 @@ $(document).ready(function () {
         });
     });
 
-    $(".modal-close").click(function () {
+    $('.modal-close').click(function () {
         closeModals();
     });
 
-    $(".modal-background").click(function () {
+    $('.modal-background').click(function () {
         if (this.hasAttribute('no-click')) {
             return;
         }
@@ -153,21 +154,21 @@ $(document).ready(function () {
 });
 
 function closeModals() {
-    $('.modal').removeClass('is-active')
-    $('#htmlRoot').removeClass('is-clipped')
+    $('.modal').removeClass('is-active');
+    $('#htmlRoot').removeClass('is-clipped');
 }
 
 //Utility function to get a meta attribute
 function getMeta(metaName) {
-  const metas = document.getElementsByTagName('meta');
+    const metas = document.getElementsByTagName('meta');
 
-  for (let i = 0; i < metas.length; i++) {
-    if (metas[i].getAttribute('name') === metaName) {
-      return metas[i].getAttribute('content');
+    for (let i = 0; i < metas.length; i++) {
+        if (metas[i].getAttribute('name') === metaName) {
+            return metas[i].getAttribute('content');
+        }
     }
-  }
 
-  return '';
+    return '';
 }
 
 function showError(error_message=defaultError) {
@@ -182,8 +183,8 @@ function showError(error_message=defaultError) {
 
 function getProfileUrl(ply) {
     switch (ply['gs_service']) {
-        case "steam": return "//steamcommunity.com/profiles/" + ply['gs_id'];
-        default: return null;
+    case 'steam': return '//steamcommunity.com/profiles/' + ply['gs_id'];
+    default: return null;
     }
 }
 
@@ -199,13 +200,13 @@ async function get_admin(admin_id) {
         return admin_cache.get(admin_id);
     }
 
-    let resp = await gbRequest('GET', '/api/gs/admininfo?ips_id=' + admin_id, null)
+    let resp = await gbRequest('GET', '/api/gs/admininfo?ips_id=' + admin_id, null);
 
     if (!resp.ok) {
         throw 'Received Not-OK from API';
     }
 
-    let data = await resp.json()
+    let data = await resp.json();
 
     admin_cache.set(admin_id, data);
 
@@ -222,11 +223,11 @@ function insertParam(key, value) {
     document.location.search = sp.toString();
 }
 
-async function uploadAttachment(infraction, filename, fi, private=false) {
-    let hdrs = {'Content-Type': "application/octet-stream", 'X-CSRF-TOKEN': getMeta('csrf_token')};
+async function uploadAttachment(infraction, filename, fi, notPublic=false) {
+    let hdrs = {'Content-Type': 'application/octet-stream', 'X-CSRF-TOKEN': getMeta('csrf_token')};
 
-    if (private) {
-        hdrs['X-Set-Private'] = "true"
+    if (notPublic) {
+        hdrs['X-Set-Private'] = 'true';
     }
 
     let resp = await fetch('/api/infractions/' + infraction + '/attachment/' + filename, {
@@ -248,10 +249,10 @@ async function uploadAttachment(infraction, filename, fi, private=false) {
 }
 
 document.addEventListener('load', function () {
-    $('.set-default-on-error').on("error", function () {
+    $('.set-default-on-error').on('error', function () {
         this.setAttribute('src', '/static/images/fallback_av.png');
         this.classList.remove('set-default-on-error');
-    })
+    });
 });
 
 function logException(e) {

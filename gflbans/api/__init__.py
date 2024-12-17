@@ -1,5 +1,7 @@
 from fastapi import APIRouter
 
+from gflbans.api.admin import admin_router
+from gflbans.api.api_key import api_key_router
 from gflbans.api.group import group_router
 from gflbans.api.gs import gs_router
 from gflbans.api.infraction import infraction_router
@@ -7,8 +9,6 @@ from gflbans.api.map_images import map_image_router
 from gflbans.api.rpc import rpc_router
 from gflbans.api.server import server_router
 from gflbans.api.statistics import statistics_router
-from gflbans.api.api_key import api_key_router
-from gflbans.api.admin import admin_router
 
 api = APIRouter()
 

@@ -13,8 +13,10 @@
             <article class="media">
                 <div class="media-left">
                     <figure class="image is-64x64 crop-to-container server-map-image">
-                        <img id="avatar_img" class="is-rounded set-default-on-error"
-                             src="/static/images/fallback_av.png" alt="UserAV">
+                        <img id="avatar_img"
+                             class="is-rounded set-default-on-error"
+                             src="/static/images/fallback_av.png"
+                             alt="UserAV">
                     </figure>
                 </div>
                 <div class="media-content">
@@ -23,21 +25,20 @@
                             <div class="is-flex is-justify-content-flex-center is-align-items-center">
                                 <strong id="user_name" class="text-primary">Aurora</strong>
                                 <small id="createdAt" class="is-flex-grow-1">March 10, 2021 @ 09:24 AM</small>
-
                                 <div id="infMenu" class="dropdown is-right is-hoverable">
-                                  <div class="dropdown-trigger">
-                                    <a id="infOptions" class="fas fa-cog"></a>
-                                  </div>
-                                  <div class="dropdown-menu" id="dropdown-menu6" role="menu">
-                                    <div class="dropdown-content background-primary">
-                                        <div class="dropdown-item" id="triggerRemoveVis">
-                                        <a id="triggerRemove">Remove</a>
-                                      </div>
-                                        <div class="dropdown-item" id="triggerReinstVis">
-                                            <a id="triggerReinstate">Reinstate</a>
+                                    <div class="dropdown-trigger">
+                                        <a id="infOptions" class="fas fa-cog"></a>
+                                    </div>
+                                    <div class="dropdown-menu" id="dropdown-menu6" role="menu">
+                                        <div class="dropdown-content background-primary">
+                                            <div class="dropdown-item" id="triggerRemoveVis">
+                                                <a id="triggerRemove">Remove</a>
+                                            </div>
+                                            <div class="dropdown-item" id="triggerReinstVis">
+                                                <a id="triggerReinstate">Reinstate</a>
+                                            </div>
                                         </div>
                                     </div>
-                                  </div>
                                 </div>
                             </div>
                             <div class="tags">
@@ -50,307 +51,341 @@
                             <div class="table-container">
                                 <table class="table background-secondary text-primary">
                                     <tbody class="is-borderless scrollable-table inf-view-tab">
-                                    <tr id="idContainer">
-                                        <td id="idLabel">ID</td>
-                                        <td id="idValue" class="data-cell"></td>
-                                    </tr>
-                                    <tr id="ipContainer">
-                                        <td id="ipLabel">IP Address</td>
-                                        <td id="ipValue" class="data-cell"></td>
-                                    </tr>
-                                    <tr>
-                                        <td>Time Left</td>
-                                        <td id="timeValue" class="data-cell"></td>
-                                        <td id="timeEditCell" class="edit-cell">
-                                            <div class="field has-addons">
-                                                <div class="control">
-                                                    <input id="editTimeTime" class="input is-small" type="text" placeholder="Length">
+                                        <tr id="idContainer">
+                                            <td id="idLabel">ID</td>
+                                            <td id="idValue" class="data-cell"></td>
+                                        </tr>
+                                        <tr id="ipContainer">
+                                            <td id="ipLabel">IP Address</td>
+                                            <td id="ipValue" class="data-cell"></td>
+                                        </tr>
+                                        <tr>
+                                            <td>Time Left</td>
+                                            <td id="timeValue" class="data-cell"></td>
+                                            <td id="timeEditCell" class="edit-cell">
+                                                <div class="field has-addons">
+                                                    <div class="control">
+                                                        <input id="editTimeTime"
+                                                               class="input is-small"
+                                                               type="text"
+                                                               placeholder="Length">
+                                                    </div>
+                                                    <div class="control">
+                                                        <div class="select is-small">
+                                                            <select id="editTimeUnitSelect">
+                                                                <option value="m" selected>Minutes</option>
+                                                                <option value="h">Hours</option>
+                                                                <option value="d">Days</option>
+                                                                <option value="w">Weeks</option>
+                                                                <option value="mo">Months</option>
+                                                                <option value="y">Years</option>
+                                                            </select>
+                                                        </div>
+                                                    </div>
+                                                    <div class="control">
+                                                        <a id="editTimePerm" class="button is-light is-warning is-small">
+                                                            <i class="fas fa-infinity"></i>
+                                                        </a>
+                                                    </div>
+                                                    <div class="control">
+                                                        <a id="editTimeTimeDec" class="button is-light is-small">
+                                                            <i class="fas fa-pause"></i>
+                                                        </a>
+                                                    </div>
+                                                    <div class="control">
+                                                        <a id="cancelEditTime" class="button is-danger is-small">
+                                                            <i class="fas fa-ban"></i>
+                                                        </a>
+                                                    </div>
+                                                    <div class="control">
+                                                        <a id="submitEditTime" class="button is-success is-small">
+                                                            <i class="fas fa-save"></i>
+                                                        </a>
+                                                    </div>
                                                 </div>
-                                                <div class="control">
-                                                    <div class="select is-small">
-                                                    <select id="editTimeUnitSelect">
-                                                        <option value="m" selected>Minutes</option>
-                                                        <option value="h">Hours</option>
-                                                        <option value="d">Days</option>
-                                                        <option value="w">Weeks</option>
-                                                        <option value="mo">Months</option>
-                                                        <option value="y">Years</option>
-                                                    </select>
+                                            </td>
+                                            <td>
+                                                <a id="editTime" class="fas fa-pen edit text-primary"></a>
+                                            </td>
+                                        </tr>
+                                        <tr id="adminContainer">
+                                            <td>Issued By</td>
+                                            <td id="issuedValue" class="data-cell"></td>
+                                        </tr>
+                                        <tr id="serverContainer">
+                                            <td>Server</td>
+                                            <td id="serverValue" class="data-cell"></td>
+                                            <td id="serverEditCell" class="edit-cell min-50p">
+                                                <div class="field has-addons">
+                                                    <div class="control is-expanded">
+                                                        <div class="select is-small is-fullwidth">
+                                                            <select id="editServerServer">
+                                                                <option value="web" selected>Web</option>
+                                                            </select>
+                                                        </div>
+                                                    </div>
+                                                    <div class="control">
+                                                        <a id="cancelEditServer" class="button is-danger is-small">
+                                                            <i class="fas fa-ban"></i>
+                                                        </a>
+                                                    </div>
+                                                    <div class="control">
+                                                        <a id="submitEditServer" class="button is-success is-small">
+                                                            <i class="fas fa-save"></i>
+                                                        </a>
+                                                    </div>
                                                 </div>
+                                            </td>
+                                            <td>
+                                                <a id="editServer" class="fas fa-pen edit text-primary"></a>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>Scope</td>
+                                            <td id="scopeValue" class="data-cell"></td>
+                                            <td id="scopeEditCell" class="edit-cell min-50p">
+                                                <div class="field has-addons">
+                                                    <div class="control is-expanded">
+                                                        <div class="select is-small is-fullwidth">
+                                                            <select id="editScopeScope">
+                                                                <option class="oeserver" value="server" selected>Server Only</option>
+                                                                <option class="oeserver" value="global">Global</option>
+                                                                <option class="oeserver" value="community">Community</option>
+                                                            </select>
+                                                        </div>
+                                                    </div>
+                                                    <div class="control">
+                                                        <a id="cancelEditScope" class="button is-danger is-small">
+                                                            <i class="fas fa-ban"></i>
+                                                        </a>
+                                                    </div>
+                                                    <div class="control">
+                                                        <a id="submitEditScope" class="button is-success is-small">
+                                                            <i class="fas fa-save"></i>
+                                                        </a>
+                                                    </div>
                                                 </div>
-                                                <div class="control">
-                                                    <a id="editTimePerm" class="button is-light is-warning is-small">
-                                                        <i class="fas fa-infinity"></i>
-                                                    </a>
+                                            </td>
+                                            <td>
+                                                <a id="editScope" class="fas fa-pen edit text-primary"></a>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>Reason</td>
+                                            <td id="reasonValue" class="mw-100 data-cell wrappable"></td>
+                                            <td id="reasonEditCell" class="edit-cell mw-100">
+                                                <div class="field has-addons">
+                                                    <div class="control is-expanded">
+                                                        <input id="editReasonReason"
+                                                               type="text"
+                                                               maxlength="280"
+                                                               class="input is-small"
+                                                               placeholder="Reason">
+                                                    </div>
+                                                    <div class="control">
+                                                        <a id="cancelEditReason" class="button is-danger is-small">
+                                                            <i class="fas fa-ban"></i>
+                                                        </a>
+                                                    </div>
+                                                    <div class="control">
+                                                        <a id="submitEditReason" class="button is-success is-small">
+                                                            <i class="fas fa-save"></i>
+                                                        </a>
+                                                    </div>
                                                 </div>
-                                                <div class="control">
-                                                    <a id="editTimeTimeDec" class="button is-light is-small">
-                                                        <i class="fas fa-pause"></i>
-                                                    </a>
-                                                </div>
-                                                <div class="control">
-                                                    <a id="cancelEditTime" class="button is-danger is-small">
-                                                        <i class="fas fa-ban"></i>
-                                                    </a>
-                                                </div>
-                                                <div class="control">
-                                                    <a id="submitEditTime" class="button is-success is-small">
-                                                        <i class="fas fa-save"></i>
-                                                    </a>
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td><a id="editTime" class="fas fa-pen edit text-primary"></a></td>
-                                    </tr>
-                                    <tr id="adminContainer">
-                                        <td>Issued By</td>
-                                        <td id="issuedValue" class="data-cell"></td>
-                                    </tr>
-                                    <tr id="serverContainer">
-                                        <td>Server</td>
-                                        <td id="serverValue" class="data-cell"></td>
-                                        <td id="serverEditCell" class="edit-cell min-50p">
-                                            <div class="field has-addons">
-                                                <div class="control is-expanded">
-                                                    <div class="select is-small is-fullwidth">
-                                                    <select id="editServerServer">
-                                                        <option value="web" selected>Web</option>
-                                                    </select>
-                                                </div>
-                                                </div>
-                                                <div class="control">
-                                                    <a id="cancelEditServer" class="button is-danger is-small">
-                                                        <i class="fas fa-ban"></i>
-                                                    </a>
-                                                </div>
-                                                <div class="control">
-                                                    <a id="submitEditServer" class="button is-success is-small">
-                                                        <i class="fas fa-save"></i>
-                                                    </a>
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td><a id="editServer" class="fas fa-pen edit text-primary"></a></td>
-                                    </tr>
-                                    <tr>
-                                        <td>Scope</td>
-                                        <td id="scopeValue" class="data-cell"></td>
-                                        <td id="scopeEditCell" class="edit-cell min-50p">
-                                            <div class="field has-addons">
-                                                <div class="control is-expanded">
-                                                    <div class="select is-small is-fullwidth">
-                                                    <select id="editScopeScope">
-                                                        <option class="oeserver" value="server" selected>Server Only</option>
-                                                        <option class="oeserver" value="global">Global</option>
-                                                        <option class="oeserver" value="community">Community</option>
-                                                    </select>
-                                                </div>
-                                                </div>
-                                                <div class="control">
-                                                    <a id="cancelEditScope" class="button is-danger is-small">
-                                                        <i class="fas fa-ban"></i>
-                                                    </a>
-                                                </div>
-                                                <div class="control">
-                                                    <a id="submitEditScope" class="button is-success is-small">
-                                                        <i class="fas fa-save"></i>
-                                                    </a>
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td><a id="editScope" class="fas fa-pen edit text-primary"></a></td>
-                                    </tr>
-                                    <tr>
-                                        <td>Reason</td>
-                                        <td id="reasonValue" class="mw-100 data-cell wrappable"></td>
-                                        <td id="reasonEditCell" class="edit-cell mw-100">
-                                            <div class="field has-addons">
-                                                <div class="control is-expanded">
-                                                    <input id="editReasonReason" type="text" maxlength="280" class="input is-small" placeholder="Reason">
-                                                </div>
-                                                <div class="control">
-                                                    <a id="cancelEditReason" class="button is-danger is-small">
-                                                        <i class="fas fa-ban"></i>
-                                                    </a>
-                                                </div>
-                                                <div class="control">
-                                                    <a id="submitEditReason" class="button is-success is-small">
-                                                        <i class="fas fa-save"></i>
-                                                    </a>
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td><a id="editReason" class="fas fa-pen edit text-primary"></a></td>
-                                    </tr>
-                                    <tr>
-                                        <td>Restrictions</td>
-                                        <td id="restrictionsValue" class="data-cell">
-                                            <div class="tags">
-                                                <span id="voiceChatFlag" class="ptag tag has-background-voice">
-                                                    <span class="icon is-small ricon">
-                                                        <i class="fas fa-volume-mute ricon"></i>
+                                            </td>
+                                            <td>
+                                                <a id="editReason" class="fas fa-pen edit text-primary"></a>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>Restrictions</td>
+                                            <td id="restrictionsValue" class="data-cell">
+                                                <div class="tags">
+                                                    <span id="voiceChatFlag" class="ptag tag has-background-voice">
+                                                        <span class="icon is-small ricon">
+                                                            <i class="fas fa-volume-mute ricon"></i>
+                                                        </span>
+                                                        Voice
                                                     </span>
-                                                    Voice
-                                                </span>
-                                                <span id="textChatFlag" class="ptag tag has-background-text">
-                                                    <span class="icon is-small ricon">
-                                                        <i class="fas fa-comment-slash ricon"></i>
+                                                    <span id="textChatFlag" class="ptag tag has-background-text">
+                                                        <span class="icon is-small ricon">
+                                                            <i class="fas fa-comment-slash ricon"></i>
+                                                        </span>
+                                                        Text
                                                     </span>
-                                                    Text
-                                                </span>
-                                                <span id="banFlag" class="ptag tag has-background-ban">
-                                                    <span class="icon is-small ricon">
-                                                        <i class="fas fa-ban ricon"></i>
+                                                    <span id="banFlag" class="ptag tag has-background-ban">
+                                                        <span class="icon is-small ricon">
+                                                            <i class="fas fa-ban ricon"></i>
+                                                        </span>
+                                                        Ban
                                                     </span>
-                                                    Ban
-                                                </span>
-                                                <span id="adminChatFlag" class="ptag tag has-background-adminchat">
-                                                    <span class="icon is-small ricon">
-                                                        <i class="fas fa-hands-helping ricon"></i>
+                                                    <span id="adminChatFlag" class="ptag tag has-background-adminchat">
+                                                        <span class="icon is-small ricon">
+                                                            <i class="fas fa-hands-helping ricon"></i>
+                                                        </span>
+                                                        Admin Chat
                                                     </span>
-                                                    Admin Chat
-                                                </span>
-                                                <span id="callAdminFlag" class="ptag tag has-background-calladmin">
-                                                    <span class="icon is-small ricon">
-                                                        <i class="fas fa-phone-slash ricon"></i>
+                                                    <span id="callAdminFlag" class="ptag tag has-background-calladmin">
+                                                        <span class="icon is-small ricon">
+                                                            <i class="fas fa-phone-slash ricon"></i>
+                                                        </span>
+                                                        Call Admin
                                                     </span>
-                                                    Call Admin
-                                                </span>
-                                                <span id="itemFlag" class="ptag tag has-background-item">
-                                                    <span class="icon is-small ricon">
-                                                        <i class="fas fa-virus-slash ricon"></i>
+                                                    <span id="itemFlag" class="ptag tag has-background-item">
+                                                        <span class="icon is-small ricon">
+                                                            <i class="fas fa-virus-slash ricon"></i>
+                                                        </span>
+                                                        Item
                                                     </span>
-                                                    Item
-                                                </span>
-                                                <span id="warningFlag" class="ptag tag has-background-warning">
-                                                    <span class="icon is-small ricon">
-                                                        <i class="fas fa-exclamation-triangle ricon"></i>
+                                                    <span id="warningFlag" class="ptag tag has-background-warning">
+                                                        <span class="icon is-small ricon">
+                                                            <i class="fas fa-exclamation-triangle ricon"></i>
+                                                        </span>
+                                                        Warning
                                                     </span>
-                                                    Warning
-                                                </span>
-                                            </div>
-                                        </td>
-                                        <td id="restrictionsEditCell" class="is-hidden edit-cell">
-                                            <div class="tags">
-                                                {% if user is not none and has_flag(user.permissions, p_nodes['Restrict Voice']) %}
-                                                <a id="voiceChatFlagEdit" data-punishment="voice_block" data-target="voiceChatFlag" class="etag tag has-background-voice">
-                                                    <span class="icon is-small ricon">
-                                                        <i class="fas fa-volume-mute ricon"></i>
-                                                    </span>
-                                                    Voice
-                                                </a>
-                                                {% endif %}
-                                                {% if user is not none and has_flag(user.permissions, p_nodes['Restrict Text']) %}
-                                                <a id="textChatFlagEdit" data-punishment="chat_block" data-target="textChatFlag" class="tag etag has-background-text">
-                                                    <span class="icon is-small ricon">
-                                                        <i class="fas fa-comment-slash ricon"></i>
-                                                    </span>
-                                                    Text
-                                                </a>
-                                                {% endif %}
-                                                {% if user is not none and has_flag(user.permissions, p_nodes['Ban']) %}
-                                                <a id="banFlagEdit" data-punishment="ban" data-target="banFlag" class="etag tag has-background-ban">
-                                                    <span class="icon is-small ricon">
-                                                        <i class="fas fa-ban ricon"></i>
-                                                    </span>
-                                                    Ban
-                                                </a>
-                                                {% endif %}
-                                                {% if user is not none and has_flag(user.permissions, p_nodes['Restrict Admin Chat']) %}
-                                                <a id="adminChatFlagEdit" data-punishment="admin_chat_block" data-target="adminChatFlag" class="tag etag has-background-adminchat">
-                                                    <span class="icon is-small ricon">
-                                                        <i class="fas fa-hands-helping ricon"></i>
-                                                    </span>
-                                                    Admin Chat
-                                                </a>
-                                                {% endif %}
-                                                {% if user is not none and has_flag(user.permissions, p_nodes['Restrict Call Admin']) %}
-                                                <a id="callAdminFlagEdit" data-punishment="call_admin_block" data-target="callAdminFlag" class="tag etag has-background-calladmin">
-                                                    <span class="icon is-small ricon">
-                                                        <i class="fas fa-phone-slash ricon"></i>
-                                                    </span>
-                                                    Call Admin
-                                                </a>
-                                                {% endif %}
-                                                {% if user is not none and has_flag(user.permissions, p_nodes['Restrict Map Items']) %}
-                                                <a id="itemFlagEdit" data-punishment="item_block" data-target="itemFlag" class="tag etag has-background-item">
-                                                    <span class="icon is-small ricon">
-                                                        <i class="fas fa-virus-slash ricon"></i>
-                                                    </span>
-                                                    Item
-                                                </a>
-                                                {% endif %}
-                                            </div>
-                                        </td>
-                                        <td id="restrictionsEdit"><a class="fas fa-pen edit text-primary"></a></td>
-                                        <td id="restrictionsCancel"><a id="restrictionsCancelIcon" class="fas fa-undo text-primary"></a></td>
-                                    </tr>
-                                    <tr class="rmEl">
-                                        <td>Rm. At</td>
-                                        <td id="removedOnValue" class="data-cell"></td>
-                                    </tr>
-                                    <tr class="rmEl">
-                                        <td>Rm. By</td>
-                                        <td id="removedByValue" class="data-cell"></td>
-                                    </tr>
-                                    <tr class="rmEl">
-                                        <td>Rm. Reason</td>
-                                        <td id="removedReasonValue" class="data-cell"></td>
-                                    </tr>
+                                                </div>
+                                            </td>
+                                            <td id="restrictionsEditCell" class="is-hidden edit-cell">
+                                                <div class="tags">
+                                                    {% if user is not none and has_flag(user.permissions, p_nodes['Restrict Voice']) %}
+                                                        <a id="voiceChatFlagEdit"
+                                                           data-punishment="voice_block"
+                                                           data-target="voiceChatFlag"
+                                                           class="etag tag has-background-voice">
+                                                            <span class="icon is-small ricon">
+                                                                <i class="fas fa-volume-mute ricon"></i>
+                                                            </span>
+                                                            Voice
+                                                        </a>
+                                                    {% endif %}
+                                                    {% if user is not none and has_flag(user.permissions, p_nodes['Restrict Text']) %}
+                                                        <a id="textChatFlagEdit"
+                                                           data-punishment="chat_block"
+                                                           data-target="textChatFlag"
+                                                           class="tag etag has-background-text">
+                                                            <span class="icon is-small ricon">
+                                                                <i class="fas fa-comment-slash ricon"></i>
+                                                            </span>
+                                                            Text
+                                                        </a>
+                                                    {% endif %}
+                                                    {% if user is not none and has_flag(user.permissions, p_nodes['Ban']) %}
+                                                        <a id="banFlagEdit"
+                                                           data-punishment="ban"
+                                                           data-target="banFlag"
+                                                           class="etag tag has-background-ban">
+                                                            <span class="icon is-small ricon">
+                                                                <i class="fas fa-ban ricon"></i>
+                                                            </span>
+                                                            Ban
+                                                        </a>
+                                                    {% endif %}
+                                                    {% if user is not none and has_flag(user.permissions, p_nodes['Restrict Admin Chat']) %}
+                                                        <a id="adminChatFlagEdit"
+                                                           data-punishment="admin_chat_block"
+                                                           data-target="adminChatFlag"
+                                                           class="tag etag has-background-adminchat">
+                                                            <span class="icon is-small ricon">
+                                                                <i class="fas fa-hands-helping ricon"></i>
+                                                            </span>
+                                                            Admin Chat
+                                                        </a>
+                                                    {% endif %}
+                                                    {% if user is not none and has_flag(user.permissions, p_nodes['Restrict Call Admin']) %}
+                                                        <a id="callAdminFlagEdit"
+                                                           data-punishment="call_admin_block"
+                                                           data-target="callAdminFlag"
+                                                           class="tag etag has-background-calladmin">
+                                                            <span class="icon is-small ricon">
+                                                                <i class="fas fa-phone-slash ricon"></i>
+                                                            </span>
+                                                            Call Admin
+                                                        </a>
+                                                    {% endif %}
+                                                    {% if user is not none and has_flag(user.permissions, p_nodes['Restrict Map Items']) %}
+                                                        <a id="itemFlagEdit"
+                                                           data-punishment="item_block"
+                                                           data-target="itemFlag"
+                                                           class="tag etag has-background-item">
+                                                            <span class="icon is-small ricon">
+                                                                <i class="fas fa-virus-slash ricon"></i>
+                                                            </span>
+                                                            Item
+                                                        </a>
+                                                    {% endif %}
+                                                </div>
+                                            </td>
+                                            <td id="restrictionsEdit">
+                                                <a class="fas fa-pen edit text-primary"></a>
+                                            </td>
+                                            <td id="restrictionsCancel">
+                                                <a id="restrictionsCancelIcon" class="fas fa-undo text-primary"></a>
+                                            </td>
+                                        </tr>
+                                        <tr class="rmEl">
+                                            <td>Rm. At</td>
+                                            <td id="removedOnValue" class="data-cell"></td>
+                                        </tr>
+                                        <tr class="rmEl">
+                                            <td>Rm. By</td>
+                                            <td id="removedByValue" class="data-cell"></td>
+                                        </tr>
+                                        <tr class="rmEl">
+                                            <td>Rm. Reason</td>
+                                            <td id="removedReasonValue" class="data-cell"></td>
+                                        </tr>
                                     </tbody>
                                 </table>
                             </div>
                         </div>
                     </div>
-
                     <a id="commentToggle" class="text-primary">Comments (<span id="commentCount">0</span>)
                         <span id="commentState" class="fas fa-sort-up text-primary"></span></a>
-                    <div id="iComments" class="mb-2 text-primary">
-                    </div>
-
+                    <div id="iComments" class="mb-2 text-primary"></div>
                     {% if user is not none and has_flag(user.permissions, p_nodes['Can Comment']) %}
-                    <article class="media">
-                        <figure class="media-left">
-                            <p class="image is-48x48">
-                                <img class="is-rounded set-default-on-error"
-                                     src="{%if user.avatar %}/file/uploads/{{user.avatar.gridfs_file}}/avatar.webp{% else %}/static/images/fallback_av.png{% endif %}">
-                            </p>
-                        </figure>
-                        <div class="media-content">
-                            <div class="field">
-                                <p class="control">
-                                    <textarea maxlength="280" id="commentText" rows="2" class="textarea"
-                                              placeholder="Add a comment..."></textarea>
+                        <article class="media">
+                            <figure class="media-left">
+                                <p class="image is-48x48">
+                                    <img class="is-rounded set-default-on-error"
+                                         alt="user-avatar"
+                                         src="{% if user.avatar %}/file/uploads/{{ user.avatar.gridfs_file }}/avatar.webp{% else %}/static/images/fallback_av.png{% endif %}">
                                 </p>
-                            </div>
-
-                            <div class="field is-grouped is-horizontal">
-
-                                <div class="control is-expanded">
-                                    <label class="checkbox">
-                                        <input type="checkbox" id="privateCheck">
-                                        <span class="text-primary">Mark as private</span>
-                                    </label>
+                            </figure>
+                            <div class="media-content">
+                                <div class="field">
+                                    <p class="control">
+                                        <textarea maxlength="280"
+                                                  id="commentText"
+                                                  rows="2"
+                                                  class="textarea"
+                                                  placeholder="Add a comment..."></textarea>
+                                    </p>
                                 </div>
-
-                                {% if user is not none and has_flag(user.permissions, p_nodes['Attach Files']) %}
-                                <div class="control">
-                                    <div id="FileButton" class="button click is-accent">
-                                            <input id="doFileUpload" class="file-input" type="file">
-                                            <i class="fas fa-upload"></i>
+                                <div class="field is-grouped is-horizontal">
+                                    <div class="control is-expanded">
+                                        <label class="checkbox">
+                                            <input type="checkbox" id="privateCheck">
+                                            <span class="text-primary">Mark as private</span>
+                                        </label>
                                     </div>
+                                    {% if user is not none and has_flag(user.permissions, p_nodes['Attach Files']) %}
+                                        <div class="control">
+                                            <div id="FileButton" class="button click is-accent">
+                                                <input id="doFileUpload" class="file-input" type="file">
+                                                <i class="fas fa-upload"></i>
+                                            </div>
+                                        </div>
+                                    {% endif %}
+                                    <p class="control">
+                                        <button class="button is-accent" id="doPost">
+                                            <i class="fas fa-paper-plane"></i>
+                                        </button>
+                                    </p>
                                 </div>
-                                {% endif %}
-                                <p class="control">
-                                    <button class="button is-accent" id="doPost"><i
-                                            class="fas fa-paper-plane"></i></button>
-                                </p>
                             </div>
-
-                        </div>
-                    </article>
+                        </article>
                     {% endif %}
-
                 </div>
             </article>
         </div>
@@ -367,7 +402,11 @@
             <div class="field">
                 <label class="label" id="removalLabel">Why do you want to remove this infraction?</label>
                 <div class="control">
-                    <textarea id="removalReason" class="textarea" maxlength="240" placeholder="Removal Reason" aria-labelledby="removalLabel"></textarea>
+                    <textarea id="removalReason"
+                              class="textarea"
+                              maxlength="240"
+                              placeholder="Removal Reason"
+                              aria-labelledby="removalLabel"></textarea>
                 </div>
             </div>
         </section>

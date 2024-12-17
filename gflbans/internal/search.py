@@ -1,22 +1,32 @@
-from datetime import timedelta
 import os
 import re
-from concurrent.futures.process import ProcessPoolExecutor
 import time
+from concurrent.futures.process import ProcessPoolExecutor
 from typing import Any, Dict
 
 from bson import ObjectId
+from defusedxml import ElementTree
 from pymongo import MongoClient
 
-from defusedxml import ElementTree
-
-from gflbans.internal.config import MONGO_URI, MONGO_DB
+from gflbans.internal.config import MONGO_DB, MONGO_URI
 from gflbans.internal.errors import SearchError
-from gflbans.internal.flags import INFRACTION_DEC_ONLINE_ONLY, INFRACTION_SYSTEM, \
-    INFRACTION_PERMANENT, INFRACTION_SUPER_GLOBAL, INFRACTION_GLOBAL, INFRACTION_VPN, \
-    INFRACTION_WEB, INFRACTION_REMOVED, INFRACTION_VOICE_BLOCK, INFRACTION_CHAT_BLOCK, \
-    INFRACTION_BAN, INFRACTION_ADMIN_CHAT_BLOCK, INFRACTION_CALL_ADMIN_BAN, \
-    INFRACTION_SESSION, INFRACTION_ITEM_BLOCK
+from gflbans.internal.flags import (
+    INFRACTION_ADMIN_CHAT_BLOCK,
+    INFRACTION_BAN,
+    INFRACTION_CALL_ADMIN_BAN,
+    INFRACTION_CHAT_BLOCK,
+    INFRACTION_DEC_ONLINE_ONLY,
+    INFRACTION_GLOBAL,
+    INFRACTION_ITEM_BLOCK,
+    INFRACTION_PERMANENT,
+    INFRACTION_REMOVED,
+    INFRACTION_SESSION,
+    INFRACTION_SUPER_GLOBAL,
+    INFRACTION_SYSTEM,
+    INFRACTION_VOICE_BLOCK,
+    INFRACTION_VPN,
+    INFRACTION_WEB,
+)
 from gflbans.internal.integrations.ips import ips_get_member_id_from_gsid
 from gflbans.internal.log import logger
 from gflbans.internal.models.protocol import Search
@@ -37,6 +47,7 @@ def ips_id_to_mongo_object_id(s: str):
 
     return r['_id']
 
+
 # Find admins given a generic steam id
 def steam_id_to_mongo_object_id(steam_id: str):
     steam_id_type = wut(steam_id)
@@ -56,7 +67,7 @@ def steam_id_to_mongo_object_id(steam_id: str):
 
     if ips_id is None:
         raise SearchError('Invalid admin Steam ID type')
-    
+
     return ips_id_to_mongo_object_id(ips_id)
 
 
@@ -130,6 +141,7 @@ async def id64_or_none(app, gs_id):
 
     return None
 
+
 def id64_or_none_no_web(gs_id):
     steam_id_type = wut(gs_id)
 
@@ -146,7 +158,7 @@ def id64_or_none_no_web(gs_id):
         return str(int(idt) + 76561197960265728)
 
     raise SearchError('Invalid Steam ID type')
-    
+
 
 def steamid_to_64(steamid):
     n = steamid[6:].split(':')
@@ -158,6 +170,7 @@ def steamid_to_64(steamid):
 
 def contains_str(s: str):
     return {'$regex': re.escape(s), '$options': 'i'}
+
 
 async def plaintext_search(app, s: str):
     if len(s) > 2048:
@@ -195,85 +208,83 @@ async def admin_name_to_mongo_ids(app, s: str):
 
 async def expiration_check(app, b: bool):
     if b:
-        return { "$and": [
-            {"flags": {"$bitsAllClear": INFRACTION_REMOVED}},
-            {"$or": [
-                {"$and": [
-                    {"expires": {"$exists": True}},
-                    {"expires": {"$lte": time.time()}}]},
-                {"$and": [
-                    {"time_left": {"$exists": True}},
-                    {"time_left": 0}]},
-                {"flags": {"$bitsAnySet": INFRACTION_SESSION}}]}]}
+        return {
+            '$and': [
+                {'flags': {'$bitsAllClear': INFRACTION_REMOVED}},
+                {
+                    '$or': [
+                        {'$and': [{'expires': {'$exists': True}}, {'expires': {'$lte': time.time()}}]},
+                        {'$and': [{'time_left': {'$exists': True}}, {'time_left': 0}]},
+                        {'flags': {'$bitsAnySet': INFRACTION_SESSION}},
+                    ]
+                },
+            ]
+        }
     else:
-        return {"$and": [
-            {"$or": [
-                {"expires": {"$exists": False}},
-                {"expires": {"$gt": time.time()}}]},
-            {"$or": [
-                {"time_left": {"$exists": False}},
-                {"time_left": {"$gt": 0}}]},
-            {"flags": {"$bitsAllClear": INFRACTION_SESSION | INFRACTION_REMOVED}}]}
+        return {
+            '$and': [
+                {'$or': [{'expires': {'$exists': False}}, {'expires': {'$gt': time.time()}}]},
+                {'$or': [{'time_left': {'$exists': False}}, {'time_left': {'$gt': 0}}]},
+                {'flags': {'$bitsAllClear': INFRACTION_SESSION | INFRACTION_REMOVED}},
+            ]
+        }
 
 
 async def active_check(app, b: bool):
     if b:
-        return {"$and": [
-            {"$or": [
-                {"expires": {"$exists": False}},
-                {"expires": {"$gt": time.time()}}]},
-            {"$or": [
-                {"time_left": {"$exists": False}},
-                {"time_left": {"$gt": 0}}]},
-            {"flags": {"$bitsAllClear": INFRACTION_SESSION | INFRACTION_REMOVED}}]}
+        return {
+            '$and': [
+                {'$or': [{'expires': {'$exists': False}}, {'expires': {'$gt': time.time()}}]},
+                {'$or': [{'time_left': {'$exists': False}}, {'time_left': {'$gt': 0}}]},
+                {'flags': {'$bitsAllClear': INFRACTION_SESSION | INFRACTION_REMOVED}},
+            ]
+        }
     else:
-        return {"$or": [
-            {"$and": [
-                {"expires": {"$exists": True}},
-                {"expires": {"$lte": time.time()}}]},
-            {"$and": [
-                {"time_left": {"$exists": True}},
-                {"time_left": 0}]},
-            {"flags": {"$bitsAnySet": INFRACTION_SESSION | INFRACTION_REMOVED}}]}
+        return {
+            '$or': [
+                {'$and': [{'expires': {'$exists': True}}, {'expires': {'$lte': time.time()}}]},
+                {'$and': [{'time_left': {'$exists': True}}, {'time_left': 0}]},
+                {'flags': {'$bitsAnySet': INFRACTION_SESSION | INFRACTION_REMOVED}},
+            ]
+        }
 
 
 FIELD_MAP = {
     # Checks single mongodb document field
-    'gs_service':           ('user.gs_service', str),
-    'gs_id':                ('user.gs_id',      id64_or_none_no_web),
-    'gs_name':              ('user.gs_name',    contains_str),
-    'ip':                   ('ip',              str),
-    'admin_id':             ('admin',           steam_id_to_mongo_object_id),
-    'server':               ('server',          ObjectId),
-    'reason':               ('reason',          contains_str),
-    'ureason':              ('ureason',         contains_str),
-
+    'gs_service': ('user.gs_service', str),
+    'gs_id': ('user.gs_id', id64_or_none_no_web),
+    'gs_name': ('user.gs_name', contains_str),
+    'ip': ('ip', str),
+    'admin_id': ('admin', steam_id_to_mongo_object_id),
+    'server': ('server', ObjectId),
+    'reason': ('reason', contains_str),
+    'ureason': ('ureason', contains_str),
     # Complex checks that can't simply be a value assigned to a key
-    'search':               ('computed', str,  plaintext_search),
-    'admin':                ('computed', str,  admin_name_to_mongo_ids),
-    'is_expired':           ('computed', bool, expiration_check),
-    'is_active':            ('computed', bool, active_check),
-
+    'search': ('computed', str, plaintext_search),
+    'admin': ('computed', str, admin_name_to_mongo_ids),
+    'is_expired': ('computed', bool, expiration_check),
+    'is_active': ('computed', bool, active_check),
     # Bitflag checks for 'flags' field in mongodb documents
-    'is_system':            ('bitflag', bool, INFRACTION_SYSTEM),
-    'is_global':            ('bitflag', bool, INFRACTION_GLOBAL),
-    'is_super_global':      ('bitflag', bool, INFRACTION_SUPER_GLOBAL),
-    'is_permanent':         ('bitflag', bool, INFRACTION_PERMANENT),
-    'is_vpn':               ('bitflag', bool, INFRACTION_VPN),
-    'is_web':               ('bitflag', bool, INFRACTION_WEB),
-    'is_removed':           ('bitflag', bool, INFRACTION_REMOVED),
-    'is_voice':             ('bitflag', bool, INFRACTION_VOICE_BLOCK),
-    'is_text':              ('bitflag', bool, INFRACTION_CHAT_BLOCK),
-    'is_ban':               ('bitflag', bool, INFRACTION_BAN),
-    'is_admin_chat':        ('bitflag', bool, INFRACTION_ADMIN_CHAT_BLOCK),
-    'is_call_admin':        ('bitflag', bool, INFRACTION_CALL_ADMIN_BAN),
-    'is_item':              ('bitflag', bool, INFRACTION_ITEM_BLOCK),
-    'is_session':           ('bitflag', bool, INFRACTION_SESSION),
-    'is_decl_online_only':  ('bitflag', bool, INFRACTION_DEC_ONLINE_ONLY)
+    'is_system': ('bitflag', bool, INFRACTION_SYSTEM),
+    'is_global': ('bitflag', bool, INFRACTION_GLOBAL),
+    'is_super_global': ('bitflag', bool, INFRACTION_SUPER_GLOBAL),
+    'is_permanent': ('bitflag', bool, INFRACTION_PERMANENT),
+    'is_vpn': ('bitflag', bool, INFRACTION_VPN),
+    'is_web': ('bitflag', bool, INFRACTION_WEB),
+    'is_removed': ('bitflag', bool, INFRACTION_REMOVED),
+    'is_voice': ('bitflag', bool, INFRACTION_VOICE_BLOCK),
+    'is_text': ('bitflag', bool, INFRACTION_CHAT_BLOCK),
+    'is_ban': ('bitflag', bool, INFRACTION_BAN),
+    'is_admin_chat': ('bitflag', bool, INFRACTION_ADMIN_CHAT_BLOCK),
+    'is_call_admin': ('bitflag', bool, INFRACTION_CALL_ADMIN_BAN),
+    'is_item': ('bitflag', bool, INFRACTION_ITEM_BLOCK),
+    'is_session': ('bitflag', bool, INFRACTION_SESSION),
+    'is_decl_online_only': ('bitflag', bool, INFRACTION_DEC_ONLINE_ONLY),
 }
 
+
 async def do_infraction_search(app, query: Search, include_ip: bool = False) -> Dict[str, Any]:
-    logger.info(f"Performing search with: {query}")
+    logger.info(f'Performing search with: {query}')
 
     parsed_query = []
     set_bit_flags = 0
@@ -282,7 +293,7 @@ async def do_infraction_search(app, query: Search, include_ip: bool = False) -> 
     for field, (mongo_field, field_type, *special) in FIELD_MAP.items():
         value = getattr(query, field, None)
 
-        if (not include_ip and field == 'ip' and value is not None):
+        if not include_ip and field == 'ip' and value is not None:
             raise SearchError('Cannot search by IP without proper permissions.')
 
         if value is None or not (callable(field_type) or isinstance(value, field_type)):
@@ -299,38 +310,80 @@ async def do_infraction_search(app, query: Search, include_ip: bool = False) -> 
             parsed_query.append({mongo_field: field_type(value)})
 
     # Handle comparisons for time based searches
-    for field, comparison_field in [("created", "created_comparison_mode"),
-                                    ("expires", "expires_comparison_mode"),
-                                    ("time_left", "time_left_comparison_mode"),
-                                    ("duration", "duration_comparison_mode")]:
+    for field, comparison_field in [
+        ('created', 'created_comparison_mode'),
+        ('expires', 'expires_comparison_mode'),
+        ('time_left', 'time_left_comparison_mode'),
+        ('duration', 'duration_comparison_mode'),
+    ]:
         value = getattr(query, field, None)
         comparison_mode = getattr(query, comparison_field, None)
 
-        if value is not None and isinstance(value, int) and comparison_mode in {"eq", "lt", "lte", "gt", "gte"}:
+        if value is not None and isinstance(value, int) and comparison_mode in {'eq', 'lt', 'lte', 'gt', 'gte'}:
             unset_bit_flags |= INFRACTION_PERMANENT | INFRACTION_SESSION
-            mongo_comparison = {"eq": "$eq", "lt": "$lt", "lte": "$lte", "gt": "$gt", "gte": "$gte"}[comparison_mode]   
-            if field == "duration":
-                if comparison_mode == "eq":
+            mongo_comparison = {'eq': '$eq', 'lt': '$lt', 'lte': '$lte', 'gt': '$gt', 'gte': '$gte'}[comparison_mode]
+            if field == 'duration':
+                if comparison_mode == 'eq':
                     tolerance = 30  # tolerance in seconds for floating point calculation imprecision in equivalancy
-                    duration_query = {"$or": [
-                        {"$and": [ {"original_time": {"$exists": True}},
-                            {"original_time": {"$gte": (value - tolerance)}},
-                            {"original_time": {"$lte": (value + tolerance)}}]},
-                        {"$and": [ {"expires": {"$exists": True}},
-                            {"$expr": { "$and": [
-                                {"$gte": [{"$round": [{"$subtract": ["$expires", "$created"]}, 0]}, value - tolerance]},
-                                {"$lte": [{"$round": [{"$subtract": ["$expires", "$created"]}, 0]}, value + tolerance]}]}}]}]}
+                    duration_query = {
+                        '$or': [
+                            {
+                                '$and': [
+                                    {'original_time': {'$exists': True}},
+                                    {'original_time': {'$gte': (value - tolerance)}},
+                                    {'original_time': {'$lte': (value + tolerance)}},
+                                ]
+                            },
+                            {
+                                '$and': [
+                                    {'expires': {'$exists': True}},
+                                    {
+                                        '$expr': {
+                                            '$and': [
+                                                {
+                                                    '$gte': [
+                                                        {'$round': [{'$subtract': ['$expires', '$created']}, 0]},
+                                                        value - tolerance,
+                                                    ]
+                                                },
+                                                {
+                                                    '$lte': [
+                                                        {'$round': [{'$subtract': ['$expires', '$created']}, 0]},
+                                                        value + tolerance,
+                                                    ]
+                                                },
+                                            ]
+                                        }
+                                    },
+                                ]
+                            },
+                        ]
+                    }
                 else:
-                    duration_query = {"$or": [
-                        {"original_time": {mongo_comparison: value}},
-                        { "$and": [{"expires": {"$exists": True}},
-                            {"$expr": { mongo_comparison: [ {"$round": [{"$subtract": ["$expires", "$created"]}, 0]}, value]}}]}]}
+                    duration_query = {
+                        '$or': [
+                            {'original_time': {mongo_comparison: value}},
+                            {
+                                '$and': [
+                                    {'expires': {'$exists': True}},
+                                    {
+                                        '$expr': {
+                                            mongo_comparison: [
+                                                {'$round': [{'$subtract': ['$expires', '$created']}, 0]},
+                                                value,
+                                            ]
+                                        }
+                                    },
+                                ]
+                            },
+                        ]
+                    }
                 parsed_query.append(duration_query)
-            elif comparison_mode == "eq" and (field == "created" or field == "expires"):
-                parsed_query.append({field: {"$gte": value, "$lte": value + 24*60*60}})
+            elif comparison_mode == 'eq' and (field == 'created' or field == 'expires'):
+                parsed_query.append({field: {'$gte': value, '$lte': value + 24 * 60 * 60}})
             else:
-                if "gt" in comparison_mode and (field == "created" or field == "expires"):
-                    value += 24*60*60 
+                if 'gt' in comparison_mode and (field == 'created' or field == 'expires'):
+                    value += 24 * 60 * 60
                 parsed_query.append({field: {mongo_comparison: value}})
 
     if set_bit_flags > 0 and unset_bit_flags > 0:
@@ -353,7 +406,7 @@ async def do_whitelist_search(query: str):
 
     try:
         parsed_query = {}
-    
+
         for field, (mongo_field, field_type, *flag_value) in FIELD_MAP.items():
             if field in query:
                 if field == 'ip':
@@ -364,7 +417,7 @@ async def do_whitelist_search(query: str):
                     else:
                         parsed_query['flags'] = {'$bitsAllSet': parsed_query['flags']['$bitsAllSet'] | flag_value}
                 else:
-                    value_list = query.split(f"{field}:")[-1].split()
+                    value_list = query.split(f'{field}:')[-1].split()
                     value = ''
                     for val in value_list:
                         val = val.strip(' ')
@@ -382,15 +435,17 @@ async def do_whitelist_search(query: str):
                         value = field_type(value)
 
                         if mongo_field not in parsed_query:
-                            if type(value) == list:
+                            if isinstance(value, list):
                                 parsed_query[mongo_field] = list()
-                                parsed_query[mongo_field].append(value) # this is for parsing at end. list in a list means $or check it
+                                parsed_query[mongo_field].append(
+                                    value
+                                )  # this is for parsing at end. list in a list means $or check it
                             else:
                                 parsed_query[mongo_field] = value
                         elif isinstance(parsed_query[mongo_field], list):
                             parsed_query[mongo_field].append(value)
                         else:
-                            parsed_query[mongo_field] = [parsed_query[mongo_field], value] # $and check these later
+                            parsed_query[mongo_field] = [parsed_query[mongo_field], value]  # $and check these later
 
         to_remove = list()
         and_query = list()
@@ -398,7 +453,7 @@ async def do_whitelist_search(query: str):
         for key, item in parsed_query.items():
             if isinstance(item, list) and key != '$or' and key != '$and':
                 for value in item:
-                    if type(value) == list:
+                    if isinstance(value, list):
                         or_query = list()
                         for val in value:
                             or_query.append({key: val})

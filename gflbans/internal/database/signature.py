@@ -1,6 +1,6 @@
 from contextlib import suppress
-from typing import Tuple
 from hashlib import sha256
+from typing import Tuple
 
 from motor.motor_asyncio import AsyncIOMotorDatabase
 from pymongo.errors import DuplicateKeyError
@@ -28,8 +28,11 @@ class DSignature(DBase):
     @classmethod
     async def save_signature(cls, db_ref: AsyncIOMotorDatabase, user: PlayerObjNoIp, signature: Tuple[str, str]):
         with suppress(DuplicateKeyError):
-            a = await db_ref[cls.__collection__].insert_one(cls(signature=sha256(signature[1].encode('utf-8')).hexdigest(), mod=signature[0], user=user).
-                                                            dict(exclude_none=True, exclude_unset=True, by_alias=True))
+            a = await db_ref[cls.__collection__].insert_one(
+                cls(signature=sha256(signature[1].encode('utf-8')).hexdigest(), mod=signature[0], user=user).dict(
+                    exclude_none=True, exclude_unset=True, by_alias=True
+                )
+            )
 
             assert a.acknowledged
 

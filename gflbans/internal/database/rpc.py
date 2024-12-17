@@ -1,6 +1,6 @@
 import asyncio
 from datetime import datetime
-from typing import Optional, List, Union
+from typing import List, Optional, Union
 
 from bson import ObjectId
 from motor.motor_asyncio import AsyncIOMotorDatabase
@@ -8,7 +8,7 @@ from pydantic.types import constr
 
 from gflbans.internal.database.base import DBase
 from gflbans.internal.models.api import PlayerObjNoIp
-from gflbans.internal.models.protocol import RPCPlayerUpdated, CheckInfractionsReply, RPCKick
+from gflbans.internal.models.protocol import CheckInfractionsReply, RPCKick, RPCPlayerUpdated
 
 
 class DRPCEventBase(DBase):
@@ -55,9 +55,15 @@ class DRPCPlayerUpdated(DRPCEventBase):
     glob: CheckInfractionsReply
 
     def as_api(self):
-        return RPCPlayerUpdated(event_id=str(self.id), time=self.time, event=self.event, target_type=self.target_type,
-                                target=self.target_payload, local=self.local,
-                                glob=self.glob)
+        return RPCPlayerUpdated(
+            event_id=str(self.id),
+            time=self.time,
+            event=self.event,
+            target_type=self.target_type,
+            target=self.target_payload,
+            local=self.local,
+            glob=self.glob,
+        )
 
 
 class DRPCKickPlayer(DRPCEventBase):
@@ -65,8 +71,8 @@ class DRPCKickPlayer(DRPCEventBase):
     target_player: PlayerObjNoIp
 
     def as_api(self):
-        return RPCKick(target_player=self.target_player, event=self.event, event_id=str(self.id),
-                       time=self.time)
+        return RPCKick(target_player=self.target_player, event=self.event, event_id=str(self.id), time=self.time)
+
 
 # Given the ID of an RPC event, block until a game server acknowledges it
 # This can theoretically block for a very long time, so it's best to make use of asyncio timeouts
@@ -80,7 +86,4 @@ async def add_ack_concern(db, rpc_event: ObjectId):
         await asyncio.sleep(0.5)
 
 
-class_dict = {
-    'player_updated': DRPCPlayerUpdated,
-    'player_kick': DRPCKickPlayer
-}
+class_dict = {'player_updated': DRPCPlayerUpdated, 'player_kick': DRPCKickPlayer}

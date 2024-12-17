@@ -4,20 +4,36 @@ from datetime import datetime
 from typing import List, Optional
 
 import bbcode
-from redis.exceptions import RedisError
 from bson import ObjectId
 from dateutil.tz import UTC
 from fastapi import HTTPException
 from motor.motor_asyncio import AsyncIOMotorDatabase
+from redis.exceptions import RedisError
 
 from gflbans.internal.config import MONGO_DB, ROOT_USER
 from gflbans.internal.constants import NOT_AUTHED_USER
 from gflbans.internal.database.common import DFile
 from gflbans.internal.database.dadmin import DAdmin
-from gflbans.internal.database.infraction import DComment, DUser, DInfraction
-from gflbans.internal.flags import ALL_PERMISSIONS, PERMISSION_VIEW_IP_ADDR, INFRACTION_PERMANENT, INFRACTION_DEC_ONLINE_ONLY, \
-    INFRACTION_SESSION, str2pflag
-from gflbans.internal.models.api import AdminInfo, Comment, FileInfo, Group, PlayerObjSimple, PlayerObj, Infraction, CInfractionSummary, PositiveIntIncl0
+from gflbans.internal.database.infraction import DComment, DInfraction, DUser
+from gflbans.internal.flags import (
+    ALL_PERMISSIONS,
+    INFRACTION_DEC_ONLINE_ONLY,
+    INFRACTION_PERMANENT,
+    INFRACTION_SESSION,
+    PERMISSION_VIEW_IP_ADDR,
+    str2pflag,
+)
+from gflbans.internal.models.api import (
+    AdminInfo,
+    CInfractionSummary,
+    Comment,
+    FileInfo,
+    Group,
+    Infraction,
+    PlayerObj,
+    PlayerObjSimple,
+    PositiveIntIncl0,
+)
 from gflbans.internal.models.protocol import CheckInfractionsReply
 from gflbans.internal.utils import validate
 
@@ -94,8 +110,14 @@ def to_unix(dt: datetime):
 
 
 async def as_comment(app, c: DComment) -> Comment:
-    return Comment(edit_data=as_edict(c.edit_data), author=await admin_as_int(app, c.author), content=c.content,
-                   private=c.private, rendered=render_comment(c.content), created=to_unix(c.created))
+    return Comment(
+        edit_data=as_edict(c.edit_data),
+        author=await admin_as_int(app, c.author),
+        content=c.content,
+        private=c.private,
+        rendered=render_comment(c.content),
+        created=to_unix(c.created),
+    )
 
 
 async def as_comments(app, c: List[DComment], exclude_priv=True) -> List[Comment]:
@@ -117,15 +139,20 @@ async def as_files(app, f: List[DFile], exclude_priv=True) -> List[FileInfo]:
         if exclude_priv and df.private:
             continue
 
-        fi = FileInfo(file_id=df.gridfs_file, name=df.file_name, uploaded_by=await admin_as_int(app, df.uploaded_by),
-                      private=df.private)
+        fi = FileInfo(
+            file_id=df.gridfs_file,
+            name=df.file_name,
+            uploaded_by=await admin_as_int(app, df.uploaded_by),
+            private=df.private,
+        )
 
         if df.created:
             fi.created = int(df.created.replace(tzinfo=UTC).timestamp())
 
-        fi.rendered = '<em>Attached a file: <a href="%s">%s</a></em>' \
-                      % (html.escape(f'/file/uploads/{df.gridfs_file}/{df.file_name}', True),
-                         html.escape(f'{df.file_name}', True))
+        fi.rendered = '<em>Attached a file: <a href="%s">%s</a></em>' % (
+            html.escape(f'/file/uploads/{df.gridfs_file}/{df.file_name}', True),
+            html.escape(f'{df.file_name}', True),
+        )
 
         e.append(fi)
 
@@ -173,23 +200,25 @@ def as_player(user: Optional[DUser], ip: Optional[str], include_ip: bool = True)
 
 
 async def as_infraction(app, infraction: DInfraction, include_ip=True) -> Infraction:
-    return Infraction(id=str_id(infraction.id),
-                      flags=infraction.flags,
-                      comments=await as_comments(app, infraction.comments, exclude_priv=not include_ip),
-                      files=await as_files(app, infraction.files, exclude_priv=not include_ip),
-                      server=str_id(infraction.server),
-                      created=infraction.created,
-                      expires=infraction.expires,
-                      player=as_player(infraction.user, infraction.ip, include_ip),
-                      admin=await admin_as_int(app, infraction.admin),
-                      reason=infraction.reason,
-                      removed_on=infraction.removed,
-                      removed_by=await admin_as_int(app, infraction.remover),
-                      removal_reason=infraction.ureason,
-                      time_left=infraction.time_left,
-                      orig_length=infraction.original_time,
-                      policy_id=str_id(infraction.policy_id),
-                      last_heartbeat=infraction.last_heartbeat)
+    return Infraction(
+        id=str_id(infraction.id),
+        flags=infraction.flags,
+        comments=await as_comments(app, infraction.comments, exclude_priv=not include_ip),
+        files=await as_files(app, infraction.files, exclude_priv=not include_ip),
+        server=str_id(infraction.server),
+        created=infraction.created,
+        expires=infraction.expires,
+        player=as_player(infraction.user, infraction.ip, include_ip),
+        admin=await admin_as_int(app, infraction.admin),
+        reason=infraction.reason,
+        removed_on=infraction.removed,
+        removed_by=await admin_as_int(app, infraction.remover),
+        removal_reason=infraction.ureason,
+        time_left=infraction.time_left,
+        orig_length=infraction.original_time,
+        policy_id=str_id(infraction.policy_id),
+        last_heartbeat=infraction.last_heartbeat,
+    )
 
 
 async def as_groups(app, groups: List[int]) -> List[Group]:
@@ -199,9 +228,9 @@ async def as_groups(app, groups: List[int]) -> List[Group]:
         group_list.append(Group(group_name=g['name'], group_id=ips_group, permissions=g['privileges']))
     return group_list
 
+
 async def as_admin(app, admin: DAdmin) -> AdminInfo:
-    admin_info = AdminInfo(admin_id=PositiveIntIncl0(admin.ips_user),
-                           admin_name=admin.name, permissions = 0)
+    admin_info = AdminInfo(admin_id=PositiveIntIncl0(admin.ips_user), admin_name=admin.name, permissions=0)
     if admin.avatar is not None and admin.avatar.gridfs_file is not None:
         admin_info.avatar_id = admin.avatar.gridfs_file
     admin_info.groups = await as_groups(app, admin.groups)
@@ -209,9 +238,9 @@ async def as_admin(app, admin: DAdmin) -> AdminInfo:
         admin_info.permissions = ALL_PERMISSIONS
     else:
         for grp in admin_info.groups:
-            admin_info.permissions |= grp.permissions 
+            admin_info.permissions |= grp.permissions
     return admin_info
-    
+
 
 def str_id(o: Optional[ObjectId]) -> Optional[str]:
     if o is None:
@@ -247,7 +276,7 @@ def cinfsum_cmp(c1: Optional[CInfractionSummary], c2: Optional[CInfractionSummar
 def cinfsum_cmp_sef(c1: Optional[CInfractionSummary], c2: Optional[CInfractionSummary]) -> bool:
     if c1 is None and c2 is not None:
         return True
-    
+
     if c2 is None:
         return False
 
@@ -264,7 +293,6 @@ def cinfsum_cmp_sef(c1: Optional[CInfractionSummary], c2: Optional[CInfractionSu
 
 
 async def cinfsum_inf(db_ref: AsyncIOMotorDatabase, inf: DInfraction) -> CInfractionSummary:
-
     c = CInfractionSummary(reason=inf.reason, admin_name=await find_admin_name(db_ref, inf.admin))
 
     if inf.flags & INFRACTION_PERMANENT == INFRACTION_PERMANENT:

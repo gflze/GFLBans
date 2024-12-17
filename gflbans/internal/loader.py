@@ -3,17 +3,23 @@ from concurrent.futures.process import ProcessPoolExecutor
 from hashlib import md5
 
 import aiohttp
-from redis.asyncio import Redis
 from motor.motor_asyncio import AsyncIOMotorClient
 from pymongo import ASCENDING, DESCENDING
+from redis.asyncio import Redis
 
 from gflbans.internal import shard
-from gflbans.internal.config import MONGO_URI, RETAIN_AUDIT_LOG_FOR, REDIS_URI, \
-                                    STEAM_OPENID_ACCESS_TOKEN_LIFETIME, MONGO_DB
+from gflbans.internal.config import (
+    MONGO_DB,
+    MONGO_URI,
+    REDIS_URI,
+    RETAIN_AUDIT_LOG_FOR,
+    STEAM_OPENID_ACCESS_TOKEN_LIFETIME,
+)
 from gflbans.internal.constants import GB_VERSION
 from gflbans.internal.log import logger
 from gflbans.internal.task import task_loop
 from gflbans.internal.utils import ORJSONSerializer
+
 
 class RedisCache:
     def __init__(self, redis_client, name, serializer):
@@ -69,8 +75,9 @@ async def gflbans_init(app):
         await app.state.db[MONGO_DB].infractions.create_index([('created', DESCENDING)])
         await app.state.db[MONGO_DB].infractions.create_index([('expires', ASCENDING)])
         await app.state.db[MONGO_DB].infractions.create_index([('ip', ASCENDING)])
-        await app.state.db[MONGO_DB].infractions.create_index([('user.gs_service', ASCENDING),
-                                                               ('user.gs_id', ASCENDING)])
+        await app.state.db[MONGO_DB].infractions.create_index(
+            [('user.gs_service', ASCENDING), ('user.gs_id', ASCENDING)]
+        )
 
         # Admins
         await app.state.db[MONGO_DB].admin_cache.create_index([('ips_user', ASCENDING)], unique=True)
@@ -79,31 +86,31 @@ async def gflbans_init(app):
         await app.state.db[MONGO_DB].blocks.create_index([('block_name', ASCENDING)], unique=True)
 
         # Avatars
-        await app.state.db[MONGO_DB].fs.files.create_index([('metadata.retrieved_from', ASCENDING)],
-                                                           name='gridfs_av_src_idx')
+        await app.state.db[MONGO_DB].fs.files.create_index(
+            [('metadata.retrieved_from', ASCENDING)], name='gridfs_av_src_idx'
+        )
 
         # Map images
-        await app.state.db[MONGO_DB].fs.files.create_index([('metadata.mod_name', ASCENDING),
-                                                            ('metadata.map_name', ASCENDING)],
-                                                           name='gridfs_mn_idx')
+        await app.state.db[MONGO_DB].fs.files.create_index(
+            [('metadata.mod_name', ASCENDING), ('metadata.map_name', ASCENDING)], name='gridfs_mn_idx'
+        )
 
         # Call Admin images
-        await app.state.db[MONGO_DB].fs.files.create_index([('metadata.dispose_created', ASCENDING)],
-                                                           name='gridfs_cai_idx', expireAfterSeconds=2592000)
+        await app.state.db[MONGO_DB].fs.files.create_index(
+            [('metadata.dispose_created', ASCENDING)], name='gridfs_cai_idx', expireAfterSeconds=2592000
+        )
 
         # Sessions
-        await app.state.db[MONGO_DB].sessions.create_index([('_id', ASCENDING),
-                                                            ('session_token', ASCENDING)])
+        await app.state.db[MONGO_DB].sessions.create_index([('_id', ASCENDING), ('session_token', ASCENDING)])
 
-        await app.state.db[MONGO_DB].sessions.create_index([('created', ASCENDING)], background=True,
-                                                           expireAfterSeconds=STEAM_OPENID_ACCESS_TOKEN_LIFETIME)
+        await app.state.db[MONGO_DB].sessions.create_index(
+            [('created', ASCENDING)], background=True, expireAfterSeconds=STEAM_OPENID_ACCESS_TOKEN_LIFETIME
+        )
 
         # Signatures
-        await app.state.db[MONGO_DB].signatures.create_index([
-            ('signature', ASCENDING),
-            ('mod', ASCENDING),
-            ('user', ASCENDING)
-        ], unique=True)
+        await app.state.db[MONGO_DB].signatures.create_index(
+            [('signature', ASCENDING), ('mod', ASCENDING), ('user', ASCENDING)], unique=True
+        )
 
         # VPN
         await app.state.db[MONGO_DB].vpns.create_index([('added_on', ASCENDING)])
@@ -113,23 +120,26 @@ async def gflbans_init(app):
         await app.state.db[MONGO_DB].tasks.create_index([('run_at', ASCENDING)], background=True)
 
         # Audit Log
-        await app.state.db[MONGO_DB].action_log.create_index([('time', ASCENDING)], background=True,
-                                                             expireAfterSeconds=RETAIN_AUDIT_LOG_FOR)
+        await app.state.db[MONGO_DB].action_log.create_index(
+            [('time', ASCENDING)], background=True, expireAfterSeconds=RETAIN_AUDIT_LOG_FOR
+        )
 
         # RPC Task queue
-        await app.state.db[MONGO_DB].rpc.create_index([('time', ASCENDING)], background=True,
-                                                      expireAfterSeconds=(60 * 15))
+        await app.state.db[MONGO_DB].rpc.create_index(
+            [('time', ASCENDING)], background=True, expireAfterSeconds=(60 * 15)
+        )
 
-        await app.state.db[MONGO_DB].user_cache.create_index([('created', ASCENDING)], background=True,
-                                                             expireAfterSeconds=(
-                                                                         STEAM_OPENID_ACCESS_TOKEN_LIFETIME - 30))
+        await app.state.db[MONGO_DB].user_cache.create_index(
+            [('created', ASCENDING)], background=True, expireAfterSeconds=(STEAM_OPENID_ACCESS_TOKEN_LIFETIME - 30)
+        )
 
         # GKV
         await app.state.db[MONGO_DB].value_store.create_index([('key', ASCENDING)], unique=True)
 
         # Confirmation Links
-        await app.state.db[MONGO_DB].confirmations.create_index([('created', ASCENDING)], background=True,
-                                                      expireAfterSeconds=(60 * 10))
+        await app.state.db[MONGO_DB].confirmations.create_index(
+            [('created', ASCENDING)], background=True, expireAfterSeconds=(60 * 10)
+        )
 
         logger.info('Mongo Indexes created')
 

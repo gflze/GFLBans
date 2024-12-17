@@ -23,8 +23,12 @@ RETAIN_AUDIT_LOG_FOR = config('RETAIN_AUDIT_LOG_FOR', cast=int, default=3600 * 2
 SERVER_CACHE_STALE_AFTER = config('SERVER_CACHE_STALE_AFTER', cast=int, default=600)
 SECRET_KEY = config('SECRET_KEY', default='testing')  # Required string, should be long and random!
 BRANDING = config('BRANDING', default='gflbans')  # Replace all gflbans branding with your own branding
-COMMUNITY_ICON = config('COMMUNITY_ICON', default='https://bans.gflclan.com/static/images/gflbans256.png') # Profile picture for discord embeds
-GFLBANS_ICON = config('GFLBANS_ICON', default='https://bans.gflclan.com/static/images/gflbans256.png') # Branding for GFLBans in Discord embeds
+COMMUNITY_ICON = config(
+    'COMMUNITY_ICON', default='https://bans.gflclan.com/static/images/gflbans256.png'
+)  # Profile picture for discord embeds
+GFLBANS_ICON = config(
+    'GFLBANS_ICON', default='https://bans.gflclan.com/static/images/gflbans256.png'
+)  # Branding for GFLBans in Discord embeds
 
 # Integrations with other services
 DISCORD_BOT_TOKEN = config('DISCORD_BOT_TOKEN', default=None)

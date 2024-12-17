@@ -36,8 +36,7 @@ async def load_admin(request, i):
     try:
         return await load_admin_from_initiator(request.app, i)
     except NoSuchAdminError:
-        raise HTTPException(detail='Could not find an admin with which to associate this'
-                                   'infraction', status_code=403)
+        raise HTTPException(detail='Could not find an admin with which to associate this' 'infraction', status_code=403)
     except ClientResponseError as e:
         logger.error('Error whilst communicating with the forums', exc_info=e)
         raise HTTPException(detail='Internal Server Error', status_code=500)

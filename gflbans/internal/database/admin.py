@@ -4,7 +4,7 @@ from typing import Optional
 from bson import ObjectId
 from dateutil.tz import UTC
 
-from gflbans.internal.config import ROOT_USER, MONGO_DB
+from gflbans.internal.config import MONGO_DB, ROOT_USER
 from gflbans.internal.database.common import DFile
 from gflbans.internal.database.dadmin import DAdmin
 from gflbans.internal.database.group import DGroup
@@ -37,9 +37,7 @@ class Admin:
             self.__dadmin = DAdmin(ips_user=self.__ips_id)
 
         # Update if the next update time is less than the current time
-        if self.__dadmin.last_updated == 0 or self.__dadmin.last_updated + 600 <= datetime.now(tz=UTC).\
-                timestamp():
-
+        if self.__dadmin.last_updated == 0 or self.__dadmin.last_updated + 600 <= datetime.now(tz=UTC).timestamp():
             self.__dadmin.last_updated = datetime.now(tz=UTC).timestamp()
 
             i_grps = []
@@ -50,14 +48,14 @@ class Admin:
                     steam_json = await _get_steam_user_info(app, ips_get_gsid_from_member_id(self.__ips_id))
                     av = DFile(**await ips_process_avatar(app, steam_json['avatarfull']))
                     self.__dadmin.name = steam_json['personaname']
-                except:
+                except Exception:
                     av = None
-                    
+
                 if av is not None:
                     self.__dadmin.avatar = av
 
                 if 'name' in adm_data:
-                    self.__dadmin.name = adm_data['name'] # Override steam name if one is specified in admin document
+                    self.__dadmin.name = adm_data['name']  # Override steam name if one is specified in admin document
                 for grp in adm_data['groups']:
                     if grp not in i_grps:
                         i_grps.append(grp)
@@ -97,7 +95,8 @@ class Admin:
         if not self.__loaded:
             raise ValueError('Attempted to access Admin object before initialized.')
 
-        if self.__ips_id == 0: return None
+        if self.__ips_id == 0:
+            return None
 
         return self.__dadmin.avatar
 
@@ -106,7 +105,8 @@ class Admin:
         if not self.__loaded:
             raise ValueError('Attempted to access Admin object before initialized.')
 
-        if self.__ips_id == 0: return 'SYSTEM'
+        if self.__ips_id == 0:
+            return 'SYSTEM'
 
         return self.__dadmin.name
 
