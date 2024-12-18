@@ -71,6 +71,7 @@ INFRACTION_CALL_ADMIN_BAN   = 1 << 11  # The player may not call an admin (using
 INFRACTION_SESSION          = 1 << 12
 INFRACTION_DEC_ONLINE_ONLY  = 1 << 13  # Only reduces infraction time when player is online. Invalid for bans and web
 INFRACTION_ITEM_BLOCK       = 1 << 14  # The player may not use map spawned items
+# 1 << 15 Deprecated, don't know what it did because was before open sourcing GFLBans
 INFRACTION_AUTO_TIER        = 1 << 16  # This infraction is considered for tiering purposes.
 
 scope_to_flag = {

@@ -13,6 +13,7 @@ from starlette.staticfiles import StaticFiles
 from starlette.templating import Jinja2Templates
 
 from gflbans.api import api
+from gflbans.deprecation import deprecation_cleanup
 from gflbans.file import file_router
 from gflbans.internal.config import PRODUCTION, SECRET_KEY
 from gflbans.internal.loader import gflbans_init, gflbans_unload
@@ -64,6 +65,8 @@ def new_app():
                 "SECRET_KEY is set to 'testing'. This is fine for development purposes, but is unsuitable for"
                 ' usage in production environments.'
             )
+
+        await deprecation_cleanup(app)
 
     return app
 
