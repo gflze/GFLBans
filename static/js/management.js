@@ -12,7 +12,6 @@ perms2name[PERMISSION.LOGIN] = 'Can Login';
 perms2name[PERMISSION.COMMENT] = 'Can Comment';
 perms2name[PERMISSION.VIEW_IP_ADDR] = 'Can See IP Addresses';
 perms2name[PERMISSION.CREATE_INFRACTION] = 'Add Infractions';
-perms2name[PERMISSION.EDIT_OWN_INFRACTIONS] = 'DEPRECATED, DO NOT GIVE';
 perms2name[PERMISSION.EDIT_ALL_INFRACTIONS] = 'Edit All Infractions';
 perms2name[PERMISSION.ATTACH_FILE] = 'Attach Files';
 perms2name[PERMISSION.WEB_MODERATOR] = 'Panel Admin';
