@@ -14,7 +14,6 @@ from gflbans.internal.flags import (
     INFRACTION_PERMANENT,
     INFRACTION_REMOVED,
     INFRACTION_SESSION,
-    INFRACTION_SUPER_GLOBAL,
     INFRACTION_VPN,
 )
 
@@ -74,11 +73,7 @@ def build_query_dict(
         if actor_type != SERVER_KEY:
             raise ValueError('The `ignore_others` option is only valid for servers.')
 
-        _super_or_server = [{'server': ObjectId(actor_id)}, {'flags': {'$bitsAllSet': INFRACTION_SUPER_GLOBAL}}]
-
-        # If ignore_others is set, $or already exists
-        cond2 = {'$or': _super_or_server}
-        _branch(f, cond2)
+        f = {'server': ObjectId(actor_id)}
 
     # Filter out expired bans, vpn bans (on ip only), removed bans, session
     if active_only:
@@ -116,18 +111,12 @@ def build_query_dict(
 
     # Filter out server only bans that do not match our server
     if actor_type == SERVER_KEY:
-        a = [
-            {
-                '$or': [
-                    {'flags': {'$bitsAllSet': INFRACTION_SUPER_GLOBAL}},
-                    {'flags': {'$bitsAllSet': INFRACTION_GLOBAL}},
-                ]
-            },
-            {'server': ObjectId(actor_id)},
-        ]
-
-        # same deal here
-        cond2 = {'$or': a}
+        cond2 = {
+            '$or': [
+                {'flags': {'$bitsAllSet': INFRACTION_GLOBAL}},
+                {'server': ObjectId(actor_id)},
+            ]
+        }
         _branch(f, cond2)
     return f
 

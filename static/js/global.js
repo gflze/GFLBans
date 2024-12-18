@@ -18,7 +18,6 @@ const PERMISSION = Object.freeze({
     BAN: 1 << 17,  // Add bans to infractions
     ADMIN_CHAT_BLOCK: 1 << 18,  // Block admin chat
     CALL_ADMIN_BLOCK: 1 << 19,  // Block call admin usage
-    SCOPE_SUPER_GLOBAL: 1 << 20,  // Admin can use SUPER GLOBAL infractions
     SCOPE_GLOBAL: 1 << 21,  // Admins can use GLOBAL infractions
     VPN_CHECK_SKIP: 1 << 22,  // Users with this permission are immune to VPN kicks
     MANAGE_POLICY: 1 << 23,  // Manage tiering policies
@@ -32,7 +31,6 @@ const PERMISSION = Object.freeze({
 const INFRACTION = Object.freeze({
     SYSTEM: 1 << 0, // Created by SYSTEM
     GLOBAL: 1 << 1, // The ban applies to all servers except those ignoring globals
-    SUPER_GLOBAL: 1 << 2, // The ban applies to all servers
     PERMANENT: 1 << 3, // The ban does not expire
     VPN: 1 << 4, // The IP associated with the ban is likely a VPN (Doesn't show up in check by ip)
     WEB: 1 << 5, // The infraction was created via the web panel (thus has no server associated with it)
@@ -74,7 +72,6 @@ const searchParams = [
 
     'is_system',
     'is_global',
-    'is_super_global',
     'is_permanent',
     'is_vpn',
     'is_web',

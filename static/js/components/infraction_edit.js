@@ -442,8 +442,6 @@ function editScope(infraction) {
 
     if (infraction['flags'] & (INFRACTION.GLOBAL)) {
         ess.val('global');
-    } else if (infraction['flags'] & (INFRACTION.SUPER_GLOBAL)) {
-        ess.val('community');
     } else {
         ess.val('server');
     }
@@ -469,10 +467,8 @@ function process_scope_edit(infraction, new_val) {
 
     if (new_val === 'server') {
         mod['scope'] = 'server';
-    } else if (new_val === 'global') {
-        mod['scope'] = 'global';
     } else {
-        mod['scope'] = 'community';
+        mod['scope'] = 'global';
     }
 
     submit_edit(infraction['id'], mod).then(function (j) {
