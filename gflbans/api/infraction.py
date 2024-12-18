@@ -51,6 +51,7 @@ from gflbans.internal.flags import (
     PERMISSION_CREATE_INFRACTION,
     PERMISSION_EDIT_ALL_INFRACTIONS,
     PERMISSION_MANAGE_POLICY,
+    PERMISSION_SCOPE_GLOBAL,
     PERMISSION_WEB_MODERATOR,
     str2pflag,
 )
@@ -392,6 +393,16 @@ async def create_infraction(
     if query.server is not None:
         if auth[2] & PERMISSION_ASSIGN_TO_SERVER != PERMISSION_ASSIGN_TO_SERVER:
             raise HTTPException(detail='Insufficient permissions to override the server', status_code=403)
+
+        # If infraction is issued through a server and the admin cant issue global punishments,
+        # just make the infraction server only
+        if (
+            auth[0] == SERVER_KEY
+            and query.scope == 'global'
+            and query.admin is not None
+            and acting_admin.permissions & PERMISSION_SCOPE_GLOBAL != PERMISSION_SCOPE_GLOBAL
+        ):
+            query.scope = 'server'
 
         server = ObjectId(query.server)
     elif auth[0] == SERVER_KEY and auth[1] is not None:

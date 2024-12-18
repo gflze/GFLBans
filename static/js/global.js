@@ -21,7 +21,7 @@ const PERMISSION = Object.freeze({
     SCOPE_GLOBAL: 1 << 21,  // Admins can use GLOBAL infractions
     VPN_CHECK_SKIP: 1 << 22,  // Users with this permission are immune to VPN kicks
     MANAGE_POLICY: 1 << 23,  // Manage tiering policies
-    IMMUNE: 1 << 24,  // Immune from bans
+    IMMUNE: 1 << 24,  // Immune from infractions
     SKIP_IMMUNITY: 1 << 25,  // Overrides immunity
     RPC_KICK: 1 << 26,
     ASSIGN_TO_SERVER: 1 << 27,  // Assign an infraction to a specific server

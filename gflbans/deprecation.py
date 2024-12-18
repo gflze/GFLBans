@@ -72,7 +72,6 @@ async def deprecation_cleanup(app):
     await info_collection.find_one_and_update(
         {'_id': DATABASE_INFO_KEY},
         {
-            '$setOnInsert': {'_id': DATABASE_INFO_KEY},
             '$unset': {
                 'updating_shard': None,
                 'old_version': None,
@@ -81,6 +80,5 @@ async def deprecation_cleanup(app):
                 'version': GB_VERSION,
             },
         },
-        upsert=True,
     )
     logger.info(f'Updated from {old_version} to {GB_VERSION} and removed deprecated features.')

@@ -25,7 +25,7 @@ PERMISSION_CALL_ADMIN_BLOCK         = 1 << 19  # Block call admin usage
 PERMISSION_SCOPE_GLOBAL             = 1 << 21  # Admins can use GLOBAL infractions
 PERMISSION_VPN_CHECK_SKIP           = 1 << 22  # Users with this permission are immune to VPN kicks
 PERMISSION_MANAGE_POLICY            = 1 << 23  # Manage tiering policies
-PERMISSION_IMMUNE                   = 1 << 24  # Immune from bans
+PERMISSION_IMMUNE                   = 1 << 24  # Immune from infractions
 PERMISSION_SKIP_IMMUNITY            = 1 << 25  # Overrides immunity
 PERMISSION_RPC_KICK                 = 1 << 26
 PERMISSION_ASSIGN_TO_SERVER         = 1 << 27  # Assign an infraction to a specific server
@@ -131,7 +131,7 @@ name2perms = {
     'Add Global Infractions':    PERMISSION_SCOPE_GLOBAL,
     'VPN Kick Immunity':         PERMISSION_VPN_CHECK_SKIP,
     'Manage Tiering Policies':   PERMISSION_MANAGE_POLICY,
-    'Immune from Bans':          PERMISSION_IMMUNE,
+    'Immune from Infractions':   PERMISSION_IMMUNE,
     'Overrides Immunity':        PERMISSION_SKIP_IMMUNITY,
     'RPC Kick':                  PERMISSION_RPC_KICK,
     'Assign an Infraction to a Specific Server': PERMISSION_ASSIGN_TO_SERVER,
