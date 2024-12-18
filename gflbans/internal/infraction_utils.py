@@ -971,7 +971,7 @@ async def check_immunity(app, dinf: DInfraction, initiator_admin: Admin = None) 
     except NoSuchAdminError:
         return False
     except ClientResponseError as e:
-        logger.error('Error whilst communicating with the forums', exc_info=e)
+        logger.error('Error whilst getting loading admin permissions for immunity check', exc_info=e)
         raise HTTPException(detail='Internal Server Error', status_code=500)
 
     if (
