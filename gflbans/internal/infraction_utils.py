@@ -36,7 +36,6 @@ from gflbans.internal.flags import (
     INFRACTION_PERMANENT,
     INFRACTION_REMOVED,
     INFRACTION_SESSION,
-    INFRACTION_SUPER_GLOBAL,
     INFRACTION_SYSTEM,
     INFRACTION_VOICE_BLOCK,
     INFRACTION_VPN,
@@ -44,7 +43,6 @@ from gflbans.internal.flags import (
     PERMISSION_CREATE_INFRACTION,
     PERMISSION_IMMUNE,
     PERMISSION_SCOPE_GLOBAL,
-    PERMISSION_SCOPE_SUPER_GLOBAL,
     PERMISSION_SKIP_IMMUNITY,
     scope_to_flag,
     str2permflag,
@@ -566,12 +564,10 @@ async def modify_infraction(
     if scope is not None:
         if dinf.flags & INFRACTION_GLOBAL == INFRACTION_GLOBAL:
             uwu('Scope', 'Global', scope)
-        elif dinf.flags & INFRACTION_SUPER_GLOBAL == INFRACTION_SUPER_GLOBAL:
-            uwu('Scope', 'Community', scope)
         else:
             uwu('Scope', 'Server Only', scope)
 
-        commit_list.append(dinf.remove_bit_flag(db, 'flags', INFRACTION_GLOBAL | INFRACTION_SUPER_GLOBAL))
+        commit_list.append(dinf.remove_bit_flag(db, 'flags', INFRACTION_GLOBAL))
 
         commit_list.append(dinf.add_bit_flag(db, 'flags', scope_to_flag[scope]))
 
@@ -706,9 +702,6 @@ def get_permissions(dinf: DInfraction) -> int:
 
     if dinf.flags & INFRACTION_GLOBAL == INFRACTION_GLOBAL:
         i |= PERMISSION_SCOPE_GLOBAL
-
-    if dinf.flags & INFRACTION_SUPER_GLOBAL == INFRACTION_SUPER_GLOBAL:
-        i |= PERMISSION_SCOPE_SUPER_GLOBAL
 
     return i
 

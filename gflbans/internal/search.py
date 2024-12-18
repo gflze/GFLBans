@@ -21,7 +21,6 @@ from gflbans.internal.flags import (
     INFRACTION_PERMANENT,
     INFRACTION_REMOVED,
     INFRACTION_SESSION,
-    INFRACTION_SUPER_GLOBAL,
     INFRACTION_SYSTEM,
     INFRACTION_VOICE_BLOCK,
     INFRACTION_VPN,
@@ -267,7 +266,6 @@ FIELD_MAP = {
     # Bitflag checks for 'flags' field in mongodb documents
     'is_system': ('bitflag', bool, INFRACTION_SYSTEM),
     'is_global': ('bitflag', bool, INFRACTION_GLOBAL),
-    'is_super_global': ('bitflag', bool, INFRACTION_SUPER_GLOBAL),
     'is_permanent': ('bitflag', bool, INFRACTION_PERMANENT),
     'is_vpn': ('bitflag', bool, INFRACTION_VPN),
     'is_web': ('bitflag', bool, INFRACTION_WEB),

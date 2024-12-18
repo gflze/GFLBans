@@ -230,13 +230,10 @@ function loadUrlParams() {
     else if (urlParams.has('server'))
         $('#search-scope-server-selector').val(urlParams.get('server'));
 
-    if (urlParams.has('is_global') && urlParams.get('is_global') === 'false'
-        && urlParams.has('is_super_global') && urlParams.get('is_super_global') === 'false')
+    if (urlParams.has('is_global') && urlParams.get('is_global') === 'false')
         $('#search-scope-server-check').trigger('click');
     else if (urlParams.has('is_global'))
         $('#search-scope-global-check').trigger('click');
-    else if (urlParams.has('is_super_global'))
-        $('#search-scope-community-check').trigger('click');
 
     // Reasons
     if (urlParams.has('reason'))
@@ -454,10 +451,8 @@ function createSearchQuery() {
 
     if ($('#search-scope-global-check').prop('checked'))
         query = query.concat('&is_global=true');
-    else if ($('#search-scope-community-check').prop('checked'))
-        query = query.concat('&is_super_global=true');
     else if ($('#search-scope-server-check').prop('checked'))
-        query = query.concat('&is_global=false&is_super_global=false');
+        query = query.concat('&is_global=false');
 
     // Reason
     if ($('#search-reason-creation').val().trim().length > 0)

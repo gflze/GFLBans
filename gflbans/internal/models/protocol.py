@@ -76,7 +76,6 @@ class Search(BaseModel):
     is_expired: Optional[bool]
     is_system: Optional[bool]
     is_global: Optional[bool]
-    is_super_global: Optional[bool]
     is_permanent: Optional[bool]
     is_decl_online_only: Optional[bool]
     is_vpn: Optional[bool]
@@ -152,7 +151,7 @@ class CreateInfraction(BaseModel):
     admin: Optional[Initiator]
     reason: constr(min_length=1, max_length=280)
     punishments: List[constr(regex=valid_types_regex)]
-    scope: constr(regex=r'^(server|global|community)$')
+    scope: constr(regex=r'^(server|global)$')
     session: bool = False
     dec_online_only: bool = False
     do_full_infraction: bool = False  # Get user data / vpn check before replying to the request
@@ -179,7 +178,7 @@ class CreateInfractionUsingPolicy(BaseModel):
     player: PlayerObjSimple
     admin: Optional[Initiator]
     reason: Optional[constr(min_length=1, max_length=280)]
-    scope: constr(regex=r'^(server|global|community)$')
+    scope: constr(regex=r'^(server|global)$')
     policy_id: str
     consider_other_policies: List[str] = []
     server: Optional[str]  # Override the server
@@ -235,7 +234,7 @@ class ModifyInfraction(BaseModel):
 
     # Other flag stuff
     punishments: Optional[List[constr(regex=valid_types_regex)]]
-    scope: Optional[constr(regex=r'^(server|global|community)$')]
+    scope: Optional[constr(regex=r'^(server|global)$')]
     vpn: Optional[bool]  # Set whether or not this is a VPN IP
 
     @root_validator(pre=True)

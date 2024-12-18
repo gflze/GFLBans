@@ -10,8 +10,6 @@ const cServerLabel = document.getElementById('serverOnlyLabel');
 const cTargetServerField = document.getElementById('targetServerField');
 const cGlobalRadio = document.getElementById('globalCheck');
 const cGlobalLabel = document.getElementById('globalLabel');
-const cCommunityRadio = document.getElementById('communityCheck');
-const cCommunityLabel = document.getElementById('communityLabel');
 //Auto tiering
 const cAutomationSection = document.getElementById('cAutomationSection');
 const cAutomaticCheck = document.getElementById('automaticCheck');
@@ -54,7 +52,7 @@ function setSelection(selector, selection) {
 }
 
 function resetModal() {
-    //Default user info
+    // Default user info
     setSelection(cUserService, 'steam');
     $(cUserId).val('');
     $(cIpEntry).val('');
@@ -67,7 +65,7 @@ function resetModal() {
     $(cTargetServerField).removeClass('is-hidden');
     $(cAutomationSection).removeClass('is-hidden');
 
-    //For both the global and community checks, we should only enable them if we have permission to use them
+    // For the global check, we should only enable it if we have permission to use it
     const gp = $(cGlobalRadio).attr('data-has-permissions') !== '1';
     $(cGlobalRadio).prop('disabled', gp);
     if (gp) {
@@ -76,17 +74,6 @@ function resetModal() {
     } else {
         cGlobalLabel.removeAttribute('disabled');
         $('#globalLabel').removeClass('is-hidden');
-    }
-
-
-    const cp = $(cCommunityRadio).attr('data-has-permissions') !== '1';
-    $(cCommunityRadio).prop('disabled', cp);
-    if (cp) {
-        cCommunityLabel.setAttribute('disabled', '1');
-        $('#communityLabel').addClass('is-hidden');
-    } else {
-        cCommunityLabel.removeAttribute('disabled');
-        $('#communityLabel').removeClass('is-hidden');
     }
 
     $('.scope-check').prop('checked', false);
@@ -133,8 +120,6 @@ function handleWebCheckChanged() {
 
             if ($(cGlobalRadio).attr('data-has-permissions') === '1')
                 $(cGlobalRadio).prop('checked', true);
-            else if ($(cCommunityRadio).attr('data-has-permissions') === '1')
-                $(cCommunityRadio).prop('checked', true);
         }
 
         $(cAutomaticCheck).prop('checked', false);
@@ -412,9 +397,7 @@ function createAndValidateInfraction() {
     }
 
     // Scope
-    if ($(cCommunityRadio).prop('checked') && $(cCommunityRadio).attr('data-has-permissions') === '1')
-        infraction['scope'] = 'community';
-    else if (
+    if (
         ($(cWebCheck).prop('checked')
             || $(cGlobalRadio).prop('checked'))
         && $(cGlobalRadio).attr('data-has-permissions') === '1'

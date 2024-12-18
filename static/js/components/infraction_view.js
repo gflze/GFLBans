@@ -266,8 +266,6 @@ async function setupViewModal(infraction) {
     // Global
     if (infraction['flags'] & (INFRACTION.GLOBAL)) {
         scopeValue.text('All Servers');
-    } else if (infraction['flags'] & (INFRACTION.SUPER_GLOBAL)) {
-        scopeValue.text('Community');
     } else {
         scopeValue.text('Only Origin Server');
     }

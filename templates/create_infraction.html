@@ -31,7 +31,7 @@
             </div>
             <label class="label text-primary">Scoping</label>
             <div class="field">
-                <div class="control {% if user is none or not has_flag(user.permissions, bit_or(p_nodes['Add Global Infractions'], p_nodes['Add Community Infractions'])) %}is-hidden{% endif %}">
+                <div class="control {% if user is none or not has_flag(user.permissions, p_nodes['Add Global Infractions']) %}is-hidden{% endif %}">
                     <label class="checkbox">
                         <input id="isWebToggle" type="checkbox" name="isWebInfract">
                         This is a web infraction
@@ -46,7 +46,7 @@
                     </div>
                 </div>
             </div>
-            <div class="control {% if user is none or not has_flag(user.permissions, bit_or(p_nodes['Add Global Infractions'], p_nodes['Add Community Infractions'])) %}is-hidden{% endif %}">
+            <div class="control {% if user is none or not has_flag(user.permissions, p_nodes['Add Global Infractions']) %}is-hidden{% endif %}">
                 <label id="serverOnlyLabel" class="radio">
                     <input class="scope-check"
                            id="serverOnlyCheck"
@@ -64,14 +64,6 @@
                            {% if user is not none and has_flag(user.permissions, p_nodes['Add Global Infractions']) %}data-has-permissions="1"{% else %}data-has-permissions="0"{% endif %}
                            checked>
                     Global
-                </label>
-                <label id="communityLabel" class="radio">
-                    <input class="scope-check"
-                           id="communityCheck"
-                           type="radio"
-                           name="scope"
-                           {% if user is not none and has_flag(user.permissions, p_nodes['Add Community Infractions']) %}data-has-permissions="1"{% else %}data-has-permissions="0"{% endif %}>
-                    Community
                 </label>
             </div>
             <br>

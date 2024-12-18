@@ -27,7 +27,6 @@ perms2name[PERMISSION.BLOCK_CHAT] = 'Restrict Text';
 perms2name[PERMISSION.BAN] = 'Ban';
 perms2name[PERMISSION.ADMIN_CHAT_BLOCK] = 'Restrict Admin Chat';
 perms2name[PERMISSION.CALL_ADMIN_BLOCK] = 'Restrict Call Admin';
-perms2name[PERMISSION.SCOPE_SUPER_GLOBAL] = 'Add Community Infractions';
 perms2name[PERMISSION.SCOPE_GLOBAL] = 'Add Global Infractions';
 perms2name[PERMISSION.VPN_CHECK_SKIP] = 'VPN Kick Immunity';
 perms2name[PERMISSION.MANAGE_POLICY] = 'Manage Tiering Policies';

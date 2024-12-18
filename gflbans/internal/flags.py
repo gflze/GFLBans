@@ -5,7 +5,7 @@ PERMISSION_LOGIN                    = 1 << 0   # Login to the website
 PERMISSION_COMMENT                  = 1 << 1
 PERMISSION_VIEW_IP_ADDR             = 1 << 2
 PERMISSION_CREATE_INFRACTION        = 1 << 3
-# PERMISSION_EDIT_OWN_INFRACTIONS   = 1 << 4   # Deprecated, if admin can create, they can edit their own
+# PERMISSION_EDIT_OWN_INFRACTIONS   = 1 << 4   # DEPRECATED
 PERMISSION_EDIT_ALL_INFRACTIONS     = 1 << 5
 PERMISSION_ATTACH_FILE              = 1 << 6
 PERMISSION_WEB_MODERATOR            = 1 << 7   # Can edit or delete comments/files on infractions
@@ -21,7 +21,7 @@ PERMISSION_BLOCK_CHAT               = 1 << 16  # Add chat blocks to infractions
 PERMISSION_BAN                      = 1 << 17  # Add bans to infractions
 PERMISSION_ADMIN_CHAT_BLOCK         = 1 << 18  # Block admin chat
 PERMISSION_CALL_ADMIN_BLOCK         = 1 << 19  # Block call admin usage
-PERMISSION_SCOPE_SUPER_GLOBAL       = 1 << 20  # Admin can use SUPER GLOBAL infractions
+# PERMISSION_SCOPE_SUPER_GLOBAL     = 1 << 20  # DEPRECATED
 PERMISSION_SCOPE_GLOBAL             = 1 << 21  # Admins can use GLOBAL infractions
 PERMISSION_VPN_CHECK_SKIP           = 1 << 22  # Users with this permission are immune to VPN kicks
 PERMISSION_MANAGE_POLICY            = 1 << 23  # Manage tiering policies
@@ -49,7 +49,6 @@ SERVER_KEY_PERMISSIONS = (
     | PERMISSION_ADMIN_CHAT_BLOCK
     | PERMISSION_CALL_ADMIN_BLOCK
     | PERMISSION_SCOPE_GLOBAL
-    | PERMISSION_SCOPE_SUPER_GLOBAL
     | PERMISSION_MANAGE_POLICY
     | PERMISSION_SKIP_IMMUNITY
 )
@@ -58,7 +57,7 @@ SERVER_KEY_PERMISSIONS = (
 # These are given to infraction objects to indicate some basic information about them
 INFRACTION_SYSTEM           = 1 << 0   # Created by SYSTEM
 INFRACTION_GLOBAL           = 1 << 1   # The ban applies to all servers except those ignoring globals
-INFRACTION_SUPER_GLOBAL     = 1 << 2   # The ban applies to all servers
+# INFRACTION_SUPER_GLOBAL   = 1 << 2   # DEPRECATED
 INFRACTION_PERMANENT        = 1 << 3   # The ban does not expire
 INFRACTION_VPN              = 1 << 4   # The IP associated with the ban is likely a VPN (Doesn't show up in check by ip)
 INFRACTION_WEB              = 1 << 5   # The infraction was created via the web panel (thus has no server associated with it)
@@ -77,7 +76,6 @@ INFRACTION_AUTO_TIER        = 1 << 16  # This infraction is considered for tieri
 scope_to_flag = {
     'server':    0,
     'global':    INFRACTION_GLOBAL,
-    'community': INFRACTION_SUPER_GLOBAL,
 }
 
 str2pflag = {
@@ -130,7 +128,6 @@ name2perms = {
     'Ban':                       PERMISSION_BAN,
     'Restrict Admin Chat':       PERMISSION_ADMIN_CHAT_BLOCK,
     'Restrict Call Admin':       PERMISSION_CALL_ADMIN_BLOCK,
-    'Add Community Infractions': PERMISSION_SCOPE_SUPER_GLOBAL,
     'Add Global Infractions':    PERMISSION_SCOPE_GLOBAL,
     'VPN Kick Immunity':         PERMISSION_VPN_CHECK_SKIP,
     'Manage Tiering Policies':   PERMISSION_MANAGE_POLICY,
