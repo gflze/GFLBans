@@ -1,5 +1,5 @@
 import asyncio
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import List, Optional, Tuple, Union
 
 import bson
@@ -152,6 +152,9 @@ async def get_infraction(
     return await as_infraction(request.app, inf, should_include_ip(auth[0], auth[2]))
 
 
+MAX_UNIX_TIMESTAMP = int((datetime.now() + timedelta(days=365 * 100)).timestamp())
+
+
 @infraction_router.get(
     '/search', response_model=GetInfractionsReply, response_model_exclude_unset=True, response_model_exclude_none=True
 )
@@ -176,6 +179,10 @@ async def search_infractions(
         if load_fast:
             dinf.comments = []
             dinf.files = []
+
+        # If time left is > 100 years, just say it is perma
+        if dinf.expires is not None and dinf.expires > MAX_UNIX_TIMESTAMP:
+            dinf.expires = None
 
         infs.append(await as_infraction(request.app, dinf, incl_ip))
 
