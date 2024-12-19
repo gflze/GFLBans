@@ -8,8 +8,6 @@ const PERMISSION = Object.freeze({
     WEB_MODERATOR: 1 << 7, // Can edit or delete comments/files on infractions
     MANAGE_SERVERS: 1 << 8,
     MANAGE_VPNS: 1 << 9,
-    PRUNE_INFRACTIONS: 1 << 10,
-    VIEW_AUDIT_LOG: 1 << 11,
     MANAGE_GROUPS_AND_ADMINS: 1 << 12,
     MANAGE_API_KEYS: 1 << 13,
     BLOCK_ITEMS: 1 << 14, // Add item blocks to infractions

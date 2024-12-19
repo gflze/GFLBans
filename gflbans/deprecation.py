@@ -51,22 +51,27 @@ async def deprecation_cleanup(app):
     logger.info(f'Updating database from v{old_version} to v{GB_VERSION} on API Shard {shard}.')
 
     if Version(old_version) < Version('0.9.0'):
-        INFRACTION_SUPER_GLOBAL = 1 << 2
-        INFRACTION_DEPRECATED_FEATURE = 1 << 15  # This was from before GFLBans was open source, no idea what it was
-        async for inf in DInfraction.from_query(
-            db, {'flags': {'$bitsAnySet': INFRACTION_SUPER_GLOBAL | INFRACTION_DEPRECATED_FEATURE}}
-        ):
-            inf.flags &= ~INFRACTION_SUPER_GLOBAL
-            inf.flags &= ~INFRACTION_DEPRECATED_FEATURE
+        INFRACTION_SUPER_GLOBAL = 1 << 2  # Replaced with GLOBAL punishment
+        INFRACTION_UNKNOWN_FEATURE = 1 << 15  # This was from before GFLBans was open source, no idea what it was
+
+        INFRACTION_DEPRECATIONS = INFRACTION_SUPER_GLOBAL | INFRACTION_UNKNOWN_FEATURE
+        async for inf in DInfraction.from_query(db, {'flags': {'$bitsAnySet': INFRACTION_DEPRECATIONS}}):
+            inf.flags &= ~INFRACTION_DEPRECATIONS
             await inf.commit(db)
 
-        PERMISSION_EDIT_OWN_INFRACTIONS = 1 << 4
-        PERMISSION_SCOPE_SUPER_GLOBAL = 1 << 20
-        async for grp in DGroup.from_query(
-            db, {'privileges': {'$bitsAnySet': PERMISSION_EDIT_OWN_INFRACTIONS | PERMISSION_SCOPE_SUPER_GLOBAL}}
-        ):
-            grp.privileges &= ~PERMISSION_EDIT_OWN_INFRACTIONS
-            grp.privileges &= ~PERMISSION_SCOPE_SUPER_GLOBAL
+        PERMISSION_EDIT_OWN_INFRACTIONS = 1 << 4  # Was added to PERMISSION_CREATE_INFRACTION
+        PERMISSION_PRUNE_INFRACTIONS = 1 << 10  # Was never implemented
+        PERMISSION_VIEW_AUDIT_LOG = 1 << 11  # Was never implemented
+        PERMISSION_SCOPE_SUPER_GLOBAL = 1 << 20  # Was replaced with PERMISSION_SCOPE_GLOBAL
+
+        PERMISSION_DEPRECATIONS = (
+            PERMISSION_EDIT_OWN_INFRACTIONS
+            | PERMISSION_PRUNE_INFRACTIONS
+            | PERMISSION_SCOPE_SUPER_GLOBAL
+            | PERMISSION_VIEW_AUDIT_LOG
+        )
+        async for grp in DGroup.from_query(db, {'privileges': {'$bitsAnySet': PERMISSION_DEPRECATIONS}}):
+            grp.privileges &= ~PERMISSION_DEPRECATIONS
             await grp.commit(db)
 
     await info_collection.find_one_and_update(

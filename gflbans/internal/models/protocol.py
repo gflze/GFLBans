@@ -157,7 +157,7 @@ class CreateInfraction(BaseModel):
     do_full_infraction: bool = False  # Get user data / vpn check before replying to the request
     server: Optional[str]  # Override the server
     allow_normalize = False  # Attempt to convert steamid to steamid64, etc
-    import_mode = False  # skip check of admin perms
+    import_mode = False  # skip check of admin perms and just use perms of api key/server
 
     @root_validator(pre=True)
     def check_conflicts(cls, values):
