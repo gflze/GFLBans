@@ -4,8 +4,8 @@ import unicodedata
 from hashlib import sha512
 
 import orjson
+from pydantic import BaseModel, validate_model
 from redis.exceptions import RedisError
-from pydantic import validate_model, BaseModel
 from starlette.requests import Request
 
 
@@ -89,4 +89,3 @@ class ORJSONSerializer:
             return orjson.loads(content)
         except Exception as e:
             raise RedisError('Content cannot be decoded') from e
-

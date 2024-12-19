@@ -1,5 +1,5 @@
 from motor.motor_asyncio import AsyncIOMotorDatabase
-from netaddr import IPNetwork, IPAddress
+from netaddr import IPAddress, IPNetwork
 from pydantic import Field
 
 from gflbans.internal.database.base import DBase

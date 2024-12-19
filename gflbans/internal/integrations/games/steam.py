@@ -16,8 +16,10 @@ async def _get_steam_user_info(app, steamid64: str):
         if a is not None:
             return a
 
-    async with app.state.aio_session.get('https://api.steampowered.com/ISteamUser/GetPlayerSummaries/v0002/',
-                                     params={'key': STEAM_API_KEY, 'steamids': steamid64, 'format': 'json'}) as resp:
+    async with app.state.aio_session.get(
+        'https://api.steampowered.com/ISteamUser/GetPlayerSummaries/v0002/',
+        params={'key': STEAM_API_KEY, 'steamids': steamid64, 'format': 'json'},
+    ) as resp:
         try:
             resp.raise_for_status()
         except Exception:
@@ -43,7 +45,7 @@ async def get_steam_user_info(app, steamid64: str):
 async def _get_steam_multiple_user_info(app, steamid64_list: list[str]):
     if STEAM_API_KEY is None:
         raise NotImplementedError('Tried to call the steam api without an api key.')
-    
+
     users = dict()
 
     for steamid64 in steamid64_list:
@@ -55,14 +57,16 @@ async def _get_steam_multiple_user_info(app, steamid64_list: list[str]):
 
     if len(steamid64_list) == 0:
         return users
-    
-    batched_steam_ids = ""
+
+    batched_steam_ids = ''
     for steamid64 in steamid64_list:
         batched_steam_ids += f',{steamid64}'
-    batched_steam_ids = batched_steam_ids[1:] # Remove comma at start
+    batched_steam_ids = batched_steam_ids[1:]  # Remove comma at start
 
-    async with app.state.aio_session.get('https://api.steampowered.com/ISteamUser/GetPlayerSummaries/v0002/',
-                                     params={'key': STEAM_API_KEY, 'steamids': batched_steam_ids, 'format': 'json'}) as resp:
+    async with app.state.aio_session.get(
+        'https://api.steampowered.com/ISteamUser/GetPlayerSummaries/v0002/',
+        params={'key': STEAM_API_KEY, 'steamids': batched_steam_ids, 'format': 'json'},
+    ) as resp:
         try:
             resp.raise_for_status()
         except Exception:
@@ -92,6 +96,7 @@ async def get_steam_multiple_user_info(app, steamid64_list: list[str]):
 def steam_validate_id(steamid64: str):
     if int(steamid64) & 0x0110000100000000 != 0x0110000100000000:
         raise ValueError('Bad SteamID64')
+
 
 async def normalize_id(app, steamid: str) -> str:
     return await id64_or_none(app, steamid)

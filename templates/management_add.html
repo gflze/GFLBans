@@ -2,7 +2,9 @@
     <div class="modal-background"></div>
     <div class="modal-card">
         <header class="modal-card-head background-tertiary">
-            <p class="modal-card-title text-primary"><!-- Put title here via JS depending on what was opened --></p>
+            <p class="modal-card-title text-primary">
+                <!-- Put title here via JS depending on what was opened -->
+            </p>
             <button class="delete manageDismiss"></button>
         </header>
         <section class="modal-card-body background-secondary">
@@ -11,57 +13,91 @@
                 <span id="createErrorMsg"></span>
             </div>
             {% if mode == 'group' %}
-            <label class="label text-primary">Group</label>
-            <div class="field">
-                <input id="nameEntry" class="input" type="text" maxlength="32" placeholder="Name">
-            </div>
-            <label class="label text-primary">Groups</label>
-            <div id="permissionButtons" class="buttons">
-                <button class="gbtn button is-outlined">Login</button>
-            </div>
+                <label class="label text-primary">Group</label>
+                <div class="field">
+                    <input id="nameEntry"
+                           class="input"
+                           type="text"
+                           maxlength="32"
+                           placeholder="Name">
+                </div>
+                <label class="label text-primary">Groups</label>
+                <div id="permissionButtons" class="buttons">
+                    <button class="gbtn button is-outlined">Login</button>
+                </div>
             {% elif mode == 'server' %}
-            <label class="label text-primary">Name</label>
-            <div class="field">
-                <input id="nameEntry" class="input" type="text" maxlength="32" placeholder="Name">
-            </div>
-            <label class="label text-primary">IP Address</label>
-            <div class="field is-grouped">
-                <div class="field mr-1">
-                    <input id="ipEntry" class="input" type="text" maxlength="15" placeholder="IP Address">
+                <label class="label text-primary">Name</label>
+                <div class="field">
+                    <input id="nameEntry"
+                           class="input"
+                           type="text"
+                           maxlength="32"
+                           placeholder="Name">
+                </div>
+                <label class="label text-primary">IP Address</label>
+                <div class="field is-grouped">
+                    <div class="field mr-1">
+                        <input id="ipEntry"
+                               class="input"
+                               type="text"
+                               maxlength="15"
+                               placeholder="IP Address">
+                    </div>
+                    <div class="field">
+                        <input id="portEntry"
+                               class="input"
+                               type="number"
+                               maxlength="5"
+                               placeholder="Port">
+                    </div>
+                </div>
+                <label class="label text-primary">Discord Infraction Summaries</label>
+                <input id="infractionEntry"
+                       class="input mb-5"
+                       type="text"
+                       placeholder="Webhook">
+                <label class="label text-primary">Discord Admin Calls</label>
+                <input id="calladminEntry"
+                       class="input mb-2"
+                       type="text"
+                       placeholder="Webhook">
+                <input id="roleIDEntry"
+                       class="input"
+                       type="text"
+                       placeholder="Pingable Staff Role ID (or 'here')">
+                <button id="generateToken"
+                        class="button is-outlined is-danger is-hidden"
+                        style="margin: 5px auto;
+                               display: block">Generate New Token</button>
+            {% elif mode == 'apikey' %}
+            {% else %}
+                <!-- Admin -->
+                <label class="label text-primary">Admin</label>
+                <div class="field">
+                    <input id="nameEntry"
+                           class="input"
+                           type="text"
+                           maxlength="32"
+                           placeholder="Name">
                 </div>
                 <div class="field">
-                    <input id="portEntry" class="input" type="number" maxlength="5" placeholder="Port">
+                    <input id="steamIdEntry" class="input" type="text" placeholder="Steam64 ID">
                 </div>
-            </div>
-            <label class="label text-primary">Discord Infraction Summaries</label>
-            <input id="infractionEntry" class="input mb-5" type="text" placeholder="Webhook">
-            <label class="label text-primary">Discord Admin Calls</label>
-            <input id="calladminEntry" class="input mb-2" type="text" placeholder="Webhook">
-            <input id="roleIDEntry" class="input" type="text" placeholder="Pingable Staff Role ID (or 'here')">
-            <button id="generateToken" class="button is-outlined is-danger is-hidden" style="margin: 5px auto; display: block">Generate New Token</button>
-            {% elif mode == 'apikey' %}
-            {% else %} <!-- Admin -->
-            <label class="label text-primary">Admin</label>
-            <div class="field">
-                <input id="nameEntry" class="input" type="text" maxlength="32" placeholder="Name">
-            </div>
-            <div class="field">
-                <input id="steamIdEntry" class="input" type="text" placeholder="Steam64 ID">
-            </div>
-            <label class="label text-primary">Permissions</label>
-            <div id="groupButtons" class="buttons">
-                <button class="gbtn button is-outlined">Root</button>
-            </div>
+                <label class="label text-primary">Permissions</label>
+                <div id="groupButtons" class="buttons">
+                    <button class="gbtn button is-outlined">Root</button>
+                </div>
             {% endif %}
         </section>
         <footer class="modal-card-foot background-tertiary">
-            <button id="manageSubmit" class="button is-success"><!-- Put 'Add whatever' here via JS depending on what was opened --></button>
+            <button id="manageSubmit" class="button is-success">
+                <!-- Put 'Add whatever' here via JS depending on what was opened -->
+            </button>
             <button class="button is-danger manageDismiss">Cancel</button>
             <button id="manageDelete" class="button is-danger">Delete</button>
         </footer>
     </div>
 </div>
-
 <div id="cLoadingModal" class="modal">
     <div class="modal-background"></div>
     <div class="modal-card">

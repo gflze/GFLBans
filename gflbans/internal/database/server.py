@@ -1,10 +1,10 @@
 import json
 from datetime import datetime, timedelta
-from typing import Optional, List
+from typing import List, Optional
 
 from dateutil.tz import UTC
 from motor.motor_asyncio import AsyncIOMotorDatabase
-from pydantic import root_validator, BaseModel
+from pydantic import BaseModel, root_validator
 
 from gflbans.internal.config import SERVER_CACHE_STALE_AFTER
 from gflbans.internal.database.base import DBase
@@ -32,6 +32,7 @@ class DCallData(BaseModel):
     claim_token: str
     call_info: ExecuteCallAdmin
 
+
 class DServer(DBase):
     __collection__ = 'servers'
     enabled: bool = True
@@ -52,18 +53,21 @@ class DServer(DBase):
 
     @root_validator(pre=True)
     def check_discord(cls, values):
-        if ('discord_webhook' in values and 'discord_staff_tag' not in values) or ('discord_staff_tag' in values
-                                                                                   and 'discord_webhook' not in values):
+        if ('discord_webhook' in values and 'discord_staff_tag' not in values) or (
+            'discord_staff_tag' in values and 'discord_webhook' not in values
+        ):
             raise ValueError('Missing discord fields!')
         return values
 
     @classmethod
     async def find_player(cls, db_ref: AsyncIOMotorDatabase, gs_service: str, gs_id: str):
-        ds = await db_ref[cls.__collection__].find_one({
-            'server_info.last_updated': {'$lt': datetime.now(tz=UTC) + timedelta(seconds=SERVER_CACHE_STALE_AFTER)},
-            'server_info.players.gs_service': gs_service,
-            'server_info.players.gs_id': gs_id
-        })
+        ds = await db_ref[cls.__collection__].find_one(
+            {
+                'server_info.last_updated': {'$lt': datetime.now(tz=UTC) + timedelta(seconds=SERVER_CACHE_STALE_AFTER)},
+                'server_info.players.gs_service': gs_service,
+                'server_info.players.gs_id': gs_id,
+            }
+        )
 
         if ds is None:
             return None

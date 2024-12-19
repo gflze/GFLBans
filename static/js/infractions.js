@@ -10,7 +10,7 @@ function handleResp(d, page, s, m) {
     }
 
     d.json().then(data => {
-        let dur = 200 - (new Date().getTime() - s);
+        const dur = 200 - (new Date().getTime() - s);
 
         function _loadI() {
             for (let i = 0; i < data['results'].length; i++) {
@@ -19,7 +19,7 @@ function handleResp(d, page, s, m) {
 
             $('#resultCount').text(data['total_matched']);
 
-            let total_pages = Math.ceil(data['total_matched'] / 30);
+            const total_pages = Math.ceil(data['total_matched'] / 30);
 
             if (total_pages < page && total_pages > 0) {
                 //Out of range
@@ -30,7 +30,7 @@ function handleResp(d, page, s, m) {
 
             if (m !== '') {
                 resetViewModal();
-                _openInfraction(m, s)
+                _openInfraction(m, s);
             } else {
                 unsetLoading();
             }
@@ -52,21 +52,22 @@ function handleResp(d, page, s, m) {
 
 function setupEmptyINotice() {
 
-    let i_root = document.getElementById('infractions_tab');
+    const i_root = document.getElementById('infractions_tab');
 
     $(i_root).empty();
 
-    i_root.classList.add('has-text-centered')
+    i_root.classList.add('has-text-centered');
     i_root.classList.remove('table-container');
 
-    let icon = document.createElement('i');
+    const icon = document.createElement('i');
     icon.classList.add('fas', 'fa-question', 'mt-5', 'nf-icon', 'text-primary');
 
-    let text = document.createElement('h1');
+    const text = document.createElement('h1');
     text.innerText = 'No Infractions';
     text.classList.add('is-size-1');
 
-    let subtext = document.createElement('p');
+    const subtext = document.createElement('p');
+    /* eslint-disable-next-line max-len */
     subtext.innerText = 'Your query matched no documents. Try a different search or add an infraction using the hammer icon in the top-left corner.';
     subtext.classList.add('mb-5');
 
@@ -85,7 +86,7 @@ function loadInfractions(page = 1, s, m) {
 
 function doSearch(page = 1, s, m) {
     let query = '/api/infractions/search?limit=30&skip=' + ((page - 1) * 30);
-    
+
     for (let i = 0; i < searchParams.length; i++) {
         if (urlParams.has(searchParams[i]) && urlParams.get(searchParams[i]).length > 0)
             query = query.concat(`&${searchParams[i]}=${encodeURIComponent(urlParams.get(searchParams[i]))}`);
@@ -106,14 +107,14 @@ function isSearch() {
 }
 
 $(document).ready(function () {
-    let start = new Date().getTime();
+    const start = new Date().getTime();
 
     setLoading();
 
     let page = 1;
 
-    let po = getMeta('page_override');
-    let pq = urlParams.get('page');
+    const po = getMeta('page_override');
+    const pq = urlParams.get('page');
 
     if (po !== '') {
         page = parseInt(po);
@@ -125,7 +126,7 @@ $(document).ready(function () {
         insertParam('page', 1);
     }
 
-    let m = getMeta('load_infraction');
+    const m = getMeta('load_infraction');
 
     if (isSearch) {
         doSearch(page, start, m);

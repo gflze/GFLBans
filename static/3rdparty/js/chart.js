@@ -1528,7 +1528,7 @@ function getAlpha(string) {
 // generators
 function hexString(rgba, a) {
    var a = (a !== undefined && rgba.length === 3) ? a : rgba[3];
-   return "#" + hexDouble(rgba[0]) 
+   return "#" + hexDouble(rgba[0])
               + hexDouble(rgba[1])
               + hexDouble(rgba[2])
               + (
@@ -3226,7 +3226,7 @@ var getLtrAdapter = function() {
 		x: function(x) {
 			return x;
 		},
-		setWidth: function(w) { // eslint-disable-line no-unused-vars
+		setWidth: function(w) {
 		},
 		textAlign: function(align) {
 			return align;
@@ -3234,7 +3234,7 @@ var getLtrAdapter = function() {
 		xPlus: function(x, value) {
 			return x + value;
 		},
-		leftForLtr: function(x, _itemWidth) { // eslint-disable-line no-unused-vars
+		leftForLtr: function(x, _itemWidth) {
 			return x;
 		},
 	};
@@ -4508,7 +4508,7 @@ var element_point = core_element.extend({
 		var x = vm.x;
 		var y = vm.y;
 		var globalDefaults = core_defaults.global;
-		var defaultColor = globalDefaults.defaultColor; // eslint-disable-line no-shadow
+		var defaultColor = globalDefaults.defaultColor;
 
 		if (vm.skip) {
 			return;
@@ -7515,7 +7515,7 @@ var supportsEventListenerOptions = (function() {
 	var supports = false;
 	try {
 		var options = Object.defineProperty({}, 'passive', {
-			// eslint-disable-next-line getter-return
+
 			get: function() {
 				supports = true;
 			}
@@ -7810,7 +7810,7 @@ var platform_dom$2 = {
 		// we can't use save() and restore() to restore the initial state. So make sure that at
 		// least the canvas context is reset to the default state by setting the canvas width.
 		// https://www.w3.org/TR/2011/WD-html5-20110525/the-canvas-element.html
-		// eslint-disable-next-line no-self-assign
+
 		canvas.width = canvas.width;
 
 		delete canvas[EXPANDO_KEY];

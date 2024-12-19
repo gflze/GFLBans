@@ -14,11 +14,17 @@ async def index(request: Request):
     page_index_info = 'index_info.html.example'
     if exists('templates/configs/index_info.html'):
         page_index_info = 'index_info.html'
-    
+
     page_index_links = 'index_links.html.example'
     if exists('templates/configs/index_links.html'):
         page_index_links = 'index_links.html'
 
-    return request.app.state.templates.TemplateResponse('pages/index.html', 
-                                                        {**await sctx(request), 'page': 'index',
-                                                         'page_index_info': page_index_info, 'page_index_links': page_index_links})
+    return request.app.state.templates.TemplateResponse(
+        'pages/index.html',
+        {
+            **await sctx(request),
+            'page': 'index',
+            'page_index_info': page_index_info,
+            'page_index_links': page_index_links,
+        },
+    )

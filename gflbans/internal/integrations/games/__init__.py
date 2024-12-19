@@ -1,8 +1,8 @@
-from gflbans.internal.integrations.games.discord import get_discord_user_info, discord_validate_id
+from gflbans.internal.integrations.games.discord import discord_validate_id, get_discord_user_info
 from gflbans.internal.integrations.games.steam import get_steam_user_info, steam_validate_id
-from gflbans.internal.models.api import PlayerObjNoIp
-from gflbans.internal.integrations.games.steam import normalize_id as steam_normalize
 from gflbans.internal.integrations.games.steam import normalize_id as discord_normalize
+from gflbans.internal.integrations.games.steam import normalize_id as steam_normalize
+from gflbans.internal.models.api import PlayerObjNoIp
 
 
 async def get_user_info(app, service, gsid):
@@ -14,10 +14,7 @@ async def get_user_info(app, service, gsid):
         raise NotImplementedError(f'Retrieving user info from {service} is currently unsupported.')
 
 
-SUPPORTED_SERVICES = [
-    'steam',
-    'discord'
-]
+SUPPORTED_SERVICES = ['steam', 'discord']
 
 
 def validate_id(svc, gsid):
@@ -40,6 +37,7 @@ async def get_url(svc, gsid):
     else:
         raise NotImplementedError('Not supported for this backend')
 
+
 async def normalize_id(app, svc: str, gsid: str) -> str:
     if svc == 'steam':
         r = await steam_normalize(app, gsid)
@@ -47,8 +45,8 @@ async def normalize_id(app, svc: str, gsid: str) -> str:
         r = await discord_normalize(app, gsid)
     else:
         raise NotImplementedError('Not supported for this provider')
-    
+
     if not r:
         raise ValueError(f'Normalization failed: Bad value {gsid} for {svc}')
-    
+
     return r

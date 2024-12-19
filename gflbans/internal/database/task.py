@@ -19,7 +19,8 @@ class DTask(DBase):
     @classmethod
     async def pop_next_task(cls, db_ref: AsyncIOMotorDatabase):
         task = await db_ref[cls.__collection__].find_one_and_delete(
-            {'run_at': {'$lte': datetime.now(tz=UTC).timestamp()}})
+            {'run_at': {'$lte': datetime.now(tz=UTC).timestamp()}}
+        )
 
         if task is None:
             return None  # no task

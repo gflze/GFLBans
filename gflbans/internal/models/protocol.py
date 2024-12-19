@@ -1,17 +1,34 @@
 # This file defines both the WebSocket and HTTP API protocol
 from datetime import datetime
-from typing import Optional, List, Union, Dict
+from typing import Dict, List, Optional, Union
 
 from fastapi import Depends, Query
-from pydantic import BaseModel, conint, PositiveInt, constr, validator, root_validator, Field, IPvAnyAddress
-
+from pydantic import BaseModel, Field, IPvAnyAddress, PositiveInt, conint, constr, root_validator, validator
 
 # Infraction related API calls
 from gflbans.internal.config import MAX_UPLOAD_SIZE
 from gflbans.internal.flags import valid_types_regex
-from gflbans.internal.models.api import FetchAdminInfo, PlayerObjNoIpOptional, PositiveIntIncl0, Infraction, Initiator, \
-    CInfractionSummary, PlayerObjNoIp, InfractionTieringPolicyTier, PlayerObjSimple, Signature, AdminInfo, Server, \
-    ServerInternal, Group, AdminMinimal, VPNInfo, InfractionDay, PlayerObjIPOptional, RawSignature
+from gflbans.internal.models.api import (
+    AdminInfo,
+    AdminMinimal,
+    CInfractionSummary,
+    FetchAdminInfo,
+    Group,
+    Infraction,
+    InfractionDay,
+    InfractionTieringPolicyTier,
+    Initiator,
+    PlayerObjIPOptional,
+    PlayerObjNoIp,
+    PlayerObjNoIpOptional,
+    PlayerObjSimple,
+    PositiveIntIncl0,
+    RawSignature,
+    Server,
+    ServerInternal,
+    Signature,
+    VPNInfo,
+)
 
 
 class GetInfractions(BaseModel):
@@ -59,7 +76,6 @@ class Search(BaseModel):
     is_expired: Optional[bool]
     is_system: Optional[bool]
     is_global: Optional[bool]
-    is_super_global: Optional[bool]
     is_permanent: Optional[bool]
     is_decl_online_only: Optional[bool]
     is_vpn: Optional[bool]
@@ -114,6 +130,7 @@ class InfractionStatisticsReply(BaseModel):
 #    duration: Optional[conint(gt=0)]
 #    dec_online: bool = False
 
+
 class RegisterInfractionTieringPolicy(BaseModel):
     name: str
     server: Optional[str]
@@ -134,13 +151,13 @@ class CreateInfraction(BaseModel):
     admin: Optional[Initiator]
     reason: constr(min_length=1, max_length=280)
     punishments: List[constr(regex=valid_types_regex)]
-    scope: constr(regex=r'^(server|global|community)$')
+    scope: constr(regex=r'^(server|global)$')
     session: bool = False
     dec_online_only: bool = False
     do_full_infraction: bool = False  # Get user data / vpn check before replying to the request
     server: Optional[str]  # Override the server
     allow_normalize = False  # Attempt to convert steamid to steamid64, etc
-    import_mode = False  # skip check of admin perms
+    import_mode = False  # skip check of admin perms and just use perms of api key/server
 
     @root_validator(pre=True)
     def check_conflicts(cls, values):
@@ -161,7 +178,7 @@ class CreateInfractionUsingPolicy(BaseModel):
     player: PlayerObjSimple
     admin: Optional[Initiator]
     reason: Optional[constr(min_length=1, max_length=280)]
-    scope: constr(regex=r'^(server|global|community)$')
+    scope: constr(regex=r'^(server|global)$')
     policy_id: str
     consider_other_policies: List[str] = []
     server: Optional[str]  # Override the server
@@ -217,7 +234,7 @@ class ModifyInfraction(BaseModel):
 
     # Other flag stuff
     punishments: Optional[List[constr(regex=valid_types_regex)]]
-    scope: Optional[constr(regex=r'^(server|global|community)$')]
+    scope: Optional[constr(regex=r'^(server|global)$')]
     vpn: Optional[bool]  # Set whether or not this is a VPN IP
 
     @root_validator(pre=True)
@@ -352,9 +369,11 @@ class ExecuteCallAdminReply(BaseModel):
 class ClaimCallAdmin(BaseModel):
     admin_name: str
 
+
 class ClaimCallAdminReply(BaseModel):
     success: bool
     msg: Optional[str]
+
 
 class QueryAdminInfo(BaseModel):
     admin: Initiator
@@ -362,6 +381,7 @@ class QueryAdminInfo(BaseModel):
 
 class QueryAdminInfoReply(BaseModel):
     admin: AdminInfo
+
 
 # Server related routes
 
@@ -395,7 +415,9 @@ class AddServer(BaseModel):
 
     @root_validator(pre=True)
     def check_discord(cls, values):
-        if ('discord_webhook' in values and 'discord_staff_tag' not in values) or ('discord_staff_tag' in values and 'discord_webhook' not in values):
+        if ('discord_webhook' in values and 'discord_staff_tag' not in values) or (
+            'discord_staff_tag' in values and 'discord_webhook' not in values
+        ):
             raise ValueError('Must give either both discord_webhook and discord_staff_tag or neither')
 
         return values
@@ -438,6 +460,7 @@ class DeleteServerReply(BaseModel):
 
 
 # Group APIs
+
 
 class UpdateGroup(BaseModel):
     name: str
@@ -513,6 +536,7 @@ class RemoveVPN(BaseModel):
 class RemoveVPNReply(BaseModel):
     success: bool
 
+
 # Server to client communications, often called RPC.
 
 
@@ -558,6 +582,7 @@ class ServerStats(BaseModel):
 
     # History
     history: Dict[str, InfractionDay]
+
 
 class GetAdmins(BaseModel):
     admin: FetchAdminInfo = Depends(FetchAdminInfo)

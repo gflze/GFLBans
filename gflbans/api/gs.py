@@ -1,42 +1,58 @@
 import asyncio
-import json
 from contextlib import suppress
 from datetime import datetime
-import re
-from typing import Tuple, Optional, List
+from typing import List, Optional, Tuple
 
-from redis.exceptions import RedisError
 from bson import ObjectId
 from dateutil.tz import UTC
 from fastapi import APIRouter, Depends, HTTPException
+from fastapi.responses import RedirectResponse
 from pydantic import PositiveInt
 from pymongo import UpdateMany
-from starlette.requests import Request
-from fastapi.responses import RedirectResponse
+from redis.exceptions import RedisError
 from starlette.background import BackgroundTasks
+from starlette.requests import Request
 
 from gflbans.api.auth import check_access
-from gflbans.api_util import str_id, construct_ci_resp, cinfsum_cmp_sef, cinfsum_cmp
-from gflbans.internal.asn import check_vpn, VPN_CLOUD, VPN_YES
+from gflbans.api_util import cinfsum_cmp, cinfsum_cmp_sef, construct_ci_resp, str_id
+from gflbans.internal.asn import VPN_CLOUD, VPN_YES, check_vpn
 from gflbans.internal.avatar import process_avatar
 from gflbans.internal.config import MONGO_DB
-from gflbans.internal.constants import SERVER_KEY, NOT_AUTHED_USER
-from gflbans.internal.database.common import DFile, DUser
-from gflbans.internal.database.infraction import DComment, build_query_dict, DInfraction
-from gflbans.internal.database.server import DServer, DServerInfo, DUserIP, DCallData
+from gflbans.internal.constants import NOT_AUTHED_USER, SERVER_KEY
+from gflbans.internal.database.common import DFile
+from gflbans.internal.database.infraction import DComment, DInfraction, build_query_dict
+from gflbans.internal.database.server import DCallData, DServer, DServerInfo, DUserIP
 from gflbans.internal.database.signature import DSignature
-from gflbans.internal.discord_calladmin import claim_monitor_task, execute_webhook, execute_claim, prepare_calladmin_image
+from gflbans.internal.discord_calladmin import (
+    claim_monitor_task,
+    execute_claim,
+    execute_webhook,
+    prepare_calladmin_image,
+)
 from gflbans.internal.errors import NoSuchAdminError
-from gflbans.internal.flags import INFRACTION_DEC_ONLINE_ONLY, str2pflag, PERMISSION_VPN_CHECK_SKIP, \
-    INFRACTION_CALL_ADMIN_BAN
+from gflbans.internal.flags import (
+    INFRACTION_CALL_ADMIN_BAN,
+    INFRACTION_DEC_ONLINE_ONLY,
+    PERMISSION_VPN_CHECK_SKIP,
+    str2pflag,
+)
 from gflbans.internal.infraction_utils import create_dinfraction, get_user_data
 from gflbans.internal.integrations.games import get_user_info
 from gflbans.internal.integrations.games.steam import get_steam_multiple_user_info
 from gflbans.internal.log import logger
-from gflbans.internal.models.api import PlayerObjNoIp, PlayerObjSimple, Initiator, AdminInfo, PlayerObjIPOptional
-from gflbans.internal.models.protocol import HeartbeatChange, Heartbeat, RunSignaturesReply, RunSignatures, \
-    CheckVPNReply, \
-    CheckVPN, ExecuteCallAdminReply, ExecuteCallAdmin, ClaimCallAdminReply, ClaimCallAdmin
+from gflbans.internal.models.api import AdminInfo, Initiator, PlayerObjIPOptional, PlayerObjNoIp, PlayerObjSimple
+from gflbans.internal.models.protocol import (
+    CheckVPN,
+    CheckVPNReply,
+    ClaimCallAdmin,
+    ClaimCallAdminReply,
+    ExecuteCallAdmin,
+    ExecuteCallAdminReply,
+    Heartbeat,
+    HeartbeatChange,
+    RunSignatures,
+    RunSignaturesReply,
+)
 from gflbans.internal.pyapi_utils import load_admin_from_initiator
 from gflbans.internal.utils import validate
 
@@ -56,6 +72,7 @@ async def _process_heartbeat_player(app, ply: PlayerObjIPOptional) -> DUserIP:
 
     return DUserIP(**ply.dict(), gs_name=name, gs_avatar=avatar)
 
+
 async def _process_heartbeat_multiple_players(app, ply_list: list[PlayerObjIPOptional]) -> list[DUserIP]:
     user_list = []
     steamid_list = []
@@ -69,7 +86,7 @@ async def _process_heartbeat_multiple_players(app, ply_list: list[PlayerObjIPOpt
         for ply in ply_list:
             user_list.append(DUserIP(**ply.dict(), gs_name='Unknown Player', gs_avatar=None))
         return user_list
-    
+
     for ply in ply_list:
         avatar: Optional[DFile] = None
         name: str = 'Unknown Player'
@@ -86,12 +103,17 @@ async def _process_heartbeat_multiple_players(app, ply_list: list[PlayerObjIPOpt
     return user_list
 
 
-@gs_router.post('/heartbeat', response_model=List[HeartbeatChange], response_model_exclude_unset=True,
-                response_model_exclude_none=True)
-async def heartbeat(request: Request, beat: Heartbeat,
-                    auth: Tuple[int, Optional[ObjectId], int] = Depends(check_access)):
-    if auth[0] != SERVER_KEY: raise HTTPException(detail='You must be authed as a server to use this route',
-                                                  status_code=403)
+@gs_router.post(
+    '/heartbeat',
+    response_model=List[HeartbeatChange],
+    response_model_exclude_unset=True,
+    response_model_exclude_none=True,
+)
+async def heartbeat(
+    request: Request, beat: Heartbeat, auth: Tuple[int, Optional[ObjectId], int] = Depends(check_access)
+):
+    if auth[0] != SERVER_KEY:
+        raise HTTPException(detail='You must be authed as a server to use this route', status_code=403)
 
     srv = await DServer.from_id(request.app.state.db[MONGO_DB], auth[1])
 
@@ -142,26 +164,57 @@ async def heartbeat(request: Request, beat: Heartbeat,
         conds = []
 
         for p in pc:
-            conds.append(build_query_dict(auth[0], auth[1], gs_service=p.gs_service, gs_id=p.gs_id,
-                                          ip=p.ip, ignore_others=not beat.include_other_servers, active_only=True))
+            conds.append(
+                build_query_dict(
+                    auth[0],
+                    auth[1],
+                    gs_service=p.gs_service,
+                    gs_id=p.gs_id,
+                    ip=p.ip,
+                    ignore_others=not beat.include_other_servers,
+                    active_only=True,
+                )
+            )
 
         if conds:
-            await request.app.state.db[MONGO_DB].infractions.bulk_write([
-                UpdateMany({'$or': conds, 'flags': {'$bitsAllSet': INFRACTION_DEC_ONLINE_ONLY}, 'time_left':
-                           {'$exists': True, '$ne': 0}},
-                           {'$inc': {'time_left': -1 * int((dsi.last_updated - srv.server_info.last_updated)
-                                                           .total_seconds())},
-                            '$set': {'last_heartbeat': datetime.now(tz=UTC).timestamp()}}),
-                UpdateMany({'time_left': {'$lt': 0}}, {'$set': {'time_left': 0}})
-            ], ordered=True)
+            await request.app.state.db[MONGO_DB].infractions.bulk_write(
+                [
+                    UpdateMany(
+                        {
+                            '$or': conds,
+                            'flags': {'$bitsAllSet': INFRACTION_DEC_ONLINE_ONLY},
+                            'time_left': {'$exists': True, '$ne': 0},
+                        },
+                        {
+                            '$inc': {
+                                'time_left': -1 * int((dsi.last_updated - srv.server_info.last_updated).total_seconds())
+                            },
+                            '$set': {'last_heartbeat': datetime.now(tz=UTC).timestamp()},
+                        },
+                    ),
+                    UpdateMany({'time_left': {'$lt': 0}}, {'$set': {'time_left': 0}}),
+                ],
+                ordered=True,
+            )
 
             for p in pc:
-                changes.append(HeartbeatChange(
-                    player=PlayerObjNoIp(**p.dict(by_alias=True)),
-                    check=await construct_ci_resp(request.app.state.db[MONGO_DB], build_query_dict(auth[0], auth[1], gs_service=p.gs_service,
-                                            gs_id=p.gs_id,
-                                            ip=p.ip, ignore_others=not beat.include_other_servers, active_only=True))
-                ))
+                changes.append(
+                    HeartbeatChange(
+                        player=PlayerObjNoIp(**p.dict(by_alias=True)),
+                        check=await construct_ci_resp(
+                            request.app.state.db[MONGO_DB],
+                            build_query_dict(
+                                auth[0],
+                                auth[1],
+                                gs_service=p.gs_service,
+                                gs_id=p.gs_id,
+                                ip=p.ip,
+                                ignore_others=not beat.include_other_servers,
+                                active_only=True,
+                            ),
+                        ),
+                    )
+                )
 
     # Save the changes
     srv.server_info = dsi
@@ -170,11 +223,20 @@ async def heartbeat(request: Request, beat: Heartbeat,
     return changes
 
 
-@gs_router.post('/signatures', response_model=RunSignaturesReply,
-                response_model_exclude_unset=True, response_model_exclude_none=True)
-async def run_signatures(request: Request,
-                         run: RunSignatures, tasks: BackgroundTasks, auth: Tuple[int, Optional[ObjectId], int] = Depends(check_access)):
-    if auth[0] != SERVER_KEY: raise HTTPException(detail='Must be authed as server for this route', status_code=403)
+@gs_router.post(
+    '/signatures',
+    response_model=RunSignaturesReply,
+    response_model_exclude_unset=True,
+    response_model_exclude_none=True,
+)
+async def run_signatures(
+    request: Request,
+    run: RunSignatures,
+    tasks: BackgroundTasks,
+    auth: Tuple[int, Optional[ObjectId], int] = Depends(check_access),
+):
+    if auth[0] != SERVER_KEY:
+        raise HTTPException(detail='Must be authed as server for this route', status_code=403)
     vpn_check_result = await check_vpn(request.app, run.player_ip)
 
     if vpn_check_result == VPN_CLOUD:
@@ -182,40 +244,54 @@ async def run_signatures(request: Request,
 
     num_alts = 0
 
-    q = build_query_dict(auth[0], str_id(auth[1]), gs_service=run.player.gs_service,
-                         gs_id=run.player.gs_id,
-                         ip=None, ignore_others=(not run.include_other_servers),
-                         active_only=True)
+    q = build_query_dict(
+        auth[0],
+        str_id(auth[1]),
+        gs_service=run.player.gs_service,
+        gs_id=run.player.gs_id,
+        ip=None,
+        ignore_others=(not run.include_other_servers),
+        active_only=True,
+    )
 
     initial_chk = await construct_ci_resp(request.app.state.db[MONGO_DB], q)
 
     for signature in run.signatures:
-        await DSignature.save_signature(request.app.state.db[MONGO_DB], run.player, signature=(signature.mod,
-                                                                                             signature.signature))
-        
+        await DSignature.save_signature(
+            request.app.state.db[MONGO_DB], run.player, signature=(signature.mod, signature.signature)
+        )
+
         signature = signature.to_signature()
         logger.debug(f'check signature {signature.mod} {signature.signature}')
-        
-        async for dsig in DSignature.find_all_of_signature(request.app.state.db[MONGO_DB],
-                                                           signature=(signature.mod, signature.signature)):
+
+        async for dsig in DSignature.find_all_of_signature(
+            request.app.state.db[MONGO_DB], signature=(signature.mod, signature.signature)
+        ):
             if dsig.user.gs_service != run.player.gs_service or dsig.user.gs_id != run.player.gs_id:
                 num_alts += 1
 
-                q2 = build_query_dict(auth[0], str_id(auth[1]), gs_service=dsig.user.gs_service,
-                                      gs_id=dsig.user.gs_id,
-                                      ip=None, ignore_others=(not run.include_other_servers),
-                                      active_only=True)
+                q2 = build_query_dict(
+                    auth[0],
+                    str_id(auth[1]),
+                    gs_service=dsig.user.gs_service,
+                    gs_id=dsig.user.gs_id,
+                    ip=None,
+                    ignore_others=(not run.include_other_servers),
+                    active_only=True,
+                )
 
                 chk = await construct_ci_resp(request.app.state.db[MONGO_DB], q2)
 
                 # If ANY field exceeds, add an evasion punishment
 
-                if cinfsum_cmp_sef(initial_chk.voice_block, chk.voice_block) or \
-                        cinfsum_cmp_sef(initial_chk.chat_block, chk.chat_block) or \
-                        cinfsum_cmp_sef(initial_chk.ban, chk.ban) or \
-                        cinfsum_cmp_sef(initial_chk.admin_chat_block, chk.admin_chat_block) or \
-                        cinfsum_cmp_sef(initial_chk.call_admin_block, chk.call_admin_block) or \
-                        cinfsum_cmp_sef(initial_chk.item_block, chk.item_block):
+                if (
+                    cinfsum_cmp_sef(initial_chk.voice_block, chk.voice_block)
+                    or cinfsum_cmp_sef(initial_chk.chat_block, chk.chat_block)
+                    or cinfsum_cmp_sef(initial_chk.ban, chk.ban)
+                    or cinfsum_cmp_sef(initial_chk.admin_chat_block, chk.admin_chat_block)
+                    or cinfsum_cmp_sef(initial_chk.call_admin_block, chk.call_admin_block)
+                    or cinfsum_cmp_sef(initial_chk.item_block, chk.item_block)
+                ):
                     v = []
 
                     for fn in str2pflag.keys():
@@ -244,14 +320,18 @@ async def run_signatures(request: Request,
                     s = 'global' if run.include_other_servers else 'server'
                     d = None if run.make_permanent_for_evasion else pick_worst(chk)
 
-                    dinf = create_dinfraction(PlayerObjSimple(
-                        gs_service=run.player.gs_service,
-                        gs_id=run.player.gs_id,
-                        ip=run.player_ip
-                    ), reason=f'Punishment evasion: {dsig.user.gs_service} {dsig.user.gs_id}', scope=s,
-                        punishments=v, duration=d, server=auth[1])
-                    
-                    dc = DComment(content=f'ref: {dsig.mod}/{dsig.signature}', private=True, created=datetime.now(tz=UTC))
+                    dinf = create_dinfraction(
+                        PlayerObjSimple(gs_service=run.player.gs_service, gs_id=run.player.gs_id, ip=run.player_ip),
+                        reason=f'Punishment evasion: {dsig.user.gs_service} {dsig.user.gs_id}',
+                        scope=s,
+                        punishments=v,
+                        duration=d,
+                        server=auth[1],
+                    )
+
+                    dc = DComment(
+                        content=f'ref: {dsig.mod}/{dsig.signature}', private=True, created=datetime.now(tz=UTC)
+                    )
 
                     dinf.comments.append(dc)
 
@@ -262,29 +342,39 @@ async def run_signatures(request: Request,
     return RunSignaturesReply(check=await construct_ci_resp(request.app.state.db[MONGO_DB], q), num_alts=num_alts)
 
 
-@gs_router.get('/alts', response_model=List[PlayerObjNoIp], response_model_exclude_none=True,
-               response_model_exclude_unset=True)
-async def get_alts(request: Request, ply: PlayerObjNoIp = Depends(PlayerObjNoIp),
-                   auth: Tuple[int, Optional[ObjectId], int] = Depends(check_access)):
-    if auth == NOT_AUTHED_USER: raise HTTPException(detail='This route requires authentication', status_code=401)
+@gs_router.get(
+    '/alts', response_model=List[PlayerObjNoIp], response_model_exclude_none=True, response_model_exclude_unset=True
+)
+async def get_alts(
+    request: Request,
+    ply: PlayerObjNoIp = Depends(PlayerObjNoIp),
+    auth: Tuple[int, Optional[ObjectId], int] = Depends(check_access),
+):
+    if auth == NOT_AUTHED_USER:
+        raise HTTPException(detail='This route requires authentication', status_code=401)
 
     alts = []
 
-    async for signature in DSignature.find_all_signatures_of_users(request.app.state.db[MONGO_DB], ply.gs_service,
-                                                                   ply.gs_id):
-        async for alt_sig in DSignature.find_all_of_signature(request.app.state.db[MONGO_DB],
-                                                              (signature.mod, signature.signature)):
+    async for signature in DSignature.find_all_signatures_of_users(
+        request.app.state.db[MONGO_DB], ply.gs_service, ply.gs_id
+    ):
+        async for alt_sig in DSignature.find_all_of_signature(
+            request.app.state.db[MONGO_DB], (signature.mod, signature.signature)
+        ):
             if alt_sig.user != ply and alt_sig.user not in alts:
                 alts.append(alt_sig.user)
 
     return alts
 
 
-@gs_router.get('/vpn', response_model=CheckVPNReply,
-               response_model_exclude_none=True, response_model_exclude_unset=True)
-async def vpn_check(request: Request, q: CheckVPN = Depends(CheckVPN),
-                    auth: Tuple[int, Optional[ObjectId], int] = Depends(check_access)):
-    if auth[0] == NOT_AUTHED_USER: raise HTTPException(detail='This route requires authentication', status_code=401)
+@gs_router.get(
+    '/vpn', response_model=CheckVPNReply, response_model_exclude_none=True, response_model_exclude_unset=True
+)
+async def vpn_check(
+    request: Request, q: CheckVPN = Depends(CheckVPN), auth: Tuple[int, Optional[ObjectId], int] = Depends(check_access)
+):
+    if auth[0] == NOT_AUTHED_USER:
+        raise HTTPException(detail='This route requires authentication', status_code=401)
     cvpn_r = CheckVPNReply(is_vpn=False, is_cloud_gaming=False, is_immune=False)
 
     vpn_result = await check_vpn(request.app, q.player.ip)
@@ -296,9 +386,9 @@ async def vpn_check(request: Request, q: CheckVPN = Depends(CheckVPN),
 
     try:
         if q.player.gs_service is not None and q.player.gs_id is not None:
-            adm = await load_admin_from_initiator(request.app,
-                                                Initiator(gs_admin=PlayerObjNoIp(gs_service=q.player.gs_service,
-                                                                                gs_id=q.player.gs_id)))
+            adm = await load_admin_from_initiator(
+                request.app, Initiator(gs_admin=PlayerObjNoIp(gs_service=q.player.gs_service, gs_id=q.player.gs_id))
+            )
 
             if adm.permissions & PERMISSION_VPN_CHECK_SKIP == PERMISSION_VPN_CHECK_SKIP:
                 cvpn_r.is_immune = True
@@ -308,11 +398,17 @@ async def vpn_check(request: Request, q: CheckVPN = Depends(CheckVPN),
     return cvpn_r
 
 
-@gs_router.post('/calladmin', response_model=ExecuteCallAdminReply,
-                response_model_exclude_none=True, response_model_exclude_unset=True)
-async def call_admin(request: Request, exe: ExecuteCallAdmin,
-                     auth: Tuple[int, Optional[ObjectId], int] = Depends(check_access)):
-    if auth[0] != SERVER_KEY: raise HTTPException(detail='Only servers can use this route', status_code=403)
+@gs_router.post(
+    '/calladmin',
+    response_model=ExecuteCallAdminReply,
+    response_model_exclude_none=True,
+    response_model_exclude_unset=True,
+)
+async def call_admin(
+    request: Request, exe: ExecuteCallAdmin, auth: Tuple[int, Optional[ObjectId], int] = Depends(check_access)
+):
+    if auth[0] != SERVER_KEY:
+        raise HTTPException(detail='Only servers can use this route', status_code=403)
 
     srv = await DServer.from_id(request.app.state.db[MONGO_DB], auth[1])
 
@@ -323,20 +419,28 @@ async def call_admin(request: Request, exe: ExecuteCallAdmin,
         raise HTTPException(status_code=405, detail='Call Admin is not configured on this server')
 
     # Check if the target is banned
-    q = build_query_dict(auth[0], auth[1], gs_service=exe.caller.gs_service, gs_id=exe.caller.gs_id,
-                         ignore_others=exe.include_other_servers, active_only=True)
+    q = build_query_dict(
+        auth[0],
+        auth[1],
+        gs_service=exe.caller.gs_service,
+        gs_id=exe.caller.gs_id,
+        ignore_others=exe.include_other_servers,
+        active_only=True,
+    )
 
-    c = await DInfraction.count(request.app.state.db[MONGO_DB], {'$and': [
-        q,
-        {'flags': {'$bitsAllSet': INFRACTION_CALL_ADMIN_BAN}}
-    ]})
+    c = await DInfraction.count(
+        request.app.state.db[MONGO_DB], {'$and': [q, {'flags': {'$bitsAllSet': INFRACTION_CALL_ADMIN_BAN}}]}
+    )
 
     if c > 0:
         return ExecuteCallAdminReply(sent=False, is_banned=True)
 
     if srv.last_calladmin + exe.cooldown > datetime.now(tz=UTC).timestamp():
-        return ExecuteCallAdminReply(sent=False, is_banned=False, cooldown=((srv.last_calladmin + exe.cooldown) -datetime.now(
-            tz=UTC).timestamp()))
+        return ExecuteCallAdminReply(
+            sent=False,
+            is_banned=False,
+            cooldown=((srv.last_calladmin + exe.cooldown) - datetime.now(tz=UTC).timestamp()),
+        )
 
     call_admin_image = await prepare_calladmin_image(exe.image) if exe.image else None
 
@@ -352,11 +456,17 @@ async def call_admin(request: Request, exe: ExecuteCallAdmin,
     return ExecuteCallAdminReply(sent=True, is_banned=False, cooldown=exe.cooldown)
 
 
-@gs_router.post('/calladmin/claim', response_model=ClaimCallAdminReply,
-                response_model_exclude_none=True, response_model_exclude_unset=True)
-async def claim_call(request: Request, claim: ClaimCallAdmin,
-                     auth: Tuple[int, Optional[ObjectId], int] = Depends(check_access)):
-    if auth[0] != SERVER_KEY: raise HTTPException(detail='Only servers can use this route', status_code=403)
+@gs_router.post(
+    '/calladmin/claim',
+    response_model=ClaimCallAdminReply,
+    response_model_exclude_none=True,
+    response_model_exclude_unset=True,
+)
+async def claim_call(
+    request: Request, claim: ClaimCallAdmin, auth: Tuple[int, Optional[ObjectId], int] = Depends(check_access)
+):
+    if auth[0] != SERVER_KEY:
+        raise HTTPException(detail='Only servers can use this route', status_code=403)
 
     srv = await DServer.from_id(request.app.state.db[MONGO_DB], auth[1])
 
@@ -392,9 +502,16 @@ def init_str(i: Initiator):
         return f'{i.gs_admin.gs_service}/{i.gs_admin.gs_id}'
 
 
-@gs_router.get('/admininfo', response_model=AdminInfo, response_model_exclude_none=True,
-               response_model_exclude_unset=True)
-async def get_admin_info(request: Request, ips_id: Optional[PositiveInt] = None, gs_service: Optional[str] = None, gs_id: Optional[str] = None, mongo_id: Optional[str] = None):
+@gs_router.get(
+    '/admininfo', response_model=AdminInfo, response_model_exclude_none=True, response_model_exclude_unset=True
+)
+async def get_admin_info(
+    request: Request,
+    ips_id: Optional[PositiveInt] = None,
+    gs_service: Optional[str] = None,
+    gs_id: Optional[str] = None,
+    mongo_id: Optional[str] = None,
+):
     # Setup objects
     p = None
 
@@ -419,7 +536,8 @@ async def get_admin_info(request: Request, ips_id: Optional[PositiveInt] = None,
     ai = AdminInfo(admin_name=adm.name, admin_id=adm.ips_id, avatar_id=av, permissions=adm.permissions)
 
     with suppress(RedisError):
-        await request.app.state.cache.set(f'admin_info:{init_str(init)}', ai.dict(), 'get_admin_info_cache',
-                                          expire_time=300)
+        await request.app.state.cache.set(
+            f'admin_info:{init_str(init)}', ai.dict(), 'get_admin_info_cache', expire_time=300
+        )
 
     return ai

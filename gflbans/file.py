@@ -4,18 +4,18 @@ from functools import partial
 from typing import Optional, Tuple
 
 import bson
-from PIL import Image
 from bson import ObjectId
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from gridfs import NoFile
 from motor.motor_asyncio import AsyncIOMotorGridFSBucket
+from PIL import Image
 from pydantic import constr
 from starlette.requests import Request
-from starlette.responses import StreamingResponse, Response, RedirectResponse
+from starlette.responses import Response, StreamingResponse
 
 from gflbans.api.auth import check_access
 from gflbans.internal.config import MONGO_DB
-from gflbans.internal.constants import SERVER_KEY, API_KEY
+from gflbans.internal.constants import API_KEY, SERVER_KEY
 
 file_router = APIRouter()
 
@@ -32,9 +32,13 @@ def sync_convert_image(image_bytes, target_format):
 
 
 @file_router.get('/uploads/{gridfs_id}/{file_name}')
-async def download_file(request: Request, gridfs_id: str, file_name: str,
-                        convert_webp: Optional[constr(regex='^(png|jpg)$')] = None,
-                        auth: Tuple[int, Optional[ObjectId], int] = Depends(check_access)):
+async def download_file(
+    request: Request,
+    gridfs_id: str,
+    file_name: str,
+    convert_webp: Optional[constr(regex='^(png|jpg)$')] = None,
+    auth: Tuple[int, Optional[ObjectId], int] = Depends(check_access),
+):
     client = AsyncIOMotorGridFSBucket(database=request.app.state.db[MONGO_DB])
 
     try:
@@ -62,21 +66,26 @@ async def download_file(request: Request, gridfs_id: str, file_name: str,
 
         file_contents = await fos.read()
 
-        image_data = await asyncio.get_running_loop().run_in_executor(request.app.state.sync_processes,
-                                                                      partial(sync_convert_image, file_contents,
-                                                                              convert_webp))
+        image_data = await asyncio.get_running_loop().run_in_executor(
+            request.app.state.sync_processes, partial(sync_convert_image, file_contents, convert_webp)
+        )
 
         mt = 'image/png' if convert_webp == 'png' else 'image/jpeg'
 
-        return Response(content=image_data, status_code=200, headers={
-            'Content-Length': str(len(image_data)),
-            'Cache-Control': 'no-cache'
-        }, media_type=mt)
+        return Response(
+            content=image_data,
+            status_code=200,
+            headers={'Content-Length': str(len(image_data)), 'Cache-Control': 'no-cache'},
+            media_type=mt,
+        )
     else:
+
         async def gridfs_read():
             while fos.tell() < fos.length:
                 yield await fos.readchunk()
-        return StreamingResponse(gridfs_read(), media_type=t, headers={'Content-Length': str(fos.length),
-                                                                       'Cache-Control':
-                                                                           'public, max-age=604800, immutable'})
 
+        return StreamingResponse(
+            gridfs_read(),
+            media_type=t,
+            headers={'Content-Length': str(fos.length), 'Cache-Control': 'public, max-age=604800, immutable'},
+        )

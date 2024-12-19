@@ -1,12 +1,11 @@
 from contextlib import suppress
 
-from redis.exceptions import RedisError
 from netaddr import IPAddress
+from redis.exceptions import RedisError
 
 from gflbans.internal.config import MONGO_DB
 from gflbans.internal.database.vpn import DVPN
 from gflbans.internal.log import logger
-
 
 VPN_YES = 0
 VPN_NO = 1
@@ -14,7 +13,6 @@ VPN_CLOUD = 2
 
 
 async def check_vpn(app, ip_addr: str) -> int:
-
     # Wtf is ip2asn.gflclan.com?
     # Whatever it is, we don't have it, and it breaks infraction loading
     # And no VPN integration is on gameserver yet anyways, so we're losing nothing by doing this
@@ -35,7 +33,7 @@ async def check_vpn(app, ip_addr: str) -> int:
 
             a = await resp.json()
             with suppress(RedisError):
-                await app.state.ip_info_cache.set(ip_addr, a, 'asninfo', expire_time=60*10)
+                await app.state.ip_info_cache.set(ip_addr, a, 'asninfo', expire_time=60 * 10)
 
     if 'as_number' in a:
         asn = a['as_number']
@@ -61,4 +59,3 @@ async def check_vpn(app, ip_addr: str) -> int:
             return VPN_YES
 
     return VPN_NO
-

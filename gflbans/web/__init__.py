@@ -5,11 +5,11 @@ from starlette.responses import Response
 
 from gflbans.web.csrf import csrf_prepare
 from gflbans.web.login import login_router
+from gflbans.web.pages.guidelines import guidelines_router
 from gflbans.web.pages.index import index_router
 from gflbans.web.pages.infractions import infractions_router
-from gflbans.web.pages.servers import servers_router
 from gflbans.web.pages.manage import management_router
-from gflbans.web.pages.guidelines import guidelines_router
+from gflbans.web.pages.servers import servers_router
 
 web_router = APIRouter(dependencies=[Depends(csrf_prepare)])
 

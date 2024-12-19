@@ -1,9 +1,8 @@
-import os
-from datetime import datetime
 import random
 import re
-from typing import Optional
 import urllib.parse
+from datetime import datetime
+from typing import Optional
 
 import aiohttp
 from dateutil.tz import UTC
@@ -20,6 +19,7 @@ from gflbans.internal.models.api import Initiator
 from gflbans.internal.pyapi_utils import load_admin_from_initiator
 
 login_router = APIRouter()
+
 
 async def current_user(request: Request) -> Optional[Admin]:
     if 'uref' not in request.session:
@@ -56,13 +56,13 @@ async def current_user(request: Request) -> Optional[Admin]:
 
 @login_router.get('/')
 async def start_login(request: Request, dcl_token: str = None):
-    parameters ={
+    parameters = {
         'openid.ns=http://specs.openid.net/auth/2.0',
         'openid.mode=checkid_setup',
         f'openid.return_to=http://{HOST}/login/finish',
         f'openid.realm=http://{HOST}',
         'openid.identity=http://specs.openid.net/auth/2.0/identifier_select',
-        'openid.claimed_id=http://specs.openid.net/auth/2.0/identifier_select'
+        'openid.claimed_id=http://specs.openid.net/auth/2.0/identifier_select',
     }
 
     url_params = None
@@ -85,11 +85,13 @@ async def finish_login(request: Request):
     for suffix in suffix_strings:
         data['openid.' + suffix] = response_data['openid.' + suffix][0]
 
-    id_regex = re.compile('^https?:\/\/steamcommunity.com\/openid\/id\/(7656119[0-9]{10})\/?$')
-    if data['openid.claimed_id'] != data['openid.identity'] or \
-        data['openid.op_endpoint'] != 'https://steamcommunity.com/openid/login' or \
-	    data['openid.return_to'] != f'http://{HOST}/login/finish' or \
-	    not id_regex.match(data['openid.identity']):
+    id_regex = re.compile(r'^https?:\/\/steamcommunity.com\/openid\/id\/(7656119[0-9]{10})\/?$')
+    if (
+        data['openid.claimed_id'] != data['openid.identity']
+        or data['openid.op_endpoint'] != 'https://steamcommunity.com/openid/login'
+        or data['openid.return_to'] != f'http://{HOST}/login/finish'
+        or not id_regex.match(data['openid.identity'])
+    ):
         raise HTTPException(status_code=502, detail='Login rejected')
     steam_id = int(id_regex.findall(data['openid.identity'])[0])
     data['openid.sig'] = response_data['openid.sig'][0]
@@ -97,9 +99,11 @@ async def finish_login(request: Request):
     data['openid.mode'] = 'check_authentication'
 
     async with aiohttp.ClientSession() as session:
-        async with session.post('https://steamcommunity.com/openid/login',
-                                headers={'Accept-language': 'en','Content-Type': 'application/x-www-form-urlencoded'},
-                                data=aiohttp.FormData(data)) as resp:
+        async with session.post(
+            'https://steamcommunity.com/openid/login',
+            headers={'Accept-language': 'en', 'Content-Type': 'application/x-www-form-urlencoded'},
+            data=aiohttp.FormData(data),
+        ) as resp:
             if resp.status >= 400:
                 print(f'failed to authenticate (HTTP {resp.status}): {await resp.text()}, api request:')
                 print(data)
@@ -112,14 +116,18 @@ async def finish_login(request: Request):
                     continue
                 if len(pair) > 2:
                     for text in pair[2:]:
-                        pair[1] = pair[1] + ':' + text # There was a colon in text (ie. 'http://')
+                        pair[1] = pair[1] + ':' + text  # There was a colon in text (ie. 'http://')
                 resp_keys[pair[0]] = pair[1]
 
-            if not 'ns' in resp_keys or resp_keys['ns'] != 'http://specs.openid.net/auth/2.0' or \
-                resp_keys['is_valid'] is None or resp_keys['is_valid'] != 'true':
+            if (
+                'ns' not in resp_keys
+                or resp_keys['ns'] != 'http://specs.openid.net/auth/2.0'
+                or resp_keys['is_valid'] is None
+                or resp_keys['is_valid'] != 'true'
+            ):
                 raise HTTPException(status_code=502, detail='Login rejected')
             ips_user = ips_get_member_id_from_gsid(steam_id)
-            
+
             response = await request.app.state.db[MONGO_DB]['user_cache'].find_one({'authed_as': ips_user})
 
             if response is None:

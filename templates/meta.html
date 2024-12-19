@@ -2,19 +2,26 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 {% if 'csrf_token' in request.session %}
-<meta name="csrf_token" content="{{request.session['csrf_token']}}">
+    <meta name="csrf_token" content="{{ request.session['csrf_token'] }}">
 {% endif %}
-<meta name="theme-opposite" content="{{opposite_theme}}">
-<meta name="active_permissions" content="{% if user is not none %}{{user.permissions}}{% else %}0{% endif %}">
-{% if user is not none %}
-<meta name="current_user" content="{{user.ips_id}}">
-{% endif %}
-
+<meta name="theme-opposite" content="{{ opposite_theme }}">
+<meta name="active_permissions"
+      content="{% if user is not none %}{{ user.permissions }}{% else %}0{% endif %}">
+{% if user is not none %}<meta name="current_user" content="{{ user.ips_id }}">{% endif %}
 <link rel="stylesheet" href="/static/3rdparty/css/bulma.css">
 <link rel="stylesheet" href="/static/css/bulma-overrides.css">
 <link rel="stylesheet" href="/static/3rdparty/css/font-awesome.css">
 <link rel="stylesheet" href="/static/3rdparty/css/sk.css">
 <link rel="stylesheet" href="/static/css/main.css">
-<link rel="icon" type="image/png" href="/static/images/gflbans16.png" sizes="16x16">
-<link rel="icon" type="image/png" href="/static/images/gflbans32.png" sizes="32x32">
-<link rel="icon" type="image/png" href="/static/images/gflbans64.png" sizes="64x64">
+<link rel="icon"
+      type="image/png"
+      href="/static/images/gflbans16.png"
+      sizes="16x16">
+<link rel="icon"
+      type="image/png"
+      href="/static/images/gflbans32.png"
+      sizes="32x32">
+<link rel="icon"
+      type="image/png"
+      href="/static/images/gflbans64.png"
+      sizes="64x64">

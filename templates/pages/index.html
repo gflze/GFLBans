@@ -1,115 +1,120 @@
 <!DOCTYPE html>
-<html id="htmlRoot" lang="en" class="{% if opposite_theme %}theme-opposite {% endif %}background-primary">
-<head>
-    {% include 'meta.html' with context %}
-    <link rel="stylesheet" href="/static/3rdparty/css/chart.css">
-    <title>{{BRANDING}} - Dashboard</title>
-</head>
-<body>
-{% include 'js_includes.html' %}
-{% include 'header.html' with context %}
-<div class="m-5">
-    <div class="columns is-desktop">
-        <div class="column is-three-quarters-fullhd is-three-fifths-desktop is-three-fifth-tablet">
-            <div class="panel text-primary background-secondary">
-                <p class="panel-heading">Welcome to {{BRANDING}}!</p>
-                <div class="panel-block no-bottom-border">
-                    {% include ('configs/' + page_index_info) with context %}
+<html id="htmlRoot"
+      lang="en"
+      class="{% if opposite_theme %}theme-opposite {% endif %}background-primary">
+    <head>
+        {% include 'meta.html' with context %}
+        <link rel="stylesheet" href="/static/3rdparty/css/chart.css">
+        <title>{{ BRANDING }} - Dashboard</title>
+    </head>
+    <body>
+        {% include 'js_includes.html' %}
+        {% include 'header.html' with context %}
+        <div class="m-5">
+            <div class="columns is-desktop">
+                <div class="column is-three-quarters-fullhd is-three-fifths-desktop is-three-fifth-tablet">
+                    <div class="panel text-primary background-secondary">
+                        <p class="panel-heading">Welcome to {{ BRANDING }}!</p>
+                        <div class="panel-block no-bottom-border">{% include ('configs/' + page_index_info) with context %}</div>
+                        <div class="panel-block">
+                            <form method="get" action="/infractions" class="index-search">
+                                <div class="field has-addons">
+                                    <label class="control is-flex-grow-1">
+                                        <input name="search"
+                                               class="input index-search-input"
+                                               type="text"
+                                               placeholder="Search">
+                                    </label>
+                                    <div class="control">
+                                        <button class="button is-accent">
+                                            <i class="fas fa-search"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                    <div class="panel is-loading">
+                        <p class="panel-heading background-secondary text-primary">
+                            New Infractions
+                            Created
+                        </p>
+                        <div class="panel-block text-primary background-secondary">
+                            <canvas id="infractionsChart">
+                            </canvas>
+                        </div>
+                    </div>
                 </div>
-                <div class="panel-block">
-                    <form method="get" action="/infractions" class="index-search">
-                        <div class="field has-addons">
-                            <label class="control is-flex-grow-1">
-                                <input name="search" class="input index-search-input" type="text" placeholder="Search">
-                            </label>
-                            <div class="control">
-                                <button class="button is-accent"><i class="fas fa-search"></i></button>
+                <div class="column">
+                    <div class="columns is-mobile">
+                        <div class="column">
+                            <div class="card mb-4 has-background-primary is-white-shadow-text is-loading">
+                                <div class="card-content stat-card is-flex is-align-items-center is-justify-content-space-between">
+                                    <span class="fas fa-gavel"></span>
+                                    <span id="count_total_infractions">0</span>
+                                </div>
+                            </div>
+                            <div class="card mb-4 has-background-warning is-white-shadow-text is-loading">
+                                <div class="card-content stat-card is-flex is-align-items-center is-justify-content-space-between">
+                                    <span class="fas fa-hourglass-half"></span>
+                                    <span id="count_active_infractions">0</span>
+                                </div>
+                            </div>
+                            <div class="card mb-4 has-background-pink is-white-shadow-text is-loading">
+                                <div class="card-content stat-card is-flex is-align-items-center is-justify-content-space-between">
+                                    <span class="fas fa-server"></span>
+                                    <span id="count_servers">0</span>
+                                </div>
+                            </div>
+                            <div class="card mb-4 has-background-success is-white-shadow-text is-loading">
+                                <div class="card-content stat-card is-flex is-align-items-center is-justify-content-space-between">
+                                    <span class="fas fa-user"></span>
+                                    <span id="count_total_players">0</span>
+                                </div>
                             </div>
                         </div>
-                    </form>
-
-
-                </div>
-
-            </div>
-            <div class="panel is-loading">
-                <p class="panel-heading background-secondary text-primary">New Infractions
-                    Created</p>
-                <div class="panel-block text-primary background-secondary">
-                    <canvas id="infractionsChart">
-
-                    </canvas>
+                        <div class="column">
+                            <div class="card mb-4 has-background-ban is-white-shadow-text is-loading">
+                                <div class="card-content stat-card is-flex is-align-items-center is-justify-content-space-between">
+                                    <span class="fas fa-ban"></span>
+                                    <span id="count_total_bans">0</span>
+                                </div>
+                            </div>
+                            <div class="card mb-4 has-background-text is-white-shadow-text is-loading">
+                                <div class="card-content stat-card is-flex is-align-items-center is-justify-content-space-between">
+                                    <span class="fas fa-comment-slash"></span>
+                                    <span id="count_total_gags">0</span>
+                                </div>
+                            </div>
+                            <div class="card mb-4 has-background-voice is-white-shadow-text is-loading">
+                                <div class="card-content stat-card is-flex is-align-items-center is-justify-content-space-between">
+                                    <span class="fas fa-volume-mute"></span>
+                                    <span id="count_total_mutes">0</span>
+                                </div>
+                            </div>
+                            <div class="card mb-4 has-background-warning is-white-shadow-text is-loading">
+                                <div class="card-content stat-card is-flex is-align-items-center is-justify-content-space-between">
+                                    <span class="fas fa-exclamation-triangle"></span>
+                                    <span id="count_total_warnings">0</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <nav class="panel background-secondary text-primary">
+                            <p class="panel-heading background-secondary text-primary">
+                                External
+                                Links
+                            </p>
+                            {% include ('configs/' + page_index_links) with context %}
+                        </nav>
+                    </div>
                 </div>
             </div>
         </div>
-        <div class="column">
-            <div class="columns is-mobile">
-                <div class="column">
-                    <div class="card mb-4 has-background-primary is-white-shadow-text is-loading">
-                        <div class="card-content stat-card is-flex is-align-items-center is-justify-content-space-between">
-                            <span class="fas fa-gavel"></span>
-                            <span id="count_total_infractions">0</span>
-                        </div>
-                    </div>
-                    <div class="card mb-4 has-background-warning is-white-shadow-text is-loading">
-                        <div class="card-content stat-card is-flex is-align-items-center is-justify-content-space-between">
-                            <span class="fas fa-hourglass-half"></span>
-                            <span id="count_active_infractions">0</span>
-                        </div>
-                    </div>
-                    <div class="card mb-4 has-background-pink is-white-shadow-text is-loading">
-                        <div class="card-content stat-card is-flex is-align-items-center is-justify-content-space-between">
-                            <span class="fas fa-server"></span>
-                            <span id="count_servers">0</span>
-                        </div>
-                    </div>
-                    <div class="card mb-4 has-background-success is-white-shadow-text is-loading">
-                        <div class="card-content stat-card is-flex is-align-items-center is-justify-content-space-between">
-                            <span class="fas fa-user"></span>
-                            <span id="count_total_players">0</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="column">
-                    <div class="card mb-4 has-background-ban is-white-shadow-text is-loading">
-                        <div class="card-content stat-card is-flex is-align-items-center is-justify-content-space-between">
-                            <span class="fas fa-ban"></span>
-                            <span id="count_total_bans">0</span>
-                        </div>
-                    </div>
-                    <div class="card mb-4 has-background-text is-white-shadow-text is-loading">
-                        <div class="card-content stat-card is-flex is-align-items-center is-justify-content-space-between">
-                            <span class="fas fa-comment-slash"></span>
-                            <span id="count_total_gags">0</span>
-                        </div>
-                    </div>
-                    <div class="card mb-4 has-background-voice is-white-shadow-text is-loading">
-                        <div class="card-content stat-card is-flex is-align-items-center is-justify-content-space-between">
-                            <span class="fas fa-volume-mute"></span>
-                            <span id="count_total_mutes">0</span>
-                        </div>
-                    </div>
-                    <div class="card mb-4 has-background-warning is-white-shadow-text is-loading">
-                        <div class="card-content stat-card is-flex is-align-items-center is-justify-content-space-between">
-                            <span class="fas fa-exclamation-triangle"></span>
-                            <span id="count_total_warnings">0</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div>
-                <nav class="panel background-secondary text-primary">
-                    <p class="panel-heading background-secondary text-primary">External
-                        Links</p>
-                    {% include ('configs/' + page_index_links) with context %}
-                </nav>
-            </div>
-        </div>
-    </div>
-</div>
-{% include 'error.html' %}
-<script src="/static/3rdparty/js/chart.js"></script>
-<script src="/static/js/index.js"></script>
-{% include 'footer.html' with context %}
-</body>
+        {% include 'error.html' %}
+        <script src="/static/3rdparty/js/chart.js"></script>
+        <script src="/static/js/index.js"></script>
+        {% include 'footer.html' with context %}
+    </body>
 </html>

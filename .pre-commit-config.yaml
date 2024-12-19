@@ -1,0 +1,29 @@
+repos:
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.8.3
+    hooks:
+      - id: ruff
+        args: [ "--fix" ]
+      - id: ruff-format
+
+  - repo: https://github.com/djlint/djLint
+    rev: v1.36.3
+    hooks:
+      - id: djlint
+        args: [ "--ignore", "H006,H020,H021,H026,H030,H031" ]
+      - id: djlint-reformat
+        args: [ "--ignore", "H006,H020,H021,H026,H030,H031" ]
+
+  - repo: https://github.com/pre-commit/mirrors-eslint
+    rev: v8.53.0
+    hooks:
+      - id: eslint
+        args: [ "--fix" ]
+
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: trailing-whitespace
+      - id: check-case-conflict
+      - id: end-of-file-fixer
+      - id: requirements-txt-fixer

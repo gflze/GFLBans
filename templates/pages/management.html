@@ -1,64 +1,80 @@
 <!DOCTYPE html>
-<html id="htmlRoot" lang="en" class="{% if opposite_theme %}theme-opposite {% endif %}background-primary"
-    data-mode="{% if mode == 'group' %}GROUP{% elif mode == 'server' %}SERVER{% elif mode == 'apikey' %}APIKEY{% else %}ADMIN{% endif %}">
-<head>
-    {% include 'meta.html' with context %}
-    <link rel="stylesheet" href="/static/3rdparty/css/chart.css">
-    <link rel="stylesheet" href="/static/css/management.css">
-    <title>{{BRANDING}} - Management</title>
-</head>
-<body>
-{% include 'js_includes.html' %}
-{% include 'header.html' with context %}
-<div id="mgmt-add" class="pagination-next is-accent button"><i class="fas fa-plus"></i></div>
-{% if mode == 'server' %}
-<div class="notification is-danger has-text-centered" style="margin-bottom: 0;">Servers cannot be deleted. They may only be disabled.</div>
-<style>#mgmt-add{top: 8.5rem;}</style>
-{% endif %}
-<div id="managementTab">
-    <table id="mgmt-table" class="table background-primary">
-        <thead>
-            <tr>
-                {% if mode == 'group' %}
-                    <th id="header-group" class="has-text-centered min-250">Group</th>
-                    <th id="header-group-privileges" class="has-text-centered min-500">Privileges</th>
-                {% elif mode == 'server' %}
-                    <th id="header-server-enabled" class="has-text-centered is-hidden-mobile">Enabled</th>
-                    <th id="header-server" class="has-text-centered min-250">Server</th>
-                    <th id="header-server-ip" class="has-text-centered min-250">IP</th>
-                {% elif mode == 'apikey' %}
-                    <th id="header-api" class="has-text-centered min-500">Key</th>
-                {% else %}
-                    <th id="header-admin" class="has-text-centered min-250">Admin</th>
-                    <th id="header-admin-groups" class="has-text-centered min-500">Groups</th>
-                {% endif %}
-            </tr>
-        </thead>
-        <tbody></tbody>
-    </table>
-</div>
-{% include 'management_add.html' with context %}
-{% include 'error.html' %}
-{% if mode == 'server' %}
-<div id="setupModal" class="modal">
-    <div class="modal-background"></div>
-    <div class="modal-content">
-        <header class="modal-card-head background-tertiary">
-            <p class="modal-card-title text-primary">CS2Fixes Convars</p>
-        </header>
-        <section class="modal-card-body background-secondary" style="text-wrap: nowrap">
-            <div class="notification is-danger has-text-centered mb-5" style="margin-bottom: 0">If gflbans_server_key is lost, it must be newly regenerated.</div>
-            <p>gflbans_api_url "<span id="setupURL"></span>"</p>
-            <p>gflbans_server_id "<span id="setupID"></span>"</p>
-            <p class="mb-5">gflbans_server_key "<span id="setupkey"></span>"</p>
-            <button id="setupClipboard" class="button">Copy to Clipboard</button>
-        </section>
-    </div>
-    <button class="modal-close is-large" aria-label="close"></button>
-</div>
-{% endif %}
-<script src="/static/js/management.js"></script>
-{% include 'loading.html' with context %}
-{% include 'footer.html' with context %}
-</body>
+<html id="htmlRoot"
+      lang="en"
+      class="{% if opposite_theme %}theme-opposite {% endif %}background-primary"
+      data-mode="{% if mode == 'group' %}GROUP{% elif mode == 'server' %}SERVER{% elif mode == 'apikey' %}APIKEY{% else %}ADMIN{% endif %}">
+    <head>
+        {% include 'meta.html' with context %}
+        <link rel="stylesheet" href="/static/3rdparty/css/chart.css">
+        <link rel="stylesheet" href="/static/css/management.css">
+        <title>{{ BRANDING }} - Management</title>
+    </head>
+    <body>
+        {% include 'js_includes.html' %}
+        {% include 'header.html' with context %}
+        <div id="mgmt-add" class="pagination-next is-accent button">
+            <i class="fas fa-plus"></i>
+        </div>
+        {% if mode == 'server' %}
+            <div class="notification is-danger has-text-centered"
+                 style="margin-bottom: 0">Servers cannot be deleted. They may only be disabled.</div>
+            <style>#mgmt-add{top: 8.5rem;}</style>
+        {% endif %}
+        <div id="managementTab">
+            <table id="mgmt-table" class="table background-primary">
+                <thead>
+                    <tr>
+                        {% if mode == 'group' %}
+                            <th id="header-group" class="has-text-centered min-250">Group</th>
+                            <th id="header-group-privileges" class="has-text-centered min-500">Privileges</th>
+                        {% elif mode == 'server' %}
+                            <th id="header-server-enabled" class="has-text-centered is-hidden-mobile">Enabled</th>
+                            <th id="header-server" class="has-text-centered min-250">Server</th>
+                            <th id="header-server-ip" class="has-text-centered min-250">IP</th>
+                        {% elif mode == 'apikey' %}
+                            <th id="header-api" class="has-text-centered min-500">Key</th>
+                        {% else %}
+                            <th id="header-admin" class="has-text-centered min-250">Admin</th>
+                            <th id="header-admin-groups" class="has-text-centered min-500">Groups</th>
+                        {% endif %}
+                    </tr>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+        </div>
+        {% include 'management_add.html' with context %}
+        {% include 'error.html' %}
+        {% if mode == 'server' %}
+            <div id="setupModal" class="modal">
+                <div class="modal-background"></div>
+                <div class="modal-content">
+                    <header class="modal-card-head background-tertiary">
+                        <p class="modal-card-title text-primary">CS2Fixes Convars</p>
+                    </header>
+                    <section class="modal-card-body background-secondary"
+                             style="text-wrap: nowrap">
+                        <div class="notification is-danger has-text-centered mb-5"
+                             style="margin-bottom: 0">
+                            If gflbans_server_key is lost, it must be newly regenerated.
+                        </div>
+                        <p>
+                            gflbans_api_url "<span id="setupURL"></span>"
+                        </p>
+                        <p>
+                            gflbans_server_id "<span id="setupID"></span>"
+                        </p>
+                        <p class="mb-5">
+                            gflbans_server_key "<span id="setupkey"></span>"
+                        </p>
+                        <button id="setupClipboard" class="button">Copy to Clipboard</button>
+                    </section>
+                </div>
+                <button class="modal-close is-large" aria-label="close"></button>
+            </div>
+        {% endif %}
+        <script src="/static/js/management.js"></script>
+        {% include 'loading.html' with context %}
+        {% include 'footer.html' with context %}
+    </body>
 </html>
