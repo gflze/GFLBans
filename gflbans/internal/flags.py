@@ -1,6 +1,5 @@
 # PERMISSION FLAGS
 # These are given to API Keys, Groups, and Server keys to determine what actions they may perform
-
 PERMISSION_LOGIN                    = 1 << 0   # Login to the website
 PERMISSION_COMMENT                  = 1 << 1
 PERMISSION_VIEW_IP_ADDR             = 1 << 2
@@ -8,11 +7,11 @@ PERMISSION_CREATE_INFRACTION        = 1 << 3
 # PERMISSION_EDIT_OWN_INFRACTIONS   = 1 << 4   # DEPRECATED
 PERMISSION_EDIT_ALL_INFRACTIONS     = 1 << 5
 PERMISSION_ATTACH_FILE              = 1 << 6
-PERMISSION_WEB_MODERATOR            = 1 << 7   # Can edit or delete comments/files on infractions
+PERMISSION_WEB_MODERATOR            = 1 << 7   # Can edit or delete all comments/files on infractions
 PERMISSION_MANAGE_SERVERS           = 1 << 8
 PERMISSION_MANAGE_VPNS              = 1 << 9
-PERMISSION_PRUNE_INFRACTIONS        = 1 << 10
-PERMISSION_VIEW_AUDIT_LOG           = 1 << 11
+# PERMISSION_PRUNE_INFRACTIONS      = 1 << 10  # Unimplemented
+# PERMISSION_VIEW_AUDIT_LOG         = 1 << 11  # Unimplemented
 PERMISSION_MANAGE_GROUPS_AND_ADMINS = 1 << 12
 PERMISSION_MANAGE_API_KEYS          = 1 << 13
 PERMISSION_BLOCK_ITEMS              = 1 << 14  # Add map item restrictions to infractions
@@ -22,7 +21,7 @@ PERMISSION_BAN                      = 1 << 17  # Add bans to infractions
 PERMISSION_ADMIN_CHAT_BLOCK         = 1 << 18  # Block admin chat
 PERMISSION_CALL_ADMIN_BLOCK         = 1 << 19  # Block call admin usage
 # PERMISSION_SCOPE_SUPER_GLOBAL     = 1 << 20  # DEPRECATED
-PERMISSION_SCOPE_GLOBAL             = 1 << 21  # Admins can use GLOBAL infractions
+PERMISSION_SCOPE_GLOBAL             = 1 << 21  # Admins can scope infractions globally
 PERMISSION_VPN_CHECK_SKIP           = 1 << 22  # Users with this permission are immune to VPN kicks
 PERMISSION_MANAGE_POLICY            = 1 << 23  # Manage tiering policies
 PERMISSION_IMMUNE                   = 1 << 24  # Immune from infractions
@@ -30,8 +29,35 @@ PERMISSION_SKIP_IMMUNITY            = 1 << 25  # Overrides immunity
 PERMISSION_RPC_KICK                 = 1 << 26
 PERMISSION_ASSIGN_TO_SERVER         = 1 << 27  # Assign an infraction to a specific server
 PERMISSION_MANAGE_MAP_ICONS         = 1 << 28  # Upload and delete map icons
-ALL_PERMISSIONS                     = (1 << 29) - 1
-# There is no permission node for SCOPE_SERVER because that's implied w/ create perms
+
+# Can't just do (1 << 29) - 1 due to deprecated permissions in the middle
+ALL_PERMISSIONS = (
+    PERMISSION_LOGIN
+    | PERMISSION_COMMENT
+    | PERMISSION_VIEW_IP_ADDR
+    | PERMISSION_CREATE_INFRACTION
+    | PERMISSION_EDIT_ALL_INFRACTIONS
+    | PERMISSION_ATTACH_FILE
+    | PERMISSION_WEB_MODERATOR
+    | PERMISSION_MANAGE_SERVERS
+    | PERMISSION_MANAGE_VPNS
+    | PERMISSION_MANAGE_GROUPS_AND_ADMINS
+    | PERMISSION_MANAGE_API_KEYS
+    | PERMISSION_BLOCK_ITEMS
+    | PERMISSION_BLOCK_VOICE
+    | PERMISSION_BLOCK_CHAT
+    | PERMISSION_BAN
+    | PERMISSION_ADMIN_CHAT_BLOCK
+    | PERMISSION_CALL_ADMIN_BLOCK
+    | PERMISSION_SCOPE_GLOBAL
+    | PERMISSION_VPN_CHECK_SKIP
+    | PERMISSION_MANAGE_POLICY
+    | PERMISSION_IMMUNE
+    | PERMISSION_SKIP_IMMUNITY
+    | PERMISSION_RPC_KICK
+    | PERMISSION_ASSIGN_TO_SERVER
+    | PERMISSION_MANAGE_MAP_ICONS
+)
 
 # This isn't a permission node, but a hard coded value for what may be done by a server acting as system
 # If the server isn't acting as system, they are limited by both SERVER_KEY_PERMISSIONS and the user's permissions
@@ -67,10 +93,10 @@ INFRACTION_CHAT_BLOCK       = 1 << 8   # The player may not type in game
 INFRACTION_BAN              = 1 << 9   # The player may not join the server
 INFRACTION_ADMIN_CHAT_BLOCK = 1 << 10  # The player may not use admin chat
 INFRACTION_CALL_ADMIN_BAN   = 1 << 11  # The player may not call an admin (using !calladmin)
-INFRACTION_SESSION          = 1 << 12
+INFRACTION_SESSION          = 1 << 12  # Infraction expires immediately on web, and duration is handled by the game server
 INFRACTION_DEC_ONLINE_ONLY  = 1 << 13  # Only reduces infraction time when player is online. Invalid for bans and web
 INFRACTION_ITEM_BLOCK       = 1 << 14  # The player may not use map spawned items
-# 1 << 15 Deprecated, don't know what it did because was before open sourcing GFLBans
+#                             1 << 15  # DEPRECATED
 INFRACTION_AUTO_TIER        = 1 << 16  # This infraction is considered for tiering purposes.
 
 scope_to_flag = {
@@ -119,8 +145,6 @@ name2perms = {
     'Panel Admin':               PERMISSION_WEB_MODERATOR,
     'Manage Servers':            PERMISSION_MANAGE_SERVERS,
     'Manage VPNs':               PERMISSION_MANAGE_VPNS,
-    'Prune Infractions':         PERMISSION_PRUNE_INFRACTIONS,
-    'View Audit Log':            PERMISSION_VIEW_AUDIT_LOG,
     'Manage Groups and Admins':  PERMISSION_MANAGE_GROUPS_AND_ADMINS,
     'Manage API Keys':           PERMISSION_MANAGE_API_KEYS,
     'Restrict Voice':            PERMISSION_BLOCK_VOICE,
