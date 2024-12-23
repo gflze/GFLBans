@@ -318,7 +318,8 @@ async def do_infraction_search(app, query: Search, include_ip: bool = False) -> 
         comparison_mode = getattr(query, comparison_field, None)
 
         if value is not None and isinstance(value, int) and comparison_mode in {'eq', 'lt', 'lte', 'gt', 'gte'}:
-            unset_bit_flags |= INFRACTION_PERMANENT | INFRACTION_SESSION
+            if field != 'created':
+                unset_bit_flags |= INFRACTION_PERMANENT | INFRACTION_SESSION
             mongo_comparison = {'eq': '$eq', 'lt': '$lt', 'lte': '$lte', 'gt': '$gt', 'gte': '$gte'}[comparison_mode]
             if field == 'duration':
                 if comparison_mode == 'eq':
