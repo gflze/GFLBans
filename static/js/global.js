@@ -88,7 +88,7 @@ const searchParams = [
 const defaultError = 'An error occurred while loading this page. Try again in a few minutes or contact the host if the problem persists.';
 const defaultAPIError = 'Received not OK response from the API.';
 
-//Request helper function
+// Request helper function
 
 async function gbRequest(method='GET', url='', data={}, send_token=false) {
     let q = {
@@ -114,13 +114,13 @@ async function gbRequest(method='GET', url='', data={}, send_token=false) {
 }
 
 $(document).ready(function () {
-    //Toggle the burger for mobile mode
+    // Toggle the burger for mobile mode
     $('.navbar-burger').click(function () {
         $('.navbar-burger').toggleClass('is-active');
         $('.navbar-menu').toggleClass('is-active');
     });
 
-    //Switch between light and dark mode
+    // Switch between light and dark mode
     $('#dark-mode-toggle').click(function () {
 
         gbRequest('GET', '/toggle_theme').then(resp => {
@@ -152,7 +152,7 @@ function closeModals() {
     $('#htmlRoot').removeClass('is-clipped');
 }
 
-//Utility function to get a meta attribute
+// Utility function to get a meta attribute
 function getMeta(metaName) {
     const metas = document.getElementsByTagName('meta');
 
@@ -168,7 +168,7 @@ function getMeta(metaName) {
 function showError(error_message=defaultError) {
     closeModals();
 
-    //Setup and show the error modal
+    // Setup and show the error modal
     $('#errorMessage').text(error_message);
     $('#errorModal').addClass('is-active');
 
@@ -186,7 +186,7 @@ function openLinkInNewTab(url) {
     window.open(url, '_blank');
 }
 
-//Cache admin data to speed up loading and reduce load on the server
+// Cache admin data to speed up loading and reduce load on the server
 let admin_cache = new Map();
 
 async function get_admin(admin_id) {

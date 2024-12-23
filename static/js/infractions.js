@@ -22,7 +22,7 @@ function handleResp(d, page, s, m) {
             const total_pages = Math.ceil(data['total_matched'] / 30);
 
             if (total_pages < page && total_pages > 0) {
-                //Out of range
+                // Out of range
                 insertParam('page', total_pages);
             }
 

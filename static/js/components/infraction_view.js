@@ -103,14 +103,14 @@ async function setupViewModal(infraction) {
 
     viewModal.attr('data-infraction', infraction['id']);
 
-    //Avatar
+    // Avatar
     if (infraction['player'].hasOwnProperty('gs_avatar')) {
         userAvatar.attr('src', '/file/uploads/' + infraction['player']['gs_avatar']['file_id'] + '/avatar.webp');
     } else {
         userAvatar.attr('src', '/static/images/fallback_av.png');
     }
 
-    //Name
+    // Name
     if (infraction['player'].hasOwnProperty('gs_name')) {
         userName.text(infraction['player']['gs_name']);
     } else if (infraction['player'].hasOwnProperty('gs_id')) {
@@ -121,10 +121,10 @@ async function setupViewModal(infraction) {
         userName.text('IP Address');
     }
 
-    //Created
+    // Created
     createdAt.text(moment.unix(infraction['created']).format('LLL'));
 
-    //A couple of flags
+    // A couple of flags
 
     if (infraction['flags'] & (INFRACTION.SYSTEM)) {
         systemTag.removeClass('is-hidden');
@@ -158,7 +158,7 @@ async function setupViewModal(infraction) {
         expiredTag.removeClass('is-hidden');
     }
 
-    //Setup GSID and IP
+    // Setup GSID and IP
 
     if (infraction['player'].hasOwnProperty('gs_id')) {
         idLabel.text(
