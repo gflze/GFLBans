@@ -377,6 +377,22 @@ async def do_infraction_search(app, query: Search, include_ip: bool = False) -> 
                             },
                         ]
                     }
+                    if comparison_mode in {'gt', 'gte'}:
+                        unset_bit_flags = INFRACTION_SESSION
+                        duration_query = {
+                            '$or': [
+                                duration_query,
+                                {'flags': {'$bitsAllSet': INFRACTION_PERMANENT}},
+                            ]
+                        }
+                    elif comparison_mode in {'lt', 'lte'}:
+                        unset_bit_flags = INFRACTION_PERMANENT
+                        duration_query = {
+                            '$or': [
+                                duration_query,
+                                {'flags': {'$bitsAllSet': INFRACTION_SESSION}},
+                            ]
+                        }
                 parsed_query.append(duration_query)
             elif comparison_mode == 'eq' and (field == 'created' or field == 'expires'):
                 parsed_query.append({field: {'$gte': value, '$lte': value + 24 * 60 * 60}})
