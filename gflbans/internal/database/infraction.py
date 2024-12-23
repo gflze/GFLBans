@@ -73,7 +73,7 @@ def build_query_dict(
         if actor_type != SERVER_KEY:
             raise ValueError('The `ignore_others` option is only valid for servers.')
 
-        f = {'server': ObjectId(actor_id)}
+        f['server'] = ObjectId(actor_id)
 
     # Filter out expired bans, vpn bans (on ip only), removed bans, session
     if active_only:
