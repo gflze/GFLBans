@@ -1,7 +1,7 @@
 <nav class="pagination mr-5 ml-5"
      role="navigation"
      aria-label="pagination">
-    {% if user is not none and has_flag(user.permissions, p_nodes['Add Infractions']) %}
+    {% if user is not none and has_flag(user.permissions, p_nodes['Add Infractions']) and has_flag(user.permissions, bit_or(p_nodes['Assign an Infraction to a Specific Server'], p_nodes['Add Global Infractions'])) %}
         <a id="createInfractionLoader" class="pagination-next is-accent button"><i class="fas fa-gavel"></i></a>
     {% endif %}
     <ul id="infraction-pages" class="pagination-list">

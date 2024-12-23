@@ -81,7 +81,7 @@ function submit_comment(infraction) {
         }
 
         repl.json().then(function (j) {
-            //Redo the comment section
+            // Redo the comment section
             commentContainer.empty();
 
             addComments(mergeCommentFiles(j));
@@ -93,7 +93,7 @@ function submit_comment(infraction) {
 }
 
 function prepareEditor(infraction) {
-    //Comment field and upload buttons will not exist when permissions are insufficient
+    // Comment field and upload buttons will not exist when permissions are insufficient
 
     const postComment = document.getElementById('doPost');
 
@@ -343,7 +343,7 @@ function editServer(infraction) {
     $('#serverValue').addClass('is-hidden');
     $('#editServer').addClass('is-hidden');
 
-    //Load all the server names into the server box
+    // Load all the server names into the server box
     const ess = $('#editServerServer');
     const essub = $('#submitEditServer');
     const ces = $('#cancelEditServer');
@@ -353,7 +353,7 @@ function editServer(infraction) {
 
     ess.empty();
 
-    //First the web option
+    // First the web option
 
     const web = document.createElement('option');
     web.setAttribute('value', 'web');
@@ -385,7 +385,7 @@ function editServer(infraction) {
         ess.append(nd);
     }
 
-    //Rig up the save button
+    // Rig up the save button
     essub.off('click').click(function () {
         if (ess.val() && !this.hasAttribute('disabled')) {
             essub.attr('disabled', '1').addClass('is-loading');

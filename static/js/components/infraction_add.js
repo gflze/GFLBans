@@ -1,8 +1,8 @@
-//User specification
+// User specification
 const cUserService = document.getElementById('serviceSelector');
 const cUserId = document.getElementById('gameIdEntry');
 const cIpEntry = document.getElementById('ipEntry');
-//Scoping
+// Scoping
 const cWebCheck = document.getElementById('isWebToggle');
 const cTargetServer = document.getElementById('serverSelector');
 const cServerRadio = document.getElementById('serverOnlyCheck');
@@ -10,18 +10,18 @@ const cServerLabel = document.getElementById('serverOnlyLabel');
 const cTargetServerField = document.getElementById('targetServerField');
 const cGlobalRadio = document.getElementById('globalCheck');
 const cGlobalLabel = document.getElementById('globalLabel');
-//Auto tiering
+// Auto tiering
 const cAutomationSection = document.getElementById('cAutomationSection');
 const cAutomaticCheck = document.getElementById('automaticCheck');
 const cOffense = document.getElementById('offenseSelector');
 const cOffenseField = document.getElementById('offenseField');
 const autoWrapper = document.getElementById('autoWrapper');
 const autoMessage = document.getElementById('autoSetupMessage');
-//Reason / evidence
+// Reason / evidence
 const cReasonEntry = document.getElementById('reasonEntry');
 const cFileInput = document.getElementById('fileInput');
 const cFileName = document.getElementById('fileName');
-//Restrictions
+// Restrictions
 const cRestrictionSection = document.getElementById('cRestrictionsSection');
 const cVoiceBtn = document.getElementById('restrictVoice');
 const cBanBtn = document.getElementById('restrictJoin');
@@ -29,7 +29,7 @@ const cTextBtn = document.getElementById('restrictText');
 const cAdminChatBtn = document.getElementById('restrictAdminChat');
 const cCallAdminBtn = document.getElementById('restrictCallAdmin');
 const cItemBtn = document.getElementById('restrictItem');
-//Expiration
+// Expiration
 const cExpirationSection = document.getElementById('cExpirationSection');
 const cPermanentCheck = document.getElementById('permanentCheck');
 const cTimeDecCheck = document.getElementById('timeDecCheck');
@@ -39,10 +39,10 @@ const cTimeDecCheckField = document.getElementById('cTimeDecCheckField');
 const cDurationField = document.getElementById('cDurationField');
 const cPermCheckField = document.getElementById('cPermCheckField');
 
-//Loading modal
+// Loading modal
 const cLoadingModal = document.getElementById('cLoadingModal');
 
-//Utility functions
+// Utility functions
 function setSelection(selector, selection) {
     for (let i = 0; i < selector.children.length; i++) {
         if (selector.children[i].hasAttribute('value') && selector.children[i].getAttribute('value') === selection) {
@@ -65,20 +65,20 @@ function resetModal() {
     $(cTargetServerField).removeClass('is-hidden');
     $(cAutomationSection).removeClass('is-hidden');
 
-    // For the global check, we should only enable it if we have permission to use it
+    $('.scope-check').prop('checked', false);
+
+    // If we have permission for global, default to it. Otherwise hide and disable
     const gp = $(cGlobalRadio).attr('data-has-permissions') !== '1';
     $(cGlobalRadio).prop('disabled', gp);
     if (gp) {
         cGlobalLabel.setAttribute('disabled', '1');
-        $('#globalLabel').addClass('is-hidden');
+        $(cGlobalLabel).addClass('is-hidden');
+        $(serverOnlyCheck).prop('checked', true);
     } else {
         cGlobalLabel.removeAttribute('disabled');
-        $('#globalLabel').removeClass('is-hidden');
+        $(cGlobalLabel).removeClass('is-hidden');
+        $(cGlobalRadio).prop('checked', true);
     }
-
-    $('.scope-check').prop('checked', false);
-
-    $(serverOnlyCheck).prop('checked', true);
 
     // The automation check is not checked by default, so the offense chooser
     // should be hidden and the restrictions / expiration sections should both be visible
@@ -89,7 +89,7 @@ function resetModal() {
     $(autoWrapper).removeClass('is-hidden');
     $(autoMessage).addClass('is-hidden');
 
-    //Clear evidence / reasoning text boxes
+    // Clear evidence / reasoning text boxes
     $(cReasonEntry).val('');
     cFileInput.value = '';
     $(cFileName).text('No file uploaded.');
@@ -227,7 +227,7 @@ async function loadModal() {
 
     closeModals();
 
-    //Setup servers
+    // Setup servers
     const servers_req = await gbRequest('GET', '/api/server/', null);
 
     if (!servers_req.ok) {
@@ -260,7 +260,7 @@ async function loadModal() {
         serverSel.append(el);
     }
 
-    //Setup and show the error modal
+    // Setup and show the error modal
     $('#createModal').addClass('is-active');
     $('#createModal .modal-card-body').get(0).scrollTo(0,0);
 
@@ -317,11 +317,11 @@ $(document).ready(function () {
 function submitInfraction() {
     setLoading();
 
-    //First request
+    // First request
 
     const createCall = createAndValidateInfraction();
 
-    //Failure, the second index is the error
+    // Failure, the second index is the error
     if (!createCall[0]) {
         $('#infractionCreateErrorMsg').text(createCall[1]);
         $('#infractionCreateError').removeClass('is-hidden');
@@ -330,7 +330,7 @@ function submitInfraction() {
         return;
     }
 
-    //Success, the second index is the request type and the third is the actual request struct
+    // Success, the second index is the request type and the third is the actual request struct
 
     let route = '/api/infractions/';
 
@@ -375,8 +375,7 @@ function createAndValidateInfraction() {
         'do_full_infraction': true
     };
 
-    //Common
-
+    // Common
     if ($(cUserId).val().trim() !== '') {
         infraction['player']['gs_service'] = $(cUserService).val();
         infraction['player']['gs_id'] = $(cUserId).val().trim();
@@ -404,22 +403,19 @@ function createAndValidateInfraction() {
     )
         infraction['scope'] = 'global';
 
-    //Reason
-
+    // Reason
     if ($(cReasonEntry).val().trim() === '' && !$(cAutomaticCheck).prop('checked')) {
         return [false, 'You must enter a reason!'];
     }
 
     infraction['reason'] = $(cReasonEntry).val().trim();
 
-    //Check the file size
-
-    //if ($(cFileInput).val() !== '' && cFileName.files[0].size > (30 * 1024 * 1024)) {
+    // Check the file size
+    // if ($(cFileInput).val() !== '' && cFileName.files[0].size > (30 * 1024 * 1024)) {
     //    return [false, 'The file must be no more than 30 MB.']
-    //}
+    // }
 
-    //Automation
-
+    // Automation
     if ($(cAutomaticCheck).prop('checked')) {
         infraction['policy_id'] = $(cOffense).val();
 
@@ -429,8 +425,7 @@ function createAndValidateInfraction() {
     // Allow STEAMID in the request field
     infraction['allow_normalize'] = true;
 
-    //Restrictions. Only apply if button exists (length is non-zero) and pressed
-
+    // Restrictions. Only apply if button exists (length is non-zero) and pressed
     infraction['punishments'] = [];
 
     if ($(cVoiceBtn).length && !$(cVoiceBtn).hasClass('is-outlined')) {
@@ -438,6 +433,9 @@ function createAndValidateInfraction() {
     }
 
     if ($(cBanBtn).length && !$(cBanBtn).hasClass('is-outlined')) {
+        if ($(cTimeDecCheck).prop('checked'))
+            return [false, 'A ban cannot be game timed.'];
+
         infraction['punishments'].push('ban');
     }
 
@@ -457,8 +455,7 @@ function createAndValidateInfraction() {
         infraction['punishments'].push('item_block');
     }
 
-    //Duration
-
+    // Duration
     try {
         if ($(cPermanentCheck).prop('checked')) {
             // A permanent infraction has no duration field
@@ -472,8 +469,6 @@ function createAndValidateInfraction() {
     } catch (e) {
         return [false, e];
     }
-
-
 
     return [true, false, infraction];
 }

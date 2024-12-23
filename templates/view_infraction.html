@@ -1,11 +1,4 @@
 <link rel="stylesheet" href="/static/3rdparty/css/bulma-tooltips.css">
-<style>
-    [data-tooltip]:not(.is-loading)::before, [data-tooltip]:not(.is-disabled)::before, [data-tooltip]:not([disabled])::before {
-        transform: translateY(-65%);
-        left: auto;
-        right: auto;
-    }
-</style>
 <div id="infraction_view_modal" class="modal" data-infraction="">
     <div id="ivm-back" class="modal-background"></div>
     <div class="modal-content background-secondary infraction-details">
@@ -82,12 +75,12 @@
                                                             </select>
                                                         </div>
                                                     </div>
-                                                    <div class="control">
+                                                    <div class="control has-tooltip-warning" data-tooltip="Permanent">
                                                         <a id="editTimePerm" class="button is-light is-warning is-small">
                                                             <i class="fas fa-infinity"></i>
                                                         </a>
                                                     </div>
-                                                    <div class="control">
+                                                    <div class="control has-tooltip-info" data-tooltip="Game Timed">
                                                         <a id="editTimeTimeDec" class="button is-light is-small">
                                                             <i class="fas fa-pause"></i>
                                                         </a>

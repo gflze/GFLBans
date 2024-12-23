@@ -25,7 +25,7 @@ function addServer(server_hostname, ip, map, mod, os, player_text='0/0', id, is_
 
     parent_tile.appendChild(child_tile);
 
-    //Server hostname and IP address
+    // Server hostname and IP address
     const title_root = document.createElement('div');
 
     const server_name = document.createElement('h1');
@@ -40,7 +40,7 @@ function addServer(server_hostname, ip, map, mod, os, player_text='0/0', id, is_
     title_root.appendChild(server_name);
     title_root.appendChild(ip_address);
 
-    //Map image and name
+    // Map image and name
     const map_root = document.createElement('div');
 
     const map_image = document.createElement('figure');
@@ -71,14 +71,14 @@ function addServer(server_hostname, ip, map, mod, os, player_text='0/0', id, is_
     map_root.appendChild(map_image);
     map_root.appendChild(map_name);
 
-    //Info Icons
+    // Info Icons
 
     const footer_root = document.createElement('div');
 
     const info_icon_container = document.createElement('h6');
     info_icon_container.classList.add('has-text-centered', 'has-text-white', 'server-icons');
 
-    //The mod
+    // The mod
 
     const mod_icon_container = document.createElement('span');
     mod_icon_container.classList.add('icon-text', 'server-icon-child');
@@ -93,7 +93,7 @@ function addServer(server_hostname, ip, map, mod, os, player_text='0/0', id, is_
 
     info_icon_container.appendChild(mod_icon_container);
 
-    //The operating system
+    // The operating system
 
     if (os === 'linux' || os === 'windows' || os === 'apple' || os === 'freebsd') {
         const os_icon_container = document.createElement('span');
@@ -127,7 +127,7 @@ function addServer(server_hostname, ip, map, mod, os, player_text='0/0', id, is_
     player_count.classList.add('is-size-5', 'has-text-centered', 'has-text-white');
     player_count.innerText = player_text;
 
-    //footer_root.appendChild(info_icon_container);
+    // footer_root.appendChild(info_icon_container);
     footer_root.appendChild(player_count);
 
     child_tile.appendChild(title_root);
@@ -212,7 +212,7 @@ function showServerModal(mod, map, hostname, ip, players, id) {
 
     $(server_players).empty();
 
-    //Do we have RPC_KICK permissions?
+    // Do we have RPC_KICK permissions?
     const can_rpc_kick = parseInt(getMeta('active_permissions')) & PERMISSION.RPC_KICK;
 
     if (players.length === 0) {
@@ -234,7 +234,7 @@ function showServerModal(mod, map, hostname, ip, players, id) {
     for (let i = 0; i < players.length; i++) {
         const row = document.createElement('tr');
 
-        //Create the user photo
+        // Create the user photo
         const avatar_row = document.createElement('td');
 
         if (can_rpc_kick) {
@@ -265,7 +265,7 @@ function showServerModal(mod, map, hostname, ip, players, id) {
 
         row.appendChild(avatar_row);
 
-        //Create the buttons
+        // Create the buttons
         const button_row = document.createElement('td');
 
         const profile_btn = document.createElement('button');
@@ -301,7 +301,7 @@ function showServerModal(mod, map, hostname, ip, players, id) {
                 }).then(function (resp) {
                     rpc_kick_btn.classList.remove('is-loading');
                     if (resp.ok) {
-                        //Refresh the modal
+                        // Refresh the modal
                         serverDetails(id, mod, map, hostname, ip);
                     } else {
                         const errorData = resp.json();
@@ -379,7 +379,7 @@ $(document).ready(function () {
             if (resp.ok) {
                 resp.json().then(j => {
                     if (j.length <= 0) {
-                        //Show a little message stating that there are no servers
+                        // Show a little message stating that there are no servers
                         setupEmptySNotice();
                         return;
                     }

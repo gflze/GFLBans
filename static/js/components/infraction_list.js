@@ -1,19 +1,19 @@
-//Also must change python definition
+// Also must change python definition
 const INFRACTIONS_PER_PAGE = 30;
 
 function setupNav(current_page, total_pages) {
-    //Reset the block
+    // Reset the block
 
     const nav = document.getElementById('infraction-pages');
 
     $(nav).empty();
 
-    //We do not render the navbar when there are only one page of bans to show
+    // We do not render the navbar when there are only one page of bans to show
     if (total_pages === 1) {
         return;
     }
 
-    //Embedded function to make us a button
+    // Embedded function to make us a button
     function make_button(page_n) {
         const page_li = document.createElement('li');
         const page_a = document.createElement('a');
@@ -105,7 +105,7 @@ function addInfractionRow(infraction) {
     const row = document.createElement('tr');
     row.classList.add('infraction-row');
 
-    //Utility function to create the wrapper for the text
+    // Utility function to create the wrapper for the text
     function getWrapper(el) {
         const w = document.createElement('div');
         w.classList.add('has-text-centered', 'text-primary');
@@ -114,7 +114,7 @@ function addInfractionRow(infraction) {
         return w;
     }
 
-    //The service logo
+    // The service logo
     let fa_type = 'fas';
     let fa_icon = 'fa-globe';
 
@@ -136,7 +136,7 @@ function addInfractionRow(infraction) {
     svc_wrap.appendChild(svc_icon);
     row.appendChild(svc_cell);
 
-    //The time
+    // The time
     const date = new Date(infraction['created'] * 1000);
     const dateStr = date.getFullYear() + '/' + (date.getMonth() + 1) + '/' + date.getDate() + ' '
         + (date.getHours() >= 10 ? date.getHours() : '0' + date.getHours()) + ':'
@@ -151,7 +151,7 @@ function addInfractionRow(infraction) {
     date_wrap.appendChild(date_span);
     row.appendChild(date_cell);
 
-    //Infraction icons
+    // Infraction icons
     const restrictions_cell = document.createElement('td');
     restrictions_cell.classList.add('vertical-center', 'is-hidden-mobile-tiny');
 
@@ -181,7 +181,7 @@ function addInfractionRow(infraction) {
 
     row.appendChild(restrictions_cell);
 
-    //User
+    // User
     let uicon = '/static/images/fallback_av.png';
 
     if (infraction['player'].hasOwnProperty('gs_avatar')) {
@@ -212,7 +212,7 @@ function addInfractionRow(infraction) {
 
     row.appendChild(user_cell);
 
-    //Admin
+    // Admin
     const admin_cell = document.createElement('td');
     admin_cell.classList.add('vertical-center', 'has-text-centered', 'is-hidden-mobile', 'text-primary');
 
@@ -225,7 +225,7 @@ function addInfractionRow(infraction) {
     atxt.innerText = 'Fetching...';
     admin_cell.appendChild(atxt);
 
-    if (infraction['flags'] & (INFRACTION.SYSTEM) || !infraction.hasOwnProperty('admin')) { //System infraction
+    if (infraction['flags'] & (INFRACTION.SYSTEM) || !infraction.hasOwnProperty('admin')) { // System infraction
         atxt.innerText = 'System';
     } else {
         get_admin(infraction['admin']).then(result => {
@@ -241,7 +241,7 @@ function addInfractionRow(infraction) {
         });
     }
 
-    //Time remaining
+    // Time remaining
 
     const time_cell = document.createElement('td');
     time_cell.classList.add('vertical-center');
@@ -263,7 +263,7 @@ function addInfractionRow(infraction) {
 
     time_wrapper.appendChild(time_text);
 
-    //Color and icons
+    // Color and icons
     if (infraction['flags'] & INFRACTION.REMOVED) {
         time_text.classList.add('has-text-warning');
         time_icon.classList.add('fas', 'fa-ankh');
@@ -307,7 +307,7 @@ function addInfractionRow(infraction) {
 function getTimeRemainingText(infraction) {
     let original = 0;
 
-    //Simple cases that do not require any other work
+    // Simple cases that do not require any other work
     if (infraction['flags'] & INFRACTION.REMOVED) {
         if (infraction['flags'] & INFRACTION.SESSION || infraction['flags'] & INFRACTION.PERMANENT) {
             return 'Removed';
@@ -334,14 +334,14 @@ function getTimeRemainingText(infraction) {
         return 'Permanent';
     }
 
-    //For both standard infractions and pausable infractions, we'd like to show remaining and original
+    // For both standard infractions and pausable infractions, we'd like to show remaining and original
     let remaining = 0;
     original = 0;
 
     if (infraction['flags'] & INFRACTION.DEC_ONLINE_ONLY) {
         remaining = infraction['time_left'] * 1000;
 
-        //Infraction might not have this attribute
+        // Infraction might not have this attribute
         if (infraction.hasOwnProperty('orig_length')) {
             original = infraction['orig_length'] * 1000;
         }

@@ -375,7 +375,7 @@ async function loadAdminMenu(adminID) {
 
     closeModals();
 
-    //Setup groups
+    // Setup groups
     const groupsRequest = await gbRequest('GET', '/api/group/', null);
 
     if (!groupsRequest.ok) {
@@ -415,7 +415,7 @@ async function loadAdminMenu(adminID) {
         toggleButton(ev.target);
     });
 
-    //Setup and show the error AddMenu
+    // Setup and show the error AddMenu
     $('#createAddMenu').addClass('is-active');
 
     $('#htmlRoot').addClass('is-clipped');
@@ -473,7 +473,7 @@ function submitNewAdmin() {
     // First request
     const adminCall = createAndValidateAdmin();
 
-    //Failure, the second index is the error
+    // Failure, the second index is the error
     if (!adminCall[0]) {
         $('#createErrorMsg').text(adminCall[1]);
         $('#createError').removeClass('is-hidden');
@@ -481,7 +481,7 @@ function submitNewAdmin() {
         return;
     }
 
-    //Success, the second index is the request type and the third is the actual request struct
+    // Success, the second index is the request type and the third is the actual request struct
 
     const route = '/api/admin/';
 
@@ -602,7 +602,7 @@ async function loadGroupMenu(groupID) {
         toggleButton(ev.target);
     });
 
-    //Setup and show the error AddMenu
+    // Setup and show the error AddMenu
     $('#createAddMenu').addClass('is-active');
 
     $('#htmlRoot').addClass('is-clipped');
@@ -765,7 +765,7 @@ async function loadServerMenu(serverID) {
 
     closeModals();
 
-    //Setup and show the error AddMenu
+    // Setup and show the error AddMenu
     $('#createAddMenu').addClass('is-active');
 
     $('#htmlRoot').addClass('is-clipped');
@@ -901,7 +901,7 @@ function handleServerSubmissionDoublePatch(resp) {
 function showNewToken(serverInfo) {
     closeModals();
 
-    //Setup and show the error modal
+    // Setup and show the error modal
     $('.modal-card-title').text('CS2Fixes Convars');
     $('#setupURL').text(window.location.host + '/api/');
     if (serverInfo.hasOwnProperty('server'))

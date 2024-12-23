@@ -822,6 +822,12 @@ img {
     background-color: var(--background-accent-secondary);
 }
 
+#timeValue[data-tooltip]::before {
+    transform: translateY(-65%);
+    left: auto;
+    right: auto;
+}
+
 /* MARK: Advanced Search */
 #advancedSearchToggle {
     position: absolute;

@@ -58,7 +58,7 @@ async function loadSearchModal() {
 
         resetSearchModal();
 
-        //Setup admins
+        // Setup admins
         const admins_req = await gbRequest('GET', '/api/admin/', null);
 
         if (!admins_req.ok) {
@@ -88,7 +88,7 @@ async function loadSearchModal() {
             adminSel.append(el);
         }
 
-        //Setup servers
+        // Setup servers
         const servers_req = await gbRequest('GET', '/api/server/', null);
 
         if (!servers_req.ok) {
