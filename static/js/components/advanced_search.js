@@ -67,10 +67,18 @@ async function loadSearchModal() {
 
         const admins = await admins_req.json();
 
+        admins.sort(function(a, b) {
+            if (!a.hasOwnProperty('admin_name'))
+                return -1;
+            else if (!b.hasOwnProperty('admin_name'))
+                return 1;
+            const aName = a['admin_name'].toLowerCase();
+            const bName = b['admin_name'].toLowerCase();
+            return ((aName < bName) ? -1 : ((aName > bName) ? 1 : 0));
+        });
+
         const adminSel = $('#search-admin-selector');
-
         adminSel.empty();
-
         adminSel.append($('<option>').attr('value', 0).text('<Any>').prop('selected', true));
 
         for (let i = 0; i < admins.length; i++) {
@@ -97,10 +105,24 @@ async function loadSearchModal() {
 
         const servers = await servers_req.json();
 
+        servers.sort(function(a, b) {
+            let aName = a['ip'];
+            if (a.hasOwnProperty('group_name'))
+                aName = a['group_name'].toLowerCase();
+            else if (a.hasOwnProperty('game_port'))
+                aName = `${a['ip']}:${a['game_port']}`;
+
+            let bName = b['ip'];
+            if (b.hasOwnProperty('group_name'))
+                bName = b['group_name'].toLowerCase();
+            else if (b.hasOwnProperty('game_port'))
+                bName = `${b['ip']}:${b['game_port']}`;
+
+            return ((aName < bName) ? -1 : ((aName > bName) ? 1 : 0));
+        });
+
         const serverSel = $('#search-scope-server-selector');
-
         serverSel.empty();
-
         serverSel.append($('<option>').attr('value', 0).text('<Any>').prop('selected', true));
 
         for (let i = 0; i < servers.length; i++) {
@@ -112,7 +134,7 @@ async function loadSearchModal() {
 
             if (servers[i].hasOwnProperty('friendly_name'))
                 el.text(servers[i]['friendly_name']);
-            else if (servers[i]['game_port'])
+            else if (servers[i].hasOwnProperty('game_port'))
                 el.text(`${servers[i]['ip']}:${servers[i]['game_port']}`);
             else
                 el.text(servers[i]['ip']);
