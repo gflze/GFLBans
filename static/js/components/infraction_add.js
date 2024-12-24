@@ -236,8 +236,23 @@ async function loadModal() {
 
     const servers = await servers_req.json();
 
-    const serverSel = $('#serverSelector');
+    servers.sort(function(a, b) {
+        let aName = a['ip'];
+        if (a.hasOwnProperty('group_name'))
+            aName = a['group_name'].toLowerCase();
+        else if (a.hasOwnProperty('game_port'))
+            aName = `${a['ip']}:${a['game_port']}`;
 
+        let bName = b['ip'];
+        if (b.hasOwnProperty('group_name'))
+            bName = b['group_name'].toLowerCase();
+        else if (b.hasOwnProperty('game_port'))
+            bName = `${b['ip']}:${b['game_port']}`;
+
+        return ((aName < bName) ? -1 : ((aName > bName) ? 1 : 0));
+    });
+
+    const serverSel = $('#serverSelector');
     serverSel.empty();
 
     for (let i = 0; i < servers.length; i++) {
