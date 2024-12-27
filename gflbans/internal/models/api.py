@@ -1,4 +1,3 @@
-from datetime import datetime
 from hashlib import sha256
 from typing import Dict, List, Optional, Union
 
@@ -106,7 +105,7 @@ class TieringPolicy(BaseModel):
 class Comment(BaseModel):
     author: Optional[PositiveIntIncl0] = None
     content: constr(min_length=1, max_length=280)
-    edit_data: Optional[Dict[str, Union[datetime, str]]]  # admin_id, unix time
+    edit_data: Optional[Dict[str, Union[int, str]]]  # admin_id, unix time
     private: bool = False
     rendered: Optional[str]
     created: int = 0

@@ -981,7 +981,8 @@ async def edit_comment(
     query: EditComment,
     auth: Tuple[int, Optional[ObjectId], int] = Depends(check_access),
 ):
-    return await _update_or_delete_comment(request, infraction_id, query, auth)
+    inf = await _update_or_delete_comment(request, infraction_id, query, auth)
+    return inf.comments[query.comment_index]
 
 
 @infraction_router.delete(

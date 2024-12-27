@@ -348,6 +348,11 @@ function mergeCommentFiles(infraction) {
             'rendered': infraction['comments'][i]['rendered']
         };
 
+        if (infraction['comments'][i].hasOwnProperty('edit_data')) {
+            c['edit_user'] = infraction['comments'][i]['edit_data']['admin'];
+            c['edit_time'] = infraction['comments'][i]['edit_data']['time'];
+        }
+
         m.push(c);
     }
 
@@ -411,11 +416,24 @@ function addComments(renderableComments) {
         const username = document.createElement('strong');
         const date = document.createElement('small');
         const priv = document.createElement('small');
+        const edit = document.createElement('small');
 
         username.classList.add('text-primary');
 
         $(username).text('Loading');
         $(date).text(' ' + moment.unix(rc['created']).format('LLL') + ' ');
+
+        if (rc['edit_time']) {
+            $(edit).text('(Edited)');
+            $(edit).css('color', 'grey');
+            edit.classList.add('has-tooltip-dark');
+            $(edit).attr('data-tooltip', 'Edited ' + moment.unix(rc['edit_time']).format('LLL'));
+            if (rc['edit_user']) {
+                get_admin(rc['edit_user']).then(function (adm) {
+                    $(edit).attr('data-tooltip', $(edit).attr('data-tooltip') + ' by ' + adm['admin_name']);
+                });
+            }
+        }
 
         if (rc['private']) {
             $(priv).text('(Private)');
@@ -427,7 +445,7 @@ function addComments(renderableComments) {
 
         $(messageContent).html(rc['rendered']);
 
-        textWrapper.append(username, date, priv, br, messageContent);
+        textWrapper.append(username, date, edit, priv, br, messageContent);
 
         innerContent.appendChild(textWrapper);
         content.appendChild(innerContent);
