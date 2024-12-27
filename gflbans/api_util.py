@@ -72,14 +72,14 @@ async def find_admin_name(db_ref: AsyncIOMotorDatabase, a: Optional[ObjectId]):
     return an
 
 
-def as_edict(ed):
+async def as_edict(app, ed):
     a = {}
 
     if 'time' in ed:
-        a = {'time': ed['time']}
+        a = {'time': to_unix(ed['time'])}
 
     if 'admin' in ed:
-        a['admin'] = str_id(ed['admin'])
+        a['admin'] = await admin_as_int(app, ed['admin'])
 
     return a
 
@@ -111,7 +111,7 @@ def to_unix(dt: datetime):
 
 async def as_comment(app, c: DComment) -> Comment:
     return Comment(
-        edit_data=as_edict(c.edit_data),
+        edit_data=await as_edict(app, c.edit_data),
         author=await admin_as_int(app, c.author),
         content=c.content,
         private=c.private,
