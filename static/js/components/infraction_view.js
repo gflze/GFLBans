@@ -100,7 +100,6 @@ async function setupViewModal(infraction) {
 
     server_data = await gbServers.json();
 
-
     viewModal.attr('data-infraction', infraction['id']);
 
     // Avatar
@@ -345,7 +344,8 @@ function mergeCommentFiles(infraction) {
             'user': uid,
             'created': infraction['comments'][i]['created'],
             'private': infraction['comments'][i]['private'],
-            'rendered': infraction['comments'][i]['rendered']
+            'rendered': infraction['comments'][i]['rendered'],
+            'index': i
         };
 
         if (infraction['comments'][i].hasOwnProperty('edit_data')) {
@@ -369,7 +369,8 @@ function mergeCommentFiles(infraction) {
             'user': uid,
             'created': infraction['files'][i]['created'],
             'private': infraction['files'][i]['private'],
-            'rendered': infraction['files'][i]['rendered']
+            'rendered': infraction['files'][i]['rendered'],
+            'file_id': i
         };
 
         m.push(f);
@@ -383,8 +384,10 @@ function mergeCommentFiles(infraction) {
     return m;
 }
 
-
 function addComments(renderableComments) {
+    const current_user = parseInt(getMeta('current_user'));
+    const active_perms = parseInt(getMeta('active_permissions'));
+
     for (let i = 0; i < renderableComments.length; i++) {
         $('#commentCount').text(i + 1);
         const rc = renderableComments[i];
@@ -436,7 +439,7 @@ function addComments(renderableComments) {
         }
 
         if (rc['private']) {
-            $(priv).text('(Private)');
+            $(priv).text('(Private) ');
             priv.classList.add('has-text-danger');
         }
 
@@ -445,7 +448,47 @@ function addComments(renderableComments) {
 
         $(messageContent).html(rc['rendered']);
 
-        textWrapper.append(username, date, edit, priv, br, messageContent);
+        textWrapper.append(username, date, priv, edit);
+
+        if (
+            (
+                rc['user'] !== 0
+                && rc['user'] === current_user
+                && active_perms & PERMISSION.COMMENT
+            )
+            || active_perms & PERMISSION.WEB_MODERATOR
+        ) {
+            if (rc['type'] === 'comment') {
+                const deleteButton = document.createElement('a');
+                deleteButton.classList.add('fas', 'fa-trash', 'text-primary', 'edit-comment');
+                $(deleteButton).css('float', 'right').css('opacity', 0.6).css('padding-right', '10px');
+                $(deleteButton).click(function(event){
+                    startDeleteComment(event, rc['index']);
+                });
+
+                textWrapper.append(deleteButton);
+
+                const editButton = document.createElement('a');
+                editButton.classList.add('fas', 'fa-pen', 'text-primary', 'edit-comment');
+                $(editButton).css('float', 'right').css('opacity', 0.6).css('padding-right', '10px');
+                $(editButton).click(function(event){
+                    startEditComment(event, rc['index']);
+                });
+
+                textWrapper.append(editButton);
+            } else if (rc['type'] === 'file') {
+                const deleteButton = document.createElement('a');
+                deleteButton.classList.add('fas', 'fa-trash', 'text-primary', 'edit-comment');
+                $(deleteButton).css('float', 'right').css('opacity', 0.6).css('padding-right', '10px');
+                $(deleteButton).click(function(event){
+                    startDeleteAttachment(event, rc['file_id']);
+                });
+
+                textWrapper.append(deleteButton);
+            }
+        }
+
+        textWrapper.append(br, messageContent);
 
         innerContent.appendChild(textWrapper);
         content.appendChild(innerContent);
@@ -475,6 +518,190 @@ function addComments(renderableComments) {
         cind.addClass('fa-sort-down');
         commentContainer.removeClass('is-hidden');
     }
+}
+
+function startDeleteComment(event, index) {
+    event.preventDefault();
+
+    // Load comment info into confirmation window
+    const comment = $(event.currentTarget).closest('.media');
+    const commentClone = comment.clone();
+    commentClone.find('.edit-comment').remove();
+    commentClone.css('border', '1px solid var(--text-secondary)').css('padding', '5px');
+    const commentPreview = $('#deleteCommentModal .control');
+    commentPreview.empty();
+    commentPreview.append(commentClone);
+
+    const dcm = $('#deleteCommentModal');
+    const db = $('#deleteButton');
+    const cd = $('#cancelDelete');
+
+    dcm.addClass('is-active');
+
+    db.off('click').click(function () {
+        if (this.hasAttribute('disabled'))
+            return;
+
+        cd.attr('disabled', '1');
+        db.attr('disabled', '1').addClass('is-loading');
+
+        deleteComment(index).then(function (d) {
+            cd.removeAttr('disabled');
+            db.removeAttr('disabled').removeClass('is-loading');
+            dcm.removeClass('is-active');
+            wrapSetupView(d);
+        }).catch(function (e) {
+            dcm.removeClass('is-active').removeClass('is-loading');
+            db.removeAttr('disabled').removeClass('is-loading');
+            logException(e);
+        });
+    });
+}
+
+async function deleteComment(index) {
+    const infID = $('#infraction_view_modal').attr('data-infraction');
+    const mod = {
+        'comment_index': index
+    };
+    const resp = await gbRequest('DELETE', `/api/infractions/${infID}/comment`, mod, true);
+
+    if (!resp.ok) {
+        const errorData = await resp.json();
+        throw new Error(errorData.detail || defaultAPIError);
+    }
+
+    return await resp.json();
+}
+
+function startEditComment(event, index) {
+    event.preventDefault();
+
+    const comment = $(event.currentTarget).closest('p');
+    const originalMessage = comment.find('span').text();
+
+    // Hide comment to replace with text area for edit
+    const content = $(comment).closest('.content');
+    content.find('p').addClass('is-hidden');
+
+    const editDiv = $('<div>').addClass('edit-comment-div');
+
+    const editTextarea = $('<textarea>');
+    editTextarea.addClass('textarea edit-comment-text');
+    editTextarea.val(originalMessage);
+    editTextarea.attr('maxlength', '280');
+    editTextarea.attr('rows', '2');
+
+    const submitEditButton = $('<button>');
+    submitEditButton.addClass('button is-success');
+    submitEditButton.text('Edit');
+
+    const cancelEditButton = $('<button>').addClass('button is-danger').text('Cancel');
+    cancelEditButton.click(function(event) {
+        if (this.hasAttribute('disabled'))
+            return;
+
+        content.find('p').removeClass('is-hidden');
+        editDiv.remove();
+    });
+
+    submitEditButton.off('click').click(function(event) {
+        if (this.hasAttribute('disabled') || originalMessage === editTextarea.val())
+            return;
+
+        editTextarea.attr('disabled', '1');
+        cancelEditButton.attr('disabled', '1');
+        submitEditButton.attr('disabled', '1').addClass('is-loading');
+
+        editComment(index, editTextarea.val()).then(function (d) {
+            content.find('p').removeClass('is-hidden');
+            editDiv.remove();
+            wrapSetupView(d);
+        }).catch(function (e) {
+            editTextarea.removeAttr('disabled');
+            cancelEditButton.removeAttr('disabled');
+            submitEditButton.removeAttr('disabled').removeClass('is-loading');
+            logException(e);
+        });
+    });
+
+    editDiv.append(editTextarea);
+    editDiv.append(submitEditButton);
+    editDiv.append(cancelEditButton);
+
+    content.append(editDiv);
+}
+
+async function editComment(index, message) {
+    const infID = $('#infraction_view_modal').attr('data-infraction');
+    const mod = {
+        'comment_index': index,
+        'content': message
+    };
+    const resp = await gbRequest('PATCH', `/api/infractions/${infID}/comment`, mod, true);
+
+    if (!resp.ok) {
+        const errorData = await resp.json();
+        throw new Error(errorData.detail || defaultAPIError);
+    }
+
+    return await resp.json();
+}
+
+function startDeleteAttachment(event, id) {
+    event.preventDefault();
+
+    // Load comment info into confirmation window
+    const comment = $(event.currentTarget).closest('.media');
+    const commentClone = comment.clone();
+    commentClone.find('.edit-comment').remove();
+    commentClone.css('border', '1px solid var(--text-secondary)').css('padding', '5px');
+    const commentPreview = $('#deleteCommentModal .control');
+    commentPreview.empty();
+    commentPreview.append(commentClone);
+
+    const dcm = $('#deleteCommentModal');
+    const db = $('#deleteButton');
+    const cd = $('#cancelDelete');
+
+    dcm.addClass('is-active');
+
+    db.off('click').click(function () {
+        if (this.hasAttribute('disabled'))
+            return;
+
+        cd.attr('disabled', '1');
+        db.attr('disabled', '1').addClass('is-loading');
+
+        deleteAttachment(id).then(function (d) {
+            cd.removeAttr('disabled');
+            db.removeAttr('disabled').removeClass('is-loading');
+            dcm.removeClass('is-active');
+            wrapSetupView(d);
+        }).catch(function (e) {
+            dcm.removeClass('is-active').removeClass('is-loading');
+            db.removeAttr('disabled').removeClass('is-loading');
+            logException(e);
+        });
+    });
+}
+
+async function deleteAttachment(fileID) {
+    const infID = $('#infraction_view_modal').attr('data-infraction');
+    const mod = {
+        'infraction': infID,
+        'file_idx': fileID,
+        // 'admin': {
+        //    'gs_admin': parseInt(getMeta('current_user'))
+        // }
+    };
+    const resp = await gbRequest('DELETE', `/api/infractions/${infID}/attachment`, mod, true);
+
+    if (!resp.ok) {
+        const errorData = await resp.json();
+        throw new Error(errorData.detail || defaultAPIError);
+    }
+
+    return await resp.json();
 }
 
 function wrapSetupView(j, start=0) {
@@ -586,4 +813,12 @@ $(document).ready(function () {
             }
         }
     };
+
+    $('#cancelDelete').click(function () {
+        if (this.hasAttribute('disabled')) {
+            return;
+        }
+
+        $('#deleteCommentModal').removeClass('is-active');
+    });
 });

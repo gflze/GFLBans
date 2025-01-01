@@ -143,7 +143,8 @@ function prepareEditor(infraction) {
     const active_perms = parseInt(getMeta('active_permissions'));
 
     if (
-        (infraction.hasOwnProperty('admin')
+        (
+            infraction.hasOwnProperty('admin')
             && infraction['admin'] === current_user
             && active_perms & PERMISSION.CREATE_INFRACTION
         )
