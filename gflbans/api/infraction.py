@@ -68,7 +68,7 @@ from gflbans.internal.infraction_utils import (
 )
 from gflbans.internal.integrations.games import normalize_id
 from gflbans.internal.log import logger
-from gflbans.internal.models.api import Comment, FileInfo, Infraction, Initiator, TieringPolicy
+from gflbans.internal.models.api import FileInfo, Infraction, Initiator, TieringPolicy
 from gflbans.internal.models.protocol import (
     AddComment,
     CheckInfractions,
@@ -970,7 +970,6 @@ async def _update_or_delete_comment(
 
 @infraction_router.patch(
     '/{infraction_id}/comment',
-    response_model=Comment,
     response_model_exclude_unset=True,
     response_model_exclude_none=True,
     dependencies=[Depends(csrf_protect)],
@@ -981,8 +980,7 @@ async def edit_comment(
     query: EditComment,
     auth: Tuple[int, Optional[ObjectId], int] = Depends(check_access),
 ):
-    inf = await _update_or_delete_comment(request, infraction_id, query, auth)
-    return inf.comments[query.comment_index]
+    return await _update_or_delete_comment(request, infraction_id, query, auth)
 
 
 @infraction_router.delete(

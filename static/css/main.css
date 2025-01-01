@@ -733,6 +733,18 @@ img {
     word-wrap: anywhere;
 }
 
+#iComments > .media .edit-comment {
+    visibility: hidden;
+}
+
+#iComments > .media:hover .edit-comment {
+    visibility: visible;
+}
+
+#deleteCommentModal .modal-card-body {
+    padding-bottom: 0;
+}
+
 #loadMessage {
     color: whitesmoke;
     text-shadow: 1px 1px black;
@@ -781,8 +793,20 @@ img {
     max-height: none;
 }
 
-.button.is-accent:not(.is-outlined) {
+.button.is-accent:not(.is-outlined),
+#deleteCommentModal .button,
+#removeModal .button {
     border-color: transparent;
+}
+
+.edit-comment-text {
+    width: 100%;
+    max-width: 100%;
+}
+
+.edit-comment-div .button {
+    margin: 5px 0 0 5px;
+    float: right;
 }
 
 #gameIdEntry {
