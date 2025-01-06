@@ -809,10 +809,6 @@ img {
     float: right;
 }
 
-#gameIdEntry {
-    border-left: 0;
-}
-
 #doFileUpload:hover {
     cursor: pointer;
 }
