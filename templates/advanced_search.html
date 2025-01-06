@@ -20,29 +20,17 @@
                         </label>
                     </div>
                 {% endif %}
-                <div id="search-user-info" class="field is-grouped">
+                <div id="search-user-info" class="field has-addons">
                     <input id="search-user-name"
                            class="input"
                            type="text"
                            maxlength="30"
                            placeholder="Name">
-                    <div class="field has-addons">
-                        <div class="control">
-                            <input id="search-user-gsid"
-                                   class="input"
-                                   type="text"
-                                   maxlength="256"
-                                   placeholder="Game ID">
-                        </div>
-                        <div class="control">
-                            <div class="select">
-                                <select id="search-user-service-selector">
-                                    <option value="steam" selected>Steam</option>
-                                    <option value="discord">Discord</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
+                    <input id="search-user-gsid"
+                           class="input"
+                           type="text"
+                           maxlength="256"
+                           placeholder="Steam ID">
                 </div>
                 {% if user is not none and has_flag(user.permissions, p_nodes['Can See IP Addresses']) %}
                     <div class="field">

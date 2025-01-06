@@ -165,7 +165,6 @@ function resetSearchModal() {
     $('#search-user-vpn-check').prop('checked', false);
     $('#search-user-name').val('');
     $('#search-user-gsid').val('');
-    $('#search-user-service-selector').val('steam');
     $('#search-user-ip').val('');
 
     // Admin
@@ -222,8 +221,6 @@ function loadUrlParams() {
         $('#search-user-name').val(urlParams.get('gs_name'));
     if (urlParams.has('gs_id'))
         $('#search-user-gsid').val(urlParams.get('gs_id'));
-    if (urlParams.has('gs_service'))
-        $('#search-user-service-selector').val(urlParams.get('gs_service')).trigger('click');
     if ($('#search-user-ip').length && urlParams.has('ip'))
         $('#search-user-ip').val(urlParams.get('ip'));
 
@@ -445,7 +442,7 @@ function createSearchQuery() {
 
     if ($('#search-user-gsid').val().trim().length > 0) {
         query = query.concat(`&gs_id=${$('#search-user-gsid').val().trim()}`);
-        query = query.concat(`&gs_service=${$('#search-user-service-selector').val()}`);
+        query = query.concat('&gs_service=steam');
     }
 
     if ($('#search-user-ip').length && $('#search-user-ip').val().trim().length > 0)

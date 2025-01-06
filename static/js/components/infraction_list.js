@@ -76,8 +76,7 @@ function setupNav(current_page, total_pages) {
 
 
 const services = {
-    'steam': ['fab', 'fa-steam'],
-    'discord': ['fab', 'fa-discord']
+    'steam': ['fab', 'fa-steam']
 };
 
 const restrictions = {

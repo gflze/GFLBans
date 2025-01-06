@@ -1,5 +1,4 @@
 // User specification
-const cUserService = document.getElementById('serviceSelector');
 const cUserId = document.getElementById('gameIdEntry');
 const cIpEntry = document.getElementById('ipEntry');
 // Scoping
@@ -53,7 +52,6 @@ function setSelection(selector, selection) {
 
 function resetModal() {
     // Default user info
-    setSelection(cUserService, 'steam');
     $(cUserId).val('');
     $(cIpEntry).val('');
 
@@ -392,7 +390,7 @@ function createAndValidateInfraction() {
 
     // Common
     if ($(cUserId).val().trim() !== '') {
-        infraction['player']['gs_service'] = $(cUserService).val();
+        infraction['player']['gs_service'] = 'steam';
         infraction['player']['gs_id'] = $(cUserId).val().trim();
     }
 

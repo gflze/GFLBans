@@ -50,7 +50,6 @@ def configure_app(app):
     app.state.redis_client = Redis.from_url(REDIS_URI, db=3)
 
     app.state.cache = RedisCache(app.state.redis_client, 'GlobalCache', ORJSONSerializer())
-    app.state.discord_cache = RedisCache(app.state.redis_client, 'DiscordCache', ORJSONSerializer())
     app.state.steam_cache = RedisCache(app.state.redis_client, 'SteamCache', ORJSONSerializer())
     app.state.ips_cache = RedisCache(app.state.redis_client, 'IPSCache', ORJSONSerializer())
     app.state.ip_info_cache = RedisCache(app.state.redis_client, 'IPInfoCache', ORJSONSerializer())
