@@ -84,7 +84,7 @@ const restrictions = {
     'ban': ['fas', 'fa-ban', 'is-ban'],
     'text': ['fas', 'fa-comment-slash', 'is-text'],
     'call-admin': ['fas', 'fa-phone-slash', 'is-call-admin'],
-    'admin-chat': ['fas', 'fa-hands-helping', 'is-admin-chat'],
+    'admin-chat': ['fas', 'fa-bell-slash', 'is-admin-chat'],
     'item': ['fas', 'fa-virus-slash', 'is-item'],
     'warning': ['fas', 'fa-exclamation-triangle', 'is-warning'],
 };

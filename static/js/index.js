@@ -130,7 +130,6 @@ $(document).ready(function () {
                     chartOpts.data.datasets[7].data.push(decoded.history[labels[i]].total);
                 }
 
-
                 if (
                     window.matchMedia
                     && (
@@ -151,12 +150,12 @@ $(document).ready(function () {
                 window.gbGraph = new Chart(ctx, chartOpts);
 
                 $('#count_total_infractions').text(decoded.total_infractions);
-                $('#count_active_infractions').text(decoded.active_infractions);
-                $('#count_servers').text(decoded.total_servers);
-                $('#count_total_players').text(decoded.online_players);
                 $('#count_total_bans').text(decoded.total_bans);
                 $('#count_total_mutes').text(decoded.total_voice_blocks);
                 $('#count_total_gags').text(decoded.total_chat_blocks);
+                $('#count_admin_chat_blocks').text(decoded.total_admin_chat_blocks);
+                $('#count_call_admin_blocks').text(decoded.total_call_admin_blocks);
+                $('#count_item_blocks').text(decoded.total_item_blocks);
                 $('#count_total_warnings').text(decoded.total_warnings);
 
                 $('.is-loading').removeClass('is-loading');
