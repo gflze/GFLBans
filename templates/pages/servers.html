@@ -15,7 +15,7 @@
         {% include 'server_info.html' %}
         {% include 'error.html' %}
         {% include 'loading.html' with context %}
-        <script src="/static/js/servers.js"></script>
+        <script src="/static/js/servers.js?v={{ GB_VERSION }}"></script>
         {% include 'footer.html' with context %}
     </body>
 </html>

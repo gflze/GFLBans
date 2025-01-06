@@ -5,8 +5,7 @@
       data-mode="{% if mode == 'group' %}GROUP{% elif mode == 'server' %}SERVER{% elif mode == 'apikey' %}APIKEY{% else %}ADMIN{% endif %}">
     <head>
         {% include 'meta.html' with context %}
-        <link rel="stylesheet" href="/static/3rdparty/css/chart.css">
-        <link rel="stylesheet" href="/static/css/management.css">
+        <link rel="stylesheet" href="/static/css/management.css?v={{ GB_VERSION }}">
         <title>{{ BRANDING }} - Management</title>
     </head>
     <body>
@@ -73,7 +72,7 @@
                 <button class="modal-close is-large" aria-label="close"></button>
             </div>
         {% endif %}
-        <script src="/static/js/management.js"></script>
+        <script src="/static/js/management.js?v={{ GB_VERSION }}"></script>
         {% include 'loading.html' with context %}
         {% include 'footer.html' with context %}
     </body>
