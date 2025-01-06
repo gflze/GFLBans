@@ -570,14 +570,14 @@ class RPCKickRequest(BaseModel):
 class ServerStats(BaseModel):
     # General stuff
     total_infractions: int
-    active_infractions: int
-    total_servers: int
-    online_players: int
 
     # Specific types, excluding admin chat, call admin, and item blocks bc those are kinda boring
     total_bans: int
     total_chat_blocks: int
     total_voice_blocks: int
+    total_admin_chat_blocks: int
+    total_call_admin_blocks: int
+    total_item_blocks: int
     total_warnings: int
 
     # History

@@ -10,15 +10,12 @@ from starlette.requests import Request
 
 from gflbans.internal.config import MONGO_DB
 from gflbans.internal.database.infraction import DInfraction
-from gflbans.internal.database.server import DServer
 from gflbans.internal.flags import (
     INFRACTION_ADMIN_CHAT_BLOCK,
     INFRACTION_BAN,
     INFRACTION_CALL_ADMIN_BAN,
     INFRACTION_CHAT_BLOCK,
     INFRACTION_ITEM_BLOCK,
-    INFRACTION_PERMANENT,
-    INFRACTION_REMOVED,
     INFRACTION_VOICE_BLOCK,
 )
 from gflbans.internal.models.api import InfractionDay
@@ -38,24 +35,16 @@ async def generate_statistics(request: Request):
 
     qs = [
         request.app.state.db[MONGO_DB].infractions.count_documents({}),
-        request.app.state.db[MONGO_DB].infractions.count_documents(
-            {
-                '$and': [
-                    {'flags': {'$bitsAllClear': INFRACTION_REMOVED}},
-                    {
-                        '$or': [
-                            {'time_left': {'$gt': 0}},
-                            {'expires': {'$gt': datetime.now(tz=UTC).timestamp()}},
-                            {'flags': {'$bitsAllSet': INFRACTION_PERMANENT}},
-                        ]
-                    },
-                ]
-            }
-        ),
-        request.app.state.db[MONGO_DB].servers.count_documents({'enabled': True}),
         request.app.state.db[MONGO_DB].infractions.count_documents({'flags': {'$bitsAllSet': INFRACTION_VOICE_BLOCK}}),
         request.app.state.db[MONGO_DB].infractions.count_documents({'flags': {'$bitsAllSet': INFRACTION_CHAT_BLOCK}}),
         request.app.state.db[MONGO_DB].infractions.count_documents({'flags': {'$bitsAllSet': INFRACTION_BAN}}),
+        request.app.state.db[MONGO_DB].infractions.count_documents(
+            {'flags': {'$bitsAllSet': INFRACTION_ADMIN_CHAT_BLOCK}}
+        ),
+        request.app.state.db[MONGO_DB].infractions.count_documents(
+            {'flags': {'$bitsAllSet': INFRACTION_CALL_ADMIN_BAN}}
+        ),
+        request.app.state.db[MONGO_DB].infractions.count_documents({'flags': {'$bitsAllSet': INFRACTION_ITEM_BLOCK}}),
         request.app.state.db[MONGO_DB].infractions.count_documents(
             {
                 'flags': {
@@ -71,15 +60,6 @@ async def generate_statistics(request: Request):
     ]
 
     r = await asyncio.gather(*qs)
-
-    pc = 0
-
-    async for doc in DServer.from_query_ex(request.app.state.db[MONGO_DB], {'enabled': True}):
-        if (
-            doc.server_info is not None
-            and (datetime.now(tz=UTC).replace(tzinfo=None) - doc.server_info.last_updated).total_seconds() < 900
-        ):
-            pc += len(doc.server_info.players)
 
     hist = {}
 
@@ -130,13 +110,13 @@ async def generate_statistics(request: Request):
 
     result = ServerStats(
         total_infractions=r[0],
-        active_infractions=r[1],
-        total_servers=r[2],
-        online_players=pc,
-        total_voice_blocks=r[3],
-        total_chat_blocks=r[4],
-        total_bans=r[5],
-        total_warnings=r[6],
+        total_voice_blocks=r[1],
+        total_chat_blocks=r[2],
+        total_bans=r[3],
+        total_admin_chat_blocks=r[4],
+        total_call_admin_blocks=r[5],
+        total_item_blocks=r[6],
+        total_warnings=r[7],
         history=hist,
     )
 
