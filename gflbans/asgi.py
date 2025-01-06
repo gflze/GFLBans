@@ -16,6 +16,7 @@ from gflbans.api import api
 from gflbans.deprecation import deprecation_cleanup
 from gflbans.file import file_router
 from gflbans.internal.config import PRODUCTION, SECRET_KEY
+from gflbans.internal.constants import GB_VERSION
 from gflbans.internal.loader import gflbans_init, gflbans_unload
 from gflbans.internal.log import logger
 from gflbans.web import web_router
@@ -80,7 +81,7 @@ async def handle_exception(request: Request, exc):
         # Probably a web browser, give it the standard error page
         status_code = 500 if not hasattr(exc, 'status_code') else exc.status_code
         return request.app.state.templates.TemplateResponse(
-            'pages/error.html', {**await sctx(request), 'code': status_code}
+            'pages/error.html', {**await sctx(request), 'code': status_code, 'GB_VERSION': GB_VERSION}
         )
 
     if hasattr(exc, 'detail'):

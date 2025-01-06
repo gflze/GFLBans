@@ -1,6 +1,7 @@
 from fastapi import APIRouter, HTTPException
 from starlette.requests import Request
 
+from gflbans.internal.constants import GB_VERSION
 from gflbans.internal.flags import (
     PERMISSION_MANAGE_API_KEYS,
     PERMISSION_MANAGE_GROUPS_AND_ADMINS,
@@ -29,7 +30,7 @@ async def default_mgmt(request: Request):
         raise HTTPException(detail='You do not have permission to view this page.', status_code=403)
     else:
         return request.app.state.templates.TemplateResponse(
-            'pages/management.html', {**sc, 'page': 'manage', 'mode': mode}
+            'pages/management.html', {**sc, 'page': 'manage', 'mode': mode, 'GB_VERSION': GB_VERSION}
         )
 
 
@@ -41,7 +42,7 @@ async def admin_mgmt(request: Request):
         raise HTTPException(detail='You do not have permission to view this page.', status_code=403)
 
     return request.app.state.templates.TemplateResponse(
-        'pages/management.html', {**sc, 'page': 'manage', 'mode': 'admin'}
+        'pages/management.html', {**sc, 'page': 'manage', 'mode': 'admin', 'GB_VERSION': GB_VERSION}
     )
 
 
@@ -53,7 +54,7 @@ async def group_mgmt(request: Request):
         raise HTTPException(detail='You do not have permission to view this page.', status_code=403)
 
     return request.app.state.templates.TemplateResponse(
-        'pages/management.html', {**sc, 'page': 'manage', 'mode': 'group'}
+        'pages/management.html', {**sc, 'page': 'manage', 'mode': 'group', 'GB_VERSION': GB_VERSION}
     )
 
 
@@ -65,7 +66,7 @@ async def server_mgmt(request: Request):
         raise HTTPException(detail='You do not have permission to view this page.', status_code=403)
 
     return request.app.state.templates.TemplateResponse(
-        'pages/management.html', {**sc, 'page': 'manage', 'mode': 'server'}
+        'pages/management.html', {**sc, 'page': 'manage', 'mode': 'server', 'GB_VERSION': GB_VERSION}
     )
 
 
@@ -77,5 +78,5 @@ async def api_mgmt(request: Request):
         raise HTTPException(detail='You do not have permission to view this page.', status_code=403)
 
     return request.app.state.templates.TemplateResponse(
-        'pages/management.html', {**sc, 'page': 'manage', 'mode': 'apikey'}
+        'pages/management.html', {**sc, 'page': 'manage', 'mode': 'apikey', 'GB_VERSION': GB_VERSION}
     )

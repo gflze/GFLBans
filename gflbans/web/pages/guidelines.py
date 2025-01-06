@@ -4,6 +4,7 @@ from fastapi import APIRouter, HTTPException
 from starlette.requests import Request
 
 from gflbans.internal.config import DISABLE_GUIDELINES
+from gflbans.internal.constants import GB_VERSION
 from gflbans.internal.flags import PERMISSION_CREATE_INFRACTION
 from gflbans.web.pages import sctx
 
@@ -24,5 +25,6 @@ async def guidelines(request: Request):
         page_guidelines = 'guidelines.html'
 
     return request.app.state.templates.TemplateResponse(
-        'pages/guidelines.html', {**sc, 'page': 'guidelines', 'page_guidelines': page_guidelines}
+        'pages/guidelines.html',
+        {**sc, 'page': 'guidelines', 'page_guidelines': page_guidelines, 'GB_VERSION': GB_VERSION},
     )

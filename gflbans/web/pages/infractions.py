@@ -4,6 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from starlette.requests import Request
 
 from gflbans.internal.config import HOST, MONGO_DB
+from gflbans.internal.constants import GB_VERSION
 from gflbans.internal.database.infraction import DInfraction
 from gflbans.internal.errors import SearchError
 from gflbans.internal.flags import PERMISSION_VIEW_IP_ADDR
@@ -17,7 +18,7 @@ infractions_router = APIRouter()
 @infractions_router.get('/')
 async def infractions(request: Request):
     return request.app.state.templates.TemplateResponse(
-        'pages/infractions.html', {**await sctx(request), 'page': 'infractions'}
+        'pages/infractions.html', {**await sctx(request), 'page': 'infractions', 'GB_VERSION': GB_VERSION}
     )
 
 
@@ -67,5 +68,12 @@ async def preload_infraction(request: Request, infraction_id: str, query: Search
 
     return request.app.state.templates.TemplateResponse(
         'pages/infractions.html',
-        {**sc, 'page': 'infractions', 'infraction': dinf, 'set_page': doc_page, 'GB_HOST': HOST},
+        {
+            **sc,
+            'page': 'infractions',
+            'infraction': dinf,
+            'set_page': doc_page,
+            'GB_HOST': HOST,
+            'GB_VERSION': GB_VERSION,
+        },
     )

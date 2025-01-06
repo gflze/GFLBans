@@ -4,7 +4,6 @@
       class="{% if opposite_theme %}theme-opposite {% endif %}background-primary">
     <head>
         {% include 'meta.html' with context %}
-        <link rel="stylesheet" href="/static/3rdparty/css/chart.css">
         <title>{{ BRANDING }} - Infractions</title>
         {% include 'infractions_meta.html' with context %}
     </head>
@@ -13,7 +12,7 @@
         {% include 'header.html' with context %}
         <div class="mt-5 mb-5">{% include 'infractions_list.html' with context %}</div>
         {% include 'error.html' %}
-        <script src="/static/js/infractions.js"></script>
+        <script src="/static/js/infractions.js?v={{ GB_VERSION }}"></script>
         {% include 'create_infraction.html' with context %}
         {% include 'advanced_search.html' with context %}
         {% include 'view_infraction.html' with context %}

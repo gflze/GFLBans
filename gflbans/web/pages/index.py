@@ -3,6 +3,7 @@ from os.path import exists
 from fastapi import APIRouter
 from starlette.requests import Request
 
+from gflbans.internal.constants import GB_VERSION
 from gflbans.web.pages import sctx
 
 index_router = APIRouter()
@@ -26,5 +27,6 @@ async def index(request: Request):
             'page': 'index',
             'page_index_info': page_index_info,
             'page_index_links': page_index_links,
+            'GB_VERSION': GB_VERSION,
         },
     )
