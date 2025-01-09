@@ -13,6 +13,7 @@ from gflbans.internal.config import (
     MONGO_URI,
     REDIS_URI,
     RETAIN_AUDIT_LOG_FOR,
+    RETAIN_CHAT_LOG_FOR,
     STEAM_OPENID_ACCESS_TOKEN_LIFETIME,
 )
 from gflbans.internal.constants import GB_VERSION
@@ -77,6 +78,13 @@ async def gflbans_init(app):
         await app.state.db[MONGO_DB].infractions.create_index(
             [('user.gs_service', ASCENDING), ('user.gs_id', ASCENDING)]
         )
+
+        # Message logs
+        await app.state.db[MONGO_DB].chat_logs.create_index(
+            [('created', ASCENDING)], background=True, expireAfterSeconds=RETAIN_CHAT_LOG_FOR
+        )
+        await app.state.db[MONGO_DB].chat_logs.create_index('server')
+        await app.state.db[MONGO_DB].chat_logs.create_index([('user.gs_service', ASCENDING), ('user.gs_id', ASCENDING)])
 
         # Admins
         await app.state.db[MONGO_DB].admin_cache.create_index([('ips_user', ASCENDING)], unique=True)

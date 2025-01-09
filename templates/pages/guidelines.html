@@ -1,8 +1,7 @@
 <!DOCTYPE html>
 <html id="htmlRoot"
       lang="en"
-      class="{% if opposite_theme %}theme-opposite {% endif %}background-primary"
-      data-mode="{% if mode == 'group' %}GROUP{% elif mode == 'server' %}SERVER{% elif mode == 'apikey' %}APIKEY{% else %}ADMIN{% endif %}">
+      class="{% if opposite_theme %}theme-opposite {% endif %}background-primary">
     <head>
         {% include 'meta.html' with context %}
         <title>{{ BRANDING }} - Guidelines</title>

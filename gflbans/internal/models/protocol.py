@@ -18,6 +18,7 @@ from gflbans.internal.models.api import (
     InfractionDay,
     InfractionTieringPolicyTier,
     Initiator,
+    MessageLog,
     PlayerObjIPOptional,
     PlayerObjNoIp,
     PlayerObjNoIpOptional,
@@ -298,6 +299,7 @@ class Heartbeat(BaseModel):
     hostname: constr(max_length=96)
     max_slots: int
     players: List[PlayerObjIPOptional]
+    messages: Optional[List[MessageLog]]
     operating_system: str
     mod: str
     map: str
@@ -457,6 +459,15 @@ class DeleteServer(BaseModel):
 
 class DeleteServerReply(BaseModel):
     success: bool
+
+
+class RequestChatLogs(BaseModel):
+    user: Optional[PlayerObjSimple]
+
+    # Cursor control
+    limit: conint(gt=0, le=500) = 50
+    skip: PositiveIntIncl0 = 0
+    created_after: PositiveIntIncl0 = 0
 
 
 # Group APIs

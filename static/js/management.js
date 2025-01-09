@@ -12,6 +12,7 @@ perms2name[PERMISSION.LOGIN] = 'Can Login';
 perms2name[PERMISSION.COMMENT] = 'Can Comment';
 perms2name[PERMISSION.VIEW_IP_ADDR] = 'Can See IP Addresses';
 perms2name[PERMISSION.CREATE_INFRACTION] = 'Add Infractions';
+perms2name[PERMISSION.VIEW_CHAT_LOGS] = 'View Chat Logs';
 perms2name[PERMISSION.EDIT_ALL_INFRACTIONS] = 'Edit All Infractions';
 perms2name[PERMISSION.ATTACH_FILE] = 'Attach Files';
 perms2name[PERMISSION.WEB_MODERATOR] = 'Panel Admin';
@@ -258,7 +259,7 @@ function addGroupRow(group) {
         perms_list.append($('<li>').text('NONE'));
     else {
         const perms = getFlagsFromBitFlag(group['permissions']);
-        for (let i = 0; i < perms.length; i++) {
+        for (let i = perms.length - 1; i >= 0; i--) {
             perms_list.append($('<li>').text(perms2name[perms[i]]));
         }
     }

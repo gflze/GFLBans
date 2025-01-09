@@ -21,6 +21,7 @@ PRODUCTION = config('PRODUCTION', cast=bool, default=True)
 MAX_UPLOAD_SIZE = config('MAX_UPLOAD_SIZE', cast=int, default=(30 * 1024 * 1024))
 RETAIN_AUDIT_LOG_FOR = config('RETAIN_AUDIT_LOG_FOR', cast=int, default=3600 * 24 * 30)
 SERVER_CACHE_STALE_AFTER = config('SERVER_CACHE_STALE_AFTER', cast=int, default=600)
+RETAIN_CHAT_LOG_FOR = config('RETAIN_CHAT_LOG_FOR', cast=int, default=3600 * 24 * 30)
 SECRET_KEY = config('SECRET_KEY', default='testing')  # Required string, should be long and random!
 BRANDING = config('BRANDING', default='gflbans')  # Replace all gflbans branding with your own branding
 COMMUNITY_ICON = config(
