@@ -111,6 +111,13 @@ class Comment(BaseModel):
     created: int = 0
 
 
+class MessageLog(BaseModel):
+    user: PlayerObj
+    content: constr(min_length=1, max_length=256)
+    rendered: Optional[str]
+    created: int
+
+
 def nn_len(v):
     i = 0
 

@@ -4,7 +4,7 @@ PERMISSION_LOGIN                    = 1 << 0   # Login to the website
 PERMISSION_COMMENT                  = 1 << 1
 PERMISSION_VIEW_IP_ADDR             = 1 << 2
 PERMISSION_CREATE_INFRACTION        = 1 << 3
-# PERMISSION_EDIT_OWN_INFRACTIONS   = 1 << 4   # DEPRECATED
+PERMISSION_VIEW_CHAT_LOGS           = 1 << 4
 PERMISSION_EDIT_ALL_INFRACTIONS     = 1 << 5
 PERMISSION_ATTACH_FILE              = 1 << 6
 PERMISSION_WEB_MODERATOR            = 1 << 7   # Can edit or delete all comments/files on infractions
@@ -36,6 +36,7 @@ ALL_PERMISSIONS = (
     | PERMISSION_COMMENT
     | PERMISSION_VIEW_IP_ADDR
     | PERMISSION_CREATE_INFRACTION
+    | PERMISSION_VIEW_CHAT_LOGS
     | PERMISSION_EDIT_ALL_INFRACTIONS
     | PERMISSION_ATTACH_FILE
     | PERMISSION_WEB_MODERATOR
@@ -140,6 +141,7 @@ name2perms = {
     'Can Comment':               PERMISSION_COMMENT,
     'Can See IP Addresses':      PERMISSION_VIEW_IP_ADDR,
     'Add Infractions':           PERMISSION_CREATE_INFRACTION,
+    'View Chat Logs':            PERMISSION_VIEW_CHAT_LOGS,
     'Edit All Infractions':      PERMISSION_EDIT_ALL_INFRACTIONS,
     'Attach Files':              PERMISSION_ATTACH_FILE,
     'Panel Admin':               PERMISSION_WEB_MODERATOR,

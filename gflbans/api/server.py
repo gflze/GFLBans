@@ -1,10 +1,12 @@
 from datetime import datetime
 from typing import List, Optional, Tuple
 
+import bbcode
 from bson import ObjectId
 from dateutil.tz import UTC
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import ORJSONResponse
+from pymongo import ASCENDING
 from starlette.requests import Request
 
 from gflbans.api.auth import check_access, csrf_protect
@@ -12,10 +14,16 @@ from gflbans.internal.config import MONGO_DB
 from gflbans.internal.constants import AUTHED_USER, NOT_AUTHED_USER
 from gflbans.internal.database.audit_log import EVENT_EDIT_SERVER, EVENT_NEW_SERVER, DAuditLog
 from gflbans.internal.database.server import DServer, DUserIP
-from gflbans.internal.flags import PERMISSION_MANAGE_SERVERS
+from gflbans.internal.flags import PERMISSION_MANAGE_SERVERS, PERMISSION_VIEW_CHAT_LOGS, PERMISSION_VIEW_IP_ADDR
 from gflbans.internal.log import logger
-from gflbans.internal.models.api import FileInfo, PlayerObj, Server, ServerInternal
-from gflbans.internal.models.protocol import AddServer, AddServerReply, EditServer, RegenerateServerTokenReply
+from gflbans.internal.models.api import FileInfo, MessageLog, PlayerObj, Server, ServerInternal
+from gflbans.internal.models.protocol import (
+    AddServer,
+    AddServerReply,
+    EditServer,
+    RegenerateServerTokenReply,
+    RequestChatLogs,
+)
 from gflbans.internal.utils import generate_api_key
 
 server_router = APIRouter(default_response_class=ORJSONResponse)
@@ -368,3 +376,82 @@ async def regenerate_server_token(
     ).commit(request.app.state.db[MONGO_DB])
 
     return RegenerateServerTokenReply(server_secret_key=key)
+
+
+@server_router.get(
+    '/{server_id}/logs',
+    response_model_exclude_none=True,
+    response_model_exclude_unset=True,
+    response_model=List[MessageLog],
+    dependencies=[Depends(csrf_protect)],
+)
+async def get_chat_logs(
+    request: Request,
+    server_id: str,
+    auth: Tuple[int, Optional[ObjectId], int] = Depends(check_access),
+    query: RequestChatLogs = Depends(RequestChatLogs),
+):
+    if auth[0] == NOT_AUTHED_USER:
+        raise HTTPException(detail='This route requires authentication', status_code=401)
+
+    if auth[2] & PERMISSION_VIEW_CHAT_LOGS != PERMISSION_VIEW_CHAT_LOGS:
+        raise HTTPException(detail='You do not have permission to do this!', status_code=403)
+
+    srv = await DServer.from_id(request.app.state.db[MONGO_DB], server_id)
+
+    if srv is None:
+        raise HTTPException(detail='No such server exists', status_code=404)
+
+    filter_query = {'server': ObjectId(server_id)}
+
+    if query.created_after > 0:
+        filter_query['created'] = {'$gte': query.created_after}
+
+    if query.user:
+        if (
+            query.user.gs_id is not None
+            and query.user.gs_service is not None
+            and auth[2] & PERMISSION_VIEW_IP_ADDR == PERMISSION_VIEW_IP_ADDR
+            and query.user.ip is not None
+        ):
+            filter_query['$or'] = [
+                {'user.ip': query.user.ip},
+                {'$and': [{'user.gs_service': query.user.gs_service}, {'user.gs_id': query.user.gs_id}]},
+            ]
+        else:
+            if query.user.gs_id is not None and query.user.gs_service is not None:
+                filter_query['user.gs_service'] = query.user.gs_service
+                filter_query['user.gs_id'] = query.user.gs_id
+            elif auth[2] & PERMISSION_VIEW_IP_ADDR == PERMISSION_VIEW_IP_ADDR and query.user.ip is not None:
+                filter_query['user.ip'] = query.user.ip
+
+    ip_projection = {}
+    if auth[2] & PERMISSION_VIEW_IP_ADDR != PERMISSION_VIEW_IP_ADDR:
+        ip_projection['user.ip'] = 0
+
+    cursor = (
+        request.app.state.db[MONGO_DB]
+        .chat_logs.find(
+            filter_query,
+            projection=ip_projection,
+        )
+        .sort('created', ASCENDING)
+        .skip(query.skip)
+        .limit(query.limit)
+    )
+
+    messages = await cursor.to_list(length=query.limit)
+
+    for message in messages:
+        # Convert from DFile to FileInfo for PlayerObj
+        message['user']['gs_avatar'] = FileInfo(
+            file_id=message['user']['gs_avatar']['gridfs_file'], name=message['user']['gs_avatar']['file_name']
+        ).dict()
+
+        # Display any html tags in message as plain text
+        bbparser = bbcode.Parser()
+        bbparser.recognized_tags = {}
+        bbparser.replace_links = False
+        message['rendered'] = bbparser.format(message['content'])
+
+    return messages

@@ -3,6 +3,7 @@ const PERMISSION = Object.freeze({
     COMMENT: 1 << 1,
     VIEW_IP_ADDR: 1 << 2,
     CREATE_INFRACTION: 1 << 3,
+    VIEW_CHAT_LOGS: 1 << 4,
     EDIT_ALL_INFRACTIONS: 1 << 5,
     ATTACH_FILE: 1 << 6,
     WEB_MODERATOR: 1 << 7, // Can edit or delete comments/files on infractions

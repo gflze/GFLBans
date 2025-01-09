@@ -220,6 +220,47 @@ async def heartbeat(
     srv.server_info = dsi
     await srv.commit(request.app.state.db[MONGO_DB])
 
+    # Log chat messages if provided
+    if beat.messages:
+        try:
+            # Extract unique players from the messages and get their info
+            unique_users = {message.user.gs_id: message.user for message in beat.messages if message.user}.values()
+            processed_users = await asyncio.gather(
+                *[_process_heartbeat_player(request.app, PlayerObjIPOptional(**user.dict())) for user in unique_users]
+            )
+
+            # Create a map of gs_id to DUserIP
+            user_map = {user.gs_id: processed_user for user, processed_user in zip(unique_users, processed_users)}
+
+            # Prepare chat log documents
+            chat_logs = [
+                {
+                    'user': {
+                        **user_map[message.user.gs_id].dict(
+                            exclude_unset=True,
+                            exclude_none=True,
+                            exclude={'gs_avatar'},
+                        ),
+                        'gs_avatar': {
+                            'gridfs_file': user_map[message.user.gs_id].gs_avatar.gridfs_file,
+                            'file_name': user_map[message.user.gs_id].gs_avatar.file_name,
+                        }
+                        if user_map[message.user.gs_id].gs_avatar
+                        else None,
+                    }
+                    if message.user
+                    else None,
+                    'content': message.content,
+                    'created': message.created,
+                    'server': ObjectId(auth[1]),
+                }
+                for message in beat.messages
+            ]
+
+            await request.app.state.db[MONGO_DB].chat_logs.insert_many(chat_logs)
+        except Exception as e:
+            logger.error('Failed to log chat messages.', exc_info=e)
+
     return changes
 
 
