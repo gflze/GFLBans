@@ -3,7 +3,6 @@ import re
 
 import uvloop
 from fastapi import FastAPI
-from fastapi.exception_handlers import http_exception_handler
 from fastapi.responses import ORJSONResponse
 from jinja2 import select_autoescape
 from starlette.middleware.gzip import GZipMiddleware
@@ -77,13 +76,21 @@ accept_regex = re.compile(r'text/html', re.IGNORECASE)
 
 async def handle_exception(request: Request, exc):
     logger.error('An exception occurred in a view.', exc_info=exc)
-    if 'Accept' in request.headers and accept_regex.match(request.headers['Accept']):
-        # Probably a web browser, give it the standard error page
-        status_code = 500 if not hasattr(exc, 'status_code') else exc.status_code
+
+    status_code = getattr(exc, 'status_code', 500)
+    detail = getattr(exc, 'detail', 'An unknown error occurred.')
+
+    if (
+        'Accept' in request.headers
+        and accept_regex.match(request.headers['Accept'])
+        and not ('user-agent' in request.headers and 'Valve/Steam' in request.headers['user-agent'])
+    ):
+        # Probably a web browser, return a standard error page with error details
         return request.app.state.templates.TemplateResponse(
-            'pages/error.html', {**await sctx(request), 'code': status_code, 'GB_VERSION': GB_VERSION}
+            'pages/error.html',
+            {**await sctx(request), 'code': status_code, 'detail': detail, 'GB_VERSION': GB_VERSION},
+            status_code=status_code,
         )
 
-    if hasattr(exc, 'detail'):
-        return await http_exception_handler(request, exc)
-    return ORJSONResponse({'detail': 'Internal Server Error'}, status_code=500)
+    # API clients will receive a proper JSON error response
+    return ORJSONResponse({'detail': detail}, status_code=status_code)
