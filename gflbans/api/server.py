@@ -195,6 +195,7 @@ async def create_server(
         friendly_name=n.friendly_name,
         allow_unknown=n.allow_unknown,
         discord_webhook=n.discord_webhook,
+        enabled=n.enabled,
         infract_webhook=n.infract_webhook,
         discord_staff_tag=n.discord_staff_tag,
         server_key=key_hash,
