@@ -409,6 +409,7 @@ class GetPlayersOfServerReply(BaseModel):
 class AddServer(BaseModel):
     ip: IPvAnyAddress
     game_port: conint(gt=0, le=65535)
+    enabled: bool = False
     friendly_name: constr(min_length=1, max_length=32)
     allow_unknown: bool = False
     discord_webhook: Optional[str]
