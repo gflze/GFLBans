@@ -144,7 +144,7 @@ name2perms = {
     'View Chat Logs':            PERMISSION_VIEW_CHAT_LOGS,
     'Edit All Infractions':      PERMISSION_EDIT_ALL_INFRACTIONS,
     'Attach Files':              PERMISSION_ATTACH_FILE,
-    'Panel Admin':               PERMISSION_WEB_MODERATOR,
+    'Edit All Comments':         PERMISSION_WEB_MODERATOR,
     'Manage Servers':            PERMISSION_MANAGE_SERVERS,
     'Manage VPNs':               PERMISSION_MANAGE_VPNS,
     'Manage Groups and Admins':  PERMISSION_MANAGE_GROUPS_AND_ADMINS,
