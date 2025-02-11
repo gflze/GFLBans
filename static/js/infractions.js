@@ -85,7 +85,21 @@ function loadInfractions(page = 1, s, m) {
 }
 
 function doSearch(page = 1, s, m) {
-    let query = '/api/infractions/search?limit=30&skip=' + ((page - 1) * 30);
+    let query = '/api/infractions/';
+    if (isAltSearch()) {
+        query += 'alt_search?depth=';
+        if (urlParams.has('depth') && urlParams.get('depth').length > 0)
+            query = query.concat(encodeURIComponent(urlParams.get('depth')) + '&');
+        else
+            query = query.concat('3&');
+        $('#advancedSearchToggle')
+            .attr('disabled', true)
+            .addClass('has-tooltip-bottom')
+            .attr('data-tooltip', 'Advanced search is disabled during account searches');
+    } else
+        query += 'search?';
+
+    query = query.concat('limit=30&skip=' + ((page - 1) * 30));
 
     for (let i = 0; i < searchParams.length; i++) {
         if (urlParams.has(searchParams[i]) && urlParams.get(searchParams[i]).length > 0)
@@ -96,6 +110,15 @@ function doSearch(page = 1, s, m) {
     }).catch(e => {
         logException(e);
     });
+}
+
+function isAltSearch() {
+    if (
+        urlParams.has('alt_search')
+        && urlParams.get('alt_search') === 'true'
+    )
+        return true;
+    return false;
 }
 
 function isSearch() {

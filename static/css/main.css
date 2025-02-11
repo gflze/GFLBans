@@ -254,14 +254,8 @@
     background-color: rgba(242, 88, 119, 1) !important;
 }
 
-
-.tile-hoverable.has-background-link {
-    background-color: rgba(50, 115, 220, 1) !important;
-    transition: 0.3s;
-}
-
-.tile-hoverable.has-background-link:hover {
-    background-color: rgba(70, 129, 223, 1) !important;
+.is-current.has-background-danger {
+    border-color: rgb(241, 70, 104) !important;
 }
 
 .tile.server-card {
@@ -358,6 +352,12 @@ th {
     overflow-y: auto;
 }
 
+.infraction-details tr > td:first-child {
+    width: 100px;
+    display: block;
+    box-sizing: content-box;
+}
+
 .table-controls {
     height: 32px;
 }
@@ -401,10 +401,6 @@ th {
     width: 75%;
     margin-left: auto;
     margin-right: auto;
-}
-
-.is-current.has-background-danger {
-    border-color: rgb(241, 70, 104) !important;
 }
 
 .infraction-row {
