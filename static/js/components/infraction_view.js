@@ -158,39 +158,38 @@ async function setupViewModal(infraction) {
     }
 
     // Setup GSID and IP
+    let search = [];
 
     if (infraction['player'].hasOwnProperty('gs_id')) {
+        let service = 'steam';
+        if (infraction['player'].hasOwnProperty('gs_service'))
+            service = infraction['player']['gs_service'];
+
         idLabel.text(
-            infraction['player']['gs_service'].charAt(0).toUpperCase()
+            service.charAt(0).toUpperCase()
             + infraction['player']['gs_service'].slice(1)
             + ' ID'
         );
+        search.push('gs_service=' + service);
+        search.push('gs_id=' + infraction['player']['gs_id']);
 
-        const search = document.createElement('a');
-        search.text = infraction['player']['gs_id'];
-        search.setAttribute('href', `/infractions/?gs_id=${infraction['player']['gs_id']}`);
-
-        idValue.append(search);
-
-        if (infraction['player']['gs_service'] === 'steam') {
+        if (service === 'steam') {
             const steamProfile = document.createElement('a');
-            steamProfile.text = userName.text();
+            steamProfile.text = infraction['player']['gs_id'];
             steamProfile.setAttribute('href', 'http://steamcommunity.com/profiles/' + infraction['player']['gs_id']);
             steamProfile.setAttribute('target', '_blank');
 
-            userName.empty();
-            userName.append(steamProfile);
+            idValue.append(steamProfile);
+        } else {
+            idValue.text(infraction['player']['gs_id']);
         }
     } else {
         idContainer.addClass('is-hidden');
     }
 
     if (infraction['player'].hasOwnProperty('ip')) {
-        const search = document.createElement('a');
-        search.text = infraction['player']['ip'];
-        search.setAttribute('href', `/infractions/?ip=${infraction['player']['ip']}`);
-
-        ipValue.append(search);
+        search.push('ip=' + infraction['player']['ip']);
+        ipValue.text(infraction['player']['ip']);
     } else {
         ipContainer.addClass('is-hidden');
     }
@@ -323,6 +322,27 @@ async function setupViewModal(infraction) {
             rBy.text('System');
         }
     }
+
+    let altSearchUrlParams = '';
+    for (let i = 0; i < search.length; i++) {
+        altSearchUrlParams = altSearchUrlParams.concat('&' + search[i]);
+    }
+
+    let altSearchLink = $('<a>')
+        .attr('href', '/infractions/?alt_search=true&depth=3' + altSearchUrlParams)
+        .text('(search)');
+
+    $('#total-blocks').empty();
+
+    let totalBlocks = 'Unknown';
+    let altBlocks = await gbRequest('GET', '/api/infractions/alt_search?depth=3' + altSearchUrlParams, null);
+    if (altBlocks.ok) {
+        altBlocksJson = await altBlocks.json();
+
+        if (altBlocksJson.hasOwnProperty('total_matched'))
+            totalBlocks = altBlocksJson['total_matched'];
+    }
+    $('#total-blocks').append($('<p>').text(totalBlocks + ' ').append(altSearchLink));
 
     addComments(mergeCommentFiles(infraction));
 

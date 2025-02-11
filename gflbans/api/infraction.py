@@ -1,6 +1,6 @@
 import asyncio
 from datetime import datetime, timedelta
-from typing import List, Optional, Tuple, Union
+from typing import List, Optional, Set, Tuple, Union
 
 import bson
 from bson import ObjectId
@@ -82,6 +82,7 @@ from gflbans.internal.models.protocol import (
     GetInfractionsReply,
     InfractionStatisticsReply,
     ModifyInfraction,
+    RecursiveSearch,
     RegisterInfractionTieringPolicy,
     RegisterInfractionTieringPolicyReply,
     RemoveInfractionsOfPlayer,
@@ -187,6 +188,97 @@ async def search_infractions(
         infs.append(await as_infraction(request.app, dinf, incl_ip))
 
     return GetInfractionsReply(results=infs, total_matched=await DInfraction.count(request.app.state.db[MONGO_DB], cq))
+
+
+async def recursive_infraction_search(
+    app,
+    ip: Optional[str],
+    steam_id: Optional[str],
+    depth: int,
+    visited_ids: Set[str],
+    found_infractions: Set[str],
+    limit: int,
+    skip: int,
+    load_fast: bool,
+) -> List[DInfraction]:
+    if depth <= 0:
+        return []
+
+    query = RecursiveSearch(ip=ip, gs_id=steam_id, limit=limit, skip=skip)
+    search_query = await do_infraction_search(app, query, include_ip=True)
+
+    infractions = []
+    new_ips = set()
+    new_steam_ids = set()
+
+    async for dinf in DInfraction.from_query(app.state.db[MONGO_DB], search_query, sort=('created', DESCENDING)):
+        if str(dinf.id) in found_infractions:
+            continue  # Skip already found infractions
+
+        if load_fast:
+            dinf.comments = []
+            dinf.files = []
+
+        found_infractions.add(str(dinf.id))
+
+        # If time left is > 100 years, just say it is perma
+        if dinf.expires is not None and dinf.expires > MAX_UNIX_TIMESTAMP:
+            dinf.expires = None
+
+        infractions.append(dinf)
+
+        if dinf.user.gs_id and dinf.user.gs_id not in visited_ids:
+            new_steam_ids.add(dinf.user.gs_id)
+        if dinf.ip and dinf.ip not in visited_ids:
+            new_ips.add(dinf.ip)
+
+        visited_ids.update(new_ips)
+        visited_ids.update(new_steam_ids)
+
+    for new_ip in new_ips:
+        infractions.extend(
+            await recursive_infraction_search(
+                app, new_ip, None, depth - 1, visited_ids, found_infractions, limit, skip, load_fast
+            )
+        )
+    for new_steam_id in new_steam_ids:
+        infractions.extend(
+            await recursive_infraction_search(
+                app, None, new_steam_id, depth - 1, visited_ids, found_infractions, limit, skip, load_fast
+            )
+        )
+
+    return infractions
+
+
+@infraction_router.get(
+    '/alt_search',
+    response_model=GetInfractionsReply,
+    response_model_exclude_unset=True,
+    response_model_exclude_none=True,
+)
+async def search_recursive_infractions(
+    request: Request,
+    query: RecursiveSearch = Depends(RecursiveSearch),
+    load_fast: bool = True,
+    auth: Tuple[int, Optional[ObjectId], int] = Depends(check_access),
+):
+    incl_ip = should_include_ip(auth[0], auth[2])
+    # If we do not have permission to view IP, force it to None
+    ip = query.ip if incl_ip else None
+
+    if not ip and not query.gs_id:
+        raise HTTPException(status_code=400, detail="At least one of 'ip' or 'gs_id' must be provided.")
+
+    visited_ids = set()
+    found_infractions = set()
+
+    infractions = await recursive_infraction_search(
+        request.app, ip, query.gs_id, query.depth, visited_ids, found_infractions, query.limit, query.skip, load_fast
+    )
+    return GetInfractionsReply(
+        results=[await as_infraction(request.app, inf, incl_ip) for inf in infractions], total_matched=len(infractions)
+    )
 
 
 @infraction_router.get(

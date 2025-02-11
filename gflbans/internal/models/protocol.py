@@ -107,6 +107,17 @@ class CheckInfractions(BaseModel):
     include_other_servers: bool = True
 
 
+class RecursiveSearch(BaseModel):
+    gs_service: Optional[constr(min_length=1, max_length=7)]
+    gs_id: Optional[constr(min_length=1, max_length=256)]
+    ip: Optional[constr(min_length=1, max_length=15)]
+    depth: conint(gt=0, le=10) = 3
+
+    # Cursor control
+    limit: conint(gt=0, le=50) = 50
+    skip: PositiveIntIncl0 = 0
+
+
 class CheckInfractionsReply(BaseModel):
     voice_block: Optional[CInfractionSummary]
     chat_block: Optional[CInfractionSummary]

@@ -5,6 +5,9 @@ $(document).ready(function () {
 });
 
 function openSearchModal() {
+    if (!$(this).is('[disabled=true]'))
+        return;
+
     const cl = $('#search-loading-modal');
 
     if (cl.hasClass('is-loading'))
