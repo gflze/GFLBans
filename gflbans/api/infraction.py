@@ -227,9 +227,9 @@ async def recursive_infraction_search(
 
         infractions.append(dinf)
 
-        if dinf.user.gs_id and dinf.user.gs_id not in visited_ids:
+        if 'user' in dinf and 'gs_id' in dinf.user and dinf.user.gs_id not in visited_ids:
             new_steam_ids.add(dinf.user.gs_id)
-        if dinf.ip and dinf.ip not in visited_ids:
+        if 'ip' in dinf and dinf.ip not in visited_ids:
             new_ips.add(dinf.ip)
 
         visited_ids.update(new_ips)
