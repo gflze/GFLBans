@@ -59,6 +59,7 @@ from gflbans.internal.infraction_utils import (
     check_immunity,
     create_dinfraction,
     create_dinfraction_with_policy,
+    discord_notify_create_infraction,
     filter_badchars,
     get_permissions,
     get_user_data,
@@ -563,6 +564,8 @@ async def create_infraction(
     if query.do_full_infraction:
         if dinf.user is not None:
             await get_user_data(request.app, dinf.id, True)
+        else:
+            await discord_notify_create_infraction(request.app, dinf)
         if dinf.ip is not None:
             await get_vpn_data(request.app, dinf.id, True)
 
@@ -572,6 +575,8 @@ async def create_infraction(
         # Schedule a background task to add in missing details (like VPN check + profile / name)
         if dinf.user is not None:
             tasks.add_task(get_user_data, request.app, dinf.id, True)
+        else:
+            tasks.add_task(discord_notify_create_infraction, request.app, dinf)
         if dinf.ip is not None:
             tasks.add_task(get_vpn_data, request.app, dinf.id, True)
 
