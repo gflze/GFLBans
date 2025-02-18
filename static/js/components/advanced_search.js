@@ -5,7 +5,7 @@ $(document).ready(function () {
 });
 
 function openSearchModal() {
-    if (!$(this).is('[disabled=true]'))
+    if (document.querySelector('#advancedSearchToggle').hasAttribute('disabled'))
         return;
 
     const cl = $('#search-loading-modal');

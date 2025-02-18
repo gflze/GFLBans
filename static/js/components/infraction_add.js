@@ -447,7 +447,7 @@ function createAndValidateInfraction() {
 
     if ($(cBanBtn).length && !$(cBanBtn).hasClass('is-outlined')) {
         if ($(cTimeDecCheck).prop('checked'))
-            return [false, 'A ban cannot be game timed.'];
+            return [false, 'A ban cannot be playtime based.'];
 
         infraction['punishments'].push('ban');
     }
