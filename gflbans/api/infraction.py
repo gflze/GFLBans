@@ -38,6 +38,8 @@ from gflbans.internal.flags import (
     INFRACTION_CALL_ADMIN_BAN,
     INFRACTION_CHAT_BLOCK,
     INFRACTION_ITEM_BLOCK,
+    INFRACTION_PERMANENT,
+    INFRACTION_SESSION,
     INFRACTION_VOICE_BLOCK,
     PERMISSION_ADMIN_CHAT_BLOCK,
     PERMISSION_ASSIGN_TO_SERVER,
@@ -320,6 +322,24 @@ async def check_infractions(
     return ci_resp
 
 
+async def find_longest_infraction_duration(app, query) -> Optional[int]:
+    longest = None
+    async for dinf in DInfraction.from_query(app.state.db[MONGO_DB], query, sort=('created', DESCENDING)):
+        if dinf.flags | INFRACTION_PERMANENT == INFRACTION_PERMANENT or (
+            dinf.expires is not None and dinf.expires > MAX_UNIX_TIMESTAMP
+        ):
+            longest = 0
+        elif dinf.flags | INFRACTION_SESSION == INFRACTION_SESSION and longest is None:
+            longest = -1
+        elif dinf.original_time is not None:
+            longest = dinf.original_time if longest is None else max(dinf.original_time, longest)
+        elif dinf.expires is not None and dinf.created is not None:
+            total_time = dinf.expires - dinf.created
+            longest = total_time if longest is None else max(total_time, longest)
+
+    return longest
+
+
 @infraction_router.get(
     '/stats',
     response_model=InfractionStatisticsReply,
@@ -343,16 +363,18 @@ async def infraction_stats(
         gs_id=query.player.gs_id,
         ip=ip,
         ignore_others=(not query.include_other_servers),
-        active_only=True,
+        active_only=query.active_only,
+        exclude_removed=query.exclude_removed,
+        online_only=query.online_only,
     )
 
-    qv = {'$and': [q, {'flags': {'$bitsAllSet': INFRACTION_VOICE_BLOCK}}]}
-    qt = {'$and': [q, {'flags': {'$bitsAllSet': INFRACTION_CHAT_BLOCK}}]}
-    qb = {'$and': [q, {'flags': {'$bitsAllSet': INFRACTION_BAN}}]}
-    qa = {'$and': [q, {'flags': {'$bitsAllSet': INFRACTION_ADMIN_CHAT_BLOCK}}]}
-    qc = {'$and': [q, {'flags': {'$bitsAllSet': INFRACTION_CALL_ADMIN_BAN}}]}
-    qi = {'$and': [q, {'flags': {'$bitsAllSet': INFRACTION_ITEM_BLOCK}}]}
-    qw = {
+    query_voice = {'$and': [q, {'flags': {'$bitsAllSet': INFRACTION_VOICE_BLOCK}}]}
+    query_chat = {'$and': [q, {'flags': {'$bitsAllSet': INFRACTION_CHAT_BLOCK}}]}
+    query_ban = {'$and': [q, {'flags': {'$bitsAllSet': INFRACTION_BAN}}]}
+    query_admin_chat = {'$and': [q, {'flags': {'$bitsAllSet': INFRACTION_ADMIN_CHAT_BLOCK}}]}
+    query_call_admin = {'$and': [q, {'flags': {'$bitsAllSet': INFRACTION_CALL_ADMIN_BAN}}]}
+    query_item = {'$and': [q, {'flags': {'$bitsAllSet': INFRACTION_ITEM_BLOCK}}]}
+    query_warning = {
         '$and': [
             q,
             {
@@ -368,25 +390,44 @@ async def infraction_stats(
         ]
     }
 
-    r = await asyncio.gather(
-        request.app.state.db[MONGO_DB].infractions.count_documents(qv),
-        request.app.state.db[MONGO_DB].infractions.count_documents(qt),
-        request.app.state.db[MONGO_DB].infractions.count_documents(qb),
-        request.app.state.db[MONGO_DB].infractions.count_documents(qa),
-        request.app.state.db[MONGO_DB].infractions.count_documents(qc),
-        request.app.state.db[MONGO_DB].infractions.count_documents(qw),
-        request.app.state.db[MONGO_DB].infractions.count_documents(qi),
+    stat_total = InfractionStatisticsReply(
+        voice_block_count=0,
+        text_block_count=0,
+        ban_count=0,
+        admin_chat_block_count=0,
+        call_admin_block_count=0,
+        item_block_count=0,
+        warning_count=0,
     )
 
-    return InfractionStatisticsReply(
-        voice_block_count=r[0],
-        text_block_count=r[1],
-        ban_count=r[2],
-        admin_chat_block_count=r[3],
-        call_admin_block_count=r[4],
-        warnings_count=r[5],
-        item_block_count=r[6],
+    (
+        stat_total.voice_block_count,
+        stat_total.text_block_count,
+        stat_total.ban_count,
+        stat_total.admin_chat_block_count,
+        stat_total.call_admin_block_count,
+        stat_total.item_block_count,
+        stat_total.warning_count,
+    ) = await asyncio.gather(
+        request.app.state.db[MONGO_DB].infractions.count_documents(query_voice),
+        request.app.state.db[MONGO_DB].infractions.count_documents(query_chat),
+        request.app.state.db[MONGO_DB].infractions.count_documents(query_ban),
+        request.app.state.db[MONGO_DB].infractions.count_documents(query_admin_chat),
+        request.app.state.db[MONGO_DB].infractions.count_documents(query_call_admin),
+        request.app.state.db[MONGO_DB].infractions.count_documents(query_item),
+        request.app.state.db[MONGO_DB].infractions.count_documents(query_warning),
     )
+
+    if not query.count_only:
+        stat_total.voice_block_longest = await find_longest_infraction_duration(request.app, query_voice)
+        stat_total.text_block_longest = await find_longest_infraction_duration(request.app, query_chat)
+        stat_total.ban_longest = await find_longest_infraction_duration(request.app, query_ban)
+        stat_total.admin_chat_block_longest = await find_longest_infraction_duration(request.app, query_admin_chat)
+        stat_total.call_admin_block_longest = await find_longest_infraction_duration(request.app, query_call_admin)
+        stat_total.item_block_longest = await find_longest_infraction_duration(request.app, query_item)
+        stat_total.warning_longest = await find_longest_infraction_duration(request.app, query_warning)
+
+    return stat_total
 
 
 @infraction_router.post(

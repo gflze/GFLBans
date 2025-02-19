@@ -51,6 +51,8 @@ def build_query_dict(
     ip: Optional[str] = None,
     ignore_others: bool = False,
     active_only: bool = False,
+    exclude_removed: bool = False,
+    online_only: bool = False,
 ):
     f = {}
 
@@ -107,7 +109,16 @@ def build_query_dict(
         cond2 = {'$or': vpnf}
         _branch(f, cond2)
 
+    if active_only or exclude_removed:
         f['flags'] = {'$bitsAllClear': INFRACTION_REMOVED}
+
+    if online_only:
+        if 'flags' not in f:
+            f['flags'] = {'$bitsAllSet': INFRACTION_DEC_ONLINE_ONLY}
+        elif '$bitsAllSet' not in f['flags']:
+            f['flags']['$bitsAllSet'] = INFRACTION_DEC_ONLINE_ONLY
+        else:
+            f['flags']['$bitsAllSet'] |= INFRACTION_DEC_ONLINE_ONLY
 
     # Filter out server only bans that do not match our server
     if actor_type == SERVER_KEY:
