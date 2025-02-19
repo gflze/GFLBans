@@ -105,6 +105,10 @@ class CheckInfractions(BaseModel):
     player: PlayerObjNoIpOptional = Depends(PlayerObjNoIpOptional)
     ip: Optional[str]
     include_other_servers: bool = True
+    active_only: bool = True
+    exclude_removed: bool = False
+    online_only: bool = False
+    count_only: bool = True
 
 
 class RecursiveSearch(BaseModel):
@@ -129,12 +133,19 @@ class CheckInfractionsReply(BaseModel):
 
 class InfractionStatisticsReply(BaseModel):
     voice_block_count: PositiveIntIncl0
+    voice_block_longest: Optional[PositiveIntIncl0]
     text_block_count: PositiveIntIncl0
+    text_block_longest: Optional[PositiveIntIncl0]
     ban_count: PositiveIntIncl0
+    ban_longest: Optional[PositiveIntIncl0]
     admin_chat_block_count: PositiveIntIncl0
+    admin_chat_block_longest: Optional[PositiveIntIncl0]
     call_admin_block_count: PositiveIntIncl0
+    call_admin_block_longest: Optional[PositiveIntIncl0]
     item_block_count: PositiveIntIncl0
-    warnings_count: PositiveIntIncl0
+    item_block_longest: Optional[PositiveIntIncl0]
+    warning_count: PositiveIntIncl0
+    warning_longest: Optional[PositiveIntIncl0]
 
 
 # class InfractionTieringPolicyTier(BaseModel):
