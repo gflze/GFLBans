@@ -383,7 +383,7 @@ async def infraction_stats(
         text_block_count=r[1],
         ban_count=r[2],
         admin_chat_block_count=r[3],
-        call_admin_block_count=[4],
+        call_admin_block_count=r[4],
         warnings_count=r[5],
         item_block_count=r[6],
     )
