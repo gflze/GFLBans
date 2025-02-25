@@ -68,12 +68,10 @@ async def execute_webhook(app, srv: DServer, call: ExecuteCallAdmin, image: Opti
 
     if srv.server_info is not None:
         embed_info['title'] = srv.server_info.hostname
-        embed_info['fields'].insert(
-            3,
+        embed_info['fields'].append(
             {
                 'name': 'Map',
                 'value': srv.server_info.map,
-                'inline': True,
             },
         )
     else:
@@ -190,12 +188,10 @@ async def execute_claim(app, srv: DServer, claim: ClaimCallAdmin, call: DCallDat
 
     if srv.server_info is not None:
         embed_info['title'] = srv.server_info.hostname
-        embed_info['fields'].insert(
-            3,
+        embed_info['fields'].append(
             {
                 'name': 'Map',
                 'value': srv.server_info.map,
-                'inline': True,
             },
         )
     else:
