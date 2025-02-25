@@ -207,8 +207,21 @@ async def recursive_infraction_search(
     if depth <= 0:
         return []
 
-    query = RecursiveSearch(ip=ip, gs_id=steam_id, limit=limit, skip=skip)
-    search_query = await do_infraction_search(app, query, include_ip=True)
+    if ip is not None and steam_id is not None:
+        search_query = {
+            '$or': [
+                await do_infraction_search(
+                    app, RecursiveSearch(ip=None, gs_id=steam_id, limit=limit, skip=skip), include_ip=True
+                ),
+                await do_infraction_search(
+                    app, RecursiveSearch(ip=ip, gs_id=None, limit=limit, skip=skip), include_ip=True
+                ),
+            ]
+        }
+    else:
+        search_query = await do_infraction_search(
+            app, RecursiveSearch(ip=ip, gs_id=steam_id, limit=limit, skip=skip), include_ip=True
+        )
 
     infractions = []
     new_ips = set()
@@ -230,9 +243,9 @@ async def recursive_infraction_search(
 
         infractions.append(dinf)
 
-        if 'user' in dinf and 'gs_id' in dinf.user and dinf.user.gs_id not in visited_ids:
+        if dinf.user is not None and dinf.user.gs_id is not None and dinf.user.gs_id not in visited_ids:
             new_steam_ids.add(dinf.user.gs_id)
-        if 'ip' in dinf and dinf.ip not in visited_ids:
+        if dinf.ip is not None and dinf.ip not in visited_ids:
             new_ips.add(dinf.ip)
 
         visited_ids.update(new_ips)
