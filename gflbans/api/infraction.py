@@ -292,8 +292,19 @@ async def search_recursive_infractions(
     infractions = await recursive_infraction_search(
         request.app, ip, query.gs_id, query.depth, visited_ids, found_infractions, query.limit, query.skip, load_fast
     )
+
+    if query.limit == 0:
+        return GetInfractionsReply(results=[], total_matched=len(infractions))
+
+    # Sort by `created` timestamp (descending order: newest first)
+    sorted_infractions = sorted(infractions, key=lambda inf: inf.created, reverse=True)
+
+    # Apply skip and limit
+    paginated_infractions = sorted_infractions[query.skip : query.skip + query.limit]
+
     return GetInfractionsReply(
-        results=[await as_infraction(request.app, inf, incl_ip) for inf in infractions], total_matched=len(infractions)
+        results=[await as_infraction(request.app, inf, incl_ip) for inf in paginated_infractions],
+        total_matched=len(infractions),  # Total before pagination
     )
 
 
