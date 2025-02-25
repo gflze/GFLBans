@@ -68,16 +68,19 @@ async def execute_webhook(app, srv: DServer, call: ExecuteCallAdmin, image: Opti
 
     if srv.server_info is not None:
         embed_info['title'] = srv.server_info.hostname
-        embed_info['description'] = (
-            f'{call.caller_name} has requested an admin on {fn(srv)} during **{srv.server_info.map}**\n'
-            f'React :mouse: or type `!claim` in-game to claim.'
+        embed_info['fields'].insert(
+            3,
+            {
+                'name': 'Map',
+                'value': srv.server_info.map,
+                'inline': True,
+            },
         )
     else:
         embed_info['title'] = fn(srv)
-        embed_info['description'] = (
-            f'{call.caller_name} has requested an admin on {fn(srv)}. '
-            f'React :mouse: or type `!claim` in-game to claim.'
-        )
+    embed_info['description'] = (
+        f'{call.caller_name} has requested an admin on {fn(srv)}. React :mouse: or type `!claim` in-game to claim.'
+    )
 
     if image:
         embed_info['image'] = {'url': f'http://{HOST}/file/uploads/{image.gridfs_file}/{image.file_name}'}
@@ -187,15 +190,19 @@ async def execute_claim(app, srv: DServer, claim: ClaimCallAdmin, call: DCallDat
 
     if srv.server_info is not None:
         embed_info['title'] = srv.server_info.hostname
-        embed_info['description'] = (
-            f'{call.call_info.caller_name} has requested an admin on {fn(srv)} during **{srv.server_info.map}**\n'
-            f'{claim.admin_name} took the call.'
+        embed_info['fields'].insert(
+            3,
+            {
+                'name': 'Map',
+                'value': srv.server_info.map,
+                'inline': True,
+            },
         )
     else:
         embed_info['title'] = fn(srv)
-        embed_info['description'] = (
-            f'{call.call_info.caller_name} has requested an admin on {fn(srv)}. ' f'{claim.admin_name} took the call.'
-        )
+    embed_info['description'] = (
+        f'{call.call_info.caller_name} has requested an admin on {fn(srv)}. {claim.admin_name} took the call.'
+    )
 
     embed_info['url'] = f'http://{HOST}/api/gs/calladmin/connect?server={srv.ip}%3A{srv.game_port}'
 
