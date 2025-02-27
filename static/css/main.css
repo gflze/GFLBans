@@ -374,7 +374,6 @@ th {
     overflow-y: auto !important;
     overflow-x: hidden;
     display: block;
-    max-height: 500px;
     min-height: 200px;
 }
 
