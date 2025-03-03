@@ -195,8 +195,8 @@ async def search_infractions(
 
 async def recursive_infraction_search(
     app,
-    ip: Optional[str],
-    steam_id: Optional[str],
+    ips: List[str],
+    steam_ids: List[str],
     depth: int,
     visited_ids: Set[str],
     found_infractions: Set[str],
@@ -204,24 +204,36 @@ async def recursive_infraction_search(
     skip: int,
     load_fast: bool,
 ) -> List[DInfraction]:
-    if depth <= 0:
+    if depth <= 0 or (not ips and not steam_ids):
         return []
 
-    if ip is not None and steam_id is not None:
-        search_query = {
-            '$or': [
-                await do_infraction_search(
-                    app, RecursiveSearch(ip=None, gs_id=steam_id, limit=limit, skip=skip), include_ip=True
-                ),
-                await do_infraction_search(
-                    app, RecursiveSearch(ip=ip, gs_id=None, limit=limit, skip=skip), include_ip=True
-                ),
-            ]
-        }
-    else:
-        search_query = await do_infraction_search(
-            app, RecursiveSearch(ip=ip, gs_id=steam_id, limit=limit, skip=skip), include_ip=True
+    # Remove already visited IPs and Steam IDs to prevent redundant searches
+    ips = [ip for ip in ips if ip not in visited_ids]
+    steam_ids = [sid for sid in steam_ids if sid not in visited_ids]
+
+    if not ips and not steam_ids:
+        return []
+
+    visited_ids.update(ips)
+    visited_ids.update(steam_ids)
+
+    search_queries = []
+
+    for ip in ips:
+        search_queries.append(
+            do_infraction_search(app, RecursiveSearch(ip=ip, gs_id=None, limit=limit, skip=skip), include_ip=True)
         )
+
+    for steam_id in steam_ids:
+        search_queries.append(
+            do_infraction_search(app, RecursiveSearch(ip=None, gs_id=steam_id, limit=limit, skip=skip), include_ip=True)
+        )
+
+    # Generate all MongoDB search queries concurrently
+    query_results = await asyncio.gather(*search_queries)
+
+    # Flatten the results into a single MongoDB `$or` query
+    search_query = {'$or': query_results} if len(query_results) > 1 else query_results[0]
 
     infractions = []
     new_ips = set()
@@ -237,33 +249,25 @@ async def recursive_infraction_search(
 
         found_infractions.add(str(dinf.id))
 
-        # If time left is > 100 years, just say it is perma
+        # Normalize excessive expiration times
         if dinf.expires is not None and dinf.expires > MAX_UNIX_TIMESTAMP:
             dinf.expires = None
 
         infractions.append(dinf)
 
-        if dinf.user is not None and dinf.user.gs_id is not None and dinf.user.gs_id not in visited_ids:
+        # Collect new identifiers for the next recursion batch
+        if dinf.user and dinf.user.gs_id and dinf.user.gs_id not in visited_ids:
             new_steam_ids.add(dinf.user.gs_id)
-        if dinf.ip is not None and dinf.ip not in visited_ids:
+
+        if dinf.ip and dinf.ip not in visited_ids:
             new_ips.add(dinf.ip)
 
-        visited_ids.update(new_ips)
-        visited_ids.update(new_steam_ids)
+    # Recursively search with all newly found identifiers in a **single batch**
+    new_results = await recursive_infraction_search(
+        app, list(new_ips), list(new_steam_ids), depth - 1, visited_ids, found_infractions, limit, skip, load_fast
+    )
 
-    for new_ip in new_ips:
-        infractions.extend(
-            await recursive_infraction_search(
-                app, new_ip, None, depth - 1, visited_ids, found_infractions, limit, skip, load_fast
-            )
-        )
-    for new_steam_id in new_steam_ids:
-        infractions.extend(
-            await recursive_infraction_search(
-                app, None, new_steam_id, depth - 1, visited_ids, found_infractions, limit, skip, load_fast
-            )
-        )
-
+    infractions.extend(new_results)
     return infractions
 
 
@@ -290,7 +294,15 @@ async def search_recursive_infractions(
     found_infractions = set()
 
     infractions = await recursive_infraction_search(
-        request.app, ip, query.gs_id, query.depth, visited_ids, found_infractions, query.limit, query.skip, load_fast
+        request.app,
+        [ip] if ip else [],
+        [query.gs_id] if query.gs_id else [],
+        query.depth,
+        visited_ids,
+        found_infractions,
+        query.limit,
+        query.skip,
+        load_fast,
     )
 
     if query.limit == 0:
