@@ -748,7 +748,7 @@ def embed_duration(dinf: DInfraction):
     elif dinf.expires is not None:
         return naturaldelta(timedelta(seconds=dinf.expires - dinf.created)).capitalize()
     elif dinf.flags & INFRACTION_PERMANENT == INFRACTION_PERMANENT:
-        return 'Infinite'
+        return 'Permanent'
     elif dinf.flags & INFRACTION_SESSION == INFRACTION_SESSION:
         return 'Session'
     else:
