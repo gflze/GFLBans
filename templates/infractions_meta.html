@@ -12,12 +12,17 @@
           content="http://{{ GB_HOST }}/infractions/{{ tostring(infraction.id) }}/">
     {% if infraction.user is not none and infraction.user.gs_name is not none %}
         <meta property="og:title"
-              content="Infraction on {{ infraction.user.gs_name }}">
+              content="{{ punishment_noun(infraction) }} on {{ infraction.user.gs_name }}">
     {% else %}
-        <meta property="og:title" content="Infraction on an unknown player">
+        <meta property="og:title"
+              content="{{ punishment_noun(infraction) }} on an unknown player">
     {% endif %}
-    <meta property="og:description" content="{{ infraction.reason }}">
+    {# djlint: off #}
+    <meta property="og:description"
+          content="**Duration:** {{ embed_duration(infraction) }}
+**Reason:** {{ infraction.reason }}">
     <meta property="og:type" content="website">
+    {# djlint: on #}
     {% if infraction.user is not none and infraction.user.gs_avatar is not none %}
         <meta property="og:image"
               content="https://{{ GB_HOST }}/file/uploads/{{ infraction.user.gs_avatar.gridfs_file }}/avatar.webp">
@@ -25,5 +30,6 @@
         <meta property="og:image"
               content="https://{{ GB_HOST }}/images/fallback_av.webp">
     {% endif %}
+    <meta content="#9000ffff" data-react-helmet="true" name="theme-color" />
 {% endif %}
 <!--End metatags for specific infractions-->

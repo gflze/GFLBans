@@ -16,6 +16,7 @@ from gflbans.deprecation import deprecation_cleanup
 from gflbans.file import file_router
 from gflbans.internal.config import PRODUCTION, SECRET_KEY
 from gflbans.internal.constants import GB_VERSION
+from gflbans.internal.infraction_utils import embed_duration, punishment_noun
 from gflbans.internal.loader import gflbans_init, gflbans_unload
 from gflbans.internal.log import logger
 from gflbans.web import web_router
@@ -57,7 +58,12 @@ def new_app():
         app.state.templates = Jinja2Templates(directory='templates')
         app.state.templates.env.autoescape = select_autoescape(default=True, default_for_string=True)
         app.state.templates.env.globals.update(
-            has_flag=has_flag, bit_or=bit_or, render_time=render_time, tostring=tostring
+            has_flag=has_flag,
+            bit_or=bit_or,
+            embed_duration=embed_duration,
+            punishment_noun=punishment_noun,
+            render_time=render_time,
+            tostring=tostring,
         )
 
         if SECRET_KEY == 'testing':
