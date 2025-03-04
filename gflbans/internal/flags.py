@@ -80,6 +80,44 @@ SERVER_KEY_PERMISSIONS = (
     | PERMISSION_SKIP_IMMUNITY
 )
 
+str2permflag = {
+    'voice_block':      PERMISSION_BLOCK_VOICE,
+    'chat_block':       PERMISSION_BLOCK_CHAT,
+    'ban':              PERMISSION_BAN,
+    'admin_chat_block': PERMISSION_ADMIN_CHAT_BLOCK,
+    'call_admin_block': PERMISSION_CALL_ADMIN_BLOCK,
+    'item_block':       PERMISSION_BLOCK_ITEMS,
+}
+
+name2perms = {
+    'Can Login':                 PERMISSION_LOGIN,
+    'Can Comment':               PERMISSION_COMMENT,
+    'Can See IP Addresses':      PERMISSION_VIEW_IP_ADDR,
+    'Add Infractions':           PERMISSION_CREATE_INFRACTION,
+    'View Chat Logs':            PERMISSION_VIEW_CHAT_LOGS,
+    'Edit All Infractions':      PERMISSION_EDIT_ALL_INFRACTIONS,
+    'Attach Files':              PERMISSION_ATTACH_FILE,
+    'Edit All Comments':         PERMISSION_WEB_MODERATOR,
+    'Manage Servers':            PERMISSION_MANAGE_SERVERS,
+    'Manage VPNs':               PERMISSION_MANAGE_VPNS,
+    'Manage Groups and Admins':  PERMISSION_MANAGE_GROUPS_AND_ADMINS,
+    'Manage API Keys':           PERMISSION_MANAGE_API_KEYS,
+    'Restrict Voice':            PERMISSION_BLOCK_VOICE,
+    'Restrict Text':             PERMISSION_BLOCK_CHAT,
+    'Ban':                       PERMISSION_BAN,
+    'Restrict Admin Chat':       PERMISSION_ADMIN_CHAT_BLOCK,
+    'Restrict Call Admin':       PERMISSION_CALL_ADMIN_BLOCK,
+    'Add Global Infractions':    PERMISSION_SCOPE_GLOBAL,
+    'VPN Kick Immunity':         PERMISSION_VPN_CHECK_SKIP,
+    'Manage Tiering Policies':   PERMISSION_MANAGE_POLICY,
+    'Immune from Infractions':   PERMISSION_IMMUNE,
+    'Overrides Immunity':        PERMISSION_SKIP_IMMUNITY,
+    'RPC Kick':                  PERMISSION_RPC_KICK,
+    'Assign an Infraction to a Specific Server': PERMISSION_ASSIGN_TO_SERVER,
+    'Upload and Delete Map Icons': PERMISSION_MANAGE_MAP_ICONS,
+    'Restrict Map Items':        PERMISSION_BLOCK_ITEMS,
+}
+
 # INFRACTION FLAGS
 # These are given to infraction objects to indicate some basic information about them
 INFRACTION_SYSTEM           = 1 << 0   # Created by SYSTEM
@@ -126,41 +164,3 @@ for t in str2pflag:
         valid_types_regex = valid_types_regex + '|' + t
 
 valid_types_regex = valid_types_regex + ')$'
-
-str2permflag = {
-    'voice_block':      PERMISSION_BLOCK_VOICE,
-    'chat_block':       PERMISSION_BLOCK_CHAT,
-    'ban':              PERMISSION_BAN,
-    'admin_chat_block': PERMISSION_ADMIN_CHAT_BLOCK,
-    'call_admin_block': PERMISSION_CALL_ADMIN_BLOCK,
-    'item_block':       PERMISSION_BLOCK_ITEMS,
-}
-
-name2perms = {
-    'Can Login':                 PERMISSION_LOGIN,
-    'Can Comment':               PERMISSION_COMMENT,
-    'Can See IP Addresses':      PERMISSION_VIEW_IP_ADDR,
-    'Add Infractions':           PERMISSION_CREATE_INFRACTION,
-    'View Chat Logs':            PERMISSION_VIEW_CHAT_LOGS,
-    'Edit All Infractions':      PERMISSION_EDIT_ALL_INFRACTIONS,
-    'Attach Files':              PERMISSION_ATTACH_FILE,
-    'Edit All Comments':         PERMISSION_WEB_MODERATOR,
-    'Manage Servers':            PERMISSION_MANAGE_SERVERS,
-    'Manage VPNs':               PERMISSION_MANAGE_VPNS,
-    'Manage Groups and Admins':  PERMISSION_MANAGE_GROUPS_AND_ADMINS,
-    'Manage API Keys':           PERMISSION_MANAGE_API_KEYS,
-    'Restrict Voice':            PERMISSION_BLOCK_VOICE,
-    'Restrict Text':             PERMISSION_BLOCK_CHAT,
-    'Ban':                       PERMISSION_BAN,
-    'Restrict Admin Chat':       PERMISSION_ADMIN_CHAT_BLOCK,
-    'Restrict Call Admin':       PERMISSION_CALL_ADMIN_BLOCK,
-    'Add Global Infractions':    PERMISSION_SCOPE_GLOBAL,
-    'VPN Kick Immunity':         PERMISSION_VPN_CHECK_SKIP,
-    'Manage Tiering Policies':   PERMISSION_MANAGE_POLICY,
-    'Immune from Infractions':   PERMISSION_IMMUNE,
-    'Overrides Immunity':        PERMISSION_SKIP_IMMUNITY,
-    'RPC Kick':                  PERMISSION_RPC_KICK,
-    'Assign an Infraction to a Specific Server': PERMISSION_ASSIGN_TO_SERVER,
-    'Upload and Delete Map Icons': PERMISSION_MANAGE_MAP_ICONS,
-    'Restrict Map Items':        PERMISSION_BLOCK_ITEMS,
-}

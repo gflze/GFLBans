@@ -652,13 +652,13 @@ async def push_state_to_nodes(app, dinf: DInfraction):
 
 
 _nouns = {
-    INFRACTION_VOICE_BLOCK: 'Voice Chat Block',
-    INFRACTION_CHAT_BLOCK: 'Text Chat Block',
+    INFRACTION_VOICE_BLOCK: 'Mute',
+    INFRACTION_CHAT_BLOCK: 'Gag',
     INFRACTION_BAN: 'Ban',
-    INFRACTION_ADMIN_CHAT_BLOCK: 'Admin Chat Block',
-    INFRACTION_CALL_ADMIN_BAN: 'Call Admin Block',
+    INFRACTION_ADMIN_CHAT_BLOCK: 'Admin Chat Gag',
+    INFRACTION_CALL_ADMIN_BAN: 'Call Admin Ban',
     INFRACTION_VOICE_BLOCK | INFRACTION_CHAT_BLOCK: 'Silence',
-    INFRACTION_ITEM_BLOCK: 'Item Block',
+    INFRACTION_ITEM_BLOCK: 'Item Restriction',
 }
 
 
