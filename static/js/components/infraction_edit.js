@@ -87,7 +87,9 @@ function submit_comment(infraction) {
             addComments(mergeCommentFiles(j));
 
             $('#commentText').prop('disabled', false).val('');
-            $('#doPost').removeClass('is-loading');
+            $('#doPost').removeClass('is-loading').blur();
+            $('#privateCheck').prop('checked', false);
+
         }).catch(logException);
     }).catch(logException);
 }
