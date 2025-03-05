@@ -20,6 +20,7 @@ from gflbans.internal.flags import (
     INFRACTION_DEC_ONLINE_ONLY,
     INFRACTION_PERMANENT,
     INFRACTION_SESSION,
+    PERMISSION_COMMENT,
     PERMISSION_VIEW_IP_ADDR,
     str2pflag,
 )
@@ -199,12 +200,12 @@ def as_player(user: Optional[DUser], ip: Optional[str], include_ip: bool = True)
     return PlayerObj(**pos.dict(), **pf)
 
 
-async def as_infraction(app, infraction: DInfraction, include_ip=True) -> Infraction:
+async def as_infraction(app, infraction: DInfraction, include_ip=True, exclude_private=False) -> Infraction:
     return Infraction(
         id=str_id(infraction.id),
         flags=infraction.flags,
-        comments=await as_comments(app, infraction.comments, exclude_priv=not include_ip),
-        files=await as_files(app, infraction.files, exclude_priv=not include_ip),
+        comments=await as_comments(app, infraction.comments, exclude_priv=exclude_private),
+        files=await as_files(app, infraction.files, exclude_priv=exclude_private),
         server=str_id(infraction.server),
         created=infraction.created,
         expires=infraction.expires,
@@ -258,6 +259,10 @@ def obj_id(o: Optional[str]) -> Optional[ObjectId]:
 
 def should_include_ip(actor_type: int, actor_perms: int):
     return actor_type != NOT_AUTHED_USER and actor_perms & PERMISSION_VIEW_IP_ADDR == PERMISSION_VIEW_IP_ADDR
+
+
+def exclude_private_comments(actor_type: int, actor_perms: int):
+    return actor_type == NOT_AUTHED_USER or actor_perms & PERMISSION_COMMENT != PERMISSION_COMMENT
 
 
 def cinfsum_cmp(c1: Optional[CInfractionSummary], c2: Optional[CInfractionSummary]) -> CInfractionSummary:

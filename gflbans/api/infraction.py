@@ -14,7 +14,15 @@ from starlette.background import BackgroundTasks
 from starlette.requests import Request
 
 from gflbans.api.auth import check_access, csrf_protect
-from gflbans.api_util import as_infraction, construct_ci_resp, obj_id, should_include_ip, str_id, user_str
+from gflbans.api_util import (
+    as_infraction,
+    construct_ci_resp,
+    exclude_private_comments,
+    obj_id,
+    should_include_ip,
+    str_id,
+    user_str,
+)
 from gflbans.internal.asn import VPN_CLOUD, VPN_YES, check_vpn
 from gflbans.internal.config import MONGO_DB
 from gflbans.internal.constants import AUTHED_USER, NOT_AUTHED_USER, SERVER_KEY
@@ -123,6 +131,7 @@ async def get_infractions(
         active_only=query.active_only,
     )
 
+    exclude_priv_comments = exclude_private_comments(auth[0], auth[2])
     infs = []
 
     async for dinf in DInfraction.from_query(
@@ -131,7 +140,7 @@ async def get_infractions(
         if load_fast:
             dinf.comments = []
             dinf.files = []
-        infs.append(await as_infraction(request.app, dinf, incl_ip))
+        infs.append(await as_infraction(request.app, dinf, incl_ip, exclude_priv_comments))
 
     return GetInfractionsReply(results=infs, total_matched=await DInfraction.count(request.app.state.db[MONGO_DB], q))
 
@@ -153,7 +162,9 @@ async def get_infraction(
     if inf is None:
         raise HTTPException(detail='No such infraction', status_code=404)
 
-    return await as_infraction(request.app, inf, should_include_ip(auth[0], auth[2]))
+    return await as_infraction(
+        request.app, inf, should_include_ip(auth[0], auth[2]), exclude_private_comments(auth[0], auth[2])
+    )
 
 
 MAX_UNIX_TIMESTAMP = int((datetime.now() + timedelta(days=365 * 100)).timestamp())
@@ -188,7 +199,7 @@ async def search_infractions(
         if dinf.expires is not None and dinf.expires > MAX_UNIX_TIMESTAMP:
             dinf.expires = None
 
-        infs.append(await as_infraction(request.app, dinf, incl_ip))
+        infs.append(await as_infraction(request.app, dinf, incl_ip, exclude_private_comments(auth[0], auth[2])))
 
     return GetInfractionsReply(results=infs, total_matched=await DInfraction.count(request.app.state.db[MONGO_DB], cq))
 
@@ -314,8 +325,12 @@ async def search_recursive_infractions(
     # Apply skip and limit
     paginated_infractions = sorted_infractions[query.skip : query.skip + query.limit]
 
+    exclude_priv_comments = exclude_private_comments(auth[0], auth[2])
+
     return GetInfractionsReply(
-        results=[await as_infraction(request.app, inf, incl_ip) for inf in paginated_infractions],
+        results=[
+            await as_infraction(request.app, inf, incl_ip, exclude_priv_comments) for inf in paginated_infractions
+        ],
         total_matched=len(infractions),  # Total before pagination
     )
 
@@ -657,7 +672,9 @@ async def create_infraction(
         if dinf.ip is not None:
             tasks.add_task(get_vpn_data, request.app, dinf.id, True)
 
-    return await as_infraction(request.app, dinf, should_include_ip(auth[0], auth[2]))
+    return await as_infraction(
+        request.app, dinf, should_include_ip(auth[0], auth[2]), exclude_private_comments(auth[0], auth[2])
+    )
 
 
 @infraction_router.post(
@@ -751,7 +768,9 @@ async def create_infraction_from_policy(
         f' on {user_str(dinf)}'
     )
 
-    return await as_infraction(request.app, dinf, should_include_ip(auth[0], auth[2]))
+    return await as_infraction(
+        request.app, dinf, should_include_ip(auth[0], auth[2]), exclude_private_comments(auth[0], auth[2])
+    )
 
 
 def _i2p(dinf: DInfraction):
@@ -1018,7 +1037,9 @@ async def edit_infraction(
     # Notify all servers that new state is available (uwu)
     tasks.add_task(push_state_to_nodes, request.app, dinf)
 
-    return await as_infraction(request.app, dinf, should_include_ip(auth[0], auth[2]))
+    return await as_infraction(
+        request.app, dinf, should_include_ip(auth[0], auth[2]), exclude_private_comments(auth[0], auth[2])
+    )
 
 
 @infraction_router.post(
@@ -1070,7 +1091,9 @@ async def add_comment(
 
     logger.info(f'{acting_admin.name} added a comment to {str_id(dinf.id)} with content {query.content}')
 
-    return await as_infraction(request.app, dinf, should_include_ip(auth[0], auth[2]))
+    return await as_infraction(
+        request.app, dinf, should_include_ip(auth[0], auth[2]), exclude_private_comments(auth[0], auth[2])
+    )
 
 
 # Same function since they're so similar
@@ -1139,7 +1162,9 @@ async def _update_or_delete_comment(
 
     logger.info(das)
 
-    return await as_infraction(request.app, dinf, should_include_ip(auth[0], auth[2]))
+    return await as_infraction(
+        request.app, dinf, should_include_ip(auth[0], auth[2]), exclude_private_comments(auth[0], auth[2])
+    )
 
 
 @infraction_router.patch(
@@ -1312,4 +1337,6 @@ async def delete_attachment(
 
     logger.info(das)
 
-    return await as_infraction(request.app, dinf, should_include_ip(auth[0], auth[2]))
+    return await as_infraction(
+        request.app, dinf, should_include_ip(auth[0], auth[2]), exclude_private_comments(auth[0], auth[2])
+    )
