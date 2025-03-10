@@ -104,6 +104,7 @@ class SearchReply(BaseModel):
 class CheckInfractions(BaseModel):
     player: PlayerObjNoIpOptional = Depends(PlayerObjNoIpOptional)
     ip: Optional[str]
+    reason: Optional[str]
     include_other_servers: bool = True
     active_only: bool = True
     exclude_removed: bool = False
