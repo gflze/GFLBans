@@ -102,7 +102,7 @@ from gflbans.internal.models.protocol import (
     UnlinkInfractionTieringPolicy,
 )
 from gflbans.internal.pyapi_utils import get_acting, load_admin
-from gflbans.internal.search import do_infraction_search
+from gflbans.internal.search import contains_str, do_infraction_search
 from gflbans.internal.utils import slugify
 
 infraction_router = APIRouter(default_response_class=ORJSONResponse)
@@ -419,6 +419,9 @@ async def infraction_stats(
         online_only=query.online_only,
     )
 
+    if query.reason is not None:
+        q['reason'] = contains_str(query.reason)
+
     query_voice = {'$and': [q, {'flags': {'$bitsAllSet': INFRACTION_VOICE_BLOCK}}]}
     query_chat = {'$and': [q, {'flags': {'$bitsAllSet': INFRACTION_CHAT_BLOCK}}]}
     query_ban = {'$and': [q, {'flags': {'$bitsAllSet': INFRACTION_BAN}}]}
@@ -430,7 +433,7 @@ async def infraction_stats(
             q,
             {
                 'flags': {
-                    '#bitsAllClear': INFRACTION_CALL_ADMIN_BAN
+                    '$bitsAllClear': INFRACTION_CALL_ADMIN_BAN
                     | INFRACTION_ADMIN_CHAT_BLOCK
                     | INFRACTION_BAN
                     | INFRACTION_CHAT_BLOCK
@@ -451,6 +454,31 @@ async def infraction_stats(
         warning_count=0,
     )
 
+    tasks = [
+        request.app.state.db[MONGO_DB].infractions.count_documents(query_voice),
+        request.app.state.db[MONGO_DB].infractions.count_documents(query_chat),
+        request.app.state.db[MONGO_DB].infractions.count_documents(query_ban),
+        request.app.state.db[MONGO_DB].infractions.count_documents(query_admin_chat),
+        request.app.state.db[MONGO_DB].infractions.count_documents(query_call_admin),
+        request.app.state.db[MONGO_DB].infractions.count_documents(query_item),
+        request.app.state.db[MONGO_DB].infractions.count_documents(query_warning),
+    ]
+
+    if not query.count_only:
+        tasks.extend(
+            [
+                find_longest_infraction_duration(request.app, query_voice),
+                find_longest_infraction_duration(request.app, query_chat),
+                find_longest_infraction_duration(request.app, query_ban),
+                find_longest_infraction_duration(request.app, query_admin_chat),
+                find_longest_infraction_duration(request.app, query_call_admin),
+                find_longest_infraction_duration(request.app, query_item),
+                find_longest_infraction_duration(request.app, query_warning),
+            ]
+        )
+
+    results = await asyncio.gather(*tasks)
+
     (
         stat_total.voice_block_count,
         stat_total.text_block_count,
@@ -459,24 +487,18 @@ async def infraction_stats(
         stat_total.call_admin_block_count,
         stat_total.item_block_count,
         stat_total.warning_count,
-    ) = await asyncio.gather(
-        request.app.state.db[MONGO_DB].infractions.count_documents(query_voice),
-        request.app.state.db[MONGO_DB].infractions.count_documents(query_chat),
-        request.app.state.db[MONGO_DB].infractions.count_documents(query_ban),
-        request.app.state.db[MONGO_DB].infractions.count_documents(query_admin_chat),
-        request.app.state.db[MONGO_DB].infractions.count_documents(query_call_admin),
-        request.app.state.db[MONGO_DB].infractions.count_documents(query_item),
-        request.app.state.db[MONGO_DB].infractions.count_documents(query_warning),
-    )
+    ) = results[:7]
 
     if not query.count_only:
-        stat_total.voice_block_longest = await find_longest_infraction_duration(request.app, query_voice)
-        stat_total.text_block_longest = await find_longest_infraction_duration(request.app, query_chat)
-        stat_total.ban_longest = await find_longest_infraction_duration(request.app, query_ban)
-        stat_total.admin_chat_block_longest = await find_longest_infraction_duration(request.app, query_admin_chat)
-        stat_total.call_admin_block_longest = await find_longest_infraction_duration(request.app, query_call_admin)
-        stat_total.item_block_longest = await find_longest_infraction_duration(request.app, query_item)
-        stat_total.warning_longest = await find_longest_infraction_duration(request.app, query_warning)
+        (
+            stat_total.voice_block_longest,
+            stat_total.text_block_longest,
+            stat_total.ban_longest,
+            stat_total.admin_chat_block_longest,
+            stat_total.call_admin_block_longest,
+            stat_total.item_block_longest,
+            stat_total.warning_longest,
+        ) = results[7:]
 
     return stat_total
 
