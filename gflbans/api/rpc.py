@@ -108,8 +108,10 @@ async def rpc_kick(
     acting_admin, _ = await get_acting(request, None, auth[0], auth[1])
 
     # Create audit log entry
-
-    log_msg = f'{acting_admin.name} ({acting_admin.ips_id}) kicked {rpc_kick_req.player.gs_service}/{rpc_kick_req.player.gs_id} from {rpc_kick_req.server_id}'  # noqa: E501
+    log_msg = (
+        f'{acting_admin.name} ({acting_admin.ips_id}) kicked '
+        f'{rpc_kick_req.player.gs_service}/{rpc_kick_req.player.gs_id} from {rpc_kick_req.server_id}'
+    )
 
     daudit = DAuditLog(
         time=datetime.now(tz=UTC),
