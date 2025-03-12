@@ -799,7 +799,7 @@ function setInfractionUri(infraction_id) {
         state = infraction_id;
     }
 
-    window.history.pushState({'gb_state': state}, 'GFLBans - Infraction', nurl);
+    window.history.replaceState({'gb_state': state}, 'GFLBans - Infraction', nurl);
 }
 
 function restoreInfractionUri() {
