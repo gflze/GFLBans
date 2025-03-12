@@ -679,9 +679,9 @@ async def create_infraction(
     # For the front end, we want to make sure we have all the information before returning
     if query.do_full_infraction:
         if dinf.user is not None:
-            await get_user_data(request.app, dinf.id, True)
+            await get_user_data(request.app, dinf.id, True, auth[0] == SERVER_KEY)
         else:
-            await discord_notify_create_infraction(request.app, dinf)
+            await discord_notify_create_infraction(request.app, dinf, auth[0] == SERVER_KEY)
         if dinf.ip is not None:
             await get_vpn_data(request.app, dinf.id, True)
 
@@ -690,9 +690,9 @@ async def create_infraction(
     else:
         # Schedule a background task to add in missing details (like VPN check + profile / name)
         if dinf.user is not None:
-            tasks.add_task(get_user_data, request.app, dinf.id, True)
+            tasks.add_task(get_user_data, request.app, dinf.id, True, auth[0] == SERVER_KEY)
         else:
-            tasks.add_task(discord_notify_create_infraction, request.app, dinf)
+            tasks.add_task(discord_notify_create_infraction, request.app, dinf, auth[0] == SERVER_KEY)
         if dinf.ip is not None:
             tasks.add_task(get_vpn_data, request.app, dinf.id, True)
 
@@ -762,7 +762,7 @@ async def create_infraction_from_policy(
     # For the front end, we want to make sure we have all the information before returning
     if query.do_full_infraction:
         if dinf.user is not None:
-            await get_user_data(request.app, dinf.id, True)
+            await get_user_data(request.app, dinf.id, True, auth[0] == SERVER_KEY)
         if dinf.ip is not None:
             await get_vpn_data(request.app, dinf.id, True)
 
@@ -771,7 +771,7 @@ async def create_infraction_from_policy(
     else:
         # Schedule a background task to add in missing details (like VPN check + profile / name)
         if dinf.user is not None:
-            tasks.add_task(get_user_data, request.app, dinf.id, True)
+            tasks.add_task(get_user_data, request.app, dinf.id, True, auth[0] == SERVER_KEY)
         if dinf.ip is not None:
             tasks.add_task(get_vpn_data, request.app, dinf.id, True)
 

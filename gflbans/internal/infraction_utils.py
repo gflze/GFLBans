@@ -234,7 +234,9 @@ async def create_dinfraction_with_policy(
     )
 
 
-async def get_user_data(app, infraction_id: ObjectId, reschedule_on_fail=False):
+async def get_user_data(
+    app, infraction_id: ObjectId, reschedule_on_fail=False, print_map_in_discord_embed: bool = False
+):
     try:
         dinf = await DInfraction.from_id(app.state.db[MONGO_DB], infraction_id)
 
@@ -260,7 +262,7 @@ async def get_user_data(app, infraction_id: ObjectId, reschedule_on_fail=False):
 
         await dinf.update_field(app.state.db[MONGO_DB], 'user', duser)
 
-        await discord_notify_create_infraction(app, dinf)
+        await discord_notify_create_infraction(app, dinf, print_map_in_discord_embed)
     except Exception as e:
         logger.error('get_user_data failed!', exc_info=e)
         if reschedule_on_fail:
@@ -755,7 +757,7 @@ def embed_duration(dinf: DInfraction):
         return 'OOPS, INVALID!'
 
 
-async def discord_notify_create_infraction(app, dinf: DInfraction):
+async def discord_notify_create_infraction(app, dinf: DInfraction, print_map: bool = False):
     bot_name, bot_avatar = (
         await get_var(app.state.db[MONGO_DB], 'bot.name', 'GFLBans Bot'),
         await get_var(app.state.db[MONGO_DB], 'bot.avatar', COMMUNITY_ICON),
@@ -786,6 +788,14 @@ async def discord_notify_create_infraction(app, dinf: DInfraction):
         srv = await DServer.from_id(app.state.db[MONGO_DB], dinf.server)
     else:
         srv = None
+
+    if print_map and srv is not None:
+        embed['embeds'][0]['fields'].append(
+            {
+                'name': 'Map',
+                'value': srv.server_info.map,
+            },
+        )
 
     if srv is not None and srv.infract_webhook is not None:
         async with app.state.aio_session.post(
