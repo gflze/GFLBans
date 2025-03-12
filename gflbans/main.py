@@ -8,7 +8,6 @@ from time import sleep
 import uvicorn
 from pytz import UTC
 
-from gflbans.asgi import new_app  # noqa: F401
 from gflbans.internal.config import WEB_PORT, WEB_UNIX, WEB_USE_UNIX, WORKERS
 from gflbans.internal.constants import GB_VERSION
 from gflbans.internal.log import logger
@@ -19,7 +18,7 @@ def start_gflbans():
     if WEB_USE_UNIX:
         logger.debug('Will bind to a UNIX socket')
         uvicorn.run(
-            'gflbans.main:new_app',
+            'gflbans.asgi:new_app',
             uds=WEB_UNIX,
             host='127.0.0.1',
             port=WEB_PORT,
@@ -30,7 +29,7 @@ def start_gflbans():
     else:
         logger.debug('Will bind to a TCP socket')
         uvicorn.run(
-            'gflbans.main:new_app',
+            'gflbans.asgi:new_app',
             host='127.0.0.1',
             port=WEB_PORT,
             workers=WORKERS,
