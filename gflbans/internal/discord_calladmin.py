@@ -21,7 +21,7 @@ from gflbans.internal.kv import get_var
 from gflbans.internal.log import logger
 from gflbans.internal.models.protocol import ClaimCallAdmin, ExecuteCallAdmin
 
-STEAM_MODS = {'csgo', 'garrysmod', 'cstrike', 'css', 'rust', 'tf'}
+STEAM_MODS = {'cs2', 'garrysmod'}
 
 
 def clickable_where_supported(ply):
@@ -86,7 +86,8 @@ async def execute_webhook(app, srv: DServer, call: ExecuteCallAdmin, image: Opti
         embed_info['fields'].append(
             {
                 'name': 'Warning',
-                'value': 'The attached image file will expire after 30 days. If the image will be needed after this point, '  # noqa: E501
+                'value': 'The attached image file will expire after 30 days.'
+                'If the image will be needed after this point, '
                 'you should save a copy and upload it elsewhere.',
                 'inline': False,
             }
@@ -181,7 +182,10 @@ async def execute_claim(app, srv: DServer, claim: ClaimCallAdmin, call: DCallDat
             1,
             {
                 'name': 'Reported Player',
-                'value': f'{call.call_info.report_target_name} ({clickable_where_supported(call.call_info.report_target)})',  # noqa: E501
+                'value': (
+                    f'{call.call_info.report_target_name} '
+                    f'({clickable_where_supported(call.call_info.report_target)})'
+                ),
                 'inline': True,
             },
         )
