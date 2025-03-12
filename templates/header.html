@@ -115,3 +115,20 @@
         {% endif %}
     </div>
 </nav>
+{% if user is not none and UPDATE_AVAILABLE %}
+    <div class="notification is-danger has-text-centered"
+         style="margin: 0px;
+                border-bottom: 1px solid var(--background-primary)">
+        A GFLBans update is available. The new version is available on the <a href="https://github.com/gflze/GFLBans">GFLBans Github repository</a>.
+    </div>
+    <style>
+    /* Move things down that have absolute positions */
+    #advancedSearchToggle {
+        top: calc(75px + 64px);
+    }
+
+    #mgmt-add {
+        top: calc(4.5rem + 64px);
+    }
+    </style>
+{% endif %}
