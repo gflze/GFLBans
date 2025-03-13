@@ -19,16 +19,17 @@ from gflbans.internal.database.common import DFile
 from gflbans.internal.database.server import DCallData, DServer
 from gflbans.internal.kv import get_var
 from gflbans.internal.log import logger
+from gflbans.internal.models.api import PlayerObjNoIp
 from gflbans.internal.models.protocol import ClaimCallAdmin, ExecuteCallAdmin
 
 STEAM_MODS = {'cs2', 'garrysmod'}
 
 
-def clickable_where_supported(ply):
+def clickable_where_supported(name: str, ply: PlayerObjNoIp):
     if ply.gs_service == 'steam':
-        return f'[Steam](https://steamcommunity.com/profiles/{ply.gs_id})'
+        return f'[{name}](https://steamcommunity.com/profiles/{ply.gs_id})'
     else:
-        return ply.gs_id
+        return f'{name} ({ply.gs_service}/{ply.gs_id})'
 
 
 def fn(srv):
@@ -46,7 +47,7 @@ async def execute_webhook(app, srv: DServer, call: ExecuteCallAdmin, image: Opti
         'fields': [
             {
                 'name': 'Player',
-                'value': f'{call.caller_name} ({clickable_where_supported(call.caller)})',
+                'value': clickable_where_supported(call.caller_name, call.caller),
                 'inline': True,
             },
             {'name': 'Admin', 'value': '(Nobody yet)', 'inline': True},
@@ -59,7 +60,7 @@ async def execute_webhook(app, srv: DServer, call: ExecuteCallAdmin, image: Opti
             1,
             {
                 'name': 'Reported Player',
-                'value': f'{call.report_target_name} ({clickable_where_supported(call.report_target)})',
+                'value': clickable_where_supported(call.report_target_name, call.report_target),
                 'inline': True,
             },
         )
@@ -169,7 +170,7 @@ async def execute_claim(app, srv: DServer, claim: ClaimCallAdmin, call: DCallDat
         'fields': [
             {
                 'name': 'Player',
-                'value': f'{call.call_info.caller_name} ({clickable_where_supported(call.call_info.caller)})',
+                'value': clickable_where_supported(call.call_info.caller_name, call.call_info.caller),
                 'inline': True,
             },
             {'name': 'Admin', 'value': f'{claim.admin_name}', 'inline': True},
@@ -182,10 +183,7 @@ async def execute_claim(app, srv: DServer, claim: ClaimCallAdmin, call: DCallDat
             1,
             {
                 'name': 'Reported Player',
-                'value': (
-                    f'{call.call_info.report_target_name} '
-                    f'({clickable_where_supported(call.call_info.report_target)})'
-                ),
+                'value': clickable_where_supported(call.call_info.report_target_name, call.call_info.report_target),
                 'inline': True,
             },
         )
