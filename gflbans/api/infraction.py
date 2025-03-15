@@ -418,7 +418,7 @@ async def infraction_stats(
         ignore_others=(not query.include_other_servers),
         active_only=query.active_only,
         exclude_removed=query.exclude_removed,
-        online_only=query.online_only,
+        playtime_based=query.playtime_based,
     )
 
     if query.reason is not None:
@@ -639,7 +639,7 @@ async def create_infraction(
         created=query.created,
         duration=query.duration,
         admin=acting_admin_id,
-        dec_online=query.dec_online_only,
+        playtime_based=query.playtime_based,
         server=server,
     )
 

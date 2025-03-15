@@ -10,7 +10,7 @@ from gflbans.internal.flags import valid_types_regex
 class DTieringPolicyTier(BaseModel):
     punishments: List[constr(regex=valid_types_regex)]
     duration: conint(ge=0)
-    dec_online: bool = False
+    playtime_based: bool = False
 
 
 class DTieringPolicy(DBase):

@@ -30,10 +30,10 @@ from gflbans.internal.flags import (
     INFRACTION_BAN,
     INFRACTION_CALL_ADMIN_BAN,
     INFRACTION_CHAT_BLOCK,
-    INFRACTION_DEC_ONLINE_ONLY,
     INFRACTION_GLOBAL,
     INFRACTION_ITEM_BLOCK,
     INFRACTION_PERMANENT,
+    INFRACTION_PLAYTIME_DURATION,
     INFRACTION_REMOVED,
     INFRACTION_SESSION,
     INFRACTION_SYSTEM,
@@ -70,7 +70,7 @@ def create_dinfraction(
     duration: int = None,
     admin: ObjectId = None,
     policy_id: str = None,
-    dec_online: bool = False,
+    playtime_based: bool = False,
     server: ObjectId = None,
 ) -> DInfraction:
     dinf = DInfraction.construct()
@@ -94,10 +94,10 @@ def create_dinfraction(
         dinf.flags |= INFRACTION_SESSION
     elif duration is None:
         dinf.flags |= INFRACTION_PERMANENT
-    elif dec_online:
+    elif playtime_based:
         dinf.original_time = duration
         dinf.time_left = duration
-        dinf.flags |= INFRACTION_DEC_ONLINE_ONLY
+        dinf.flags |= INFRACTION_PLAYTIME_DURATION
     else:
         dinf.expires = datetime.now(tz=UTC).timestamp() + duration
 
@@ -228,7 +228,7 @@ async def create_dinfraction_with_policy(
         tier.punishments,
         duration=tier.duration,
         admin=admin,
-        dec_online=tier.dec_online,
+        playtime_based=tier.playtime_based,
         server=server,
         policy_id=policy_id,
     )
@@ -415,7 +415,7 @@ async def modify_infraction(
 
     # Handle changing of the expiration properties of the infraction
     fl = ['expires', 'time_left', 'original_time']
-    fl2 = [INFRACTION_SESSION, INFRACTION_PERMANENT, INFRACTION_DEC_ONLINE_ONLY]
+    fl2 = [INFRACTION_SESSION, INFRACTION_PERMANENT, INFRACTION_PLAYTIME_DURATION]
 
     def clear_expiration_stuff():
         for field in fl:
@@ -431,7 +431,7 @@ async def modify_infraction(
             return 'Permanent'
         elif dinf.flags & INFRACTION_SESSION == INFRACTION_SESSION:
             return 'Session'
-        elif dinf.flags & INFRACTION_DEC_ONLINE_ONLY == INFRACTION_DEC_ONLINE_ONLY:
+        elif dinf.flags & INFRACTION_PLAYTIME_DURATION == INFRACTION_PLAYTIME_DURATION:
             return naturaldelta(timedelta(seconds=dinf.original_time))
         elif dinf.expires is None:
             return 'ERROR'
@@ -452,7 +452,7 @@ async def modify_infraction(
         commit_list.append(dinf.update_field(db, 'expires', expiration + dinf.created))
     elif time_left is not None:
         if dinf.flags & INFRACTION_BAN == INFRACTION_BAN and (punishments is None or 'ban' in punishments):
-            raise ValueError('Cannot set a ban to dec online only')
+            raise ValueError('Cannot make a ban based on playtime')
 
         uwu('Duration', exp_orig_value(), naturaldelta(timedelta(seconds=time_left)))
         clear_expiration_stuff()
@@ -465,7 +465,7 @@ async def modify_infraction(
         else:
             commit_list.append(dinf.update_field(db, 'time_left', time_left))
             commit_list.append(dinf.update_field(db, 'original_time', time_left))
-        commit_list.append(dinf.add_bit_flag(db, 'flags', INFRACTION_DEC_ONLINE_ONLY))
+        commit_list.append(dinf.add_bit_flag(db, 'flags', INFRACTION_PLAYTIME_DURATION))
 
     # Handle policy_id set or remove
     if policy_id is not None:
@@ -542,8 +542,8 @@ async def modify_infraction(
         return ', '.join([_lang(b) for b in a])
 
     if punishments is not None:
-        if 'ban' in punishments and dinf.flags & INFRACTION_DEC_ONLINE_ONLY == INFRACTION_DEC_ONLINE_ONLY:
-            raise ValueError('Cannot make a dec online only infraction into a ban')
+        if 'ban' in punishments and dinf.flags & INFRACTION_PLAYTIME_DURATION == INFRACTION_PLAYTIME_DURATION:
+            raise ValueError('Cannot make a playtime based infraction into a ban')
         t = 0
         old_res = []
         for k, val in str2pflag.items():
