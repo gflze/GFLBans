@@ -1,4 +1,3 @@
-from hashlib import sha256
 from typing import Dict, List, Optional, Union
 
 from pydantic import BaseModel, PositiveInt, conint, constr, root_validator
@@ -73,19 +72,6 @@ class PlayerObj(PlayerObjSimple):
     # Extra data not often sent
     gs_name: Optional[str]
     gs_avatar: Optional[FileInfo]
-
-
-class Signature(BaseModel):
-    signature: str
-    mod: str
-
-
-class RawSignature(BaseModel):
-    signature: constr(min_length=1)
-    mod: str
-
-    def to_signature(self):
-        return Signature(mod=self.mod, signature=sha256(self.signature.encode('utf-8')).hexdigest())
 
 
 class Comment(BaseModel):

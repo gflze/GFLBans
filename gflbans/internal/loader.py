@@ -114,11 +114,6 @@ async def gflbans_init(app):
             [('created', ASCENDING)], background=True, expireAfterSeconds=STEAM_OPENID_ACCESS_TOKEN_LIFETIME
         )
 
-        # Signatures
-        await app.state.db[MONGO_DB].signatures.create_index(
-            [('signature', ASCENDING), ('mod', ASCENDING), ('user', ASCENDING)], unique=True
-        )
-
         # VPN
         await app.state.db[MONGO_DB].vpns.create_index([('added_on', ASCENDING)])
         await app.state.db[MONGO_DB].vpns.create_index([('payload', ASCENDING)], unique=True)
