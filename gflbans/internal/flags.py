@@ -23,7 +23,7 @@ PERMISSION_CALL_ADMIN_BLOCK         = 1 << 19  # Block call admin usage
 # PERMISSION_SCOPE_SUPER_GLOBAL     = 1 << 20  # DEPRECATED
 PERMISSION_SCOPE_GLOBAL             = 1 << 21  # Admins can scope infractions globally
 PERMISSION_VPN_CHECK_SKIP           = 1 << 22  # Users with this permission are immune to VPN kicks
-PERMISSION_MANAGE_POLICY            = 1 << 23  # Manage tiering policies
+# PERMISSION_MANAGE_POLICY          = 1 << 23  # DEPRECATED
 PERMISSION_IMMUNE                   = 1 << 24  # Immune from infractions
 PERMISSION_SKIP_IMMUNITY            = 1 << 25  # Overrides immunity
 PERMISSION_RPC_KICK                 = 1 << 26
@@ -52,7 +52,6 @@ ALL_PERMISSIONS = (
     | PERMISSION_CALL_ADMIN_BLOCK
     | PERMISSION_SCOPE_GLOBAL
     | PERMISSION_VPN_CHECK_SKIP
-    | PERMISSION_MANAGE_POLICY
     | PERMISSION_IMMUNE
     | PERMISSION_SKIP_IMMUNITY
     | PERMISSION_RPC_KICK
@@ -76,7 +75,6 @@ SERVER_KEY_PERMISSIONS = (
     | PERMISSION_ADMIN_CHAT_BLOCK
     | PERMISSION_CALL_ADMIN_BLOCK
     | PERMISSION_SCOPE_GLOBAL
-    | PERMISSION_MANAGE_POLICY
     | PERMISSION_SKIP_IMMUNITY
 )
 
@@ -109,7 +107,6 @@ name2perms = {
     'Restrict Call Admin':       PERMISSION_CALL_ADMIN_BLOCK,
     'Add Global Infractions':    PERMISSION_SCOPE_GLOBAL,
     'VPN Kick Immunity':         PERMISSION_VPN_CHECK_SKIP,
-    'Manage Tiering Policies':   PERMISSION_MANAGE_POLICY,
     'Immune from Infractions':   PERMISSION_IMMUNE,
     'Overrides Immunity':        PERMISSION_SKIP_IMMUNITY,
     'RPC Kick':                  PERMISSION_RPC_KICK,
@@ -136,7 +133,7 @@ INFRACTION_SESSION              = 1 << 12  # Infraction expires immediately on w
 INFRACTION_PLAYTIME_DURATION    = 1 << 13  # Only reduces duration when player is online. Invalid for bans and web infractions
 INFRACTION_ITEM_BLOCK           = 1 << 14  # The player may not use map spawned items
 #                                 1 << 15  # DEPRECATED
-INFRACTION_AUTO_TIER            = 1 << 16  # This infraction is considered for tiering purposes.
+# INFRACTION_AUTO_TIER          = 1 << 16  # DEPRECATED
 
 scope_to_flag = {
     'server':    0,

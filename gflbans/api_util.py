@@ -217,7 +217,6 @@ async def as_infraction(app, infraction: DInfraction, include_ip=True, exclude_p
         removal_reason=infraction.ureason,
         time_left=infraction.time_left,
         orig_length=infraction.original_time,
-        policy_id=str_id(infraction.policy_id),
         last_heartbeat=infraction.last_heartbeat,
     )
 

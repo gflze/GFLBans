@@ -6,7 +6,6 @@ import bson
 from bson import ObjectId
 from dateutil.tz import UTC
 from fastapi import APIRouter, Depends, Header, HTTPException
-from fastapi.openapi.models import Response
 from fastapi.responses import ORJSONResponse
 from motor.motor_asyncio import AsyncIOMotorGridFSBucket
 from pymongo import DESCENDING
@@ -38,7 +37,6 @@ from gflbans.internal.database.audit_log import (
 )
 from gflbans.internal.database.common import DFile
 from gflbans.internal.database.infraction import DComment, DInfraction, build_query_dict
-from gflbans.internal.database.tiering_policy import DTieringPolicy, DTieringPolicyTier
 from gflbans.internal.errors import SearchError
 from gflbans.internal.flags import (
     INFRACTION_ADMIN_CHAT_BLOCK,
@@ -60,7 +58,6 @@ from gflbans.internal.flags import (
     PERMISSION_COMMENT,
     PERMISSION_CREATE_INFRACTION,
     PERMISSION_EDIT_ALL_INFRACTIONS,
-    PERMISSION_MANAGE_POLICY,
     PERMISSION_SCOPE_GLOBAL,
     PERMISSION_WEB_MODERATOR,
     str2pflag,
@@ -68,7 +65,6 @@ from gflbans.internal.flags import (
 from gflbans.internal.infraction_utils import (
     check_immunity,
     create_dinfraction,
-    create_dinfraction_with_policy,
     discord_notify_create_infraction,
     filter_badchars,
     get_permissions,
@@ -79,13 +75,12 @@ from gflbans.internal.infraction_utils import (
 )
 from gflbans.internal.integrations.games import normalize_id
 from gflbans.internal.log import logger
-from gflbans.internal.models.api import FileInfo, Infraction, Initiator, TieringPolicy
+from gflbans.internal.models.api import FileInfo, Infraction, Initiator
 from gflbans.internal.models.protocol import (
     AddComment,
     CheckInfractions,
     CheckInfractionsReply,
     CreateInfraction,
-    CreateInfractionUsingPolicy,
     DeleteComment,
     DeleteFile,
     EditComment,
@@ -94,12 +89,9 @@ from gflbans.internal.models.protocol import (
     InfractionStatisticsReply,
     ModifyInfraction,
     RecursiveSearch,
-    RegisterInfractionTieringPolicy,
-    RegisterInfractionTieringPolicyReply,
     RemoveInfractionsOfPlayer,
     RemoveInfractionsOfPlayerReply,
     Search,
-    UnlinkInfractionTieringPolicy,
 )
 from gflbans.internal.pyapi_utils import get_acting, load_admin
 from gflbans.internal.search import contains_str, do_infraction_search
@@ -506,88 +498,6 @@ async def infraction_stats(
 
 
 @infraction_router.post(
-    '/register_policy',
-    response_model=RegisterInfractionTieringPolicyReply,
-    response_model_exclude_unset=True,
-    response_model_exclude_none=True,
-    dependencies=[Depends(csrf_protect)],
-)
-async def register_tiering_policy(
-    request: Request,
-    query: RegisterInfractionTieringPolicy,
-    auth: Tuple[int, Optional[ObjectId], int] = Depends(check_access),
-):
-    if auth[2] & PERMISSION_MANAGE_POLICY != PERMISSION_MANAGE_POLICY:
-        raise HTTPException(detail='Missing required permission PERMISSION_MANAGE_POLICY', status_code=403)
-
-    server = None if query.server is None else ObjectId(query.server)
-
-    if auth[0] == SERVER_KEY:
-        server = auth[1]
-
-    dt = DTieringPolicy(
-        tiers=[],
-        include_other_servers=query.include_other_servers,
-        tier_ttl=query.tier_ttl,
-        reason=query.default_reason,
-        name=query.name,
-        server=server,
-    )
-
-    for di in query.tiers:
-        dt.tiers.append(DTieringPolicyTier(**di.dict()))
-
-    await dt.commit(request.app.state.db[MONGO_DB])
-
-    assert dt.id is not None, '_id was none after insert'
-
-    return RegisterInfractionTieringPolicyReply(policy_id=str(dt.id))
-
-
-@infraction_router.post(
-    '/unlink_policy',
-    dependencies=[Depends(csrf_protect)],
-    response_model_exclude_unset=True,
-    response_model_exclude_none=True,
-)
-async def unlink_tiering_policy(
-    request: Request,
-    query: UnlinkInfractionTieringPolicy,
-    auth: Tuple[int, Optional[ObjectId], int] = Depends(check_access),
-):
-    if auth[2] & PERMISSION_MANAGE_POLICY != PERMISSION_MANAGE_POLICY:
-        raise HTTPException(detail='Missing required permission PERMISSION_MANAGE_POLICY', status_code=403)
-
-    dp = await DTieringPolicy.from_id(request.app.state.db[MONGO_DB], ObjectId(query.policy_id))
-
-    if dp is None:
-        raise HTTPException(detail='No such policy', status_code=404)
-
-    dp.server = None
-
-    await dp.commit(request.app.state.db[MONGO_DB])
-
-    return Response(status_code=204)
-
-
-@infraction_router.get(
-    '/policies', response_model=List[TieringPolicy], response_model_exclude_unset=True, response_model_exclude_none=True
-)
-async def get_tiering_policies(
-    request: Request, server: str, auth: Tuple[int, Optional[ObjectId], int] = Depends(check_access)
-):
-    if auth[0] == NOT_AUTHED_USER:
-        raise HTTPException(detail='This route is only available to authed users', status_code=401)
-
-    pols = []
-
-    async for dpol in DTieringPolicy.from_query(request.app.state.db[MONGO_DB], {'server': ObjectId(server)}):
-        pols.append(TieringPolicy(name=dpol.name, server=server, pol_id=str(dpol.id)))
-
-    return pols
-
-
-@infraction_router.post(
     '/',
     response_model=Infraction,
     response_model_exclude_unset=True,
@@ -695,102 +605,6 @@ async def create_infraction(
             tasks.add_task(discord_notify_create_infraction, request.app, dinf, auth[0] == SERVER_KEY)
         if dinf.ip is not None:
             tasks.add_task(get_vpn_data, request.app, dinf.id, True)
-
-    return await as_infraction(
-        request.app, dinf, should_include_ip(auth[0], auth[2]), exclude_private_comments(auth[0], auth[2])
-    )
-
-
-@infraction_router.post(
-    '/using_policy',
-    response_model=Infraction,
-    response_model_exclude_unset=True,
-    response_model_exclude_none=True,
-    dependencies=[Depends(csrf_protect)],
-)
-async def create_infraction_from_policy(
-    request: Request,
-    query: CreateInfractionUsingPolicy,
-    tasks: BackgroundTasks,
-    auth: Tuple[int, Optional[ObjectId], int] = Depends(check_access),
-):
-    if auth[0] == NOT_AUTHED_USER:
-        raise HTTPException(detail='This route requires authorization.', status_code=401)
-
-    acting_admin, acting_admin_id = await get_acting(request, query.admin, auth[0], auth[1])
-
-    server_ov = None
-
-    if query.server is not None:
-        if auth[2] & PERMISSION_ASSIGN_TO_SERVER != PERMISSION_ASSIGN_TO_SERVER:
-            raise HTTPException(detail='Insufficient permissions to override the server', status_code=403)
-
-        server_ov = ObjectId(query.server)
-
-    if query.player.gs_id and query.allow_normalize:
-        query.player.gs_id = await normalize_id(request.app, query.player.gs_service, query.player.gs_id)
-
-    dinf = await create_dinfraction_with_policy(
-        request.app,
-        auth[0],
-        player=query.player,
-        scope=query.scope,
-        policy_id=query.policy_id,
-        admin=acting_admin_id,
-        reason_override=query.reason,
-        actor_id=auth[1],
-        other_pol=query.consider_other_policies,
-        server_override=server_ov,
-    )
-
-    rp = get_permissions(dinf)
-
-    if acting_admin.permissions & rp != rp or auth[2] & rp != rp:
-        raise HTTPException(detail='Insufficient privileges', status_code=403)
-
-    aa = acting_admin if acting_admin.mongo_admin_id is not None else None
-
-    if await check_immunity(request.app, dinf, aa):
-        raise HTTPException(detail='Your target is immune', status_code=403)
-
-    # Write the dinfraction
-    await dinf.commit(request.app.state.db[MONGO_DB])
-
-    # Notify all servers that new state is available (uwu)
-    tasks.add_task(push_state_to_nodes, request.app, dinf)
-
-    # For the front end, we want to make sure we have all the information before returning
-    if query.do_full_infraction:
-        if dinf.user is not None:
-            await get_user_data(request.app, dinf.id, True, auth[0] == SERVER_KEY)
-        if dinf.ip is not None:
-            await get_vpn_data(request.app, dinf.id, True)
-
-        # Refetch this!
-        dinf = await DInfraction.from_id(request.app.state.db[MONGO_DB], dinf.id)
-    else:
-        # Schedule a background task to add in missing details (like VPN check + profile / name)
-        if dinf.user is not None:
-            tasks.add_task(get_user_data, request.app, dinf.id, True, auth[0] == SERVER_KEY)
-        if dinf.ip is not None:
-            tasks.add_task(get_vpn_data, request.app, dinf.id, True)
-
-    # Create audit log entry
-    daudit = DAuditLog(
-        time=datetime.now(tz=UTC),
-        event_type=EVENT_NEW_INFRACTION,
-        initiator=acting_admin.mongo_admin_id,
-        key_pair=(auth[0], auth[1]),
-        message=f'{acting_admin.name} ({acting_admin.ips_id}) created an infraction {dinf.id} with flags'
-        f' {dinf.flags} on {user_str(dinf)}',
-    )
-
-    await daudit.commit(request.app.state.db[MONGO_DB])
-
-    logger.info(
-        f'{acting_admin.name} ({acting_admin.ips_id}) created an infraction {dinf.id} with flags {dinf.flags}'
-        f' on {user_str(dinf)}'
-    )
 
     return await as_infraction(
         request.app, dinf, should_include_ip(auth[0], auth[2]), exclude_private_comments(auth[0], auth[2])
@@ -1007,11 +821,6 @@ async def edit_infraction(
         adm = await load_admin(request, query.admin)
         a = adm.mongo_admin_id
 
-    b = query.policy_id
-
-    if b is not None and isinstance(b, str):
-        b = ObjectId(b)
-
     c = query.removed_by
 
     if c is not None and isinstance(c, Initiator):
@@ -1029,7 +838,6 @@ async def edit_infraction(
             make_permanent=query.make_permanent,
             expiration=query.expiration,
             time_left=query.time_left,
-            policy_id=b,
             make_web=query.make_web,
             server=obj_id(query.server),
             reason=query.reason,
