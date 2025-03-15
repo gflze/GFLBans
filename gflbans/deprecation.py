@@ -50,29 +50,35 @@ async def deprecation_cleanup(app):
 
     logger.info(f'Updating database from v{old_version} to v{GB_VERSION} on API Shard {shard}.')
 
+    INFRACTION_DEPRECATIONS = 0
+    PERMISSION_DEPRECATIONS = 0
+
     if Version(old_version) < Version('0.9.0'):
-        INFRACTION_SUPER_GLOBAL = 1 << 2  # Replaced with GLOBAL punishment
-        INFRACTION_UNKNOWN_FEATURE = 1 << 15  # This was from before GFLBans was open source, no idea what it was
-
-        INFRACTION_DEPRECATIONS = INFRACTION_SUPER_GLOBAL | INFRACTION_UNKNOWN_FEATURE
-        async for inf in DInfraction.from_query(db, {'flags': {'$bitsAnySet': INFRACTION_DEPRECATIONS}}):
-            inf.flags &= ~INFRACTION_DEPRECATIONS
-            await inf.commit(db)
-
-        PERMISSION_EDIT_OWN_INFRACTIONS = 1 << 4  # Was added to PERMISSION_CREATE_INFRACTION
-        PERMISSION_PRUNE_INFRACTIONS = 1 << 10  # Was never implemented
-        PERMISSION_VIEW_AUDIT_LOG = 1 << 11  # Was never implemented
-        PERMISSION_SCOPE_SUPER_GLOBAL = 1 << 20  # Was replaced with PERMISSION_SCOPE_GLOBAL
-
-        PERMISSION_DEPRECATIONS = (
-            PERMISSION_EDIT_OWN_INFRACTIONS
-            | PERMISSION_PRUNE_INFRACTIONS
-            | PERMISSION_SCOPE_SUPER_GLOBAL
-            | PERMISSION_VIEW_AUDIT_LOG
+        PERMISSION_DEPRECATIONS |= (
+            (1 << 4)  # PERMISSION_EDIT_OWN_INFRACTIONS, was added to PERMISSION_CREATE_INFRACTION
+            | (1 << 10)  # PERMISSION_PRUNE_INFRACTIONS, was never implemented
+            | (1 << 20)  # PERMISSION_SCOPE_SUPER_GLOBAL, was replaced with PERMISSION_SCOPE_GLOBAL
+            | (1 << 11)  # PERMISSION_VIEW_AUDIT_LOG, was never implemented
         )
+
+        INFRACTION_DEPRECATIONS |= (
+            (1 << 2)  # INFRACTION_SUPER_GLOBAL, replaced with GLOBAL punishment
+            | (1 << 15)  # This was from before GFLBans was open source, no idea what it was
+        )
+
+    if Version(old_version) < Version('1.0.0'):
+        PERMISSION_DEPRECATIONS |= 1 << 4  # PERMISSION_MANAGE_POLICY, tiering policies were removed
+        INFRACTION_DEPRECATIONS |= 1 << 16  # INFRACTION_AUTO_TIER, tiering policies were removed
+
+    if PERMISSION_DEPRECATIONS > 0:
         async for grp in DGroup.from_query(db, {'privileges': {'$bitsAnySet': PERMISSION_DEPRECATIONS}}):
             grp.privileges &= ~PERMISSION_DEPRECATIONS
             await grp.commit(db)
+
+    if INFRACTION_DEPRECATIONS > 0:
+        async for inf in DInfraction.from_query(db, {'flags': {'$bitsAnySet': INFRACTION_DEPRECATIONS}}):
+            inf.flags &= ~INFRACTION_DEPRECATIONS
+            await inf.commit(db)
 
     await info_collection.find_one_and_update(
         {'_id': DATABASE_INFO_KEY},

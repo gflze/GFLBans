@@ -19,7 +19,6 @@ const PERMISSION = Object.freeze({
     CALL_ADMIN_BLOCK: 1 << 19,  // Block call admin usage
     SCOPE_GLOBAL: 1 << 21,  // Admins can use GLOBAL infractions
     VPN_CHECK_SKIP: 1 << 22,  // Users with this permission are immune to VPN kicks
-    MANAGE_POLICY: 1 << 23,  // Manage tiering policies
     IMMUNE: 1 << 24,  // Immune from infractions
     SKIP_IMMUNITY: 1 << 25,  // Overrides immunity
     RPC_KICK: 1 << 26,
@@ -42,7 +41,6 @@ const INFRACTION = Object.freeze({
     SESSION: 1 << 12,
     PLAYTIME_DURATION: 1 << 13, // Only reduces duration when player is online. Invalid for bans and web infractions
     ITEM_BLOCK: 1 << 14, // The player may not use map spawned items
-    AUTO_TIER: 1 << 16 // This infraction is considered for tiering purposes.
 });
 
 const searchParams = [

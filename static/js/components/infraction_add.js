@@ -9,13 +9,6 @@ const cServerLabel = document.getElementById('serverOnlyLabel');
 const cTargetServerField = document.getElementById('targetServerField');
 const cGlobalRadio = document.getElementById('globalCheck');
 const cGlobalLabel = document.getElementById('globalLabel');
-// Auto tiering
-const cAutomationSection = document.getElementById('cAutomationSection');
-const cAutomaticCheck = document.getElementById('automaticCheck');
-const cOffense = document.getElementById('offenseSelector');
-const cOffenseField = document.getElementById('offenseField');
-const autoWrapper = document.getElementById('autoWrapper');
-const autoMessage = document.getElementById('autoSetupMessage');
 // Reason / evidence
 const cReasonEntry = document.getElementById('reasonEntry');
 const cFileInput = document.getElementById('fileInput');
@@ -55,13 +48,11 @@ function resetModal() {
     $(cUserId).val('');
     $(cIpEntry).val('');
 
-    // By default, we do not make web infractions, so we should show the target server box,
-    // enable the 'server' tick, and the automation section
+    // By default, we do not make web infractions, so we should show the target server box and enable the 'server' tick
     $(cWebCheck).prop('checked', false);
     $(cServerRadio).prop('disabled', false);
     cServerLabel.removeAttribute('disabled');
     $(cTargetServerField).removeClass('is-hidden');
-    $(cAutomationSection).removeClass('is-hidden');
 
     $('.scope-check').prop('checked', false);
 
@@ -78,14 +69,8 @@ function resetModal() {
         $(cGlobalRadio).prop('checked', true);
     }
 
-    // The automation check is not checked by default, so the offense chooser
-    // should be hidden and the restrictions / expiration sections should both be visible
-    $(cAutomaticCheck).prop('checked', false);
-    $(cOffenseField).addClass('is-hidden');
     $(cRestrictionSection).removeClass('is-hidden');
     $(cExpirationSection).removeClass('is-hidden');
-    $(autoWrapper).removeClass('is-hidden');
-    $(autoMessage).addClass('is-hidden');
 
     // Clear evidence / reasoning text boxes
     $(cReasonEntry).val('');
@@ -111,7 +96,6 @@ function handleWebCheckChanged() {
         cServerLabel.setAttribute('disabled', '1');
 
         $(cTargetServerField).addClass('is-hidden');
-        $(cAutomationSection).addClass('is-hidden');
 
         if ($(cServerRadio).prop('checked')) {
             $(cServerRadio).prop('checked', false);
@@ -119,27 +103,10 @@ function handleWebCheckChanged() {
             if ($(cGlobalRadio).attr('data-has-permissions') === '1')
                 $(cGlobalRadio).prop('checked', true);
         }
-
-        $(cAutomaticCheck).prop('checked', false);
-        handleAutoChanged();
     } else {
         $(cServerRadio).prop('disabled', false);
         cServerLabel.removeAttribute('disabled');
-
         $(cTargetServerField).removeClass('is-hidden');
-        $(cAutomationSection).removeClass('is-hidden');
-    }
-}
-
-function handleAutoChanged() {
-    if ($(cAutomaticCheck).prop('checked')) {
-        $(cOffenseField).removeClass('is-hidden');
-        $(cRestrictionSection).addClass('is-hidden');
-        $(cExpirationSection).addClass('is-hidden');
-    } else {
-        $(cOffenseField).addClass('is-hidden');
-        $(cRestrictionSection).removeClass('is-hidden');
-        $(cExpirationSection).removeClass('is-hidden');
     }
 }
 
@@ -189,37 +156,6 @@ function handleTimeDecCheck() {
     }
 }
 
-async function setServer(id) {
-    const policies = await gbRequest('GET', '/api/infractions/policies?server=' + id, null);
-
-    $(cOffense).empty();
-
-    if (!policies.ok) {
-        throw policies.error();
-    }
-
-    const pol_list = await policies.json();
-
-    if (pol_list.length === 0) {
-        $(autoMessage).removeClass('is-hidden');
-        $(autoWrapper).addClass('is-hidden');
-    } else {
-        $(autoMessage).addClass('is-hidden');
-        $(autoWrapper).removeClass('is-hidden');
-    }
-
-    for (let i = 0; i < pol_list.length; i++) {
-        const opt = document.createElement('option');
-        opt.innerText = pol_list[i]['name'];
-        opt.setAttribute('value', pol_list[i]['id']);
-
-        if (i === 0) {
-            $(opt).prop('selected', true);
-            $(cOffense).append(opt);
-        }
-    }
-}
-
 async function loadModal() {
     resetModal();
 
@@ -265,10 +201,8 @@ async function loadModal() {
             el.innerText = servers[i]['ip'];
         }
 
-        if (i === 0) {
+        if (i === 0)
             $(el).prop('selected', true);
-            await setServer(servers[i]['id']);
-        }
 
         serverSel.append(el);
     }
@@ -308,7 +242,6 @@ function openModal() {
 
 $(document).ready(function () {
     $(cWebCheck).click(handleWebCheckChanged);
-    $(cAutomaticCheck).click(handleAutoChanged);
     $(cPermanentCheck).click(handlePermCheck);
     $(cTimeDecCheck).click(handleTimeDecCheck);
     $('.rbtn').click(function (ev) {
@@ -318,10 +251,6 @@ $(document).ready(function () {
     $(cFileInput).change(function () {
         const fn = $(cFileInput)[0].files[0].name;
         $(cFileName).text(fn);
-    });
-
-    $(cTargetServer).change(function () {
-        setServer($(cTargetServer).val()).catch(logException);
     });
 
     $('#createInfractionLoader').click(openModal);
@@ -346,10 +275,6 @@ function submitInfraction() {
     // Success, the second index is the request type and the third is the actual request struct
 
     let route = '/api/infractions/';
-
-    if (createCall[1]) {
-        route = '/api/infractions/using_policy';
-    }
 
     gbRequest('POST', route, createCall[2], true).then(handleInfractionSubmission).catch(logException);
 }
@@ -417,7 +342,7 @@ function createAndValidateInfraction() {
         infraction['scope'] = 'global';
 
     // Reason
-    if ($(cReasonEntry).val().trim() === '' && !$(cAutomaticCheck).prop('checked')) {
+    if ($(cReasonEntry).val().trim() === '') {
         return [false, 'You must enter a reason!'];
     }
 
@@ -427,13 +352,6 @@ function createAndValidateInfraction() {
     // if ($(cFileInput).val() !== '' && cFileName.files[0].size > (30 * 1024 * 1024)) {
     //    return [false, 'The file must be no more than 30 MB.']
     // }
-
-    // Automation
-    if ($(cAutomaticCheck).prop('checked')) {
-        infraction['policy_id'] = $(cOffense).val();
-
-        return [true, true, infraction];
-    }
 
     // Allow STEAMID in the request field
     infraction['allow_normalize'] = true;

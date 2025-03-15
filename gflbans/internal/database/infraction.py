@@ -160,6 +160,3 @@ class DInfraction(DBase):
     # Web attributes
     comments: conlist(DComment, max_items=255) = []
     files: conlist(DFile, max_items=255) = []
-
-    # Tiering
-    policy_id: Optional[ObjectId]

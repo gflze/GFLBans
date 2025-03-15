@@ -22,11 +22,9 @@ from gflbans.internal.database.infraction import DInfraction, DUser, build_query
 from gflbans.internal.database.rpc import DRPCPlayerUpdated
 from gflbans.internal.database.server import DServer
 from gflbans.internal.database.task import DTask
-from gflbans.internal.database.tiering_policy import DTieringPolicy
 from gflbans.internal.errors import NoSuchAdminError
 from gflbans.internal.flags import (
     INFRACTION_ADMIN_CHAT_BLOCK,
-    INFRACTION_AUTO_TIER,
     INFRACTION_BAN,
     INFRACTION_CALL_ADMIN_BAN,
     INFRACTION_CHAT_BLOCK,
@@ -69,7 +67,6 @@ def create_dinfraction(
     created: int = None,
     duration: int = None,
     admin: ObjectId = None,
-    policy_id: str = None,
     playtime_based: bool = False,
     server: ObjectId = None,
 ) -> DInfraction:
@@ -113,125 +110,12 @@ def create_dinfraction(
     else:
         dinf.flags |= INFRACTION_WEB
 
-    if policy_id:
-        dinf.flags |= INFRACTION_AUTO_TIER
-        dinf.policy_id = policy_id
-
     if admin:
         dinf.admin = admin
     else:
         dinf.flags |= INFRACTION_SYSTEM
 
     return dinf
-
-
-# Do the policy thing and call the above function
-async def create_dinfraction_with_policy(
-    app,
-    actor_type: int,
-    player: PlayerObjSimple,
-    scope: str,
-    policy_id: str,
-    admin: ObjectId = None,
-    reason_override: str = None,
-    actor_id: ObjectId = None,
-    other_pol: List[str] = None,
-    server_override: Optional[ObjectId] = None,
-) -> DInfraction:
-    # load the policy object
-    policy = await DTieringPolicy.from_id(app.state.db[MONGO_DB], policy_id)
-
-    if policy is None:
-        raise TypeError('Expected a DTieringPolicy, got None')
-
-    # Build a dict and get the tier
-    if server_override is None:
-        q = build_query_dict(
-            actor_type,
-            str(actor_id),
-            player.gs_service,
-            player.gs_id,
-            player.ip,
-            not policy.include_other_servers,
-            False,
-        )
-    else:
-        q = build_query_dict(
-            SERVER_KEY,
-            str(server_override),
-            player.gs_service,
-            player.gs_id,
-            player.ip,
-            not policy.include_other_servers,
-            False,
-        )
-
-    oj = {'policy_id': ObjectId(policy_id)}
-
-    if other_pol is not None:
-        oj = {'$or': [oj]}
-
-        for op in other_pol:
-            oj['$or'].append({'policy_id': ObjectId(op)})
-
-    # Special case: I don't want to consider expired warns in the tier because it confused some people
-    q = {
-        '$and': [
-            q,
-            {'flags': {'$bitsAllSet': INFRACTION_AUTO_TIER}},
-            oj,
-            {'flags': {'$bitsAllClear': INFRACTION_SESSION | INFRACTION_REMOVED}},
-            {'created': {'$gte': datetime.now(tz=UTC).timestamp() - policy.tier_ttl}},
-            {
-                '$or': {
-                    {
-                        'flags': {
-                            '$bitsAnySet': INFRACTION_BAN
-                            | INFRACTION_VOICE_BLOCK
-                            | INFRACTION_CHAT_BLOCK
-                            | INFRACTION_CALL_ADMIN_BAN
-                            | INFRACTION_ADMIN_CHAT_BLOCK
-                            | INFRACTION_ITEM_BLOCK
-                        }
-                    },
-                    {
-                        '$or': {
-                            {'flags': {'$bitsAllSet': INFRACTION_PERMANENT}},
-                            {'time_left': {'$gt': 0}},
-                            {'expires': {'$gt': datetime.now(tz=UTC).timestamp()}},
-                        }
-                    },
-                }
-            },
-        ]
-    }
-
-    t = await app.state.db[MONGO_DB].infractions.count_documents(q)
-
-    tier_idx = policy.tiers[t - 1] if t <= len(policy.tiers) else len(policy.tiers) - 1
-
-    tier = policy.tiers[tier_idx]
-
-    r = reason_override if reason_override else tier.reason
-
-    if server_override is not None:
-        server = server_override
-    elif actor_type == SERVER_KEY:
-        server = actor_id
-    else:
-        server = None
-
-    return create_dinfraction(
-        player,
-        r,
-        scope,
-        tier.punishments,
-        duration=tier.duration,
-        admin=admin,
-        playtime_based=tier.playtime_based,
-        server=server,
-        policy_id=policy_id,
-    )
 
 
 async def get_user_data(
@@ -317,18 +201,6 @@ def target_name(dinf: DInfraction) -> str:
         return 'Unknown Player'
 
 
-async def policy_name(app, pol_ref: Optional[ObjectId]) -> str:
-    if pol_ref is None:
-        return 'No Policy'
-
-    dpol = await DTieringPolicy.from_id(app.state.db[MONGO_DB], pol_ref)
-
-    if dpol is None:
-        return 'UNKNOWN'
-
-    return dpol.name
-
-
 async def _embed_host(db_ref, dsrv_ref: Optional[ObjectId]):
     if dsrv_ref is None:
         return 'GFLBans Web'
@@ -353,7 +225,6 @@ async def modify_infraction(
     make_permanent: bool = False,
     expiration: Optional[PositiveInt] = None,
     time_left: Optional[PositiveIntIncl0] = None,
-    policy_id: Union[ObjectId, None, bool] = None,
     server: Optional[ObjectId] = None,
     reason: Optional[str] = None,
     set_removal_state: Optional[bool] = None,
@@ -466,19 +337,6 @@ async def modify_infraction(
             commit_list.append(dinf.update_field(db, 'time_left', time_left))
             commit_list.append(dinf.update_field(db, 'original_time', time_left))
         commit_list.append(dinf.add_bit_flag(db, 'flags', INFRACTION_PLAYTIME_DURATION))
-
-    # Handle policy_id set or remove
-    if policy_id is not None:
-        if isinstance(policy_id, bool):
-            uwu('Tiering Policy', await policy_name(app, dinf.policy_id), 'None')
-            commit_list.append(dinf.unset_field(db, 'policy_id'))
-            commit_list.append(dinf.remove_bit_flag(db, 'flags', INFRACTION_AUTO_TIER))
-        elif isinstance(policy_id, ObjectId):
-            uwu('Tiering Policy', await policy_name(app, dinf.policy_id), await policy_name(app, policy_id))
-            commit_list.append(dinf.update_field(db, 'policy_id', policy_id))
-            commit_list.append(dinf.add_bit_flag(db, 'flags', INFRACTION_AUTO_TIER))
-        else:
-            raise ValueError('Tried to specify a policy ID using an unknown identifier type')
 
     if make_web:
         uwu('Server', await _embed_host(app.state.db[MONGO_DB], dinf.server), 'GFLBans Web')
