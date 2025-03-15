@@ -32,7 +32,7 @@ from gflbans.internal.discord_calladmin import (
 from gflbans.internal.errors import NoSuchAdminError
 from gflbans.internal.flags import (
     INFRACTION_CALL_ADMIN_BAN,
-    INFRACTION_DEC_ONLINE_ONLY,
+    INFRACTION_PLAYTIME_DURATION,
     PERMISSION_VPN_CHECK_SKIP,
     str2pflag,
 )
@@ -182,7 +182,7 @@ async def heartbeat(
                     UpdateMany(
                         {
                             '$or': conds,
-                            'flags': {'$bitsAllSet': INFRACTION_DEC_ONLINE_ONLY},
+                            'flags': {'$bitsAllSet': INFRACTION_PLAYTIME_DURATION},
                             'time_left': {'$exists': True, '$ne': 0},
                         },
                         {

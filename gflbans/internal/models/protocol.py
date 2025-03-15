@@ -78,7 +78,7 @@ class Search(BaseModel):
     is_system: Optional[bool]
     is_global: Optional[bool]
     is_permanent: Optional[bool]
-    is_decl_online_only: Optional[bool]
+    is_playtime_duration: Optional[bool]
     is_vpn: Optional[bool]
     is_web: Optional[bool]
     is_active: Optional[bool]
@@ -108,7 +108,7 @@ class CheckInfractions(BaseModel):
     include_other_servers: bool = True
     active_only: bool = True
     exclude_removed: bool = False
-    online_only: bool = False
+    playtime_based: bool = False
     count_only: bool = True
 
 
@@ -152,7 +152,7 @@ class InfractionStatisticsReply(BaseModel):
 # class InfractionTieringPolicyTier(BaseModel):
 #    punishments: List[constr(regex=valid_types_regex)]
 #    duration: Optional[conint(gt=0)]
-#    dec_online: bool = False
+#    playtime_based: bool = False
 
 
 class RegisterInfractionTieringPolicy(BaseModel):
@@ -177,7 +177,7 @@ class CreateInfraction(BaseModel):
     punishments: List[constr(regex=valid_types_regex)]
     scope: constr(regex=r'^(server|global)$')
     session: bool = False
-    dec_online_only: bool = False
+    playtime_based: bool = False
     do_full_infraction: bool = False  # Get user data / vpn check before replying to the request
     server: Optional[str]  # Override the server
     allow_normalize = False  # Attempt to convert steamid to steamid64, etc
@@ -185,8 +185,8 @@ class CreateInfraction(BaseModel):
 
     @root_validator(pre=True)
     def check_conflicts(cls, values):
-        if 'dec_online_only' in values and values['dec_online_only'] and 'ban' in values['punishments']:
-            raise ValueError('Cannot have a ban that only decreases when the player is online')
+        if 'playtime_based' in values and values['playtime_based'] and 'ban' in values['punishments']:
+            raise ValueError('Cannot have a ban that is based on playtime')
 
         if 'ban' in values['punishments'] and 'session' in values and values['session']:
             raise ValueError('Session bans do not make sense!')
@@ -241,7 +241,7 @@ class ModifyInfraction(BaseModel):
 
     expiration: Optional[PositiveInt]  # UNIX time that the infraction expires at.
 
-    time_left: Optional[PositiveIntIncl0]  # Sets DEC_ONLINE_ONLY and uses this time in seconds as the initial count
+    time_left: Optional[PositiveIntIncl0]  # Sets PLAYTIME_DURATION and uses this time in seconds as the initial count
 
     # Auto tiering
     policy_id: Union[str, None, bool]  # give False to remove, string to set

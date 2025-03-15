@@ -323,7 +323,7 @@ function editTime(infraction) {
         td.attr('disabled', '1');
         ett.prop('disabled', true);
         ets.prop('disabled', true);
-    } else if (infraction['flags'] & (INFRACTION.DEC_ONLINE_ONLY)) {
+    } else if (infraction['flags'] & (INFRACTION.PLAYTIME_DURATION)) {
         perm.attr('disabled', '1');
         td.removeClass('is-light');
         ett.val(Math.ceil(infraction['orig_length'] / 60).toString());

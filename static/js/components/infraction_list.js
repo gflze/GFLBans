@@ -277,7 +277,7 @@ function addInfractionRow(infraction) {
         time_text.classList.add('has-text-success');
         time_icon.classList.add('fas', 'fa-check');
     } else if (
-        infraction['flags'] & INFRACTION.DEC_ONLINE_ONLY
+        infraction['flags'] & INFRACTION.PLAYTIME_DURATION
         && (
             (infraction.hasOwnProperty('last_heartbeat') && (infraction['last_heartbeat'] + 300) < unixNow)
             || !infraction.hasOwnProperty('last_heartbeat')
@@ -312,7 +312,7 @@ function getTimeRemainingText(infraction) {
             return 'Removed';
         }
 
-        if (infraction['flags'] & INFRACTION.DEC_ONLINE_ONLY) {
+        if (infraction['flags'] & INFRACTION.PLAYTIME_DURATION) {
             if (infraction.hasOwnProperty('orig_length')) {
                 original = infraction['orig_length'] * 1000;
             }
@@ -337,7 +337,7 @@ function getTimeRemainingText(infraction) {
     let remaining = 0;
     original = 0;
 
-    if (infraction['flags'] & INFRACTION.DEC_ONLINE_ONLY) {
+    if (infraction['flags'] & INFRACTION.PLAYTIME_DURATION) {
         remaining = infraction['time_left'] * 1000;
 
         // Infraction might not have this attribute

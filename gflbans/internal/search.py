@@ -15,10 +15,10 @@ from gflbans.internal.flags import (
     INFRACTION_BAN,
     INFRACTION_CALL_ADMIN_BAN,
     INFRACTION_CHAT_BLOCK,
-    INFRACTION_DEC_ONLINE_ONLY,
     INFRACTION_GLOBAL,
     INFRACTION_ITEM_BLOCK,
     INFRACTION_PERMANENT,
+    INFRACTION_PLAYTIME_DURATION,
     INFRACTION_REMOVED,
     INFRACTION_SESSION,
     INFRACTION_SYSTEM,
@@ -277,7 +277,7 @@ FIELD_MAP = {
     'is_call_admin': ('bitflag', bool, INFRACTION_CALL_ADMIN_BAN),
     'is_item': ('bitflag', bool, INFRACTION_ITEM_BLOCK),
     'is_session': ('bitflag', bool, INFRACTION_SESSION),
-    'is_decl_online_only': ('bitflag', bool, INFRACTION_DEC_ONLINE_ONLY),
+    'is_playtime_duration': ('bitflag', bool, INFRACTION_PLAYTIME_DURATION),
 }
 
 

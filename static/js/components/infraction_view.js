@@ -146,7 +146,7 @@ async function setupViewModal(infraction) {
     if (
         infraction.hasOwnProperty('time_left')
         && infraction['time_left'] <= 0
-        && infraction['flag'] & INFRACTION.DEC_ONLINE_ONLY
+        && infraction['flag'] & INFRACTION.PLAYTIME_DURATION
     ) {
         isExpired = true;
     } else if (infraction.hasOwnProperty('expires') && Date.now() / 1000 >= infraction['expires']) {
@@ -201,7 +201,7 @@ async function setupViewModal(infraction) {
         timeValue.text('Permanent');
     } else if (infraction['flags'] & (INFRACTION.SESSION)) {
         timeValue.text('Session');
-    } else if (infraction['flags'] & (INFRACTION.DEC_ONLINE_ONLY)) {
+    } else if (infraction['flags'] & (INFRACTION.PLAYTIME_DURATION)) {
         let s;
         const tl = moment.duration(infraction['time_left'] * 1000);
 

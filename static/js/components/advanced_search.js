@@ -299,9 +299,9 @@ function loadUrlParams() {
         $('#search-time-permanent-check').trigger('click');
     else if (urlParams.has('is_session'))
         $('#search-time-session-check').trigger('click');
-    else if (urlParams.has('is_decl_online_only') && urlParams.get('is_decl_online_only') === 'false')
+    else if (urlParams.has('is_playtime_duration') && urlParams.get('is_playtime_duration') === 'false')
         $('#search-time-real-world-timed-check').trigger('click');
-    else if (urlParams.has('is_decl_online_only'))
+    else if (urlParams.has('is_playtime_duration'))
         $('#search-time-game-timed-check').trigger('click');
     if (urlParams.has('created')) {
         const timestamp = parseInt(getParams.get('created'), 10) * 1000;
@@ -519,9 +519,9 @@ function createSearchQuery() {
     else if ($('#search-time-permanent-check').prop('checked'))
         query = query.concat('&is_permanent=true');
     else if ($('#search-time-game-timed-check').prop('checked'))
-        query = query.concat('&is_decl_online_only=true');
+        query = query.concat('&is_playtime_duration=true');
     else if ($('#search-time-real-world-timed-check').prop('checked'))
-        query = query.concat('&is_decl_online_only=false');
+        query = query.concat('&is_playtime_duration=false');
 
     if (
         !$('#search-time-date-creation-field').hasClass('is-hidden')

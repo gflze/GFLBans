@@ -120,23 +120,23 @@ name2perms = {
 
 # INFRACTION FLAGS
 # These are given to infraction objects to indicate some basic information about them
-INFRACTION_SYSTEM           = 1 << 0   # Created by SYSTEM
-INFRACTION_GLOBAL           = 1 << 1   # The ban applies to all servers except those ignoring globals
-# INFRACTION_SUPER_GLOBAL   = 1 << 2   # DEPRECATED
-INFRACTION_PERMANENT        = 1 << 3   # The ban does not expire
-INFRACTION_VPN              = 1 << 4   # The IP associated with the ban is likely a VPN (Doesn't show up in check by ip)
-INFRACTION_WEB              = 1 << 5   # The infraction was created via the web panel (thus has no server associated with it)
-INFRACTION_REMOVED          = 1 << 6   # The ban was removed by an admin. It still appears, but is not active
-INFRACTION_VOICE_BLOCK      = 1 << 7   # The player may not speak in game
-INFRACTION_CHAT_BLOCK       = 1 << 8   # The player may not type in game
-INFRACTION_BAN              = 1 << 9   # The player may not join the server
-INFRACTION_ADMIN_CHAT_BLOCK = 1 << 10  # The player may not use admin chat
-INFRACTION_CALL_ADMIN_BAN   = 1 << 11  # The player may not call an admin (using !calladmin)
-INFRACTION_SESSION          = 1 << 12  # Infraction expires immediately on web, and duration is handled by the game server
-INFRACTION_DEC_ONLINE_ONLY  = 1 << 13  # Only reduces infraction time when player is online. Invalid for bans and web
-INFRACTION_ITEM_BLOCK       = 1 << 14  # The player may not use map spawned items
-#                             1 << 15  # DEPRECATED
-INFRACTION_AUTO_TIER        = 1 << 16  # This infraction is considered for tiering purposes.
+INFRACTION_SYSTEM               = 1 << 0   # Created by SYSTEM
+INFRACTION_GLOBAL               = 1 << 1   # The ban applies to all servers except those ignoring globals
+# INFRACTION_SUPER_GLOBAL       = 1 << 2   # DEPRECATED
+INFRACTION_PERMANENT            = 1 << 3   # The ban does not expire
+INFRACTION_VPN                  = 1 << 4   # The IP associated with the ban is likely a VPN (Doesn't show up in check by ip)
+INFRACTION_WEB                  = 1 << 5   # The infraction was created via the web panel (thus has no server associated with it)
+INFRACTION_REMOVED              = 1 << 6   # The ban was removed by an admin. It still appears, but is not active
+INFRACTION_VOICE_BLOCK          = 1 << 7   # The player may not speak in game
+INFRACTION_CHAT_BLOCK           = 1 << 8   # The player may not type in game
+INFRACTION_BAN                  = 1 << 9   # The player may not join the server
+INFRACTION_ADMIN_CHAT_BLOCK     = 1 << 10  # The player may not use admin chat
+INFRACTION_CALL_ADMIN_BAN       = 1 << 11  # The player may not call an admin (using !calladmin)
+INFRACTION_SESSION              = 1 << 12  # Infraction expires immediately on web, and duration is handled by the game server
+INFRACTION_PLAYTIME_DURATION    = 1 << 13  # Only reduces duration when player is online. Invalid for bans and web infractions
+INFRACTION_ITEM_BLOCK           = 1 << 14  # The player may not use map spawned items
+#                                 1 << 15  # DEPRECATED
+INFRACTION_AUTO_TIER            = 1 << 16  # This infraction is considered for tiering purposes.
 
 scope_to_flag = {
     'server':    0,

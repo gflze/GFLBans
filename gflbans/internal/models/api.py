@@ -93,7 +93,7 @@ class RawSignature(BaseModel):
 class InfractionTieringPolicyTier(BaseModel):
     punishments: List[constr(regex=valid_types_regex)]
     duration: Optional[conint(gt=0)]
-    dec_online: bool = False
+    playtime_based: bool = False
 
 
 class TieringPolicy(BaseModel):
@@ -161,7 +161,7 @@ class Infraction(BaseModel):
     removed_by: Optional[PositiveIntIncl0]
     removal_reason: Optional[constr(min_length=1, max_length=280)]
 
-    # For DEC_ONLINE_ONLY
+    # For PLAYTIME_DURATION
     time_left: Optional[PositiveIntIncl0]
     orig_length: Optional[PositiveIntIncl0]
 

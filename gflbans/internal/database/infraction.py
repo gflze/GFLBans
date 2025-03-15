@@ -9,9 +9,9 @@ from gflbans.internal.constants import SERVER_KEY
 from gflbans.internal.database.base import DBase
 from gflbans.internal.database.common import DFile, DUser
 from gflbans.internal.flags import (
-    INFRACTION_DEC_ONLINE_ONLY,
     INFRACTION_GLOBAL,
     INFRACTION_PERMANENT,
+    INFRACTION_PLAYTIME_DURATION,
     INFRACTION_REMOVED,
     INFRACTION_SESSION,
     INFRACTION_VPN,
@@ -52,7 +52,7 @@ def build_query_dict(
     ignore_others: bool = False,
     active_only: bool = False,
     exclude_removed: bool = False,
-    online_only: bool = False,
+    playtime_based: bool = False,
 ):
     f = {}
 
@@ -90,7 +90,7 @@ def build_query_dict(
             {
                 '$and': [
                     {
-                        'flags': {'$bitsAllSet': INFRACTION_DEC_ONLINE_ONLY},
+                        'flags': {'$bitsAllSet': INFRACTION_PLAYTIME_DURATION},
                     },
                     {'time_left': {'$gt': 0}},
                 ]
@@ -112,13 +112,13 @@ def build_query_dict(
     if active_only or exclude_removed:
         f['flags'] = {'$bitsAllClear': INFRACTION_REMOVED}
 
-    if online_only:
+    if playtime_based:
         if 'flags' not in f:
-            f['flags'] = {'$bitsAllSet': INFRACTION_DEC_ONLINE_ONLY}
+            f['flags'] = {'$bitsAllSet': INFRACTION_PLAYTIME_DURATION}
         elif '$bitsAllSet' not in f['flags']:
-            f['flags']['$bitsAllSet'] = INFRACTION_DEC_ONLINE_ONLY
+            f['flags']['$bitsAllSet'] = INFRACTION_PLAYTIME_DURATION
         else:
-            f['flags']['$bitsAllSet'] |= INFRACTION_DEC_ONLINE_ONLY
+            f['flags']['$bitsAllSet'] |= INFRACTION_PLAYTIME_DURATION
 
     # Filter out server only bans that do not match our server
     if actor_type == SERVER_KEY:
