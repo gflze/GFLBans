@@ -473,10 +473,10 @@ function createAndValidateInfraction() {
         if ($(cPermanentCheck).prop('checked')) {
             // A permanent infraction has no duration field
         } else if ($(cTimeDecCheck).prop('checked')) {
-            infraction['dec_online_only'] = true;
+            infraction['playtime_based'] = true;
             infraction['duration'] = getInfractionSeconds();
         } else {
-            infraction['dec_online_only'] = false;
+            infraction['playtime_based'] = false;
             infraction['duration'] = getInfractionSeconds();
         }
     } catch (e) {

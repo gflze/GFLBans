@@ -40,7 +40,7 @@ const INFRACTION = Object.freeze({
     ADMIN_CHAT_BLOCK: 1 << 10, // The player may not use admin chat
     CALL_ADMIN_BAN: 1 << 11, // The player may not call an admin (using !calladmin)
     SESSION: 1 << 12,
-    DEC_ONLINE_ONLY: 1 << 13, // Only reduces infraction time when player is online. Invalid for bans and web
+    PLAYTIME_DURATION: 1 << 13, // Only reduces duration when player is online. Invalid for bans and web infractions
     ITEM_BLOCK: 1 << 14, // The player may not use map spawned items
     AUTO_TIER: 1 << 16 // This infraction is considered for tiering purposes.
 });
@@ -82,7 +82,7 @@ const searchParams = [
     'is_call_admin',
     'is_item',
     'is_session',
-    'is_decl_online_only'
+    'is_playtime_duration'
 ];
 
 /* eslint-disable-next-line max-len */

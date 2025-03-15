@@ -17,8 +17,8 @@ from gflbans.internal.database.dadmin import DAdmin
 from gflbans.internal.database.infraction import DComment, DInfraction, DUser
 from gflbans.internal.flags import (
     ALL_PERMISSIONS,
-    INFRACTION_DEC_ONLINE_ONLY,
     INFRACTION_PERMANENT,
+    INFRACTION_PLAYTIME_DURATION,
     INFRACTION_SESSION,
     PERMISSION_COMMENT,
     PERMISSION_VIEW_IP_ADDR,
@@ -302,7 +302,7 @@ async def cinfsum_inf(db_ref: AsyncIOMotorDatabase, inf: DInfraction) -> CInfrac
 
     if inf.flags & INFRACTION_PERMANENT == INFRACTION_PERMANENT:
         pass
-    elif inf.flags & INFRACTION_DEC_ONLINE_ONLY == INFRACTION_DEC_ONLINE_ONLY:
+    elif inf.flags & INFRACTION_PLAYTIME_DURATION == INFRACTION_PLAYTIME_DURATION:
         c.expiration = datetime.now(tz=UTC).timestamp() + inf.time_left
     elif inf.flags & INFRACTION_SESSION == INFRACTION_SESSION:
         c.expiration = 0
