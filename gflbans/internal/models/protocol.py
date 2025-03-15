@@ -23,10 +23,8 @@ from gflbans.internal.models.api import (
     PlayerObjNoIpOptional,
     PlayerObjSimple,
     PositiveIntIncl0,
-    RawSignature,
     Server,
     ServerInternal,
-    Signature,
     VPNInfo,
 )
 
@@ -200,11 +198,8 @@ class ModifyInfraction(BaseModel):
 
     # Change the expiration. All of these groups are mutually exclusive
     make_session: bool = False  # If true, make this a session infraction
-
     make_permanent: bool = False  # If true, make this infraction not expire
-
     expiration: Optional[PositiveInt]  # UNIX time that the infraction expires at.
-
     time_left: Optional[PositiveIntIncl0]  # Sets PLAYTIME_DURATION and uses this time in seconds as the initial count
 
     # Misc attrs
@@ -294,29 +289,6 @@ class Heartbeat(BaseModel):
 class HeartbeatChange(BaseModel):
     player: PlayerObjNoIp
     check: CheckInfractionsReply
-
-
-class RunSignatures(BaseModel):
-    player: PlayerObjNoIp
-    player_ip: str
-    signatures: List[RawSignature]
-    include_other_servers: bool = True
-    make_permanent_for_evasion: bool = False
-
-
-class RunSignaturesReply(BaseModel):
-    check: Optional[CheckInfractionsReply]
-    num_alts: int
-    cloud_refused: bool = False
-
-
-class GetAltsOfUser(BaseModel):
-    player: PlayerObjNoIp
-    signatures: List[Signature]
-
-
-class GetAltsOfUserReply(BaseModel):
-    alts: List[PlayerObjNoIp]
 
 
 class CheckVPN(BaseModel):

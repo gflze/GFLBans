@@ -10,19 +10,17 @@ from fastapi.responses import RedirectResponse
 from pydantic import PositiveInt
 from pymongo import UpdateMany
 from redis.exceptions import RedisError
-from starlette.background import BackgroundTasks
 from starlette.requests import Request
 
 from gflbans.api.auth import check_access
-from gflbans.api_util import cinfsum_cmp, cinfsum_cmp_sef, construct_ci_resp, str_id
+from gflbans.api_util import construct_ci_resp
 from gflbans.internal.asn import VPN_CLOUD, VPN_YES, check_vpn
 from gflbans.internal.avatar import process_avatar
 from gflbans.internal.config import MONGO_DB
 from gflbans.internal.constants import NOT_AUTHED_USER, SERVER_KEY
 from gflbans.internal.database.common import DFile
-from gflbans.internal.database.infraction import DComment, DInfraction, build_query_dict
+from gflbans.internal.database.infraction import DInfraction, build_query_dict
 from gflbans.internal.database.server import DCallData, DServer, DServerInfo, DUserIP
-from gflbans.internal.database.signature import DSignature
 from gflbans.internal.discord_calladmin import (
     claim_monitor_task,
     execute_claim,
@@ -34,13 +32,11 @@ from gflbans.internal.flags import (
     INFRACTION_CALL_ADMIN_BAN,
     INFRACTION_PLAYTIME_DURATION,
     PERMISSION_VPN_CHECK_SKIP,
-    str2pflag,
 )
-from gflbans.internal.infraction_utils import create_dinfraction, get_user_data
 from gflbans.internal.integrations.games import get_user_info
 from gflbans.internal.integrations.games.steam import get_steam_multiple_user_info
 from gflbans.internal.log import logger
-from gflbans.internal.models.api import AdminInfo, Initiator, PlayerObjIPOptional, PlayerObjNoIp, PlayerObjSimple
+from gflbans.internal.models.api import AdminInfo, Initiator, PlayerObjIPOptional, PlayerObjNoIp
 from gflbans.internal.models.protocol import (
     CheckVPN,
     CheckVPNReply,
@@ -50,8 +46,6 @@ from gflbans.internal.models.protocol import (
     ExecuteCallAdminReply,
     Heartbeat,
     HeartbeatChange,
-    RunSignatures,
-    RunSignaturesReply,
 )
 from gflbans.internal.pyapi_utils import load_admin_from_initiator
 from gflbans.internal.utils import validate
@@ -262,150 +256,6 @@ async def heartbeat(
             logger.error('Failed to log chat messages.', exc_info=e)
 
     return changes
-
-
-@gs_router.post(
-    '/signatures',
-    response_model=RunSignaturesReply,
-    response_model_exclude_unset=True,
-    response_model_exclude_none=True,
-)
-async def run_signatures(
-    request: Request,
-    run: RunSignatures,
-    tasks: BackgroundTasks,
-    auth: Tuple[int, Optional[ObjectId], int] = Depends(check_access),
-):
-    if auth[0] != SERVER_KEY:
-        raise HTTPException(detail='Must be authed as server for this route', status_code=403)
-    vpn_check_result = await check_vpn(request.app, run.player_ip)
-
-    if vpn_check_result == VPN_CLOUD:
-        return RunSignaturesReply(num_alts=0, cloud_refused=True)
-
-    num_alts = 0
-
-    q = build_query_dict(
-        auth[0],
-        str_id(auth[1]),
-        gs_service=run.player.gs_service,
-        gs_id=run.player.gs_id,
-        ip=None,
-        ignore_others=(not run.include_other_servers),
-        active_only=True,
-    )
-
-    initial_chk = await construct_ci_resp(request.app.state.db[MONGO_DB], q)
-
-    for signature in run.signatures:
-        await DSignature.save_signature(
-            request.app.state.db[MONGO_DB], run.player, signature=(signature.mod, signature.signature)
-        )
-
-        signature = signature.to_signature()
-        logger.debug(f'check signature {signature.mod} {signature.signature}')
-
-        async for dsig in DSignature.find_all_of_signature(
-            request.app.state.db[MONGO_DB], signature=(signature.mod, signature.signature)
-        ):
-            if dsig.user.gs_service != run.player.gs_service or dsig.user.gs_id != run.player.gs_id:
-                num_alts += 1
-
-                q2 = build_query_dict(
-                    auth[0],
-                    str_id(auth[1]),
-                    gs_service=dsig.user.gs_service,
-                    gs_id=dsig.user.gs_id,
-                    ip=None,
-                    ignore_others=(not run.include_other_servers),
-                    active_only=True,
-                )
-
-                chk = await construct_ci_resp(request.app.state.db[MONGO_DB], q2)
-
-                # If ANY field exceeds, add an evasion punishment
-
-                if (
-                    cinfsum_cmp_sef(initial_chk.voice_block, chk.voice_block)
-                    or cinfsum_cmp_sef(initial_chk.chat_block, chk.chat_block)
-                    or cinfsum_cmp_sef(initial_chk.ban, chk.ban)
-                    or cinfsum_cmp_sef(initial_chk.admin_chat_block, chk.admin_chat_block)
-                    or cinfsum_cmp_sef(initial_chk.call_admin_block, chk.call_admin_block)
-                    or cinfsum_cmp_sef(initial_chk.item_block, chk.item_block)
-                ):
-                    v = []
-
-                    for fn in str2pflag.keys():
-                        if hasattr(chk, fn) and getattr(chk, fn) is not None:
-                            v.append(fn)
-
-                    def pick_worst(c):
-                        w = None
-                        for fn2 in str2pflag.keys():
-                            if hasattr(c, fn2) and getattr(c, fn2) is not None:
-                                if w is None:
-                                    w = getattr(c, fn2)
-                                else:
-                                    w = cinfsum_cmp(w, getattr(c, fn2))
-
-                        if w.expiration is None:
-                            return None
-                        else:
-                            a = w.expiration - int(datetime.now(tz=UTC).timestamp())
-
-                            if a > 0:
-                                return a
-                            else:
-                                return 60
-
-                    s = 'global' if run.include_other_servers else 'server'
-                    d = None if run.make_permanent_for_evasion else pick_worst(chk)
-
-                    dinf = create_dinfraction(
-                        PlayerObjSimple(gs_service=run.player.gs_service, gs_id=run.player.gs_id, ip=run.player_ip),
-                        reason=f'Punishment evasion: {dsig.user.gs_service} {dsig.user.gs_id}',
-                        scope=s,
-                        punishments=v,
-                        duration=d,
-                        server=auth[1],
-                    )
-
-                    dc = DComment(
-                        content=f'ref: {dsig.mod}/{dsig.signature}', private=True, created=datetime.now(tz=UTC)
-                    )
-
-                    dinf.comments.append(dc)
-
-                    await dinf.commit(request.app.state.db[MONGO_DB])
-
-                    tasks.add_task(get_user_data, request.app, dinf.id, True)
-
-    return RunSignaturesReply(check=await construct_ci_resp(request.app.state.db[MONGO_DB], q), num_alts=num_alts)
-
-
-@gs_router.get(
-    '/alts', response_model=List[PlayerObjNoIp], response_model_exclude_none=True, response_model_exclude_unset=True
-)
-async def get_alts(
-    request: Request,
-    ply: PlayerObjNoIp = Depends(PlayerObjNoIp),
-    auth: Tuple[int, Optional[ObjectId], int] = Depends(check_access),
-):
-    if auth == NOT_AUTHED_USER:
-        raise HTTPException(detail='This route requires authentication', status_code=401)
-
-    alts = []
-
-    async for signature in DSignature.find_all_signatures_of_users(
-        request.app.state.db[MONGO_DB], ply.gs_service, ply.gs_id
-    ):
-        async for alt_sig in DSignature.find_all_of_signature(
-            request.app.state.db[MONGO_DB], (signature.mod, signature.signature)
-        ):
-            if alt_sig.user != ply and alt_sig.user not in alts:
-                alts.append(alt_sig.user)
-
-    return alts
 
 
 @gs_router.get(
