@@ -3,8 +3,6 @@ from typing import Dict, List, Optional, Union
 
 from pydantic import BaseModel, PositiveInt, conint, constr, root_validator
 
-from gflbans.internal.flags import valid_types_regex
-
 PositiveIntIncl0 = conint(ge=0)
 
 
@@ -90,18 +88,6 @@ class RawSignature(BaseModel):
         return Signature(mod=self.mod, signature=sha256(self.signature.encode('utf-8')).hexdigest())
 
 
-class InfractionTieringPolicyTier(BaseModel):
-    punishments: List[constr(regex=valid_types_regex)]
-    duration: Optional[conint(gt=0)]
-    playtime_based: bool = False
-
-
-class TieringPolicy(BaseModel):
-    name: str
-    server: str
-    pol_id: str
-
-
 class Comment(BaseModel):
     author: Optional[PositiveIntIncl0] = None
     content: constr(min_length=1, max_length=280)
@@ -164,9 +150,6 @@ class Infraction(BaseModel):
     # For PLAYTIME_DURATION
     time_left: Optional[PositiveIntIncl0]
     orig_length: Optional[PositiveIntIncl0]
-
-    # For tiering policy
-    policy_id: Optional[str]
 
     # When was the last time a heartbeat caused this to be updated?
     last_heartbeat: Optional[PositiveIntIncl0]

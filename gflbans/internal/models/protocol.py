@@ -16,7 +16,6 @@ from gflbans.internal.models.api import (
     Group,
     Infraction,
     InfractionDay,
-    InfractionTieringPolicyTier,
     Initiator,
     MessageLog,
     PlayerObjIPOptional,
@@ -149,25 +148,6 @@ class InfractionStatisticsReply(BaseModel):
     warning_longest: Optional[int]
 
 
-# class InfractionTieringPolicyTier(BaseModel):
-#    punishments: List[constr(regex=valid_types_regex)]
-#    duration: Optional[conint(gt=0)]
-#    playtime_based: bool = False
-
-
-class RegisterInfractionTieringPolicy(BaseModel):
-    name: str
-    server: Optional[str]
-    include_other_servers: bool = True
-    tier_ttl: int  # How long an infraction counts for tiering purposes
-    default_reason: constr(min_length=1, max_length=280)
-    tiers: List[InfractionTieringPolicyTier]
-
-
-class RegisterInfractionTieringPolicyReply(BaseModel):
-    policy_id: str
-
-
 class CreateInfraction(BaseModel):
     created: Optional[PositiveInt]
     duration: Optional[PositiveInt]
@@ -198,22 +178,6 @@ class CreateInfractionReply(BaseModel):
     infraction: Infraction
 
 
-class CreateInfractionUsingPolicy(BaseModel):
-    player: PlayerObjSimple
-    admin: Optional[Initiator]
-    reason: Optional[constr(min_length=1, max_length=280)]
-    scope: constr(regex=r'^(server|global)$')
-    policy_id: str
-    consider_other_policies: List[str] = []
-    server: Optional[str]  # Override the server
-    do_full_infraction = False
-    allow_normalize = False  # Attempt to convert steamid to steamid64, etc
-
-
-class UnlinkInfractionTieringPolicy(BaseModel):
-    policy_id: str
-
-
 class RemoveInfractionsOfPlayer(BaseModel):
     player: PlayerObjSimple
     remove_reason: constr(min_length=1, max_length=280)
@@ -242,9 +206,6 @@ class ModifyInfraction(BaseModel):
     expiration: Optional[PositiveInt]  # UNIX time that the infraction expires at.
 
     time_left: Optional[PositiveIntIncl0]  # Sets PLAYTIME_DURATION and uses this time in seconds as the initial count
-
-    # Auto tiering
-    policy_id: Union[str, None, bool]  # give False to remove, string to set
 
     # Misc attrs
     make_web: bool = False
