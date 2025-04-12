@@ -376,11 +376,13 @@ async def check_infractions(
 async def find_longest_infraction_duration(app, query) -> Optional[int]:
     longest = None
     async for dinf in DInfraction.from_query(app.state.db[MONGO_DB], query, sort=('created', DESCENDING)):
-        if dinf.flags | INFRACTION_PERMANENT == INFRACTION_PERMANENT or (
-            dinf.expires is not None and dinf.expires > MAX_UNIX_TIMESTAMP
+        if (
+            longest == 0
+            or dinf.flags & INFRACTION_PERMANENT == INFRACTION_PERMANENT
+            or (dinf.expires is not None and dinf.expires > MAX_UNIX_TIMESTAMP)
         ):
             longest = 0
-        elif dinf.flags | INFRACTION_SESSION == INFRACTION_SESSION and longest is None:
+        elif dinf.flags & INFRACTION_SESSION == INFRACTION_SESSION and longest is None:
             longest = -1
         elif dinf.original_time is not None:
             longest = dinf.original_time if longest is None else max(dinf.original_time, longest)

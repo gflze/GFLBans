@@ -134,19 +134,19 @@ class CheckInfractionsReply(BaseModel):
 
 class InfractionStatisticsReply(BaseModel):
     voice_block_count: PositiveIntIncl0
-    voice_block_longest: Optional[PositiveIntIncl0]
+    voice_block_longest: Optional[int]
     text_block_count: PositiveIntIncl0
-    text_block_longest: Optional[PositiveIntIncl0]
+    text_block_longest: Optional[int]
     ban_count: PositiveIntIncl0
-    ban_longest: Optional[PositiveIntIncl0]
+    ban_longest: Optional[int]
     admin_chat_block_count: PositiveIntIncl0
-    admin_chat_block_longest: Optional[PositiveIntIncl0]
+    admin_chat_block_longest: Optional[int]
     call_admin_block_count: PositiveIntIncl0
-    call_admin_block_longest: Optional[PositiveIntIncl0]
+    call_admin_block_longest: Optional[int]
     item_block_count: PositiveIntIncl0
-    item_block_longest: Optional[PositiveIntIncl0]
+    item_block_longest: Optional[int]
     warning_count: PositiveIntIncl0
-    warning_longest: Optional[PositiveIntIncl0]
+    warning_longest: Optional[int]
 
 
 # class InfractionTieringPolicyTier(BaseModel):
