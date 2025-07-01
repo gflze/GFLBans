@@ -3,9 +3,9 @@ from starlette.requests import Request
 
 from gflbans.internal.constants import GB_VERSION
 from gflbans.internal.flags import (
-    PERMISSION_MANAGE_API_KEYS,
     PERMISSION_MANAGE_GROUPS_AND_ADMINS,
     PERMISSION_MANAGE_SERVERS,
+    PERMISSION_MANAGE_VPNS,
 )
 from gflbans.web.pages import sctx
 
@@ -23,8 +23,8 @@ async def default_mgmt(request: Request):
         mode = 'admin'
     elif sc['user'].permissions & PERMISSION_MANAGE_SERVERS:
         mode = 'server'
-    elif sc['user'].permissions & PERMISSION_MANAGE_API_KEYS:
-        mode = 'api'
+    elif sc['user'].permissions & PERMISSION_MANAGE_VPNS:
+        mode = 'vpn'
 
     if mode is None:
         raise HTTPException(detail='You do not have permission to view this page.', status_code=403)
@@ -70,13 +70,13 @@ async def server_mgmt(request: Request):
     )
 
 
-@management_router.get('/apikey/')
+@management_router.get('/vpn/')
 async def api_mgmt(request: Request):
     sc = await sctx(request)
 
-    if sc['user'] is None or not (sc['user'].permissions & PERMISSION_MANAGE_API_KEYS):
+    if sc['user'] is None or not (sc['user'].permissions & PERMISSION_MANAGE_VPNS):
         raise HTTPException(detail='You do not have permission to view this page.', status_code=403)
 
     return request.app.state.templates.TemplateResponse(
-        'pages/management.html', {**sc, 'page': 'manage', 'mode': 'apikey', 'GB_VERSION': GB_VERSION}
+        'pages/management.html', {**sc, 'page': 'manage', 'mode': 'vpn', 'GB_VERSION': GB_VERSION}
     )

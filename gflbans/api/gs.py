@@ -14,7 +14,7 @@ from starlette.requests import Request
 
 from gflbans.api.auth import check_access
 from gflbans.api_util import construct_ci_resp
-from gflbans.internal.asn import VPN_CLOUD, VPN_YES, check_vpn
+from gflbans.internal.asn import VPN_DUBIOUS, VPN_YES, check_vpn
 from gflbans.internal.avatar import process_avatar
 from gflbans.internal.config import MONGO_DB
 from gflbans.internal.constants import NOT_AUTHED_USER, SERVER_KEY
@@ -266,14 +266,14 @@ async def vpn_check(
 ):
     if auth[0] == NOT_AUTHED_USER:
         raise HTTPException(detail='This route requires authentication', status_code=401)
-    cvpn_r = CheckVPNReply(is_vpn=False, is_cloud_gaming=False, is_immune=False)
+    cvpn_r = CheckVPNReply(is_vpn=False, is_dubious=False, is_immune=False)
 
     vpn_result = await check_vpn(request.app, q.player.ip)
 
     if vpn_result == VPN_YES:
         cvpn_r.is_vpn = True
-    elif vpn_result == VPN_CLOUD:
-        cvpn_r.is_cloud_gaming = True
+    elif vpn_result == VPN_DUBIOUS:
+        cvpn_r.is_dubious = True
 
     try:
         if q.player.gs_service is not None and q.player.gs_id is not None:

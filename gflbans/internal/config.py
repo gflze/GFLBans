@@ -33,9 +33,11 @@ GFLBANS_ICON = config(
 
 # Integrations with other services
 DISCORD_BOT_TOKEN = config('DISCORD_BOT_TOKEN', default=None)
+GLOBAL_INFRACTION_WEBHOOK = config('GLOBAL_INFRACT_WEBHOOK', default=None)  # For global monitoring
 STEAM_API_KEY = config('STEAM_API_KEY', default=None)
 STEAM_OPENID_ACCESS_TOKEN_LIFETIME = config('STEAM_OPENID_ACCESS_TOKEN_LIFETIME', cast=int, default=604800)
-GLOBAL_INFRACTION_WEBHOOK = config('GLOBAL_INFRACT_WEBHOOK', default=None)  # For global monitoring
+IPHUB_API_KEY = config('IPHUB_API_KEY', default=None)
+IPHUB_CACHE_TIME = config('IPHUB_CACHE_TIME', cast=int, default=(60 * 60 * 24 * 7))  # Seconds to cache IPHub results
 
 # Web Server Configuration
 WEB_USE_UNIX = config('WEB_USE_UNIX', default=True, cast=bool)  # True = use unix socket, False = use HTTP/TCP

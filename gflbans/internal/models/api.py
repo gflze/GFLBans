@@ -207,8 +207,9 @@ class AdminMinimal(BaseModel):
 
 
 class VPNInfo(BaseModel):
+    id: str
     vpn_type: constr(regex=r'^(asn|cidr)$')
-    is_cloud: bool = False
+    is_dubious: bool = False
     as_number: Optional[int]
     cidr: Optional[str]
     comment: Optional[constr(min_length=1, max_length=120)]
