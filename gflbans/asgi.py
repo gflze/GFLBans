@@ -12,7 +12,7 @@ from starlette.staticfiles import StaticFiles
 from starlette.templating import Jinja2Templates
 
 from gflbans.api import api
-from gflbans.deprecation import deprecation_cleanup
+from gflbans.deprecation import deprecation_cleanup, full_vpn_check
 from gflbans.file import file_router
 from gflbans.internal.config import PRODUCTION, SECRET_KEY
 from gflbans.internal.constants import GB_VERSION
@@ -73,6 +73,7 @@ def new_app():
             )
 
         await deprecation_cleanup(app)
+        await full_vpn_check(app)
 
     return app
 

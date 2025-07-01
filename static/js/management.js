@@ -2,7 +2,7 @@ const MGMT = Object.freeze({
     ADMIN: 0,
     GROUP: 1,
     SERVER: 2,
-    APIKEY: 3
+    VPN: 3
 });
 
 let MGMT_MODE = 0;
@@ -40,7 +40,12 @@ $(document).ready(function () {
     setLoading();
     const mode = $('html').attr('data-mode');
 
-    if (mode === 'GROUP') {
+    if (mode === 'ADMIN') {
+        MGMT_MODE = MGMT.ADMIN;
+        $('#mgmt-add').click(function(){
+            openAdminMenu(0);
+        });
+    } else if (mode === 'GROUP') {
         MGMT_MODE = MGMT.GROUP;
         $('#mgmt-add').click(function(){
             openGroupMenu(0);
@@ -50,16 +55,15 @@ $(document).ready(function () {
         $('#mgmt-add').click(function(){
             openServerMenu(0);
         });
-    } else if (mode === 'APIKEY') {
-        MGMT_MODE = MGMT.APIKEY;
+    } else if (mode === 'VPN') {
+        MGMT_MODE = MGMT.VPN;
+        $('#mgmt-add').click(function(){
+            openVPNMenu(0);
+        });
+    } else {
         $('#mgmt-table').html($('<div style="text-align: center; font-size: 40pt">WORK IN PROGRESS</div>'));
         unsetLoading();
         return;
-    } else {
-        MGMT_MODE = MGMT.ADMIN;
-        $('#mgmt-add').click(function(){
-            openAdminMenu(0);
-        });
     }
 
     loadMgmt(start);
@@ -71,16 +75,22 @@ function loadMgmt(start) {
     $('#mgmt-table > tbody').empty();
     let endpoint = '';
     switch(MGMT_MODE) {
+    case MGMT.ADMIN:
+        endpoint = '/api/admin';
+        break;
     case MGMT.GROUP:
         endpoint = '/api/group';
         break;
     case MGMT.SERVER:
         endpoint = '/api/server';
         break;
-    case MGMT.ADMIN:
-    default:
-        endpoint = '/api/admin';
+    case MGMT.VPN:
+        endpoint = '/api/vpn';
         break;
+    default:
+        $('#mgmt-table').html($('<div style="text-align: center; font-size: 40pt">WORK IN PROGRESS</div>'));
+        unsetLoading();
+        return;
     }
 
     gbRequest('GET', endpoint, null).then(function (response) {
@@ -101,6 +111,14 @@ function handleResponse(response, start) {
 
         function _loadMgmt() {
             switch(MGMT_MODE) {
+            case MGMT.ADMIN:
+                var addRow = addAdminRow;
+                data.sort(function(a, b) {
+                    const aName = a.hasOwnProperty('admin_name') ? a['admin_name'].toLowerCase() : 'unnamed admin';
+                    const bName = b.hasOwnProperty('admin_name') ? b['admin_name'].toLowerCase() : 'unnamed admin';
+                    return ((aName < bName) ? -1 : ((aName > bName) ? 1 : 0));
+                });
+                break;
             case MGMT.GROUP:
                 var addRow = addGroupRow;
                 data.sort(sortGroups);
@@ -123,12 +141,16 @@ function handleResponse(response, start) {
                     return ((aName < bName) ? -1 : ((aName > bName) ? 1 : 0));
                 });
                 break;
-            case MGMT.ADMIN:
-            default:
-                var addRow = addAdminRow;
+            case MGMT.VPN:
+                data = data['results'];
+                var addRow = addVPNRow;
                 data.sort(function(a, b) {
-                    const aName = a.hasOwnProperty('admin_name') ? a['admin_name'].toLowerCase() : 'unnamed admin';
-                    const bName = b.hasOwnProperty('admin_name') ? b['admin_name'].toLowerCase() : 'unnamed admin';
+                    if (!(a.hasOwnProperty('is_asn') && b.hasOwnProperty('is_asn') && a['is_asn'] == b['is_asn']))
+                        return (a.hasOwnProperty('is_asn') && a['is_asn']) ? -1 : 1;
+
+                    const payload = a['is_asn'] ? 'as_number' : 'cidr';
+                    const aName = a.hasOwnProperty(payload) ? a[payload].toLowerCase() : '';
+                    const bName = b.hasOwnProperty(payload) ? b[payload].toLowerCase() : '';
                     return ((aName < bName) ? -1 : ((aName > bName) ? 1 : 0));
                 });
                 break;
@@ -317,6 +339,52 @@ function addServerRow(server) {
     $('#mgmt-table > tbody').append(row);
 }
 
+function addVPNRow(vpn) {
+    const row = $('<tr>').addClass('mgmt-item vpn-row');
+
+    // Dubious
+    const dubious_cell = $('<td>').addClass('vertical-center has-text-centered is-hidden-mobile');
+    const dubious_icon = $('<i>');
+    if (vpn.hasOwnProperty('is_dubious') && vpn['is_dubious'])
+        dubious_icon.addClass('fas fa-minus-circle');
+    dubious_cell.append(dubious_icon);
+
+    // Type
+    const type_cell = $('<td>').addClass('vertical-center has-text-centered').text('Unknown');
+
+    if (vpn.hasOwnProperty('as_number'))
+        type_cell.text('ASN');
+    else if (vpn.hasOwnProperty('cidr'))
+        type_cell.text('CIDR');
+
+    // Identifier
+    const identifier_cell = $('<td>').addClass('vertical-center has-text-centered');
+    identifier_cell.text('Unknown');
+    if (vpn.hasOwnProperty('as_number'))
+        identifier_cell.text(vpn['as_number']);
+    else if (vpn.hasOwnProperty('cidr'))
+        identifier_cell.text(vpn['cidr']);
+
+    // Comment
+    const comment_cell = $('<td>').addClass('vertical-center has-text-centered');
+    comment_cell.text('NO COMMENT');
+    if (vpn.hasOwnProperty('comment'))
+        comment_cell.text(vpn['comment']);
+
+    row.append(dubious_cell);
+    row.append(type_cell);
+    row.append(identifier_cell);
+    row.append(comment_cell);
+
+    row.attr('data-vpn-payload', identifier_cell.text());
+
+    row.click(function () {
+        openVPNMenu(this.getAttribute('data-vpn-payload'));
+    });
+
+    $('#mgmt-table > tbody').append(row);
+}
+
 function sortGroups(a, b) {
     const aName = a.hasOwnProperty('group_name') ? a['group_name'].toLowerCase() : 'unnamed group';
     const bName = b.hasOwnProperty('group_name') ? b['group_name'].toLowerCase() : 'unnamed group';
@@ -370,7 +438,7 @@ async function loadAdminMenu(adminID) {
 
         $('.modal-card-title').text('Update ' + (admin.hasOwnProperty('admin_name') ? admin['admin_name'] : 'Admin'));
         $('#manageSubmit').text('Update ' + (admin.hasOwnProperty('admin_name') ? admin['admin_name'] : 'Admin'));
-        $('#manageDelete').click(deleteAdmin);
+        $('#manageDelete').off('click').click(deleteAdmin);
     }
 
     closeModals();
@@ -411,7 +479,7 @@ async function loadAdminMenu(adminID) {
         }
     }
 
-    $('.gbtn').click(function (ev) {
+    $('.gbtn').off('click').click(function (ev) {
         toggleButton(ev.target);
     });
 
@@ -427,11 +495,11 @@ async function loadAdminMenu(adminID) {
         closeModals();
     });
 
-    $('.cDismissError').click(function () {
+    $('.cDismissError').off('click').click(function () {
         $('#createError').addClass('is-hidden');
     });
 
-    $('#manageSubmit').click(submitNewAdmin);
+    $('#manageSubmit').off('click').click(submitNewAdmin);
 }
 
 function resetAdminMenu() {
@@ -580,7 +648,7 @@ async function loadGroupMenu(groupID) {
         $('#manageSubmit').text('Update ' + (group.hasOwnProperty('group_name') ? group['group_name'] : 'Group'));
 
         $('#manageSubmit').attr('data-group', groupID);
-        $('#manageDelete').click(deleteGroup);
+        $('#manageDelete').off('click').click(deleteGroup);
     }
 
     closeModals();
@@ -598,7 +666,7 @@ async function loadGroupMenu(groupID) {
         permissionButtons.append($('<button>').addClass(classes).text(name).val(flag));
     }
 
-    $('.gbtn').click(function (ev) {
+    $('.gbtn').off('click').click(function (ev) {
         toggleButton(ev.target);
     });
 
@@ -614,11 +682,11 @@ async function loadGroupMenu(groupID) {
         closeModals();
     });
 
-    $('.cDismissError').click(function () {
+    $('.cDismissError').off('click').click(function () {
         $('#createError').addClass('is-hidden');
     });
 
-    $('#manageSubmit').click(submitGroupChange);
+    $('#manageSubmit').off('click').click(submitGroupChange);
 }
 
 function resetGroupMenu() {
@@ -756,9 +824,9 @@ async function loadServerMenu(serverID) {
         $('#manageSubmit').text('Update Server');
 
         $('#manageSubmit').attr('data-server', serverID);
-        $('#manageDelete').click(toggleServer);
+        $('#manageDelete').off('click').click(toggleServer);
 
-        $('#generateToken').click(function (ev) {
+        $('#generateToken').off('click').click(function (ev) {
             toggleButton(ev.target);
         });
     }
@@ -777,11 +845,11 @@ async function loadServerMenu(serverID) {
         closeModals();
     });
 
-    $('.cDismissError').click(function () {
+    $('.cDismissError').off('click').click(function () {
         $('#createError').addClass('is-hidden');
     });
 
-    $('#manageSubmit').click(submitServerChange);
+    $('#manageSubmit').off('click').click(submitServerChange);
 }
 
 function resetServerMenu() {
@@ -888,16 +956,6 @@ function handleServerSubmission(resp) {
     window.location.reload();
 }
 
-function handleServerSubmissionDoublePatch(resp) {
-    if (!resp.ok) {
-        console.log(resp);
-        resp.text().then(function (t) {
-            console.log(t);
-        });
-        throw 'Server returned a non-OK error code.';
-    }
-}
-
 function showNewToken(serverInfo) {
     closeModals();
 
@@ -911,7 +969,7 @@ function showNewToken(serverInfo) {
 
     $('#setupkey').text(serverInfo['server_secret_key']);
 
-    $('#setupClipboard').click(function () {
+    $('#setupClipboard').off('click').click(function () {
         let text = '';
         $('#setupModal section p').each(function(i, obj) {
             const convar = $(obj);
@@ -923,7 +981,7 @@ function showNewToken(serverInfo) {
     $('#setupModal').addClass('is-active');
     $('#htmlRoot').addClass('is-clipped');
 
-    $('.modal-background').click(function () {
+    $('.modal-background').off('click').click(function () {
         closeModals();
         window.location.reload();
     });
@@ -965,4 +1023,214 @@ function createAndValidateServer() {
         return [false, 'You must give either both discord_webhook and discord_staff_tag or neither.'];
 
     return [true, server];
+}
+
+// Stuff for adding/editing/deleting a VPN in database
+function openVPNMenu(vpnPayload = 0) {
+    if ($('#mgmt-add').hasClass('is-loading'))
+        return;
+    $('#mgmt-add').addClass('is-loading');
+
+    loadVPNMenu(vpnPayload).catch(logException);
+}
+
+async function loadVPNMenu(vpnPayload) {
+    resetVPNMenu();
+    if (vpnPayload === 0) {
+        $('.modal-card-title').text('Add VPN');
+        $('#manageSubmit').text('Add VPN');
+        $('#manageDelete').addClass('is-hidden');
+    } else {
+        const vpnInfo = await gbRequest('GET', '/api/vpn/?block_filter=' + vpnPayload, null);
+        if (!vpnInfo.ok)
+            throw vpnInfo.error();
+
+        const vpnList = await vpnInfo.json();
+        if (!vpnList.hasOwnProperty('results') || vpnList['results'].length == 0)
+            throw 'No VPNs matched the given payload!';
+
+        const vpn = vpnList['results'][0];
+        $('#manageDelete').removeClass('is-hidden');
+
+        // Use existing vpn identity
+        if (vpn['vpn_type'] === 'asn') {
+            $('#type-asn-button').removeClass('is-outlined');
+            $('#type-cidr-button').addClass('is-outlined');
+            $('#asn-identifier-label').removeClass('is-hidden');
+            $('#asn-identifier-input').removeClass('is-hidden');
+            $('#asn-identifier-input').val(vpn['as_number']);
+            $('#cidr-identifier-label').addClass('is-hidden');
+            $('#cidr-identifier-input').addClass('is-hidden');
+            $('#cidr-identifier-input').val('');
+        } else if (vpn['vpn_type'] === 'cidr') {
+            $('#type-asn-button').addClass('is-outlined');
+            $('#type-cidr-button').removeClass('is-outlined');
+            $('#asn-identifier-label').addClass('is-hidden');
+            $('#asn-identifier-input').addClass('is-hidden');
+            $('#asn-identifier-input').val('');
+            $('#cidr-identifier-label').removeClass('is-hidden');
+            $('#cidr-identifier-input').removeClass('is-hidden');
+            $('#cidr-identifier-input').val(vpn['cidr']);
+        }
+
+        if (vpn['is_dubious'])
+            $('#type-dubious-button').removeClass('is-outlined');
+
+        $('#vpn-comment').val(vpn.hasOwnProperty('comment') ? vpn['comment'] : '');
+
+        $('.modal-card-title').text('Edit VPN');
+        $('#manageSubmit').text('Edit VPN');
+
+        $('#manageSubmit').attr('data-vpn-id', vpn['id']);
+        $('#manageDelete').attr('data-vpn-payload', vpnPayload);
+        $('#manageDelete').off('click').click(deleteVPN);
+    }
+
+    closeModals();
+
+    // Setup and show the error AddMenu
+    $('#createAddMenu').addClass('is-active');
+
+    $('#htmlRoot').addClass('is-clipped');
+
+    $('#mgmt-add').removeClass('is-loading');
+
+    $('#type-dubious-button').off('click').click(function (ev) {
+        toggleButton(ev.target);
+    });
+
+    $('.tbtn').off('click').click(function (ev) {
+        $('#type-asn-button').addClass('is-outlined');
+        $('#type-cidr-button').addClass('is-outlined');
+        toggleButton(ev.target);
+        if (ev.target.id === 'type-asn-button') {
+            $('#asn-identifier-label').removeClass('is-hidden');
+            $('#asn-identifier-input').removeClass('is-hidden');
+            $('#cidr-identifier-label').addClass('is-hidden');
+            $('#cidr-identifier-input').addClass('is-hidden');
+        } else {
+            $('#asn-identifier-label').addClass('is-hidden');
+            $('#asn-identifier-input').addClass('is-hidden');
+            $('#cidr-identifier-label').removeClass('is-hidden');
+            $('#cidr-identifier-input').removeClass('is-hidden');
+        }
+    });
+
+    $('.manageDismiss').off('click').click(function () {
+        resetVPNMenu();
+        closeModals();
+    });
+
+    $('.cDismissError').off('click').click(function () {
+        $('#createError').addClass('is-hidden');
+    });
+
+    $('#manageSubmit').off('click').click(submitVPNChange);
+}
+
+function resetVPNMenu() {
+    $('#mgmt-add').removeClass('is-loading');
+    $('#createError').addClass('is-hidden');
+
+    // Default VPN
+    $('#type-asn-button').removeClass('is-outlined');
+    $('#type-cidr-button').addClass('is-outlined');
+    $('#type-dubious-button').addClass('is-outlined');
+    $('#asn-identifier-label').removeClass('is-hidden');
+    $('#asn-identifier-input').removeClass('is-hidden');
+    $('#asn-identifier-input').val('');
+    $('#cidr-identifier-label').addClass('is-hidden');
+    $('#cidr-identifier-input').addClass('is-hidden');
+    $('#cidr-identifier-input').val('');
+    $('#vpn-comment').val('');
+
+    $('#manageSubmit').removeAttr('data-vpn-id');
+    $('#manageDelete').removeAttr('data-vpn-payload');
+}
+
+async function submitVPNChange() {
+    setLoading();
+    const vpnID = $('#manageSubmit').attr('data-vpn-id');
+
+    // First request
+    const vpnCall = createAndValidateVPN();
+
+    // Failure, the second index is the error
+    if (!vpnCall[0]) {
+        $('#createErrorMsg').text(vpnCall[1]);
+        $('#createError').removeClass('is-hidden');
+        unsetLoading();
+        return;
+    }
+
+    const route = '/api/vpn/';
+    if (typeof vpnID === 'undefined' || vpnID === false) {
+        // Adding new VPN
+        gbRequest('POST', route, vpnCall[1], true).then(handleGroupSubmission).catch(logException);
+    } else {
+        // Patching existing VPN
+        vpnCall[1]['id'] = vpnID;
+        gbRequest('PATCH', route, vpnCall[1], true).then(handleGroupSubmission).catch(logException);
+    }
+}
+
+function deleteVPN() {
+    setLoading();
+    const vpnPayload = $('#manageDelete').attr('data-vpn-payload');
+
+    // First request
+    if (typeof vpnPayload === 'undefined' || vpnPayload === false) {
+        $('#createErrorMsg').text('Something went wrong. This VPN does not have an associated id.');
+        $('#createError').removeClass('is-hidden');
+        unsetLoading();
+        return;
+    }
+
+    vpn = {
+        'as_number_or_cidr': vpnPayload
+    };
+
+    const route = '/api/vpn/';
+    gbRequest('DELETE', route, vpn, true).then(handleGroupSubmission).catch(logException);
+}
+
+function handleVPNSubmission(resp) {
+    if (!resp.ok) {
+        console.log(resp);
+        resp.text().then(function (t) {
+            console.log(t);
+        });
+        throw 'Server returned a non-OK error code.';
+    }
+
+    closeModals();
+    window.location.reload();
+}
+
+function createAndValidateVPN() {
+    const vpn = {};
+
+    if (!$('#type-asn-button').hasClass('is-outlined')) {
+        vpn['vpn_type'] = 'asn';
+        if ($('#asn-identifier-input').val().trim() !== '')
+            vpn['as_number'] = $('#asn-identifier-input').val().trim();
+        else
+            return [false, 'You must enter an ASN identifier.'];
+    } else if (!$('#type-cidr-button').hasClass('is-outlined')) {
+        vpn['vpn_type'] = 'cidr';
+        if ($('#cidr-identifier-input').val().trim() !== '')
+            vpn['cidr'] = $('#cidr-identifier-input').val().trim();
+        else
+            return [false, 'You must enter an CIDR identifier.'];
+    } else
+        return [false, 'You must set the VPN either as an ASN or CIDR type.'];
+
+    vpn['is_dubious'] = !$('#type-dubious-button').hasClass('is-outlined');
+
+    if ($('#vpn-comment').val().trim() !== '')
+        vpn['comment'] = $('#vpn-comment').val().trim();
+    else
+        return [false, 'You must add a comment describing the VPN.'];
+
+    return [true, vpn];
 }

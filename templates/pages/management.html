@@ -2,7 +2,7 @@
 <html id="htmlRoot"
       lang="en"
       class="{% if opposite_theme %}theme-opposite {% endif %}background-primary"
-      data-mode="{% if mode == 'group' %}GROUP{% elif mode == 'server' %}SERVER{% elif mode == 'apikey' %}APIKEY{% else %}ADMIN{% endif %}">
+      data-mode="{% if mode == 'group' %}GROUP{% elif mode == 'server' %}SERVER{% elif mode == 'vpn' %}VPN{% else %}ADMIN{% endif %}">
     <head>
         {% include 'meta.html' with context %}
         <link rel="stylesheet" href="/static/css/management.css?v={{ GB_VERSION }}">
@@ -18,6 +18,12 @@
             <div class="notification is-danger has-text-centered"
                  style="margin-bottom: 0">Servers cannot be deleted. They may only be disabled.</div>
             <style>#mgmt-add{top: 8.5rem;}</style>
+        {% elif mode == 'vpn' %}
+            <div class="notification is-danger has-text-centered"
+                 style="margin-bottom: 0">
+                IPs are checked on <a href="https://iphub.info/">IPHub</a> first. A manually added ASN or CIDR is only used if IPHub does not flag the IP as a VPN.
+            </div>
+            <style>#mgmt-add{top: 8.5rem;}</style>
         {% endif %}
         <div id="managementTab">
             <table id="mgmt-table" class="table background-primary">
@@ -30,11 +36,14 @@
                             <th id="header-server-enabled" class="has-text-centered is-hidden-mobile">Enabled</th>
                             <th id="header-server" class="has-text-centered min-250">Server</th>
                             <th id="header-server-ip" class="has-text-centered min-250">IP</th>
-                        {% elif mode == 'apikey' %}
-                            <th id="header-api" class="has-text-centered min-500">Key</th>
-                        {% else %}
+                        {% elif mode == 'admin' %}
                             <th id="header-admin" class="has-text-centered min-250">Admin</th>
                             <th id="header-admin-groups" class="has-text-centered min-500">Groups</th>
+                        {% elif mode == 'vpn' %}
+                            <th id="header-vpn-dubious" class="has-text-centered min-250">Dubious</th>
+                            <th id="header-vpn-type" class="has-text-centered min-250">Type</th>
+                            <th id="header-vpn" class="has-text-centered min-250">Identifier</th>
+                            <th id="header-vpn-comment" class="has-text-centered min-500">Comment</th>
                         {% endif %}
                     </tr>
                 </thead>

@@ -17,7 +17,7 @@ async def sctx(request: Request) -> dict:
     user = await current_user(request)
 
     update_available = False
-    if user.ips_id == ROOT_USER:
+    if user and user.ips_id == ROOT_USER:
         async with request.app.state.aio_session.get(
             'https://raw.githubusercontent.com/gflze/GFLBans/refs/heads/main/gflbans/internal/constants.py'
         ) as response:

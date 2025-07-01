@@ -12,7 +12,7 @@ from pydantic import PositiveInt
 # This function does no permission checks. It merely constructs a DInfraction object without saving it
 # with the desired parameters
 from gflbans.api_util import construct_ci_resp
-from gflbans.internal.asn import VPN_CLOUD, VPN_YES, check_vpn
+from gflbans.internal.asn import VPN_DUBIOUS, VPN_YES, check_vpn
 from gflbans.internal.avatar import process_avatar
 from gflbans.internal.config import COMMUNITY_ICON, GFLBANS_ICON, GLOBAL_INFRACTION_WEBHOOK, HOST, MONGO_DB
 from gflbans.internal.constants import SERVER_KEY
@@ -172,8 +172,8 @@ async def get_vpn_data(app, infraction_id: ObjectId, reschedule_on_fail=False):
 
         vpn_state = await check_vpn(app, dinf.ip)
 
-        if vpn_state == VPN_YES or vpn_state == VPN_CLOUD:
-            logger.info(f'{dinf.ip} is a vpn or cloud gaming IP address.')
+        if vpn_state == VPN_YES or vpn_state == VPN_DUBIOUS:
+            logger.info(f'{dinf.ip} is a vpn or suspicious IP address.')
 
             await dinf.add_bit_flag(app.state.db[MONGO_DB], 'flags', INFRACTION_VPN)
     except Exception as e:

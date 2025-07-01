@@ -10,7 +10,6 @@ from gflbans.internal.config import MAX_UPLOAD_SIZE
 from gflbans.internal.flags import valid_types_regex
 from gflbans.internal.models.api import (
     AdminInfo,
-    AdminMinimal,
     CInfractionSummary,
     FetchAdminInfo,
     Group,
@@ -303,7 +302,7 @@ class CheckVPN(BaseModel):
 
 class CheckVPNReply(BaseModel):
     is_vpn: bool
-    is_cloud_gaming: bool
+    is_dubious: bool
     is_immune: bool
 
 
@@ -444,39 +443,9 @@ class GetGroupsReply(BaseModel):
 
 
 # VPN APIs
-class FetchWhitelist(BaseModel):
-    skip: PositiveIntIncl0
-    limit: conint(gt=0, le=50)
-
-
-class FetchWhitelistReply(BaseModel):
-    results: List[AdminMinimal]
-    total_whitelist: int = 0
-
-
-class SearchWhitelist(FetchWhitelist):
-    xql_query: str
-
-
-class AddToWhitelist(BaseModel):
-    admin: Initiator
-
-
-class AddToWhitelistReply(BaseModel):
-    success: bool
-
-
-class RemoveFromWhitelist(BaseModel):
-    admin: Initiator
-
-
-class RemoveFromWhitelistReply(BaseModel):
-    success: bool
-
-
 class AddVPN(BaseModel):
     vpn_type: constr(regex=r'^(asn|cidr)$')
-    is_cloud: bool = False
+    is_dubious: bool = False
     as_number: Optional[int]
     cidr: Optional[str]
     comment: constr(min_length=1, max_length=120)
@@ -484,6 +453,26 @@ class AddVPN(BaseModel):
 
 class AddVPNReply(BaseModel):
     success: bool
+
+
+class PatchVPN(BaseModel):
+    id: str
+    vpn_type: Optional[constr(regex=r'^(asn|cidr)$')]
+    is_dubious: Optional[bool]
+    as_number: Optional[int]
+    cidr: Optional[str]
+    comment: Optional[constr(min_length=1, max_length=120)]
+
+    @root_validator(pre=True)
+    def check_type(cls, values):
+        if ('vpn_type' in values and values['vpn_type'] == 'cidr' and 'cidr' not in values) or (
+            'vpn_type' in values and values['vpn_type'] == 'asn' and 'as_number' not in values
+        ):
+            raise ValueError(
+                'If vpn_type is being changed, the matchin identifier (cidr or as_number) must also be provided'
+            )
+
+        return values
 
 
 class FetchBlocklist(BaseModel):

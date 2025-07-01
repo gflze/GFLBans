@@ -12,14 +12,12 @@
             </div>
             <h2 class="text-primary">User</h2>
             <div class="search-area">
-                {% if user is not none and has_flag(user.permissions, p_nodes['Can See IP Addresses']) %}
-                    <div class="control field">
-                        <label class="checkbox">
-                            <input id="search-user-vpn-check" type="checkbox" name="isWebInfract">
-                            VPN
-                        </label>
-                    </div>
-                {% endif %}
+                <div class="control field">
+                    <label class="checkbox">
+                        <input id="search-user-vpn-check" type="checkbox" name="isWebInfract">
+                        VPN
+                    </label>
+                </div>
                 <div id="search-user-info" class="field has-addons">
                     <input id="search-user-name"
                            class="input"

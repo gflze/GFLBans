@@ -25,6 +25,11 @@ EVENT_ADD_GROUP = 11
 EVENT_DELETE_GROUP = 12
 EVENT_SET_ADMIN_PERMISSIONS = 13
 
+# VPN
+EVENT_NEW_VPN = 14
+EVENT_DELETE_VPN = 15
+EVENT_EDIT_VPN = 16
+
 
 class DAuditLog(DBase):
     __collection__ = 'action_log'

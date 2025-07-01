@@ -113,7 +113,7 @@
     row-gap: 10px;
 }
 
-.gbtn {
+.gbtn, .tbtn {
     text-wrap: balance;
     height: fit-content;
     height: 100%;
@@ -136,24 +136,28 @@
 }
 
 .gbtn.is-outlined,
-.pbtn.is-outlined {
+.pbtn.is-outlined,
+.tbtn.is-outlined {
     color: var(--text-primary);
     border-color: var(--background-accent-primary);
 }
 
 .gbtn:not(.is-outlined),
-.pbtn:not(.is-outlined) {
+.pbtn:not(.is-outlined),
+.tbtn:not(.is-outlined) {
     color: #fff !important;
 }
 
 .gbtn:hover,
 .pbtn:hover,
+.tbtn:hover,
 .button {
     border-color: var(--background-accent-primary);
 }
 
 .gbtn:hover,
-.pbtn:hover {
+.pbtn:hover,
+.tbtn:hover {
     background-color: var(--background-accent-secondary);
 }
 
@@ -168,4 +172,12 @@
 
 .button.is-danger.is-outlined:hover {
     background-color: #b42643;
+}
+
+.tbtn {
+    flex-grow: 1;
+}
+
+.tbtn:not(:last-child) {
+    margin-right: 5px !important;
 }

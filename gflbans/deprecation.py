@@ -1,13 +1,18 @@
 import asyncio
+from datetime import datetime, timedelta
+from math import ceil
 
+from dateutil.tz import UTC
 from packaging.version import Version
 from pymongo import ReturnDocument
 
 from gflbans.internal import shard
-from gflbans.internal.config import MONGO_DB
+from gflbans.internal.config import IPHUB_API_KEY, MONGO_DB
 from gflbans.internal.constants import GB_VERSION
 from gflbans.internal.database.group import DGroup
 from gflbans.internal.database.infraction import DInfraction
+from gflbans.internal.database.task import DTask
+from gflbans.internal.flags import INFRACTION_VPN
 from gflbans.internal.log import logger
 
 
@@ -93,3 +98,49 @@ async def deprecation_cleanup(app):
         },
     )
     logger.info(f'Updated from {old_version} to {GB_VERSION} and removed deprecated features.')
+
+
+async def full_vpn_check(app):
+    DATABASE_INFO_KEY = 'gflbans_info'
+    db = app.state.db[MONGO_DB]
+    info_collection = db['version_info']
+
+    version_info = await info_collection.find_one({'_id': DATABASE_INFO_KEY})
+
+    # Only do a full re-check on infraction IPs being a VPN if it was never done
+    if (
+        (version_info is None or not version_info.get('vpn_backfill_done', False))
+        and IPHUB_API_KEY
+        and IPHUB_API_KEY != 'APIKEYHERE'
+    ):
+        DAILY_LIMIT = 500  # 1k is daily limit for free key on IPHub
+        now = datetime.now(tz=UTC)
+        db = app.state.db[MONGO_DB]
+
+        cursor = db['infractions'].find(
+            {'ip': {'$exists': True, '$ne': None}, 'flags': {'$bitsAllClear': INFRACTION_VPN}},
+            {'_id': 1},
+            sort=[('_id', 1)],
+        )
+
+        i = 0
+        async for doc in cursor:
+            inf_id = doc['_id']
+
+            day_offset = i // DAILY_LIMIT
+            slot_in_day = i % DAILY_LIMIT
+            run_time = now + timedelta(days=day_offset, seconds=slot_in_day * 60)  # 1-min spacing
+
+            task = DTask(
+                run_at=run_time.timestamp(),
+                task_data={'i_id': inf_id},
+                ev_handler='get_vpn_data',
+            )
+            await task.commit(db)
+
+            i += 1
+
+        logger.info(f'Scheduled {i} VPN check tasks over {ceil(i / DAILY_LIMIT)} days.')
+
+        # Mark as complete
+        await info_collection.update_one({'_id': DATABASE_INFO_KEY}, {'$set': {'vpn_backfill_done': True}}, upsert=True)

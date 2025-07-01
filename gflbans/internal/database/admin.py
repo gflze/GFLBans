@@ -8,7 +8,7 @@ from gflbans.internal.config import MONGO_DB, ROOT_USER
 from gflbans.internal.database.common import DFile
 from gflbans.internal.database.dadmin import DAdmin
 from gflbans.internal.database.group import DGroup
-from gflbans.internal.flags import ALL_PERMISSIONS, PERMISSION_VPN_CHECK_SKIP
+from gflbans.internal.flags import ALL_PERMISSIONS
 from gflbans.internal.integrations.games.steam import _get_steam_user_info
 from gflbans.internal.integrations.ips import get_member_by_id_nc, ips_get_gsid_from_member_id, ips_process_avatar
 
@@ -19,7 +19,6 @@ class Admin:
 
         self.__loaded = False
         self.__dadmin: Optional[DAdmin] = None
-        self.__vpn_immunity = False
 
         self.__calc_privs = 0
 
@@ -66,9 +65,6 @@ class Admin:
 
             await self.__dadmin.commit(app.state.db[MONGO_DB])
 
-        if self.__dadmin.vpn_whitelist:
-            self.__vpn_immunity = True
-
         if self.__dadmin.ips_user != ROOT_USER:
             for grp in self.__dadmin.groups:
                 g = await DGroup.find_one_from_query(app.state.db[MONGO_DB], {'ips_group': grp})
@@ -84,9 +80,6 @@ class Admin:
             raise ValueError('Attempted to access Admin object before initialized.')
 
         privs = ALL_PERMISSIONS if self.__ips_id == 0 or self.__ips_id == ROOT_USER else self.__calc_privs
-
-        if self.__vpn_immunity:
-            privs |= PERMISSION_VPN_CHECK_SKIP
 
         return privs
 

@@ -29,7 +29,7 @@
                    class="navbar-item {% if page == 'guidelines' %}is-active{% endif %}"><i class="fas fa-file-alt nav-icon"></i>Guidelines
                 </a>
             {% endif %}
-            {% if user is not none and has_flag(user.permissions, bit_or(p_nodes['Manage Servers'], p_nodes['Manage Groups and Admins'], p_nodes['Manage API Keys'])) %}
+            {% if user is not none and has_flag(user.permissions, bit_or(p_nodes['Manage Servers'], p_nodes['Manage Groups and Admins'], p_nodes['Manage VPNs'])) %}
                 <div class="navbar-item has-dropdown is-hoverable">
                     <a href="/manage/"
                        class="navbar-link is-arrowless is-hoverable is-hidden-touch {% if page == 'manage' %}is-active{% endif %}"><i class="fas fa-user-shield nav-icon"></i>Manage
@@ -50,10 +50,10 @@
                                        href="/manage/server/"
                                        class="panel-block{% if mode == 'server' %} is-active{% endif %}">Servers</a>
                                 {% endif %}
-                                {% if user is not none and has_flag(user.permissions, p_nodes['Manage API Keys']) %}
+                                {% if user is not none and has_flag(user.permissions, p_nodes['Manage VPNs']) %}
                                     <a id="API-mgmt"
-                                       href="/manage/apikey/"
-                                       class="panel-block{% if mode == 'apikey' %} is-active{% endif %}">API Keys</a>
+                                       href="/manage/vpn/"
+                                       class="panel-block{% if mode == 'vpn' %} is-active{% endif %}">VPNs</a>
                                 {% endif %}
                             </div>
                         </div>

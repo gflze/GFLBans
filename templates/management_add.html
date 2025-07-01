@@ -69,9 +69,7 @@
                         class="button is-outlined is-danger is-hidden"
                         style="margin: 5px auto;
                                display: block">Generate New Token</button>
-            {% elif mode == 'apikey' %}
-            {% else %}
-                <!-- Admin -->
+            {% elif mode == 'admin' %}
                 <label class="label text-primary">Admin</label>
                 <div class="field">
                     <input id="nameEntry"
@@ -87,6 +85,35 @@
                 <div id="groupButtons" class="buttons">
                     <button class="gbtn button is-outlined">Root</button>
                 </div>
+            {% elif mode == 'vpn' %}
+                <label class="label text-primary">Type</label>
+                <div id="typeButtons" class="buttons">
+                    <button id="type-asn-button" class="tbtn button" value="asn">ASN</button>
+                    <button id="type-cidr-button" class="tbtn button is-outlined" value="cidr">CIDR</button>
+                </div>
+                <button id="type-dubious-button"
+                        class="button is-outlined is-danger"
+                        value="dubious"
+                        style="margin: 5px auto;
+                               width: 100%;
+                               display: block">Dubious (may have false positives)</button>
+                <label id="asn-identifier-label" class="label text-primary">ASN Number</label>
+                <input id="asn-identifier-input"
+                       class="input mb-2"
+                       type="number"
+                       placeholder="15169"
+                       onkeypress="return /[0-9]/i.test(event.key)">
+                <label id="cidr-identifier-label" class="label text-primary is-hidden">CIDR Range</label>
+                <input id="cidr-identifier-input"
+                       class="input mb-2 is-hidden"
+                       type="text"
+                       placeholder="192.168.0.1/24">
+                <label class="label text-primary">Comment</label>
+                <input id="vpn-comment"
+                       class="input mb-2"
+                       type="text"
+                       maxlength="120"
+                       placeholder="VPN name, description, etc.">
             {% endif %}
         </section>
         <footer class="modal-card-foot background-tertiary">

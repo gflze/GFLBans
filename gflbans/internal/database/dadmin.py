@@ -15,7 +15,6 @@ class DAdmin(DBase):
     groups: List[int] = []
     name: Optional[str]
     avatar: Optional[DFile]
-    vpn_whitelist = False
 
     @classmethod
     async def from_ips_user(cls, db_ref: AsyncIOMotorDatabase, ips_user: int):
