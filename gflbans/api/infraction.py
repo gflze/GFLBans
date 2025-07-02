@@ -22,7 +22,6 @@ from gflbans.api_util import (
     str_id,
     user_str,
 )
-from gflbans.internal.asn import VPN_DUBIOUS, VPN_YES, check_vpn
 from gflbans.internal.config import MONGO_DB
 from gflbans.internal.constants import AUTHED_USER, NOT_AUTHED_USER, SERVER_KEY
 from gflbans.internal.database.audit_log import (
@@ -344,11 +343,11 @@ async def check_infractions(
 
     # run a vpn check
     # do not check by IP if it is a VPN
-    if ip:
-        vpn_result = await check_vpn(request.app, ip)
-
-        if vpn_result == VPN_YES or vpn_result == VPN_DUBIOUS:
-            ip = None
+    # if ip:
+    #     vpn_result = await check_vpn(request.app, ip)
+    #
+    #     if vpn_result == VPN_YES or vpn_result == VPN_DUBIOUS:
+    #         ip = None
 
     q = build_query_dict(
         auth[0],
