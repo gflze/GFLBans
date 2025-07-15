@@ -1166,11 +1166,11 @@ async function submitVPNChange() {
     const route = '/api/vpn/';
     if (typeof vpnID === 'undefined' || vpnID === false) {
         // Adding new VPN
-        gbRequest('POST', route, vpnCall[1], true).then(handleGroupSubmission).catch(logException);
+        gbRequest('POST', route, vpnCall[1], true).then(handleVPNSubmission).catch(logException);
     } else {
         // Patching existing VPN
         vpnCall[1]['id'] = vpnID;
-        gbRequest('PATCH', route, vpnCall[1], true).then(handleGroupSubmission).catch(logException);
+        gbRequest('PATCH', route, vpnCall[1], true).then(handleVPNSubmission).catch(logException);
     }
 }
 
