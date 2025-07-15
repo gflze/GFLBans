@@ -6,7 +6,6 @@ from bson import ObjectId
 from dateutil.tz import UTC
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import ORJSONResponse
-from pydantic import conint
 from pymongo import ASCENDING
 from pymongo.errors import DuplicateKeyError
 from starlette.requests import Request
@@ -19,7 +18,7 @@ from gflbans.internal.database.audit_log import EVENT_DELETE_VPN, EVENT_EDIT_VPN
 from gflbans.internal.database.vpn import DVPN
 from gflbans.internal.flags import PERMISSION_MANAGE_VPNS
 from gflbans.internal.log import logger
-from gflbans.internal.models.api import PositiveIntIncl0, VPNInfo
+from gflbans.internal.models.api import VPNInfo
 from gflbans.internal.models.protocol import AddVPN, FetchBlocklistReply, PatchVPN, RemoveVPN
 
 vpn_router = APIRouter(default_response_class=ORJSONResponse)
@@ -199,9 +198,7 @@ async def remove_vpn(
     response_model_exclude_unset=True,
     response_model_exclude_none=True,
 )
-async def fetch_blocklist(
-    request: Request, skip: PositiveIntIncl0 = 0, limit: conint(gt=0, le=50) = 50, block_filter: Optional[str] = None
-):
+async def fetch_blocklist(request: Request, block_filter: Optional[str] = None):
     if block_filter is None:
         q = {}
     else:
@@ -214,9 +211,7 @@ async def fetch_blocklist(
 
     dvs = []
 
-    async for dv in DVPN.from_query(
-        request.app.state.db[MONGO_DB], q, skip=skip, sort=('added_on', ASCENDING), limit=limit
-    ):
+    async for dv in DVPN.from_query(request.app.state.db[MONGO_DB], q, sort=('added_on', ASCENDING)):
         vt = 'asn' if dv.is_asn else 'cidr'
         a = VPNInfo(id=str(dv.id), vpn_type=vt, is_dubious=dv.is_dubious, comment=dv.comment)
 
