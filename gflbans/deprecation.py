@@ -109,38 +109,63 @@ async def full_vpn_check(app):
 
     # Only do a full re-check on infraction IPs being a VPN if it was never done
     if (
-        (version_info is None or not version_info.get('vpn_backfill_done', False))
-        and IPHUB_API_KEY
-        and IPHUB_API_KEY != 'APIKEYHERE'
+        version_info is None
+        or version_info.get('vpn_backfill_done', False)
+        or not IPHUB_API_KEY
+        or IPHUB_API_KEY == 'APIKEYHERE'
     ):
-        DAILY_LIMIT = 500  # 1k is daily limit for free key on IPHub
-        now = datetime.now(tz=UTC)
-        db = app.state.db[MONGO_DB]
+        return
 
-        cursor = db['infractions'].find(
-            {'ip': {'$exists': True, '$ne': None}, 'flags': {'$bitsAllClear': INFRACTION_VPN}},
-            {'_id': 1},
-            sort=[('_id', 1)],
+    version_info = await info_collection.find_one_and_update(
+        {'_id': DATABASE_INFO_KEY},
+        {
+            '$setOnInsert': {'_id': DATABASE_INFO_KEY},
+            '$set': {'vpn_check_shard': shard},
+        },
+        upsert=True,
+        return_document=ReturnDocument.AFTER,
+    )
+
+    await asyncio.sleep(1)
+    version_info = await info_collection.find_one({'_id': DATABASE_INFO_KEY})
+
+    # To only run full_vpn_check once, only 1 shard should be allowed to run it
+    if version_info.get('vpn_check_shard') != shard:
+        return
+
+    DAILY_LIMIT = 500  # 1k is daily limit for free key on IPHub
+    now = datetime.now(tz=UTC)
+
+    cursor = db['infractions'].find(
+        {'ip': {'$exists': True, '$ne': None}, 'flags': {'$bitsAllClear': INFRACTION_VPN}},
+        {'_id': 1},
+        sort=[('_id', 1)],
+    )
+
+    i = 0
+    async for doc in cursor:
+        inf_id = doc['_id']
+
+        day_offset = i // DAILY_LIMIT
+        slot_in_day = i % DAILY_LIMIT
+        run_time = now + timedelta(days=day_offset, seconds=slot_in_day * 60)  # 1-min spacing
+
+        task = DTask(
+            run_at=run_time.timestamp(),
+            task_data={'i_id': inf_id},
+            ev_handler='get_vpn_data',
         )
+        await task.commit(db)
 
-        i = 0
-        async for doc in cursor:
-            inf_id = doc['_id']
+        i += 1
 
-            day_offset = i // DAILY_LIMIT
-            slot_in_day = i % DAILY_LIMIT
-            run_time = now + timedelta(days=day_offset, seconds=slot_in_day * 60)  # 1-min spacing
+    logger.info(f'Scheduled {i} VPN check tasks over {ceil(i / DAILY_LIMIT)} days.')
 
-            task = DTask(
-                run_at=run_time.timestamp(),
-                task_data={'i_id': inf_id},
-                ev_handler='get_vpn_data',
-            )
-            await task.commit(db)
-
-            i += 1
-
-        logger.info(f'Scheduled {i} VPN check tasks over {ceil(i / DAILY_LIMIT)} days.')
-
-        # Mark as complete
-        await info_collection.update_one({'_id': DATABASE_INFO_KEY}, {'$set': {'vpn_backfill_done': True}}, upsert=True)
+    # Mark backfill as done
+    await info_collection.update_one(
+        {'_id': DATABASE_INFO_KEY},
+        {
+            '$set': {'vpn_backfill_done': True},
+            '$unset': {'vpn_check_shard': None},
+        },
+    )
