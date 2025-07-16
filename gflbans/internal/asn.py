@@ -14,7 +14,7 @@ VPN_DUBIOUS = 2
 
 async def check_vpn(app, ip_addr: str) -> int:
     iphub_data = None
-
+    iphub_call_failed = False
     with suppress(RedisError):
         iphub_data = await app.state.ip_info_cache.get(ip_addr, 'iphubinfo')
 
@@ -38,6 +38,7 @@ async def check_vpn(app, ip_addr: str) -> int:
 
             except Exception as e:
                 logger.error('Call to IPHub API failed.', exc_info=e)
+                iphub_call_failed = True
                 # Dont return False yet, as we still can check cidr rule for manually defined ASNs
 
     if iphub_data and iphub_data.get('block', 0) == 1:
@@ -72,5 +73,8 @@ async def check_vpn(app, ip_addr: str) -> int:
         else:
             logger.info(f'{ip_addr} is a suspicious ip address per CIDR rule {cidr_vpn.payload} ({cidr_vpn.id})')
             is_dubious = True
+
+    if iphub_call_failed and not is_dubious:
+        raise Exception('Call to IPHub API failed and no manually defined rules matched IP')
 
     return VPN_DUBIOUS if is_dubious else VPN_NO
