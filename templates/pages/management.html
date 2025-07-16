@@ -21,7 +21,10 @@
         {% elif mode == 'vpn' %}
             <div class="notification is-danger has-text-centered"
                  style="margin-bottom: 0">
-                IPs are checked on <a href="https://iphub.info/">IPHub</a> first. A manually added ASN or CIDR is only used if IPHub does not flag the IP as a VPN.
+                <p>
+                    IPs are checked on <a href="https://iphub.info/">IPHub</a> first. A manually added ASN or CIDR is only used if IPHub does not flag the IP as a VPN.
+                </p>
+                <p>Dubious VPNs are only used for game server VPN checks and will not mark infractions as being on VPNs.</p>
             </div>
             <style>#mgmt-add{top: 8.5rem;}</style>
         {% endif %}
