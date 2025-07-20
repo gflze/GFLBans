@@ -19,8 +19,8 @@
     {% endif %}
     {# djlint: off #}
     <meta property="og:description"
-          content="**Duration:** {{ embed_duration(infraction) }}
-**Reason:** {{ infraction.reason }}">
+          content="Duration: {{ embed_duration(infraction) }}
+Reason: {{ infraction.reason }}">
     <meta property="og:type" content="website">
     {# djlint: on #}
     {% if infraction.user is not none and infraction.user.gs_avatar is not none %}
