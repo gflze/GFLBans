@@ -22,6 +22,7 @@ from gflbans.internal.database.infraction import DInfraction, DUser, build_query
 from gflbans.internal.database.rpc import DRPCPlayerUpdated
 from gflbans.internal.database.server import DServer
 from gflbans.internal.database.task import DTask
+from gflbans.internal.discord_calladmin import sanitize_discord_username
 from gflbans.internal.errors import NoSuchAdminError
 from gflbans.internal.flags import (
     INFRACTION_ADMIN_CHAT_BLOCK,
@@ -597,7 +598,7 @@ def target_link(dinf: DInfraction):
     name = 'Unknown Player' if dinf.user.gs_name is None else dinf.user.gs_name
 
     if dinf.user.gs_service == 'steam':
-        return f'[{name}](https://steamcommunity.com/profiles/{dinf.user.gs_id})'
+        return f'[{sanitize_discord_username(name)}](https://steamcommunity.com/profiles/{dinf.user.gs_id})'
     else:
         return name
 
