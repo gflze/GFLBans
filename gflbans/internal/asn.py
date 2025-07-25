@@ -33,7 +33,7 @@ async def check_vpn(app, ip_addr: str) -> int:
                             ip_addr,
                             iphub_data,
                             'iphubinfo',
-                            expire_time=IPHUB_CACHE_TIME,  # Cache for 1 week
+                            expire_time=IPHUB_CACHE_TIME,
                         )
 
             except Exception as e:
@@ -78,3 +78,32 @@ async def check_vpn(app, ip_addr: str) -> int:
         raise iphub_call_exception
 
     return VPN_DUBIOUS if is_dubious else VPN_NO
+
+
+async def check_location(app, ip_addr: str) -> str:
+    iphub_data = None
+    with suppress(RedisError):
+        iphub_data = await app.state.ip_info_cache.get(ip_addr, 'iphubinfo')
+
+    if iphub_data is None and IPHUB_API_KEY is not None and IPHUB_API_KEY != 'APIKEYHERE':
+        headers = {'X-Key': IPHUB_API_KEY}
+        async with app.state.aio_session.get(f'https://v2.api.iphub.info/ip/{ip_addr}', headers=headers) as resp:
+            try:
+                resp.raise_for_status()
+
+                if resp.status == 429:
+                    logger.warning('Rate limit exceeded for IPHub API')
+                else:
+                    iphub_data = await resp.json()
+                    with suppress(RedisError):
+                        await app.state.ip_info_cache.set(
+                            ip_addr,
+                            iphub_data,
+                            'iphubinfo',
+                            expire_time=IPHUB_CACHE_TIME,
+                        )
+
+            except Exception as e:
+                logger.error('Failed to check IP location.', exc_info=e)
+
+    return iphub_data['countryName'] if iphub_data and iphub_data.get('countryName') else None
