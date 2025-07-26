@@ -304,6 +304,7 @@ class CheckVPNReply(BaseModel):
     is_vpn: bool
     is_dubious: bool
     is_immune: bool
+    countryName: Optional[str]
 
 
 class ExecuteCallAdmin(BaseModel):

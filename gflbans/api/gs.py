@@ -14,7 +14,7 @@ from starlette.requests import Request
 
 from gflbans.api.auth import check_access
 from gflbans.api_util import construct_ci_resp
-from gflbans.internal.asn import VPN_DUBIOUS, VPN_YES, check_vpn
+from gflbans.internal.asn import VPN_DUBIOUS, VPN_YES, check_location, check_vpn
 from gflbans.internal.avatar import process_avatar
 from gflbans.internal.config import MONGO_DB
 from gflbans.internal.constants import NOT_AUTHED_USER, SERVER_KEY
@@ -274,6 +274,10 @@ async def vpn_check(
         cvpn_r.is_vpn = True
     elif vpn_result == VPN_DUBIOUS:
         cvpn_r.is_dubious = True
+
+    location = await check_location(request.app, q.player.ip)
+    if location:
+        cvpn_r.countryName = location
 
     try:
         if q.player.gs_service is not None and q.player.gs_id is not None:

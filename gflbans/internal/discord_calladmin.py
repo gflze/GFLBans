@@ -25,11 +25,32 @@ from gflbans.internal.models.protocol import ClaimCallAdmin, ExecuteCallAdmin
 STEAM_MODS = {'cs2', 'garrysmod'}
 
 
+def sanitize_discord_username(name: str) -> str:
+    replacements = {
+        '*': '﹡',  # U+FE61
+        '_': '＿',  # U+FF3F
+        '~': '〜',  # U+301C
+        '|': 'ǀ',  # U+01C0
+        '`': 'ˋ',  # U+02CB
+        '[': '⟦',  # U+27E6
+        ']': '⟧',  # U+27E7
+        '(': '﹙',  # U+FE59
+        ')': '﹚',  # U+FE5A
+        '<': '‹',  # U+2039
+        '>': '›',  # U+203A
+        '#': '＃',  # U+FF03
+        ':': '꞉',  # U+A789
+        '@': '＠',  # U+FF20
+    }
+    return ''.join(replacements.get(c, c) for c in name)
+
+
 def clickable_where_supported(name: str, ply: PlayerObjNoIp):
+    sanitized_name = sanitize_discord_username(name)
     if ply.gs_service == 'steam':
-        return f'[{name}](https://steamcommunity.com/profiles/{ply.gs_id})'
+        return f'[{sanitized_name}](https://steamcommunity.com/profiles/{ply.gs_id})'
     else:
-        return f'{name} ({ply.gs_service}/{ply.gs_id})'
+        return f'{sanitized_name} ({ply.gs_service}/{ply.gs_id})'
 
 
 def fn(srv):
