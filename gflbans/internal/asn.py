@@ -106,4 +106,10 @@ async def check_location(app, ip_addr: str) -> str:
             except Exception as e:
                 logger.error('Failed to check IP location.', exc_info=e)
 
-    return iphub_data['countryName'] if iphub_data and iphub_data.get('countryName') else None
+    if iphub_data and iphub_data.get('countryName'):
+        if iphub_data['countryName'] == 'ZZ':
+            return 'Local IP Address'
+        else:
+            return iphub_data['countryName']
+    else:
+        return None
