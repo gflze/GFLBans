@@ -22,7 +22,7 @@ from gflbans.api_util import (
     str_id,
     user_str,
 )
-from gflbans.internal.config import MONGO_DB
+from gflbans.internal.config import AUTO_STACK_MAX_AGE, AUTO_STACK_MULTIPLIER, AUTO_STACK_START_TIME, MONGO_DB
 from gflbans.internal.constants import AUTHED_USER, NOT_AUTHED_USER, SERVER_KEY
 from gflbans.internal.database.audit_log import (
     EVENT_DELETE_COMMENT,
@@ -538,7 +538,54 @@ async def create_infraction(
     if query.player.gs_id and query.allow_normalize:
         query.player.gs_id = await normalize_id(request.app, query.player.gs_service, query.player.gs_id)
 
-    # create a DInfraction
+    duration_to_use = query.duration
+
+    if query.auto_duration:
+        # Base query
+        q = build_query_dict(
+            auth[0],
+            str_id(auth[1]),
+            gs_service=query.player.gs_service,
+            gs_id=query.player.gs_id,
+            ip=query.player.ip,
+            ignore_others=False,
+            active_only=False,
+            exclude_removed=True,
+            playtime_based=query.playtime_based,
+        )
+
+        q['created'] = {'$gte': datetime.now(tz=UTC).timestamp() - AUTO_STACK_MAX_AGE}
+
+        # Determine the combined punishment flag
+        punishment_flag = 0
+        for punishment in query.punishments:
+            punishment_flag |= str2pflag.get(punishment, 0)
+
+        q.setdefault('flags', {})
+
+        if punishment_flag == 0:
+            # Warning
+            q['flags']['$bitsAllClear'] = q['flags'].get('$bitsAllClear', 0) | sum(str2pflag.values())
+        else:
+            q['flags']['$bitsAnySet'] = q['flags'].get('$bitsAnySet', 0) | punishment_flag
+
+        # Get the previous longest duration
+        longest = await find_longest_infraction_duration(request.app, q)
+
+        # Decide the new duration
+        if longest is None and query.duration:
+            duration_to_use = query.duration
+        elif longest is None or longest < 0:
+            duration_to_use = AUTO_STACK_START_TIME
+        elif longest == 0:
+            duration_to_use = None  # Permanent
+        else:
+            duration_to_use = longest * AUTO_STACK_MULTIPLIER
+
+    ten_years = 60 * 60 * 24 * 365 * 10
+    if duration_to_use and duration_to_use > ten_years:
+        duration_to_use = None  # Permanent
+
     dinf = create_dinfraction(
         player=query.player,
         reason=query.reason,
@@ -546,7 +593,7 @@ async def create_infraction(
         punishments=query.punishments,
         session=query.session,
         created=query.created,
-        duration=query.duration,
+        duration=duration_to_use,
         admin=acting_admin_id,
         playtime_based=query.playtime_based,
         server=server,

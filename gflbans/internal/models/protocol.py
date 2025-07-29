@@ -148,6 +148,7 @@ class InfractionStatisticsReply(BaseModel):
 class CreateInfraction(BaseModel):
     created: Optional[PositiveInt]
     duration: Optional[PositiveInt]
+    auto_duration: bool = False  # If True, ignores duration
     player: PlayerObjSimple
     admin: Optional[Initiator]
     reason: constr(min_length=1, max_length=280)
