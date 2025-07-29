@@ -23,12 +23,14 @@ const cCallAdminBtn = document.getElementById('restrictCallAdmin');
 const cItemBtn = document.getElementById('restrictItem');
 // Expiration
 const cExpirationSection = document.getElementById('cExpirationSection');
-const cPermanentCheck = document.getElementById('permanentCheck');
 const cTimeDecCheck = document.getElementById('timeDecCheck');
+const cAutoStackCheck = document.getElementById('autoStackCheck');
+const cPermanentCheck = document.getElementById('permanentCheck');
 const cDurationEntry = document.getElementById('durationEntry');
 const cDurationUnit = document.getElementById('unitSelector');
 const cTimeDecCheckField = document.getElementById('cTimeDecCheckField');
 const cDurationField = document.getElementById('cDurationField');
+const cAutoStackCheckField = document.getElementById('cAutoStackCheckField');
 const cPermCheckField = document.getElementById('cPermCheckField');
 
 // Loading modal
@@ -82,8 +84,9 @@ function resetModal() {
     $(cTimeDecCheckField).removeClass('is-hidden');
     $(cDurationField).removeClass('is-hidden');
 
-    $(cPermanentCheck).prop('checked', false);
     $(cTimeDecCheck).prop('checked', false);
+    $(cAutoStackCheck).prop('checked', false);
+    $(cPermanentCheck).prop('checked', false);
     $(cDurationEntry).val('');
     setSelection(cDurationUnit, 'h');
     $('#cInfractionSubmit').off('click');
@@ -137,23 +140,31 @@ function toggleButton(target) {
 function handlePermCheck() {
     if ($(cPermanentCheck).prop('checked')) {
         $(cTimeDecCheck).prop('checked', false);
-        handleTimeDecCheck();
+        $(cAutoStackCheck).prop('checked', false);
+        handleNonPermCheck();
         $(cTimeDecCheckField).addClass('is-hidden');
+        $(cAutoStackCheckField).addClass('is-hidden');
         $(cDurationField).addClass('is-hidden');
     } else {
         $(cDurationField).removeClass('is-hidden');
+        $(cAutoStackCheckField).removeClass('is-hidden');
         $(cTimeDecCheckField).removeClass('is-hidden');
     }
 }
 
-function handleTimeDecCheck() {
-    if ($(cTimeDecCheck).prop('checked')) {
+function handleNonPermCheck() {
+    if ($(cTimeDecCheck).prop('checked') || $(cAutoStackCheck).prop('checked')) {
         $(cPermanentCheck).prop('checked', false);
         handlePermCheck();
         $(cPermCheckField).addClass('is-hidden');
     } else {
         $(cPermCheckField).removeClass('is-hidden');
     }
+
+    if ($(cAutoStackCheck).prop('checked'))
+        $(cDurationField).addClass('is-hidden');
+    else
+        $(cDurationField).removeClass('is-hidden');
 }
 
 async function loadModal() {
@@ -243,7 +254,8 @@ function openModal() {
 $(document).ready(function () {
     $(cWebCheck).click(handleWebCheckChanged);
     $(cPermanentCheck).click(handlePermCheck);
-    $(cTimeDecCheck).click(handleTimeDecCheck);
+    $(cAutoStackCheck).click(handleNonPermCheck);
+    $(cTimeDecCheck).click(handleNonPermCheck);
     $('.rbtn').click(function (ev) {
         toggleButton(ev.target);
     });
@@ -388,14 +400,13 @@ function createAndValidateInfraction() {
 
     // Duration
     try {
-        if ($(cPermanentCheck).prop('checked')) {
-            // A permanent infraction has no duration field
-        } else if ($(cTimeDecCheck).prop('checked')) {
-            infraction['playtime_based'] = true;
-            infraction['duration'] = getInfractionSeconds();
-        } else {
-            infraction['playtime_based'] = false;
-            infraction['duration'] = getInfractionSeconds();
+        // A permanent infraction has no duration field
+        if (!$(cPermanentCheck).prop('checked')) {
+            infraction['playtime_based'] = $(cTimeDecCheck).prop('checked');
+            if ($(cAutoStackCheck).prop('checked'))
+                infraction['auto_duration'] = true;
+            else
+                infraction['duration'] = getInfractionSeconds();
         }
     } catch (e) {
         return [false, e];

@@ -16,6 +16,15 @@ MEDIA_URL = config('MEDIA_URL', default='https://bans.gflclan.com/media/')
 STATIC_URL = config('STATIC_URL', default='https://bans.gflclan.com/static/')
 HOST = config('HOST', default='bans.gflclan.com')
 
+# Auto stacking infractions
+AUTO_STACK_START_TIME = config('AUTO_STACK_START_TIME', cast=int, default=60 * 30)  # Duration if no infraction history
+AUTO_STACK_MAX_AGE = config(
+    'AUTO_STACK_MAX_AGE', cast=int, default=60 * 60 * 24 * 365
+)  # Max age of previous infractions to stack with (based on their creation date)
+AUTO_STACK_MULTIPLIER = config(
+    'AUTO_STACK_MULTIPLIER', cast=float, default=2.0
+)  # How much to multiply longest past duration by to get new duration
+
 DISABLE_GUIDELINES = config('DISABLE_GUIDELINES', cast=bool, default=True)
 PRODUCTION = config('PRODUCTION', cast=bool, default=True)
 MAX_UPLOAD_SIZE = config('MAX_UPLOAD_SIZE', cast=int, default=(30 * 1024 * 1024))
