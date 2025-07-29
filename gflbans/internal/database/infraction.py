@@ -109,15 +109,16 @@ def build_query_dict(
         cond2 = {'$or': vpnf}
         _branch(f, cond2)
 
-    f.setdefault('flags', {})
-
     if active_only or exclude_removed:
         f['flags'] = {'$bitsAllClear': INFRACTION_REMOVED}
 
     if playtime_based:
-        f['flags']['$bitsAllSet'] = f['flags'].get('$bitsAllSet', 0) | INFRACTION_PLAYTIME_DURATION
-    else:
-        f['flags']['$bitsAllClear'] = f['flags'].get('$bitsAllClear', 0) | INFRACTION_PLAYTIME_DURATION
+        if 'flags' not in f:
+            f['flags'] = {'$bitsAllSet': INFRACTION_PLAYTIME_DURATION}
+        elif '$bitsAllSet' not in f['flags']:
+            f['flags']['$bitsAllSet'] = INFRACTION_PLAYTIME_DURATION
+        else:
+            f['flags']['$bitsAllSet'] |= INFRACTION_PLAYTIME_DURATION
 
     # Filter out server only bans that do not match our server
     if actor_type == SERVER_KEY:

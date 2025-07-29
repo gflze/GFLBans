@@ -44,6 +44,7 @@ from gflbans.internal.flags import (
     INFRACTION_CHAT_BLOCK,
     INFRACTION_ITEM_BLOCK,
     INFRACTION_PERMANENT,
+    INFRACTION_PLAYTIME_DURATION,
     INFRACTION_SESSION,
     INFRACTION_VOICE_BLOCK,
     PERMISSION_ADMIN_CHAT_BLOCK,
@@ -553,6 +554,9 @@ async def create_infraction(
             exclude_removed=True,
             playtime_based=query.playtime_based,
         )
+
+        if not query.playtime_based:
+            q['flags']['$bitsAllClear'] = q['flags'].get('$bitsAllClear', 0) | INFRACTION_PLAYTIME_DURATION
 
         q['created'] = {'$gte': datetime.now(tz=UTC).timestamp() - AUTO_STACK_MAX_AGE}
 
