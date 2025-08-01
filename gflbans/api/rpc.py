@@ -29,10 +29,10 @@ rpc_router = APIRouter()
 
 @rpc_router.get('/poll')
 async def rpc_poll(request: Request, auth: Tuple[int, Optional[ObjectId], int] = Depends(check_access)):
-    if auth[0] != SERVER_KEY:
+    if auth.type != SERVER_KEY:
         raise HTTPException(detail='Only servers may use this route!', status_code=403)
 
-    devs = await DRPCEventBase.poll(request.app.state.db[MONGO_DB], auth[1], ack_on_read=True)
+    devs = await DRPCEventBase.poll(request.app.state.db[MONGO_DB], auth.actor_id, ack_on_read=True)
 
     evs = []
     for dev in devs:
@@ -49,7 +49,7 @@ async def rpc_ws(websocket: WebSocket):
 
     auth = await check_access(websocket, authorization=websocket.headers['Authorization'])
 
-    if auth[0] != SERVER_KEY:
+    if auth.type != SERVER_KEY:
         # Only servers can connect to the ws endpoint
         await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
         return
@@ -74,11 +74,11 @@ async def rpc_ws(websocket: WebSocket):
                 if dev_d is None:
                     continue
 
-                if dev_d['target'] == auth[1]:
+                if dev_d['target'] == auth.actor_id:
                     await websocket.app.state.db[MONGO_DB].rpc.delete_one({'_id': ack_id})
                 else:
                     await websocket.app.state.db[MONGO_DB].rpc.update_one(
-                        {'_id': ack_id}, {'$push': {'acknowledged_by': auth[1]}}
+                        {'_id': ack_id}, {'$push': {'acknowledged_by': auth.actor_id}}
                     )
             except CancelledError:
                 raise
@@ -89,7 +89,7 @@ async def rpc_ws(websocket: WebSocket):
 
     while True:
         await asyncio.sleep(1)
-        devs = await DRPCEventBase.poll(websocket.app.state.db[MONGO_DB], auth[1])
+        devs = await DRPCEventBase.poll(websocket.app.state.db[MONGO_DB], auth.actor_id)
 
         for dev in devs:
             await websocket.send_text(orjson.dumps(dev.as_api().dict()).decode('utf-8'))
@@ -99,13 +99,13 @@ async def rpc_ws(websocket: WebSocket):
 async def rpc_kick(
     request: Request, rpc_kick_req: RPCKickRequest, auth: Tuple[int, Optional[ObjectId], int] = Depends(check_access)
 ):
-    if auth[0] != AUTHED_USER and auth[0] != API_KEY:
+    if auth.type != AUTHED_USER and auth.type != API_KEY:
         raise HTTPException(status_code=403, detail='Bad key type')
 
-    if auth[2] & PERMISSION_RPC_KICK != PERMISSION_RPC_KICK:
+    if auth.permissions & PERMISSION_RPC_KICK != PERMISSION_RPC_KICK:
         raise HTTPException(status_code=403, detail='You do not have permission to do this!')
 
-    acting_admin, _ = await get_acting(request, None, auth[0], auth[1])
+    acting_admin, _ = await get_acting(request, None, auth.type, auth.actor_id)
 
     # Create audit log entry
     log_msg = (
@@ -117,7 +117,7 @@ async def rpc_kick(
         time=datetime.now(tz=UTC),
         event_type=EVENT_RPC_KICK,
         initiator=acting_admin.mongo_admin_id,
-        key_pair=(auth[0], auth[1]),
+        key_pair=(auth.type, auth.actor_id),
         message=log_msg,
     )
 

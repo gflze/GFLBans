@@ -61,7 +61,7 @@ async def download_file(
             raise HTTPException(detail='Requested file is not a WEBP image', status_code=400)
         if fos.length > (10 * 1024 * 1024):
             raise HTTPException(detail='File is too big to be converted on demand', status_code=400)
-        if auth[0] != SERVER_KEY and auth[0] != API_KEY:
+        if auth.type != SERVER_KEY and auth.type != API_KEY:
             raise HTTPException(detail='Must be either a server or an api key to make this request', status_code=403)
 
         file_contents = await fos.read()

@@ -106,10 +106,10 @@ async def _process_heartbeat_multiple_players(app, ply_list: list[PlayerObjIPOpt
 async def heartbeat(
     request: Request, beat: Heartbeat, auth: Tuple[int, Optional[ObjectId], int] = Depends(check_access)
 ):
-    if auth[0] != SERVER_KEY:
+    if auth.type != SERVER_KEY:
         raise HTTPException(detail='You must be authed as a server to use this route', status_code=403)
 
-    srv = await DServer.from_id(request.app.state.db[MONGO_DB], auth[1])
+    srv = await DServer.from_id(request.app.state.db[MONGO_DB], auth.actor_id)
 
     if srv is None:
         raise HTTPException(status_code=500, detail='This should not happen')
@@ -160,8 +160,8 @@ async def heartbeat(
         for p in pc:
             conds.append(
                 build_query_dict(
-                    auth[0],
-                    auth[1],
+                    auth.type,
+                    auth.actor_id,
                     gs_service=p.gs_service,
                     gs_id=p.gs_id,
                     ip=p.ip,
@@ -198,8 +198,8 @@ async def heartbeat(
                         check=await construct_ci_resp(
                             request.app.state.db[MONGO_DB],
                             build_query_dict(
-                                auth[0],
-                                auth[1],
+                                auth.type,
+                                auth.actor_id,
                                 gs_service=p.gs_service,
                                 gs_id=p.gs_id,
                                 ip=p.ip,
@@ -246,7 +246,7 @@ async def heartbeat(
                     else None,
                     'content': message.content,
                     'created': message.created,
-                    'server': ObjectId(auth[1]),
+                    'server': ObjectId(auth.actor_id),
                 }
                 for message in beat.messages
             ]
@@ -264,7 +264,7 @@ async def heartbeat(
 async def vpn_check(
     request: Request, q: CheckVPN = Depends(CheckVPN), auth: Tuple[int, Optional[ObjectId], int] = Depends(check_access)
 ):
-    if auth[0] == NOT_AUTHED_USER:
+    if auth.type == NOT_AUTHED_USER:
         raise HTTPException(detail='This route requires authentication', status_code=401)
     cvpn_r = CheckVPNReply(is_vpn=False, is_dubious=False, is_immune=False)
 
@@ -302,10 +302,10 @@ async def vpn_check(
 async def call_admin(
     request: Request, exe: ExecuteCallAdmin, auth: Tuple[int, Optional[ObjectId], int] = Depends(check_access)
 ):
-    if auth[0] != SERVER_KEY:
+    if auth.type != SERVER_KEY:
         raise HTTPException(detail='Only servers can use this route', status_code=403)
 
-    srv = await DServer.from_id(request.app.state.db[MONGO_DB], auth[1])
+    srv = await DServer.from_id(request.app.state.db[MONGO_DB], auth.actor_id)
 
     if srv is None:
         raise HTTPException(status_code=500, detail='This should not happen lol')
@@ -315,8 +315,8 @@ async def call_admin(
 
     # Check if the target is banned
     q = build_query_dict(
-        auth[0],
-        auth[1],
+        auth.type,
+        auth.actor_id,
         gs_service=exe.caller.gs_service,
         gs_id=exe.caller.gs_id,
         ignore_others=exe.include_other_servers,
@@ -360,10 +360,10 @@ async def call_admin(
 async def claim_call(
     request: Request, claim: ClaimCallAdmin, auth: Tuple[int, Optional[ObjectId], int] = Depends(check_access)
 ):
-    if auth[0] != SERVER_KEY:
+    if auth.type != SERVER_KEY:
         raise HTTPException(detail='Only servers can use this route', status_code=403)
 
-    srv = await DServer.from_id(request.app.state.db[MONGO_DB], auth[1])
+    srv = await DServer.from_id(request.app.state.db[MONGO_DB], auth.actor_id)
 
     if srv is None:
         raise HTTPException(status_code=500, detail='This should not happen lol')

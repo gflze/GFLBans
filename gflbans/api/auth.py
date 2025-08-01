@@ -1,6 +1,6 @@
 import re
 from hashlib import sha512
-from typing import Optional, Tuple
+from typing import NamedTuple, Optional, Tuple
 
 from bson import ObjectId
 from fastapi import Depends, Header, HTTPException, Query
@@ -22,6 +22,13 @@ auth_header_regex = re.compile(
 user_session_regex = re.compile(r'^(?P<sessionId>[a-z0-9A-Z]+)_(?P<sessionSecret>[a-z0-9A-Z]+)$')
 
 
+class AuthInfo(NamedTuple):
+    type: int
+    authenticator_id: Optional[ObjectId]
+    permissions: int
+    actor_id: Optional[ObjectId]  # Only used if type is SERVER_KEY or API_KEY
+
+
 # break this out from the main api stuff so it can be used for RPC auth
 async def handle_auth_header(app, authorization, real_ip='') -> Tuple[int, Optional[ObjectId], int]:
     auth_header = auth_header_regex.match(authorization).groupdict()
@@ -39,7 +46,7 @@ async def handle_auth_header(app, authorization, real_ip='') -> Tuple[int, Optio
             logger.info(f'Rejected api key {auth_header["actorId"]} from {real_ip}')
             raise HTTPException(detail='Invalid API Key', status_code=401)
 
-        return API_KEY, actor_id, int(api_key['privileges'])
+        return AuthInfo(API_KEY, api_key['_id'], int(api_key['privileges']), actor_id)
     elif auth_header['actorType'].lower() == 'server':
         server = await app.state.db[MONGO_DB].servers.find_one({'_id': actor_id})
 
@@ -52,7 +59,7 @@ async def handle_auth_header(app, authorization, real_ip='') -> Tuple[int, Optio
             logger.info(f'Rejected server key for {auth_header["actorId"]} from {real_ip}')
             raise HTTPException(detail='Invalid API Key', status_code=401)
 
-        return SERVER_KEY, actor_id, SERVER_KEY_PERMISSIONS
+        return AuthInfo(SERVER_KEY, server['_id'], SERVER_KEY_PERMISSIONS, actor_id)
     else:
         raise HTTPException(detail='Invalid token type', status_code=401)
 
@@ -79,9 +86,9 @@ async def check_access(
 
     # If session is not set, just return an unauthed user
     if c_user is None:
-        return NOT_AUTHED_USER, None, 0
+        return AuthInfo(NOT_AUTHED_USER, None, 0, None)
     else:
-        return AUTHED_USER, c_user.mongo_admin_id, c_user.permissions
+        return AuthInfo(AUTHED_USER, c_user.mongo_admin_id, c_user.permissions, c_user.mongo_admin_id)
 
 
 async def csrf_protect(
@@ -89,7 +96,7 @@ async def csrf_protect(
     x_csrf_token: str = Header(None, description='The CSRF Token'),
     auth: Tuple[int, Optional[ObjectId], int] = Depends(check_access),
 ):
-    if auth[0] != AUTHED_USER:
+    if auth.type != AUTHED_USER:
         return None
 
     if x_csrf_token is None:
