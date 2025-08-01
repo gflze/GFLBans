@@ -1,5 +1,4 @@
 # Actor Types
-
 SERVER_KEY = 0
 API_KEY = 1
 AUTHED_USER = 2

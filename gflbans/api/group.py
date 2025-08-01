@@ -57,10 +57,10 @@ async def get_group(request: Request, ips_group: PositiveIntIncl0):
 async def update_group(
     request: Request, ug_query: UpdateGroup, auth: Tuple[int, Optional[ObjectId], int] = Depends(check_access)
 ):
-    if auth[0] == NOT_AUTHED_USER:
+    if auth.type == NOT_AUTHED_USER:
         raise HTTPException(status_code=401, detail='You must be authenticated to do this!')
 
-    if auth[2] & PERMISSION_MANAGE_GROUPS_AND_ADMINS != PERMISSION_MANAGE_GROUPS_AND_ADMINS:
+    if auth.permissions & PERMISSION_MANAGE_GROUPS_AND_ADMINS != PERMISSION_MANAGE_GROUPS_AND_ADMINS:
         raise HTTPException(detail='You do not have permission to do this!', status_code=403)
     # Try to find lowest unused value to set new ips_group to
     groups = await py_get_groups(request.app)
@@ -71,18 +71,20 @@ async def update_group(
 
     new_group = DGroup(ips_group=available_groups[0], name=ug_query.name, privileges=ug_query.privileges)
 
-    ev_string = f'{auth[0]}/{auth[1]} created group {new_group.ips_group} with privileges {new_group.privileges}'
+    ev_string = (
+        f'{auth.type}/{auth.actor_id} created group {new_group.ips_group} with privileges {new_group.privileges}'
+    )
 
     logger.info(ev_string)
 
-    i = auth[1] if auth[1] == AUTHED_USER else None
+    i = auth.actor_id if auth.actor_id == AUTHED_USER else None
 
     await DAuditLog(
         time=datetime.now(tz=UTC),
         event_type=EVENT_ADD_GROUP,
         initiator=i,
         message=ev_string,
-        key_pair=(auth[0], auth[1]),
+        key_pair=(auth.type, auth.actor_id),
     ).commit(request.app.state.db[MONGO_DB])
 
     await new_group.commit(request.app.state.db[MONGO_DB])
@@ -98,10 +100,10 @@ async def update_group(
 async def delete_group(
     request: Request, ips_group: int, auth: Tuple[int, Optional[ObjectId], int] = Depends(check_access)
 ):
-    if auth[0] == NOT_AUTHED_USER:
+    if auth.type == NOT_AUTHED_USER:
         raise HTTPException(status_code=401, detail='You must be authenticated to do this!')
 
-    if auth[2] & PERMISSION_MANAGE_GROUPS_AND_ADMINS != PERMISSION_MANAGE_GROUPS_AND_ADMINS:
+    if auth.permissions & PERMISSION_MANAGE_GROUPS_AND_ADMINS != PERMISSION_MANAGE_GROUPS_AND_ADMINS:
         raise HTTPException(detail='You do not have permission to do this!', status_code=403)
     dg = await DGroup.find_one_from_query(request.app.state.db[MONGO_DB], {'ips_group': ips_group})
 
@@ -116,18 +118,18 @@ async def delete_group(
         admin.groups.remove(ips_group)
         await admin.commit(request.app.state.db[MONGO_DB])
 
-    ev_string = f'{auth[0]}/{auth[1]} deleted group {ips_group}'
+    ev_string = f'{auth.type}/{auth.actor_id} deleted group {ips_group}'
 
     logger.info(ev_string)
 
-    i = auth[1] if auth[1] == AUTHED_USER else None
+    i = auth.actor_id if auth.actor_id == AUTHED_USER else None
 
     await DAuditLog(
         time=datetime.now(tz=UTC),
         event_type=EVENT_DELETE_GROUP,
         initiator=i,
         message=ev_string,
-        key_pair=(auth[0], auth[1]),
+        key_pair=(auth.type, auth.actor_id),
     ).commit(request.app.state.db[MONGO_DB])
 
     await request.app.state.db[MONGO_DB][DGroup.__collection__].delete_one({'ips_group': ips_group})
@@ -146,10 +148,10 @@ async def patch_group(
     ug_query: UpdateGroup,
     auth: Tuple[int, Optional[ObjectId], int] = Depends(check_access),
 ):
-    if auth[0] == NOT_AUTHED_USER:
+    if auth.type == NOT_AUTHED_USER:
         raise HTTPException(status_code=401, detail='You must be authenticated to do this!')
 
-    if auth[2] & PERMISSION_MANAGE_GROUPS_AND_ADMINS != PERMISSION_MANAGE_GROUPS_AND_ADMINS:
+    if auth.permissions & PERMISSION_MANAGE_GROUPS_AND_ADMINS != PERMISSION_MANAGE_GROUPS_AND_ADMINS:
         raise HTTPException(detail='You do not have permission to do this!', status_code=403)
     dg = await DGroup.find_one_from_query(request.app.state.db[MONGO_DB], {'ips_group': ips_group})
 
@@ -159,18 +161,18 @@ async def patch_group(
     dg.name = ug_query.name
     dg.privileges = ug_query.privileges
 
-    ev_string = f'{auth[0]}/{auth[1]} patched the permissions of {dg.ips_group} to {ug_query.privileges}'
+    ev_string = f'{auth.type}/{auth.actor_id} patched the permissions of {dg.ips_group} to {ug_query.privileges}'
 
     logger.info(ev_string)
 
-    i = auth[1] if auth[1] == AUTHED_USER else None
+    i = auth.actor_id if auth.actor_id == AUTHED_USER else None
 
     await DAuditLog(
         time=datetime.now(tz=UTC),
         event_type=EVENT_SET_GROUP_PERMISSIONS,
         initiator=i,
         message=ev_string,
-        key_pair=(auth[0], auth[1]),
+        key_pair=(auth.type, auth.actor_id),
     ).commit(request.app.state.db[MONGO_DB])
 
     await dg.commit(request.app.state.db[MONGO_DB])

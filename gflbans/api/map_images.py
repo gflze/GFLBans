@@ -68,7 +68,7 @@ async def write_map_image(
     contents: UploadFile = File(...),
     auth: Tuple[int, Optional[ObjectId], int] = Depends(check_access),
 ):
-    if auth[2] & PERMISSION_MANAGE_MAP_ICONS != PERMISSION_MANAGE_MAP_ICONS:
+    if auth.permissions & PERMISSION_MANAGE_MAP_ICONS != PERMISSION_MANAGE_MAP_ICONS:
         raise HTTPException(status_code=403, detail='You do not have permission to do this!')
 
     if not contents.content_type.startswith('image'):

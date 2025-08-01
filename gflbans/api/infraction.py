@@ -109,13 +109,13 @@ async def get_infractions(
     load_fast: bool = True,
     auth: Tuple[int, Optional[ObjectId], int] = Depends(check_access),
 ):
-    incl_ip = should_include_ip(auth[0], auth[2])  # Check if we have perms to see IP addresses
+    incl_ip = should_include_ip(auth.type, auth.permissions)  # Check if we have perms to see IP addresses
 
     ip = query.ip if incl_ip else None  # If we do not have permissions, force this value to None
 
     q = build_query_dict(
-        auth[0],
-        str_id(auth[1]),
+        auth.type,
+        str_id(auth.actor_id),
         gs_service=query.player.gs_service,
         gs_id=query.player.gs_id,
         ip=ip,
@@ -123,7 +123,7 @@ async def get_infractions(
         active_only=query.active_only,
     )
 
-    exclude_priv_comments = exclude_private_comments(auth[0], auth[2])
+    exclude_priv_comments = exclude_private_comments(auth.type, auth.permissions)
     infs = []
 
     async for dinf in DInfraction.from_query(
@@ -155,7 +155,10 @@ async def get_infraction(
         raise HTTPException(detail='No such infraction', status_code=404)
 
     return await as_infraction(
-        request.app, inf, should_include_ip(auth[0], auth[2]), exclude_private_comments(auth[0], auth[2])
+        request.app,
+        inf,
+        should_include_ip(auth.type, auth.permissions),
+        exclude_private_comments(auth.type, auth.permissions),
     )
 
 
@@ -171,7 +174,7 @@ async def search_infractions(
     load_fast: bool = True,
     auth: Tuple[int, Optional[ObjectId], int] = Depends(check_access),
 ):
-    incl_ip = should_include_ip(auth[0], auth[2])
+    incl_ip = should_include_ip(auth.type, auth.permissions)
 
     try:
         cq = await do_infraction_search(request.app, query, include_ip=incl_ip)
@@ -191,7 +194,9 @@ async def search_infractions(
         if dinf.expires is not None and dinf.expires > MAX_UNIX_TIMESTAMP:
             dinf.expires = None
 
-        infs.append(await as_infraction(request.app, dinf, incl_ip, exclude_private_comments(auth[0], auth[2])))
+        infs.append(
+            await as_infraction(request.app, dinf, incl_ip, exclude_private_comments(auth.type, auth.permissions))
+        )
 
     return GetInfractionsReply(results=infs, total_matched=await DInfraction.count(request.app.state.db[MONGO_DB], cq))
 
@@ -286,7 +291,7 @@ async def search_recursive_infractions(
     load_fast: bool = True,
     auth: Tuple[int, Optional[ObjectId], int] = Depends(check_access),
 ):
-    incl_ip = should_include_ip(auth[0], auth[2])
+    incl_ip = should_include_ip(auth.type, auth.permissions)
     # If we do not have permission to view IP, force it to None
     ip = query.ip if incl_ip else None
 
@@ -317,7 +322,7 @@ async def search_recursive_infractions(
     # Apply skip and limit
     paginated_infractions = sorted_infractions[query.skip : query.skip + query.limit]
 
-    exclude_priv_comments = exclude_private_comments(auth[0], auth[2])
+    exclude_priv_comments = exclude_private_comments(auth.type, auth.permissions)
 
     return GetInfractionsReply(
         results=[
@@ -335,7 +340,7 @@ async def check_infractions(
     query: CheckInfractions = Depends(CheckInfractions),
     auth: Tuple[int, Optional[ObjectId], int] = Depends(check_access),
 ):
-    incl_ip = should_include_ip(auth[0], auth[2])  # Check if we have perms to see IP addresses
+    incl_ip = should_include_ip(auth.type, auth.permissions)  # Check if we have perms to see IP addresses
 
     ip = query.ip if incl_ip else None  # If we do not have permissions, force this value to None
 
@@ -351,8 +356,8 @@ async def check_infractions(
     #         ip = None
 
     q = build_query_dict(
-        auth[0],
-        str_id(auth[1]),
+        auth.type,
+        str_id(auth.actor_id),
         gs_service=query.player.gs_service,
         gs_id=query.player.gs_id,
         ip=ip,
@@ -396,14 +401,14 @@ async def infraction_stats(
     query: CheckInfractions = Depends(CheckInfractions),
     auth: Tuple[int, Optional[ObjectId], int] = Depends(check_access),
 ):
-    ip = query.ip if should_include_ip(auth[0], auth[2]) else None
+    ip = query.ip if should_include_ip(auth.type, auth.permissions) else None
 
     if ip is None and query.player is None:
         raise HTTPException(detail='Cannot have both an empty ip and an empty player', status_code=401)
 
     q = build_query_dict(
-        auth[0],
-        str_id(auth[1]),
+        auth.type,
+        str_id(auth.actor_id),
         gs_service=query.player.gs_service,
         gs_id=query.player.gs_id,
         ip=ip,
@@ -510,20 +515,20 @@ async def create_infraction(
     tasks: BackgroundTasks,
     auth: Tuple[int, Optional[ObjectId], int] = Depends(check_access),
 ):
-    if auth[0] == NOT_AUTHED_USER:
+    if auth.type == NOT_AUTHED_USER:
         raise HTTPException(detail='This route requires authorization.', status_code=401)
 
-    acting_admin, acting_admin_id = await get_acting(request, query.admin, auth[0], auth[1])
+    acting_admin, acting_admin_id = await get_acting(request, query.admin, auth.type, auth.actor_id)
 
     # Server
     if query.server is not None:
-        if auth[2] & PERMISSION_ASSIGN_TO_SERVER != PERMISSION_ASSIGN_TO_SERVER:
+        if auth.permissions & PERMISSION_ASSIGN_TO_SERVER != PERMISSION_ASSIGN_TO_SERVER:
             raise HTTPException(detail='Insufficient permissions to override the server', status_code=403)
 
         # If infraction is issued through a server and the admin cant issue global punishments,
         # just make the infraction server only
         if (
-            auth[0] == SERVER_KEY
+            auth.type == SERVER_KEY
             and query.scope == 'global'
             and query.admin is not None
             and acting_admin.permissions & PERMISSION_SCOPE_GLOBAL != PERMISSION_SCOPE_GLOBAL
@@ -531,8 +536,8 @@ async def create_infraction(
             query.scope = 'server'
 
         server = ObjectId(query.server)
-    elif auth[0] == SERVER_KEY and auth[1] is not None:
-        server = auth[1]
+    elif auth.type == SERVER_KEY and auth.actor_id is not None:
+        server = auth.actor_id
     else:
         server = None
 
@@ -544,8 +549,8 @@ async def create_infraction(
     if query.auto_duration:
         # Base query
         q = build_query_dict(
-            auth[0],
-            str_id(auth[1]),
+            auth.type,
+            str_id(auth.actor_id),
             gs_service=query.player.gs_service,
             gs_id=query.player.gs_id,
             ip=query.player.ip,
@@ -605,7 +610,7 @@ async def create_infraction(
 
     rp = get_permissions(dinf)
 
-    if (acting_admin.permissions & rp != rp and not query.import_mode) or auth[2] & rp != rp:
+    if (acting_admin.permissions & rp != rp and not query.import_mode) or auth.permissions & rp != rp:
         raise HTTPException(detail='Insufficient privileges', status_code=403)
 
     aa = acting_admin if acting_admin.mongo_admin_id is not None else None
@@ -621,7 +626,7 @@ async def create_infraction(
         time=datetime.now(tz=UTC),
         event_type=EVENT_NEW_INFRACTION,
         initiator=acting_admin.mongo_admin_id,
-        key_pair=(auth[0], auth[1]),
+        key_pair=(auth.type, auth.actor_id),
         message=f'{acting_admin.name} ({acting_admin.ips_id}) created an infraction {dinf.id} with flags'
         f' {dinf.flags} on {user_str(dinf)}, import_mode = {query.import_mode}',
     )
@@ -639,9 +644,9 @@ async def create_infraction(
     # For the front end, we want to make sure we have all the information before returning
     if query.do_full_infraction:
         if dinf.user is not None:
-            await get_user_data(request.app, dinf.id, True, auth[0] == SERVER_KEY)
+            await get_user_data(request.app, dinf.id, True, auth.type == SERVER_KEY)
         else:
-            await discord_notify_create_infraction(request.app, dinf, auth[0] == SERVER_KEY)
+            await discord_notify_create_infraction(request.app, dinf, auth.type == SERVER_KEY)
         if dinf.ip is not None:
             await get_vpn_data(request.app, dinf.id, True)
 
@@ -650,14 +655,17 @@ async def create_infraction(
     else:
         # Schedule a background task to add in missing details (like VPN check + profile / name)
         if dinf.user is not None:
-            tasks.add_task(get_user_data, request.app, dinf.id, True, auth[0] == SERVER_KEY)
+            tasks.add_task(get_user_data, request.app, dinf.id, True, auth.type == SERVER_KEY)
         else:
-            tasks.add_task(discord_notify_create_infraction, request.app, dinf, auth[0] == SERVER_KEY)
+            tasks.add_task(discord_notify_create_infraction, request.app, dinf, auth.type == SERVER_KEY)
         if dinf.ip is not None:
             tasks.add_task(get_vpn_data, request.app, dinf.id, True)
 
     return await as_infraction(
-        request.app, dinf, should_include_ip(auth[0], auth[2]), exclude_private_comments(auth[0], auth[2])
+        request.app,
+        dinf,
+        should_include_ip(auth.type, auth.permissions),
+        exclude_private_comments(auth.type, auth.permissions),
     )
 
 
@@ -684,23 +692,23 @@ async def remove_infraction(
     tasks: BackgroundTasks,
     auth: Tuple[int, Optional[ObjectId], int] = Depends(check_access),
 ):
-    if auth[0] == NOT_AUTHED_USER:
+    if auth.type == NOT_AUTHED_USER:
         raise HTTPException(detail='This route requires authorization', status_code=401)
 
-    acting_admin, acting_admin_id = await get_acting(request, query.admin, auth[0], auth[1])
+    acting_admin, acting_admin_id = await get_acting(request, query.admin, auth.type, auth.actor_id)
 
     if (
         acting_admin.permissions & PERMISSION_CREATE_INFRACTION != PERMISSION_CREATE_INFRACTION
         and acting_admin.permissions & PERMISSION_EDIT_ALL_INFRACTIONS != PERMISSION_EDIT_ALL_INFRACTIONS
     ) or (
-        auth[2] & PERMISSION_EDIT_ALL_INFRACTIONS != PERMISSION_EDIT_ALL_INFRACTIONS
-        and auth[2] & PERMISSION_CREATE_INFRACTION != PERMISSION_CREATE_INFRACTION
+        auth.permissions & PERMISSION_EDIT_ALL_INFRACTIONS != PERMISSION_EDIT_ALL_INFRACTIONS
+        and auth.permissions & PERMISSION_CREATE_INFRACTION != PERMISSION_CREATE_INFRACTION
     ):
         raise HTTPException(detail='You do not have permission to do this!', status_code=403)
 
     q = build_query_dict(
-        auth[0],
-        auth[1],
+        auth.type,
+        auth.actor_id,
         gs_service=query.player.gs_service,
         gs_id=query.player.gs_id,
         ip=query.player.ip,
@@ -715,7 +723,7 @@ async def remove_infraction(
         n_considered += 1
         if dinf.admin != acting_admin_id and (
             acting_admin.permissions & PERMISSION_EDIT_ALL_INFRACTIONS != PERMISSION_EDIT_ALL_INFRACTIONS
-            or auth[2] & PERMISSION_EDIT_ALL_INFRACTIONS != PERMISSION_EDIT_ALL_INFRACTIONS
+            or auth.permissions & PERMISSION_EDIT_ALL_INFRACTIONS != PERMISSION_EDIT_ALL_INFRACTIONS
         ):
             n_skipped += 1
             continue
@@ -773,7 +781,7 @@ async def remove_infraction(
             time=datetime.now(tz=UTC),
             event_type=EVENT_REMOVE_INFRACTION,
             initiator=acting_admin.mongo_admin_id,
-            key_pair=(auth[0], auth[1]),
+            key_pair=(auth.type, auth.actor_id),
             message=f'{acting_admin.name} ({acting_admin.ips_id}) removed an infraction {dinf.id} '
             f' for {query.remove_reason}',
         )
@@ -801,10 +809,10 @@ async def edit_infraction(
     tasks: BackgroundTasks,
     auth: Tuple[int, Optional[ObjectId], int] = Depends(check_access),
 ):
-    if auth[0] == NOT_AUTHED_USER:
+    if auth.type == NOT_AUTHED_USER:
         raise HTTPException(detail='This route requires authorization', status_code=401)
 
-    acting_admin, acting_admin_id = await get_acting(request, query.admin, auth[0], auth[1])
+    acting_admin, acting_admin_id = await get_acting(request, query.admin, auth.type, auth.actor_id)
 
     # Load the DInfraction
     dinf = await DInfraction.from_id(request.app.state.db[MONGO_DB], infraction_id)
@@ -876,8 +884,8 @@ async def edit_infraction(
     if c is not None and isinstance(c, Initiator):
         adm = await load_admin(request, query.removed_by)
         c = adm.mongo_admin_id
-    elif query.set_removal_state and c is None and auth[0] == AUTHED_USER:
-        c = auth[1]
+    elif query.set_removal_state and c is None and auth.type == AUTHED_USER:
+        c = auth.actor_id
 
     try:
         await modify_infraction(
@@ -907,7 +915,7 @@ async def edit_infraction(
         time=datetime.now(tz=UTC),
         event_type=EVENT_EDIT_INFRACTION,
         initiator=acting_admin.mongo_admin_id,
-        key_pair=(auth[0], auth[1]),
+        key_pair=(auth.type, auth.actor_id),
         message=f'{acting_admin.name} ({acting_admin.ips_id}) edited an infraction {dinf.id}',
         long_msg=query.json(exclude_defaults=True, exclude_none=True, exclude_unset=True),
     )
@@ -920,7 +928,10 @@ async def edit_infraction(
     tasks.add_task(push_state_to_nodes, request.app, dinf)
 
     return await as_infraction(
-        request.app, dinf, should_include_ip(auth[0], auth[2]), exclude_private_comments(auth[0], auth[2])
+        request.app,
+        dinf,
+        should_include_ip(auth.type, auth.permissions),
+        exclude_private_comments(auth.type, auth.permissions),
     )
 
 
@@ -937,14 +948,14 @@ async def add_comment(
     query: AddComment,
     auth: Tuple[int, Optional[ObjectId], int] = Depends(check_access),
 ):
-    if auth[0] == NOT_AUTHED_USER:
+    if auth.type == NOT_AUTHED_USER:
         raise HTTPException(detail='You must be logged in to do this!', status_code=401)
 
-    acting_admin, acting_admin_id = await get_acting(request, query.admin, auth[0], auth[1])
+    acting_admin, acting_admin_id = await get_acting(request, query.admin, auth.type, auth.actor_id)
 
     if (
         acting_admin.permissions & PERMISSION_COMMENT != PERMISSION_COMMENT
-        or auth[2] & PERMISSION_COMMENT != PERMISSION_COMMENT
+        or auth.permissions & PERMISSION_COMMENT != PERMISSION_COMMENT
     ):
         raise HTTPException(detail='You do not have permission to do this!', status_code=403)
 
@@ -965,7 +976,7 @@ async def add_comment(
         time=datetime.now(tz=UTC),
         event_type=EVENT_NEW_COMMENT,
         initiator=acting_admin.mongo_admin_id,
-        key_pair=(auth[0], auth[1]),
+        key_pair=(auth.type, auth.actor_id),
         message=f'{acting_admin.name} added a comment to {str_id(dinf.id)} with content ' f'{query.content}',
     )
 
@@ -974,7 +985,10 @@ async def add_comment(
     logger.info(f'{acting_admin.name} added a comment to {str_id(dinf.id)} with content {query.content}')
 
     return await as_infraction(
-        request.app, dinf, should_include_ip(auth[0], auth[2]), exclude_private_comments(auth[0], auth[2])
+        request.app,
+        dinf,
+        should_include_ip(auth.type, auth.permissions),
+        exclude_private_comments(auth.type, auth.permissions),
     )
 
 
@@ -985,10 +999,10 @@ async def _update_or_delete_comment(
     query: Union[EditComment, DeleteComment],
     auth: Tuple[int, Optional[ObjectId], int],
 ):
-    if auth[0] == NOT_AUTHED_USER:
+    if auth.type == NOT_AUTHED_USER:
         raise HTTPException(detail='You must be logged in to do this!', status_code=401)
 
-    acting_admin, acting_admin_id = await get_acting(request, query.admin, auth[0], auth[1])
+    acting_admin, acting_admin_id = await get_acting(request, query.admin, auth.type, auth.actor_id)
 
     dinf = await DInfraction.from_id(request.app.state.db[MONGO_DB], infraction_id)
 
@@ -999,10 +1013,10 @@ async def _update_or_delete_comment(
         if (
             acting_admin.permissions & PERMISSION_COMMENT != PERMISSION_COMMENT
             or dinf.comments[query.comment_index].author != acting_admin_id
-            or auth[2] & PERMISSION_COMMENT != PERMISSION_COMMENT
+            or auth.permissions & PERMISSION_COMMENT != PERMISSION_COMMENT
         ) and (
             acting_admin.permissions & PERMISSION_WEB_MODERATOR != PERMISSION_WEB_MODERATOR
-            or auth[2] & PERMISSION_WEB_MODERATOR != PERMISSION_WEB_MODERATOR
+            or auth.permissions & PERMISSION_WEB_MODERATOR != PERMISSION_WEB_MODERATOR
         ):
             raise HTTPException(detail='You do not have permission to do that!', status_code=403)
 
@@ -1036,7 +1050,7 @@ async def _update_or_delete_comment(
         time=datetime.now(tz=UTC),
         event_type=at,
         initiator=acting_admin.mongo_admin_id,
-        key_pair=(auth[0], auth[1]),
+        key_pair=(auth.type, auth.actor_id),
         message=das,
     )
 
@@ -1045,7 +1059,10 @@ async def _update_or_delete_comment(
     logger.info(das)
 
     return await as_infraction(
-        request.app, dinf, should_include_ip(auth[0], auth[2]), exclude_private_comments(auth[0], auth[2])
+        request.app,
+        dinf,
+        should_include_ip(auth.type, auth.permissions),
+        exclude_private_comments(auth.type, auth.permissions),
     )
 
 
@@ -1093,14 +1110,14 @@ async def add_attachment(
     x_set_private: bool = Header(False),
     auth: Tuple[int, Optional[ObjectId], int] = Depends(check_access),
 ):
-    if auth[0] == NOT_AUTHED_USER:
+    if auth.type == NOT_AUTHED_USER:
         raise HTTPException(detail='You must be logged in to do this!', status_code=401)
 
-    acting_admin, acting_admin_id = await get_acting(request, None, auth[0], auth[1])
+    acting_admin, acting_admin_id = await get_acting(request, None, auth.type, auth.actor_id)
 
     if (
         acting_admin.permissions & PERMISSION_ATTACH_FILE != PERMISSION_ATTACH_FILE
-        or auth[2] & PERMISSION_ATTACH_FILE != PERMISSION_ATTACH_FILE
+        or auth.permissions & PERMISSION_ATTACH_FILE != PERMISSION_ATTACH_FILE
     ):
         raise HTTPException(detail='You do not have permission to do this!', status_code=403)
 
@@ -1144,7 +1161,7 @@ async def add_attachment(
         time=datetime.now(tz=UTC),
         event_type=EVENT_UPLOAD_FILE,
         initiator=acting_admin.mongo_admin_id,
-        key_pair=(auth[0], auth[1]),
+        key_pair=(auth.type, auth.actor_id),
         message=das,
     )
 
@@ -1170,10 +1187,10 @@ async def delete_attachment(
     query: DeleteFile,
     auth: Tuple[int, Optional[ObjectId], int] = Depends(check_access),
 ):
-    if auth[0] == NOT_AUTHED_USER:
+    if auth.type == NOT_AUTHED_USER:
         raise HTTPException(detail='You must be logged in to do this!', status_code=401)
 
-    acting_admin, acting_admin_id = await get_acting(request, query.admin, auth[0], auth[1])
+    acting_admin, acting_admin_id = await get_acting(request, query.admin, auth.type, auth.actor_id)
 
     dinf = await DInfraction.from_id(request.app.state.db[MONGO_DB], infraction_id)
 
@@ -1188,10 +1205,10 @@ async def delete_attachment(
     if (
         acting_admin.permissions & PERMISSION_ATTACH_FILE != PERMISSION_ATTACH_FILE
         or dinf.files[query.file_idx].uploaded_by != acting_admin_id
-        or auth[2] & PERMISSION_ATTACH_FILE != PERMISSION_ATTACH_FILE
+        or auth.permissions & PERMISSION_ATTACH_FILE != PERMISSION_ATTACH_FILE
     ) and (
         acting_admin.permissions & PERMISSION_WEB_MODERATOR != PERMISSION_WEB_MODERATOR
-        or auth[2] & PERMISSION_WEB_MODERATOR != PERMISSION_WEB_MODERATOR
+        or auth.permissions & PERMISSION_WEB_MODERATOR != PERMISSION_WEB_MODERATOR
     ):
         raise HTTPException(detail='You do not have permission to do that!', status_code=403)
 
@@ -1211,7 +1228,7 @@ async def delete_attachment(
         time=datetime.now(tz=UTC),
         event_type=EVENT_UPLOAD_FILE,
         initiator=acting_admin.mongo_admin_id,
-        key_pair=(auth[0], auth[1]),
+        key_pair=(auth.type, auth.actor_id),
         message=das,
     )
 
@@ -1220,5 +1237,8 @@ async def delete_attachment(
     logger.info(das)
 
     return await as_infraction(
-        request.app, dinf, should_include_ip(auth[0], auth[2]), exclude_private_comments(auth[0], auth[2])
+        request.app,
+        dinf,
+        should_include_ip(auth.type, auth.permissions),
+        exclude_private_comments(auth.type, auth.permissions),
     )

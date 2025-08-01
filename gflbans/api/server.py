@@ -88,7 +88,7 @@ async def get_servers(
     svs = []
 
     indicate_webhooks = False
-    if auth[2] & PERMISSION_MANAGE_SERVERS == PERMISSION_MANAGE_SERVERS:
+    if auth.permissions & PERMISSION_MANAGE_SERVERS == PERMISSION_MANAGE_SERVERS:
         indicate_webhooks = True
 
     async for dsv in DServer.from_query_ex(request.app.state.db[MONGO_DB], q):
@@ -109,7 +109,7 @@ async def get_server(
         raise HTTPException(status_code=404, detail='No such server')
 
     indicate_webhooks = False
-    if auth[2] & PERMISSION_MANAGE_SERVERS == PERMISSION_MANAGE_SERVERS:
+    if auth.permissions & PERMISSION_MANAGE_SERVERS == PERMISSION_MANAGE_SERVERS:
         indicate_webhooks = True
 
     return dserver_to_server(sv, indicate_webhooks)
@@ -147,10 +147,10 @@ async def get_players(request: Request, server_id: str):
 async def get_server_internal(
     request: Request, server_id: str, auth: Tuple[int, Optional[ObjectId], int] = Depends(check_access)
 ):
-    if auth[0] == NOT_AUTHED_USER:
+    if auth.type == NOT_AUTHED_USER:
         raise HTTPException(detail='This route requires authentication', status_code=401)
 
-    if auth[2] & PERMISSION_MANAGE_SERVERS != PERMISSION_MANAGE_SERVERS:
+    if auth.permissions & PERMISSION_MANAGE_SERVERS != PERMISSION_MANAGE_SERVERS:
         raise HTTPException(detail='You do not have permission to do this!', status_code=403)
 
     sv = await DServer.from_id(request.app.state.db[MONGO_DB], server_id)
@@ -181,10 +181,10 @@ async def get_server_internal(
 async def create_server(
     request: Request, n: AddServer, auth: Tuple[int, Optional[ObjectId], int] = Depends(check_access)
 ):
-    if auth[0] == NOT_AUTHED_USER:
+    if auth.type == NOT_AUTHED_USER:
         raise HTTPException(detail='This route requires authentication', status_code=401)
 
-    if auth[2] & PERMISSION_MANAGE_SERVERS != PERMISSION_MANAGE_SERVERS:
+    if auth.permissions & PERMISSION_MANAGE_SERVERS != PERMISSION_MANAGE_SERVERS:
         raise HTTPException(detail='You do not have permission to do this!', status_code=403)
 
     key, salt, key_hash = generate_api_key()
@@ -204,18 +204,18 @@ async def create_server(
 
     await dsv.commit(request.app.state.db[MONGO_DB])
 
-    ev_string = f'{auth[0]}/{auth[1]} created a new server with ip {str(n.ip)} and name {dsv.friendly_name}'
+    ev_string = f'{auth.type}/{auth.actor_id} created a new server with ip {str(n.ip)} and name {dsv.friendly_name}'
 
     logger.info(ev_string)
 
-    i = auth[1] if auth[1] == AUTHED_USER else None
+    i = auth.actor_id if auth.actor_id == AUTHED_USER else None
 
     await DAuditLog(
         time=datetime.now(tz=UTC),
         event_type=EVENT_NEW_SERVER,
         initiator=i,
         message=ev_string,
-        key_pair=(auth[0], auth[1]),
+        key_pair=(auth.type, auth.actor_id),
     ).commit(request.app.state.db[MONGO_DB])
 
     return AddServerReply(
@@ -244,10 +244,10 @@ async def create_server(
 async def edit_server(
     request: Request, e: EditServer, server_id: str, auth: Tuple[int, Optional[ObjectId], int] = Depends(check_access)
 ):
-    if auth[0] == NOT_AUTHED_USER:
+    if auth.type == NOT_AUTHED_USER:
         raise HTTPException(detail='This route requires authentication', status_code=401)
 
-    if auth[2] & PERMISSION_MANAGE_SERVERS != PERMISSION_MANAGE_SERVERS:
+    if auth.permissions & PERMISSION_MANAGE_SERVERS != PERMISSION_MANAGE_SERVERS:
         raise HTTPException(detail='You do not have permission to do this!', status_code=403)
 
     srv = await DServer.from_id(request.app.state.db[MONGO_DB], server_id)
@@ -307,18 +307,18 @@ async def edit_server(
 
     await srv.commit(request.app.state.db[MONGO_DB])
 
-    ev_string = f'{auth[0]}/{auth[1]} edited a server {srv.id}'
+    ev_string = f'{auth.type}/{auth.actor_id} edited a server {srv.id}'
 
     logger.info(ev_string)
 
-    i = auth[1] if auth[1] == AUTHED_USER else None
+    i = auth.actor_id if auth.actor_id == AUTHED_USER else None
 
     await DAuditLog(
         time=datetime.now(tz=UTC),
         event_type=EVENT_EDIT_SERVER,
         initiator=i,
         message=ev_string,
-        key_pair=(auth[0], auth[1]),
+        key_pair=(auth.type, auth.actor_id),
         long_message=modifications,
     ).commit(request.app.state.db[MONGO_DB])
 
@@ -345,10 +345,10 @@ async def edit_server(
 async def regenerate_server_token(
     request: Request, server_id: str, auth: Tuple[int, Optional[ObjectId], int] = Depends(check_access)
 ):
-    if auth[0] == NOT_AUTHED_USER:
+    if auth.type == NOT_AUTHED_USER:
         raise HTTPException(detail='This route requires authentication', status_code=401)
 
-    if auth[2] & PERMISSION_MANAGE_SERVERS != PERMISSION_MANAGE_SERVERS:
+    if auth.permissions & PERMISSION_MANAGE_SERVERS != PERMISSION_MANAGE_SERVERS:
         raise HTTPException(detail='You do not have permission to do this!', status_code=403)
 
     srv = await DServer.from_id(request.app.state.db[MONGO_DB], server_id)
@@ -362,18 +362,18 @@ async def regenerate_server_token(
 
     await srv.commit(request.app.state.db[MONGO_DB])
 
-    ev_string = f'{auth[0]}/{auth[1]} regenerated the server token for {server_id}'
+    ev_string = f'{auth.type}/{auth.actor_id} regenerated the server token for {server_id}'
 
     logger.info(ev_string)
 
-    i = auth[1] if auth[1] == AUTHED_USER else None
+    i = auth.actor_id if auth.actor_id == AUTHED_USER else None
 
     await DAuditLog(
         time=datetime.now(tz=UTC),
         event_type=EVENT_EDIT_SERVER,
         initiator=i,
         message=ev_string,
-        key_pair=(auth[0], auth[1]),
+        key_pair=(auth.type, auth.actor_id),
     ).commit(request.app.state.db[MONGO_DB])
 
     return RegenerateServerTokenReply(server_secret_key=key)
@@ -392,10 +392,10 @@ async def get_chat_logs(
     auth: Tuple[int, Optional[ObjectId], int] = Depends(check_access),
     query: RequestChatLogs = Depends(RequestChatLogs),
 ):
-    if auth[0] == NOT_AUTHED_USER:
+    if auth.type == NOT_AUTHED_USER:
         raise HTTPException(detail='This route requires authentication', status_code=401)
 
-    if auth[2] & PERMISSION_VIEW_CHAT_LOGS != PERMISSION_VIEW_CHAT_LOGS:
+    if auth.permissions & PERMISSION_VIEW_CHAT_LOGS != PERMISSION_VIEW_CHAT_LOGS:
         raise HTTPException(detail='You do not have permission to do this!', status_code=403)
 
     srv = await DServer.from_id(request.app.state.db[MONGO_DB], server_id)
@@ -412,7 +412,7 @@ async def get_chat_logs(
         if (
             query.user.gs_id is not None
             and query.user.gs_service is not None
-            and auth[2] & PERMISSION_VIEW_IP_ADDR == PERMISSION_VIEW_IP_ADDR
+            and auth.permissions & PERMISSION_VIEW_IP_ADDR == PERMISSION_VIEW_IP_ADDR
             and query.user.ip is not None
         ):
             filter_query['$or'] = [
@@ -423,11 +423,11 @@ async def get_chat_logs(
             if query.user.gs_id is not None and query.user.gs_service is not None:
                 filter_query['user.gs_service'] = query.user.gs_service
                 filter_query['user.gs_id'] = query.user.gs_id
-            elif auth[2] & PERMISSION_VIEW_IP_ADDR == PERMISSION_VIEW_IP_ADDR and query.user.ip is not None:
+            elif auth.permissions & PERMISSION_VIEW_IP_ADDR == PERMISSION_VIEW_IP_ADDR and query.user.ip is not None:
                 filter_query['user.ip'] = query.user.ip
 
     ip_projection = {}
-    if auth[2] & PERMISSION_VIEW_IP_ADDR != PERMISSION_VIEW_IP_ADDR:
+    if auth.permissions & PERMISSION_VIEW_IP_ADDR != PERMISSION_VIEW_IP_ADDR:
         ip_projection['user.ip'] = 0
 
     cursor = (

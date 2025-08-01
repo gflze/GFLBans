@@ -26,10 +26,10 @@ vpn_router = APIRouter(default_response_class=ORJSONResponse)
 
 # Define a dependency since all of these require management perms
 async def ensure_management_privs(auth: Tuple[int, Optional[ObjectId], int] = Depends(check_access)):
-    if auth[0] == NOT_AUTHED_USER:
+    if auth.type == NOT_AUTHED_USER:
         raise HTTPException(status_code=401, detail='You must be authenticated to do this!')
 
-    if auth[2] & PERMISSION_MANAGE_VPNS != PERMISSION_MANAGE_VPNS:
+    if auth.permissions & PERMISSION_MANAGE_VPNS != PERMISSION_MANAGE_VPNS:
         raise HTTPException(status_code=403, detail='You do not have permission to do this!')
 
     return auth
@@ -62,18 +62,18 @@ async def add_vpn(request: Request, vpn: AddVPN, auth: Tuple[int, Optional[Objec
     except DuplicateKeyError:
         raise HTTPException(detail='VPN is already on the blocklist', status_code=409)
 
-    ev_string = f'{auth[0]}/{auth[1]} created a VPN {dv.id}'
+    ev_string = f'{auth.type}/{auth.actor_id} created a VPN {dv.id}'
 
     logger.info(ev_string)
 
-    i = auth[1] if auth[1] == AUTHED_USER else None
+    i = auth.actor_id if auth.actor_id == AUTHED_USER else None
 
     await DAuditLog(
         time=datetime.now(tz=UTC),
         event_type=EVENT_NEW_VPN,
         initiator=i,
         message=ev_string,
-        key_pair=(auth[0], auth[1]),
+        key_pair=(auth.type, auth.actor_id),
     ).commit(request.app.state.db[MONGO_DB])
 
     return VPNInfo(
@@ -131,18 +131,18 @@ async def patch_vpn(
 
     await vpn.commit(request.app.state.db[MONGO_DB])
 
-    ev_string = f'{auth[0]}/{auth[1]} edited a VPN {vpn.id}'
+    ev_string = f'{auth.type}/{auth.actor_id} edited a VPN {vpn.id}'
 
     logger.info(ev_string)
 
-    i = auth[1] if auth[1] == AUTHED_USER else None
+    i = auth.actor_id if auth.actor_id == AUTHED_USER else None
 
     await DAuditLog(
         time=datetime.now(tz=UTC),
         event_type=EVENT_EDIT_VPN,
         initiator=i,
         message=ev_string,
-        key_pair=(auth[0], auth[1]),
+        key_pair=(auth.type, auth.actor_id),
         long_message=modifications,
     ).commit(request.app.state.db[MONGO_DB])
 
@@ -175,18 +175,18 @@ async def remove_vpn(
     if delete_type.deleted_count is None or delete_type.deleted_count == 0:
         raise HTTPException(detail='No VPN exists with identifier: {vpn.as_number_or_cidr}', status_code=404)
 
-    ev_string = f'{auth[0]}/{auth[1]} deleted VPN {vpn.as_number_or_cidr}'
+    ev_string = f'{auth.type}/{auth.actor_id} deleted VPN {vpn.as_number_or_cidr}'
 
     logger.info(ev_string)
 
-    i = auth[1] if auth[1] == AUTHED_USER else None
+    i = auth.actor_id if auth.actor_id == AUTHED_USER else None
 
     await DAuditLog(
         time=datetime.now(tz=UTC),
         event_type=EVENT_DELETE_VPN,
         initiator=i,
         message=ev_string,
-        key_pair=(auth[0], auth[1]),
+        key_pair=(auth.type, auth.actor_id),
     ).commit(request.app.state.db[MONGO_DB])
     return Response(status_code=204)
 

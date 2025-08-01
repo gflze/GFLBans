@@ -71,10 +71,10 @@ async def get_admins(request: Request, query: GetAdmins = Depends(GetAdmins)):
 async def update_admin(
     request: Request, uai_query: UpdateAdminInfo, auth: Tuple[int, Optional[ObjectId], int] = Depends(check_access)
 ):
-    if auth[0] == NOT_AUTHED_USER:
+    if auth.type == NOT_AUTHED_USER:
         raise HTTPException(status_code=401, detail='You must be authenticated to do this!')
 
-    if auth[2] & PERMISSION_MANAGE_GROUPS_AND_ADMINS != PERMISSION_MANAGE_GROUPS_AND_ADMINS:
+    if auth.permissions & PERMISSION_MANAGE_GROUPS_AND_ADMINS != PERMISSION_MANAGE_GROUPS_AND_ADMINS:
         raise HTTPException(detail='You do not have permission to do this!', status_code=403)
 
     ips_user = ips_get_member_id_from_gsid(await id64_or_none(request.app, uai_query.admin_id))
@@ -101,18 +101,18 @@ async def update_admin(
     if av is not None:
         target_info.avatar = av
 
-    ev_string = f'{auth[0]}/{auth[1]} set the groups of {ips_user} to {uai_query.groups}'
+    ev_string = f'{auth.type}/{auth.actor_id} set the groups of {ips_user} to {uai_query.groups}'
 
     logger.info(ev_string)
 
-    i = auth[1] if auth[1] == AUTHED_USER else None
+    i = auth.actor_id if auth.actor_id == AUTHED_USER else None
 
     await DAuditLog(
         time=datetime.now(tz=UTC),
         event_type=EVENT_SET_ADMIN_PERMISSIONS,
         initiator=i,
         message=ev_string,
-        key_pair=(auth[0], auth[1]),
+        key_pair=(auth.type, auth.actor_id),
     ).commit(request.app.state.db[MONGO_DB])
 
     await target_info.commit(request.app.state.db[MONGO_DB])
