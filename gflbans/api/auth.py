@@ -28,7 +28,7 @@ class AuthInfo(NamedTuple):
     type: int
     authenticator_id: Optional[ObjectId]
     permissions: int
-    admin: Optional[Admin]  # Only used if type is SERVER_KEY or API_KEY
+    admin: Admin  # Only use if type is SERVER_KEY or API_KEY
 
 
 # break this out from the main api stuff so it can be used for RPC auth
@@ -87,7 +87,7 @@ async def check_access(
     elif c_user is not None:
         return AuthInfo(AUTHED_USER, c_user.mongo_admin_id, c_user.permissions, c_user)
     else:
-        return AuthInfo(NOT_AUTHED_USER, None, 0, None)
+        return AuthInfo(NOT_AUTHED_USER, None, 0, Admin(0))
 
     if auth.type in (SERVER_KEY, API_KEY):
         try:
@@ -95,9 +95,7 @@ async def check_access(
             raw_admin = body.get('admin')
             if isinstance(raw_admin, dict):
                 validated_admin = Initiator(**raw_admin)
-                acting_admin, acting_admin_id = await get_acting(
-                    request, validated_admin, auth.type, auth.authenticator_id
-                )
+                acting_admin = await get_acting(request, validated_admin, auth.type, auth.authenticator_id)
                 return AuthInfo(auth.type, auth.authenticator_id, auth.permissions, acting_admin)
         except Exception as e:
             logger.debug(f'Failed to parse request body for admin field: {e}')

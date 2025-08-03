@@ -78,7 +78,7 @@ async def update_group(request: Request, ug_query: UpdateGroup, auth: AuthInfo =
         event_type=EVENT_ADD_GROUP,
         authentication_type=auth.type,
         authenticator=auth.authenticator_id,
-        admin=auth.admin.mongo_admin_id if auth.admin else None,
+        admin=auth.admin.mongo_admin_id,
         new_item=new_group.dict(),
     ).commit(request.app.state.db[MONGO_DB])
 
@@ -118,7 +118,7 @@ async def delete_group(request: Request, ips_group: int, auth: AuthInfo = Depend
         event_type=EVENT_DELETE_GROUP,
         authentication_type=auth.type,
         authenticator=auth.authenticator_id,
-        admin=auth.admin.mongo_admin_id if auth.admin else None,
+        admin=auth.admin.mongo_admin_id,
         old_item=dg.dict(),
     ).commit(request.app.state.db[MONGO_DB])
 
@@ -161,7 +161,7 @@ async def patch_group(
         event_type=EVENT_SET_GROUP_PERMISSIONS,
         authentication_type=auth.type,
         authenticator=auth.authenticator_id,
-        admin=auth.admin.mongo_admin_id if auth.admin else None,
+        admin=auth.admin.mongo_admin_id,
         old_item=original_group_info.dict(),
         new_item=dg.dict(),
     ).commit(request.app.state.db[MONGO_DB])
