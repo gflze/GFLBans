@@ -68,7 +68,7 @@ async def add_vpn(request: Request, vpn: AddVPN, auth: AuthInfo = Depends(check_
         event_type=EVENT_NEW_VPN,
         authentication_type=auth.type,
         authenticator=auth.authenticator_id,
-        admin=auth.admin.mongo_admin_id if auth.admin else None,
+        admin=auth.admin.mongo_admin_id,
         new_item=dv.dict(),
     ).commit(request.app.state.db[MONGO_DB])
 
@@ -133,7 +133,7 @@ async def patch_vpn(request: Request, vpn_patch: PatchVPN, auth: AuthInfo = Depe
         event_type=EVENT_EDIT_VPN,
         authentication_type=auth.type,
         authenticator=auth.authenticator_id,
-        admin=auth.admin.mongo_admin_id if auth.admin else None,
+        admin=auth.admin.mongo_admin_id,
         old_item=original_vpn_info.dict(),
         new_item=vpn.dict(),
     ).commit(request.app.state.db[MONGO_DB])
@@ -172,7 +172,7 @@ async def remove_vpn(request: Request, vpn: RemoveVPN, auth: AuthInfo = Depends(
         event_type=EVENT_DELETE_VPN,
         authentication_type=auth.type,
         authenticator=auth.authenticator_id,
-        admin=auth.admin.mongo_admin_id if auth.admin else None,
+        admin=auth.admin.mongo_admin_id,
         old_item=vpn.dict(),
     ).commit(request.app.state.db[MONGO_DB])
     return Response(status_code=204)

@@ -106,7 +106,7 @@ async def update_admin(request: Request, uai_query: UpdateAdminInfo, auth: AuthI
         event_type=EVENT_SET_ADMIN_PERMISSIONS,
         authentication_type=auth.type,
         authenticator=auth.authenticator_id,
-        admin=auth.admin.mongo_admin_id if auth.admin else None,
+        admin=auth.admin.mongo_admin_id,
         old_item=original_admin_info.dict(),
         new_item=target_info.dict(),
     ).commit(request.app.state.db[MONGO_DB])

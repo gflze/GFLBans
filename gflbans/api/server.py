@@ -208,7 +208,7 @@ async def create_server(request: Request, n: AddServer, auth: AuthInfo = Depends
         event_type=EVENT_NEW_SERVER,
         authentication_type=auth.type,
         authenticator=auth.authenticator_id,
-        admin=auth.admin.mongo_admin_id if auth.admin else None,
+        admin=auth.admin.mongo_admin_id,
         new_item=censored_srv.dict(),
     ).commit(request.app.state.db[MONGO_DB])
 
@@ -312,7 +312,7 @@ async def edit_server(request: Request, e: EditServer, server_id: str, auth: Aut
         event_type=EVENT_EDIT_SERVER,
         authentication_type=auth.type,
         authenticator=auth.authenticator_id,
-        admin=auth.admin.mongo_admin_id if auth.admin else None,
+        admin=auth.admin.mongo_admin_id,
         old_item=original_srv_info.dict(),
         new_item=logged_srv.dict(),
     ).commit(request.app.state.db[MONGO_DB])
@@ -363,7 +363,7 @@ async def regenerate_server_token(request: Request, server_id: str, auth: AuthIn
         event_type=EVENT_EDIT_SERVER,
         authentication_type=auth.type,
         authenticator=auth.authenticator_id,
-        admin=auth.admin.mongo_admin_id if auth.admin else None,
+        admin=auth.admin.mongo_admin_id,
         new_item=srv.dict(),
     ).commit(request.app.state.db[MONGO_DB])
 

@@ -21,7 +21,6 @@ from gflbans.internal.database.rpc import DRPCEventBase, DRPCKickPlayer, add_ack
 from gflbans.internal.flags import PERMISSION_RPC_KICK
 from gflbans.internal.log import logger
 from gflbans.internal.models.protocol import RPCKickRequest
-from gflbans.internal.pyapi_utils import get_acting
 
 rpc_router = APIRouter()
 
@@ -102,10 +101,8 @@ async def rpc_kick(request: Request, rpc_kick_req: RPCKickRequest, auth: AuthInf
     if auth.permissions & PERMISSION_RPC_KICK != PERMISSION_RPC_KICK:
         raise HTTPException(status_code=403, detail='You do not have permission to do this!')
 
-    acting_admin, _ = await get_acting(request, None, auth.type, auth.authenticator_id)
-
     logger.info(
-        f'{acting_admin.name} ({acting_admin.ips_id}) kicked '
+        f'{auth.admin.name} ({auth.admin.ips_id}) kicked '
         f'{rpc_kick_req.player.gs_service}/{rpc_kick_req.player.gs_id} from {rpc_kick_req.server_id}'
     )
 
@@ -114,7 +111,7 @@ async def rpc_kick(request: Request, rpc_kick_req: RPCKickRequest, auth: AuthInf
         event_type=EVENT_RPC_KICK,
         authentication_type=auth.type,
         authenticator=auth.authenticator_id,
-        admin=auth.admin.mongo_admin_id if auth.admin else None,
+        admin=auth.admin.mongo_admin_id,
         new_item=rpc_kick_req.player.dict(),
     ).commit(request.app.state.db[MONGO_DB])
 
