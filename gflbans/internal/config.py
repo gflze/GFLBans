@@ -25,7 +25,6 @@ AUTO_STACK_MULTIPLIER = config(
     'AUTO_STACK_MULTIPLIER', cast=float, default=2.0
 )  # How much to multiply longest past duration by to get new duration
 
-DISABLE_GUIDELINES = config('DISABLE_GUIDELINES', cast=bool, default=True)
 PRODUCTION = config('PRODUCTION', cast=bool, default=True)
 MAX_UPLOAD_SIZE = config('MAX_UPLOAD_SIZE', cast=int, default=(30 * 1024 * 1024))
 RETAIN_AUDIT_LOG_FOR = config('RETAIN_AUDIT_LOG_FOR', cast=int, default=3600 * 24 * 30)

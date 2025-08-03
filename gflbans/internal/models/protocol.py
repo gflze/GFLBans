@@ -10,6 +10,7 @@ from gflbans.internal.config import MAX_UPLOAD_SIZE
 from gflbans.internal.flags import valid_types_regex
 from gflbans.internal.models.api import (
     AdminInfo,
+    AuditLog,
     CInfractionSummary,
     FetchAdminInfo,
     Group,
@@ -549,3 +550,18 @@ class GetAdmins(BaseModel):
     # Cursor control
     limit: Optional[conint(gt=0, le=50)]
     skip: PositiveIntIncl0 = 0
+
+
+class GetAuditLogs(BaseModel):
+    event_type: Optional[List[int]]
+    authenticator: Optional[str]
+    admin: Optional[str]
+
+    # Cursor control
+    limit: conint(gt=0, le=50) = 30
+    skip: PositiveIntIncl0 = 0
+
+
+class GetAuditLogsReply(BaseModel):
+    results: List[AuditLog]
+    total_matched: int = 0

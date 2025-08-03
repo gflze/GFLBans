@@ -1,7 +1,7 @@
 import asyncio
 import io
 from functools import partial
-from typing import Optional, Tuple
+from typing import Optional
 
 import bson
 from bson import ObjectId
@@ -13,7 +13,7 @@ from pydantic import constr
 from starlette.requests import Request
 from starlette.responses import Response, StreamingResponse
 
-from gflbans.api.auth import check_access
+from gflbans.api.auth import AuthInfo, check_access
 from gflbans.internal.config import MONGO_DB
 from gflbans.internal.constants import API_KEY, SERVER_KEY
 
@@ -37,7 +37,7 @@ async def download_file(
     gridfs_id: str,
     file_name: str,
     convert_webp: Optional[constr(regex='^(png|jpg)$')] = None,
-    auth: Tuple[int, Optional[ObjectId], int] = Depends(check_access),
+    auth: AuthInfo = Depends(check_access),
 ):
     client = AsyncIOMotorGridFSBucket(database=request.app.state.db[MONGO_DB])
 

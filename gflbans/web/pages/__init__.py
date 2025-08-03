@@ -5,7 +5,7 @@ from packaging.version import Version
 from pytz import UTC
 from starlette.requests import Request
 
-from gflbans.internal.config import BRANDING, DISABLE_GUIDELINES, ROOT_USER
+from gflbans.internal.config import BRANDING, ROOT_USER
 from gflbans.internal.constants import GB_VERSION
 from gflbans.internal.flags import name2perms
 from gflbans.internal.log import logger
@@ -37,6 +37,5 @@ async def sctx(request: Request) -> dict:
         'GB_VERSION': GB_VERSION,
         'GB_BEGIN_RENDER': datetime.now(tz=UTC).timestamp(),
         'BRANDING': BRANDING,
-        'DISABLE_GUIDELINES': DISABLE_GUIDELINES,
         'UPDATE_AVAILABLE': update_available,
     }

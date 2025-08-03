@@ -1,8 +1,6 @@
 import asyncio
-from typing import Optional, Tuple
 
 from aiohttp import ClientResponseError
-from bson import ObjectId
 from fastapi import APIRouter, Depends, File, Header, HTTPException, UploadFile
 from fastapi.responses import ORJSONResponse
 from gridfs import NoFile
@@ -10,7 +8,7 @@ from motor.motor_asyncio import AsyncIOMotorGridFSBucket
 from starlette.requests import Request
 from starlette.responses import RedirectResponse, StreamingResponse
 
-from gflbans.api.auth import check_access
+from gflbans.api.auth import AuthInfo, check_access
 from gflbans.internal.config import MONGO_DB
 from gflbans.internal.flags import PERMISSION_MANAGE_MAP_ICONS
 from gflbans.internal.log import logger
@@ -66,7 +64,7 @@ async def write_map_image(
     mod_name: str,
     map_name: str,
     contents: UploadFile = File(...),
-    auth: Tuple[int, Optional[ObjectId], int] = Depends(check_access),
+    auth: AuthInfo = Depends(check_access),
 ):
     if auth.permissions & PERMISSION_MANAGE_MAP_ICONS != PERMISSION_MANAGE_MAP_ICONS:
         raise HTTPException(status_code=403, detail='You do not have permission to do this!')

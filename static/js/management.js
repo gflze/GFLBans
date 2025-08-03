@@ -18,6 +18,7 @@ perms2name[PERMISSION.ATTACH_FILE] = 'Attach Files';
 perms2name[PERMISSION.WEB_MODERATOR] = 'Edit All Comments';
 perms2name[PERMISSION.MANAGE_SERVERS] = 'Manage Servers';
 perms2name[PERMISSION.MANAGE_VPNS] = 'Manage VPNs';
+perms2name[PERMISSION.VIEW_AUDIT_LOGS] = 'View Audit Logs';
 perms2name[PERMISSION.MANAGE_GROUPS_AND_ADMINS] = 'Manage Groups and Admins';
 perms2name[PERMISSION.MANAGE_API_KEYS] = 'Manage API Keys';
 perms2name[PERMISSION.BLOCK_ITEMS] = 'Restrict Map Items';

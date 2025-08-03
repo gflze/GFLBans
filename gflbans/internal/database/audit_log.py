@@ -1,10 +1,10 @@
-from datetime import datetime
-from typing import Optional, Tuple
+from typing import Any, Dict, Optional, Union
 
 from bson import ObjectId
 
 from gflbans.internal.database.base import DBase
 
+# Infraction
 EVENT_NEW_INFRACTION = 0
 EVENT_REMOVE_INFRACTION = 1
 EVENT_EDIT_INFRACTION = 2
@@ -32,11 +32,14 @@ EVENT_EDIT_VPN = 16
 
 
 class DAuditLog(DBase):
-    __collection__ = 'action_log'
+    __collection__ = 'audit_log'
 
-    time: datetime
+    time: int
     event_type: int
-    initiator: Optional[ObjectId]
-    message: str
-    key_pair: Tuple[int, Optional[ObjectId]]
-    long_msg: Optional[str]
+    authentication_type: int
+    authenticator: ObjectId
+    admin: Optional[ObjectId]
+
+    # Store arbitrary structured data as dicts
+    old_item: Optional[Union[Dict[str, Any], Any]] = None
+    new_item: Optional[Union[Dict[str, Any], Any]] = None

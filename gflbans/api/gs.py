@@ -1,7 +1,7 @@
 import asyncio
 from contextlib import suppress
 from datetime import datetime
-from typing import List, Optional, Tuple
+from typing import List, Optional
 
 from bson import ObjectId
 from dateutil.tz import UTC
@@ -12,7 +12,7 @@ from pymongo import UpdateMany
 from redis.exceptions import RedisError
 from starlette.requests import Request
 
-from gflbans.api.auth import check_access
+from gflbans.api.auth import AuthInfo, check_access
 from gflbans.api_util import construct_ci_resp
 from gflbans.internal.asn import VPN_DUBIOUS, VPN_YES, check_location, check_vpn
 from gflbans.internal.avatar import process_avatar
@@ -103,13 +103,11 @@ async def _process_heartbeat_multiple_players(app, ply_list: list[PlayerObjIPOpt
     response_model_exclude_unset=True,
     response_model_exclude_none=True,
 )
-async def heartbeat(
-    request: Request, beat: Heartbeat, auth: Tuple[int, Optional[ObjectId], int] = Depends(check_access)
-):
+async def heartbeat(request: Request, beat: Heartbeat, auth: AuthInfo = Depends(check_access)):
     if auth.type != SERVER_KEY:
         raise HTTPException(detail='You must be authed as a server to use this route', status_code=403)
 
-    srv = await DServer.from_id(request.app.state.db[MONGO_DB], auth.actor_id)
+    srv = await DServer.from_id(request.app.state.db[MONGO_DB], auth.authenticator_id)
 
     if srv is None:
         raise HTTPException(status_code=500, detail='This should not happen')
@@ -161,7 +159,7 @@ async def heartbeat(
             conds.append(
                 build_query_dict(
                     auth.type,
-                    auth.actor_id,
+                    auth.authenticator_id,
                     gs_service=p.gs_service,
                     gs_id=p.gs_id,
                     ip=p.ip,
@@ -199,7 +197,7 @@ async def heartbeat(
                             request.app.state.db[MONGO_DB],
                             build_query_dict(
                                 auth.type,
-                                auth.actor_id,
+                                auth.authenticator_id,
                                 gs_service=p.gs_service,
                                 gs_id=p.gs_id,
                                 ip=p.ip,
@@ -246,7 +244,7 @@ async def heartbeat(
                     else None,
                     'content': message.content,
                     'created': message.created,
-                    'server': ObjectId(auth.actor_id),
+                    'server': ObjectId(auth.authenticator_id),
                 }
                 for message in beat.messages
             ]
@@ -261,9 +259,7 @@ async def heartbeat(
 @gs_router.get(
     '/vpn', response_model=CheckVPNReply, response_model_exclude_none=True, response_model_exclude_unset=True
 )
-async def vpn_check(
-    request: Request, q: CheckVPN = Depends(CheckVPN), auth: Tuple[int, Optional[ObjectId], int] = Depends(check_access)
-):
+async def vpn_check(request: Request, q: CheckVPN = Depends(CheckVPN), auth: AuthInfo = Depends(check_access)):
     if auth.type == NOT_AUTHED_USER:
         raise HTTPException(detail='This route requires authentication', status_code=401)
     cvpn_r = CheckVPNReply(is_vpn=False, is_dubious=False, is_immune=False)
@@ -299,13 +295,11 @@ async def vpn_check(
     response_model_exclude_none=True,
     response_model_exclude_unset=True,
 )
-async def call_admin(
-    request: Request, exe: ExecuteCallAdmin, auth: Tuple[int, Optional[ObjectId], int] = Depends(check_access)
-):
+async def call_admin(request: Request, exe: ExecuteCallAdmin, auth: AuthInfo = Depends(check_access)):
     if auth.type != SERVER_KEY:
         raise HTTPException(detail='Only servers can use this route', status_code=403)
 
-    srv = await DServer.from_id(request.app.state.db[MONGO_DB], auth.actor_id)
+    srv = await DServer.from_id(request.app.state.db[MONGO_DB], auth.authenticator_id)
 
     if srv is None:
         raise HTTPException(status_code=500, detail='This should not happen lol')
@@ -316,7 +310,7 @@ async def call_admin(
     # Check if the target is banned
     q = build_query_dict(
         auth.type,
-        auth.actor_id,
+        auth.authenticator_id,
         gs_service=exe.caller.gs_service,
         gs_id=exe.caller.gs_id,
         ignore_others=exe.include_other_servers,
@@ -357,13 +351,11 @@ async def call_admin(
     response_model_exclude_none=True,
     response_model_exclude_unset=True,
 )
-async def claim_call(
-    request: Request, claim: ClaimCallAdmin, auth: Tuple[int, Optional[ObjectId], int] = Depends(check_access)
-):
+async def claim_call(request: Request, claim: ClaimCallAdmin, auth: AuthInfo = Depends(check_access)):
     if auth.type != SERVER_KEY:
         raise HTTPException(detail='Only servers can use this route', status_code=403)
 
-    srv = await DServer.from_id(request.app.state.db[MONGO_DB], auth.actor_id)
+    srv = await DServer.from_id(request.app.state.db[MONGO_DB], auth.authenticator_id)
 
     if srv is None:
         raise HTTPException(status_code=500, detail='This should not happen lol')

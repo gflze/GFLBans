@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html id="htmlRoot"
+      lang="en"
+      class="{% if opposite_theme %}theme-opposite {% endif %}background-primary">
+    <head>
+        {% include 'meta.html' with context %}
+        <link rel="stylesheet" href="/static/css/logs.css?v={{ GB_VERSION }}">
+        <title>{{ BRANDING }} - Logs</title>
+    </head>
+    <body>
+        {% include 'js_includes.html' %}
+        {% include 'header.html' with context %}
+        <div id="logs">
+            <div id="logs-category">
+                <div class="category-folder selected" data-type="all">All Log Types</div>
+                <div class="category-folder" data-type="infraction">Infraction</div>
+                <div class="category-item" data-type="EVENT_NEW_INFRACTION">New Infraction</div>
+                <div class="category-item" data-type="EVENT_REMOVE_INFRACTION">Remove Infraction</div>
+                <div class="category-item" data-type="EVENT_EDIT_INFRACTION">Edit Infraction</div>
+                <div class="category-item" data-type="EVENT_NEW_COMMENT">New Comment</div>
+                <div class="category-item" data-type="EVENT_EDIT_COMMENT">Edit Comment</div>
+                <div class="category-item" data-type="EVENT_DELETE_COMMENT">Delete Comment</div>
+                <div class="category-item" data-type="EVENT_UPLOAD_FILE">Upload File</div>
+                <div class="category-item" data-type="EVENT_DELETE_FILE">Delete File</div>
+                <div class="category-item" data-type="EVENT_RPC_KICK">RPC Kick</div>
+                <div class="category-folder" data-type="server">Server</div>
+                <div class="category-item" data-type="EVENT_NEW_SERVER">New Server</div>
+                <div class="category-item" data-type="EVENT_EDIT_SERVER">Edit Server</div>
+                <div class="category-folder" data-type="group">Permissions</div>
+                <div class="category-item" data-type="EVENT_SET_GROUP_PERMISSIONS">Edit Group</div>
+                <div class="category-item" data-type="EVENT_ADD_GROUP">Add Group</div>
+                <div class="category-item" data-type="EVENT_DELETE_GROUP">Delete Group</div>
+                <div class="category-item" data-type="EVENT_SET_ADMIN_PERMISSIONS">Edit Admin</div>
+                <div class="category-folder" data-type="vpn">VPN</div>
+                <div class="category-item" data-type="EVENT_NEW_VPN">New VPN</div>
+                <div class="category-item" data-type="EVENT_DELETE_VPN">Delete VPN</div>
+                <div class="category-item" data-type="EVENT_EDIT_VPN">Edit VPN</div>
+            </div>
+            <div id="logs-body">
+                <div id="logs-table">
+                    <div id="logs-table-header">
+                        <div>Time</div>
+                        <div>Type</div>
+                        <div>Auth Type</div>
+                        <div>Authenticator</div>
+                        <div>Admin</div>
+                    </div>
+                    <div id="logs-table-body">
+                        <div class="logs-table-row">
+                            <div>2025-07-29 09:00</div>
+                            <div>New Infraction</div>
+                            <div>User</div>
+                            <div>System</div>
+                            <div>1234</div>
+                        </div>
+                    </div>
+                </div>
+                <div id="logs-description">Work in progress. Will display diff caused by event here in future.</div>
+            </div>
+            <div id="logs-admin" class="is-hidden-mobile-tiny">
+                <div class="admin-folder selected" data-type="0">All Admins</div>
+                <div class="admin-item" data-type="-1">System/Unknown</div>
+                <div class="admin-item" data-type="asdfasq2341234">Vauff</div>
+                <div class="admin-item" data-type="asdfasq2341234">Ice</div>
+                <div class="admin-item" data-type="asdfasq2341234">Snowy</div>
+                <div class="admin-item" data-type="asdfasq2341234">Block</div>
+            </div>
+        </div>
+        <script src="/static/js/logs.js?v={{ GB_VERSION }}"></script>
+        {% include 'loading.html' with context %}
+        {% include 'footer.html' with context %}
+    </body>
+</html>

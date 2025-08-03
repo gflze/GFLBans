@@ -12,7 +12,7 @@ from pymongo import DESCENDING
 from starlette.background import BackgroundTasks
 from starlette.requests import Request
 
-from gflbans.api.auth import check_access, csrf_protect
+from gflbans.api.auth import AuthInfo, check_access, csrf_protect
 from gflbans.api_util import (
     as_infraction,
     construct_ci_resp,
@@ -107,7 +107,7 @@ async def get_infractions(
     request: Request,
     query: GetInfractions = Depends(GetInfractions),
     load_fast: bool = True,
-    auth: Tuple[int, Optional[ObjectId], int] = Depends(check_access),
+    auth: AuthInfo = Depends(check_access),
 ):
     incl_ip = should_include_ip(auth.type, auth.permissions)  # Check if we have perms to see IP addresses
 
@@ -115,7 +115,7 @@ async def get_infractions(
 
     q = build_query_dict(
         auth.type,
-        str_id(auth.actor_id),
+        str_id(auth.authenticator_id),
         gs_service=query.player.gs_service,
         gs_id=query.player.gs_id,
         ip=ip,
@@ -143,9 +143,7 @@ async def get_infractions(
     response_model_exclude_unset=True,
     response_model_exclude_none=True,
 )
-async def get_infraction(
-    request: Request, infraction_id: str, auth: Tuple[int, Optional[ObjectId], int] = Depends(check_access)
-):
+async def get_infraction(request: Request, infraction_id: str, auth: AuthInfo = Depends(check_access)):
     try:
         inf = await DInfraction.from_id(request.app.state.db[MONGO_DB], infraction_id)
     except bson.errors.InvalidId:
@@ -172,7 +170,7 @@ async def search_infractions(
     request: Request,
     query: Search = Depends(Search),
     load_fast: bool = True,
-    auth: Tuple[int, Optional[ObjectId], int] = Depends(check_access),
+    auth: AuthInfo = Depends(check_access),
 ):
     incl_ip = should_include_ip(auth.type, auth.permissions)
 
@@ -289,7 +287,7 @@ async def search_recursive_infractions(
     request: Request,
     query: RecursiveSearch = Depends(RecursiveSearch),
     load_fast: bool = True,
-    auth: Tuple[int, Optional[ObjectId], int] = Depends(check_access),
+    auth: AuthInfo = Depends(check_access),
 ):
     incl_ip = should_include_ip(auth.type, auth.permissions)
     # If we do not have permission to view IP, force it to None
@@ -338,7 +336,7 @@ async def search_recursive_infractions(
 async def check_infractions(
     request: Request,
     query: CheckInfractions = Depends(CheckInfractions),
-    auth: Tuple[int, Optional[ObjectId], int] = Depends(check_access),
+    auth: AuthInfo = Depends(check_access),
 ):
     incl_ip = should_include_ip(auth.type, auth.permissions)  # Check if we have perms to see IP addresses
 
@@ -357,7 +355,7 @@ async def check_infractions(
 
     q = build_query_dict(
         auth.type,
-        str_id(auth.actor_id),
+        str_id(auth.authenticator_id),
         gs_service=query.player.gs_service,
         gs_id=query.player.gs_id,
         ip=ip,
@@ -399,7 +397,7 @@ async def find_longest_infraction_duration(app, query) -> Optional[int]:
 async def infraction_stats(
     request: Request,
     query: CheckInfractions = Depends(CheckInfractions),
-    auth: Tuple[int, Optional[ObjectId], int] = Depends(check_access),
+    auth: AuthInfo = Depends(check_access),
 ):
     ip = query.ip if should_include_ip(auth.type, auth.permissions) else None
 
@@ -408,7 +406,7 @@ async def infraction_stats(
 
     q = build_query_dict(
         auth.type,
-        str_id(auth.actor_id),
+        str_id(auth.authenticator_id),
         gs_service=query.player.gs_service,
         gs_id=query.player.gs_id,
         ip=ip,
@@ -513,12 +511,12 @@ async def create_infraction(
     request: Request,
     query: CreateInfraction,
     tasks: BackgroundTasks,
-    auth: Tuple[int, Optional[ObjectId], int] = Depends(check_access),
+    auth: AuthInfo = Depends(check_access),
 ):
     if auth.type == NOT_AUTHED_USER:
         raise HTTPException(detail='This route requires authorization.', status_code=401)
 
-    acting_admin, acting_admin_id = await get_acting(request, query.admin, auth.type, auth.actor_id)
+    acting_admin, acting_admin_id = await get_acting(request, query.admin, auth.type, auth.authenticator_id)
 
     # Server
     if query.server is not None:
@@ -536,8 +534,8 @@ async def create_infraction(
             query.scope = 'server'
 
         server = ObjectId(query.server)
-    elif auth.type == SERVER_KEY and auth.actor_id is not None:
-        server = auth.actor_id
+    elif auth.type == SERVER_KEY and auth.authenticator_id is not None:
+        server = auth.authenticator_id
     else:
         server = None
 
@@ -550,7 +548,7 @@ async def create_infraction(
         # Base query
         q = build_query_dict(
             auth.type,
-            str_id(auth.actor_id),
+            str_id(auth.authenticator_id),
             gs_service=query.player.gs_service,
             gs_id=query.player.gs_id,
             ip=query.player.ip,
@@ -621,22 +619,20 @@ async def create_infraction(
     # Write the dinfraction
     await dinf.commit(request.app.state.db[MONGO_DB])
 
-    # Create audit log entry
-    daudit = DAuditLog(
-        time=datetime.now(tz=UTC),
-        event_type=EVENT_NEW_INFRACTION,
-        initiator=acting_admin.mongo_admin_id,
-        key_pair=(auth.type, auth.actor_id),
-        message=f'{acting_admin.name} ({acting_admin.ips_id}) created an infraction {dinf.id} with flags'
-        f' {dinf.flags} on {user_str(dinf)}, import_mode = {query.import_mode}',
-    )
-
-    await daudit.commit(request.app.state.db[MONGO_DB])
-
     logger.info(
         f'{acting_admin.name} ({acting_admin.ips_id}) created an infraction {dinf.id} with flags {dinf.flags}'
         f' on {user_str(dinf)}, import_mode = {query.import_mode}'
     )
+
+    # Create audit log entry
+    await DAuditLog(
+        time=datetime.now(tz=UTC).timestamp(),
+        event_type=EVENT_NEW_INFRACTION,
+        authentication_type=auth.type,
+        authenticator=auth.authenticator_id,
+        admin=auth.admin.mongo_admin_id if auth.admin else None,
+        new_item=dinf.dict(),
+    ).commit(request.app.state.db[MONGO_DB])
 
     # Notify all servers that new state is available (uwu)
     tasks.add_task(push_state_to_nodes, request.app, dinf)
@@ -690,12 +686,12 @@ async def remove_infraction(
     request: Request,
     query: RemoveInfractionsOfPlayer,
     tasks: BackgroundTasks,
-    auth: Tuple[int, Optional[ObjectId], int] = Depends(check_access),
+    auth: AuthInfo = Depends(check_access),
 ):
     if auth.type == NOT_AUTHED_USER:
         raise HTTPException(detail='This route requires authorization', status_code=401)
 
-    acting_admin, acting_admin_id = await get_acting(request, query.admin, auth.type, auth.actor_id)
+    acting_admin, acting_admin_id = await get_acting(request, query.admin, auth.type, auth.authenticator_id)
 
     if (
         acting_admin.permissions & PERMISSION_CREATE_INFRACTION != PERMISSION_CREATE_INFRACTION
@@ -708,7 +704,7 @@ async def remove_infraction(
 
     q = build_query_dict(
         auth.type,
-        auth.actor_id,
+        auth.authenticator_id,
         gs_service=query.player.gs_service,
         gs_id=query.player.gs_id,
         ip=query.player.ip,
@@ -777,20 +773,19 @@ async def remove_infraction(
             n_skipped += 1
             continue
 
-        daudit = DAuditLog(
-            time=datetime.now(tz=UTC),
-            event_type=EVENT_REMOVE_INFRACTION,
-            initiator=acting_admin.mongo_admin_id,
-            key_pair=(auth.type, auth.actor_id),
-            message=f'{acting_admin.name} ({acting_admin.ips_id}) removed an infraction {dinf.id} '
-            f' for {query.remove_reason}',
-        )
-        await daudit.commit(request.app.state.db[MONGO_DB])
-
         logger.info(
             f'{acting_admin.name} ({acting_admin.ips_id}) removed an infraction {dinf.id} '
             f' for {query.remove_reason}'
         )
+
+        await DAuditLog(
+            time=datetime.now(tz=UTC).timestamp(),
+            event_type=EVENT_REMOVE_INFRACTION,
+            authentication_type=auth.type,
+            authenticator=auth.authenticator_id,
+            admin=auth.admin.mongo_admin_id if auth.admin else None,
+            old_item=dinf.dict(),
+        ).commit(request.app.state.db[MONGO_DB])
 
     return RemoveInfractionsOfPlayerReply(num_removed=n_removed, num_considered=n_considered, num_not_removed=n_skipped)
 
@@ -807,18 +802,20 @@ async def edit_infraction(
     infraction_id: str,
     query: ModifyInfraction,
     tasks: BackgroundTasks,
-    auth: Tuple[int, Optional[ObjectId], int] = Depends(check_access),
+    auth: AuthInfo = Depends(check_access),
 ):
     if auth.type == NOT_AUTHED_USER:
         raise HTTPException(detail='This route requires authorization', status_code=401)
 
-    acting_admin, acting_admin_id = await get_acting(request, query.admin, auth.type, auth.actor_id)
+    acting_admin, acting_admin_id = await get_acting(request, query.admin, auth.type, auth.authenticator_id)
 
     # Load the DInfraction
     dinf = await DInfraction.from_id(request.app.state.db[MONGO_DB], infraction_id)
 
     if dinf is None:
         raise HTTPException(detail=f'Infraction {infraction_id} does not exist.', status_code=404)
+
+    original_dinf_info = dinf  # For Audit logging purposes
 
     if not (
         acting_admin.permissions & PERMISSION_EDIT_ALL_INFRACTIONS == PERMISSION_EDIT_ALL_INFRACTIONS
@@ -885,7 +882,7 @@ async def edit_infraction(
         adm = await load_admin(request, query.removed_by)
         c = adm.mongo_admin_id
     elif query.set_removal_state and c is None and auth.type == AUTHED_USER:
-        c = auth.actor_id
+        c = auth.authenticator_id
 
     try:
         await modify_infraction(
@@ -911,18 +908,17 @@ async def edit_infraction(
     except ValueError as e:
         raise HTTPException(status_code=401, detail=str(e)) from e
 
-    daudit = DAuditLog(
-        time=datetime.now(tz=UTC),
-        event_type=EVENT_EDIT_INFRACTION,
-        initiator=acting_admin.mongo_admin_id,
-        key_pair=(auth.type, auth.actor_id),
-        message=f'{acting_admin.name} ({acting_admin.ips_id}) edited an infraction {dinf.id}',
-        long_msg=query.json(exclude_defaults=True, exclude_none=True, exclude_unset=True),
-    )
-
-    await daudit.commit(request.app.state.db[MONGO_DB])
-
     logger.info(f'{acting_admin.name} ({acting_admin.ips_id}) edited an infraction {dinf.id}')
+
+    await DAuditLog(
+        time=datetime.now(tz=UTC).timestamp(),
+        event_type=EVENT_REMOVE_INFRACTION if query.set_removal_state else EVENT_EDIT_INFRACTION,
+        authentication_type=auth.type,
+        authenticator=auth.authenticator_id,
+        admin=auth.admin.mongo_admin_id if auth.admin else None,
+        new_item=dinf.dict(),
+        old_item=original_dinf_info.dict(),
+    ).commit(request.app.state.db[MONGO_DB])
 
     # Notify all servers that new state is available (uwu)
     tasks.add_task(push_state_to_nodes, request.app, dinf)
@@ -946,12 +942,12 @@ async def add_comment(
     request: Request,
     infraction_id: str,
     query: AddComment,
-    auth: Tuple[int, Optional[ObjectId], int] = Depends(check_access),
+    auth: AuthInfo = Depends(check_access),
 ):
     if auth.type == NOT_AUTHED_USER:
         raise HTTPException(detail='You must be logged in to do this!', status_code=401)
 
-    acting_admin, acting_admin_id = await get_acting(request, query.admin, auth.type, auth.actor_id)
+    acting_admin, acting_admin_id = await get_acting(request, query.admin, auth.type, auth.authenticator_id)
 
     if (
         acting_admin.permissions & PERMISSION_COMMENT != PERMISSION_COMMENT
@@ -972,17 +968,16 @@ async def add_comment(
 
     await dinf.append_to_array_field(request.app.state.db[MONGO_DB], 'comments', dc)
 
-    daudit = DAuditLog(
-        time=datetime.now(tz=UTC),
-        event_type=EVENT_NEW_COMMENT,
-        initiator=acting_admin.mongo_admin_id,
-        key_pair=(auth.type, auth.actor_id),
-        message=f'{acting_admin.name} added a comment to {str_id(dinf.id)} with content ' f'{query.content}',
-    )
-
-    await daudit.commit(request.app.state.db[MONGO_DB])
-
     logger.info(f'{acting_admin.name} added a comment to {str_id(dinf.id)} with content {query.content}')
+
+    await DAuditLog(
+        time=datetime.now(tz=UTC).timestamp(),
+        event_type=EVENT_NEW_COMMENT,
+        authentication_type=auth.type,
+        authenticator=auth.authenticator_id,
+        admin=auth.admin.mongo_admin_id if auth.admin else None,
+        new_item=dc.dict(),
+    ).commit(request.app.state.db[MONGO_DB])
 
     return await as_infraction(
         request.app,
@@ -1002,12 +997,14 @@ async def _update_or_delete_comment(
     if auth.type == NOT_AUTHED_USER:
         raise HTTPException(detail='You must be logged in to do this!', status_code=401)
 
-    acting_admin, acting_admin_id = await get_acting(request, query.admin, auth.type, auth.actor_id)
+    acting_admin, acting_admin_id = await get_acting(request, query.admin, auth.type, auth.authenticator_id)
 
     dinf = await DInfraction.from_id(request.app.state.db[MONGO_DB], infraction_id)
 
     if dinf is None:
         raise HTTPException(detail='No such infraction exists!', status_code=404)
+
+    original_dinf_info = dinf  # For Audit logging purposes
 
     try:
         if (
@@ -1044,19 +1041,17 @@ async def _update_or_delete_comment(
 
     await dinf.update_field(request.app.state.db[MONGO_DB], 'comments', dc)
 
-    at = EVENT_EDIT_COMMENT if isinstance(query, EditComment) else EVENT_DELETE_COMMENT
-
-    daudit = DAuditLog(
-        time=datetime.now(tz=UTC),
-        event_type=at,
-        initiator=acting_admin.mongo_admin_id,
-        key_pair=(auth.type, auth.actor_id),
-        message=das,
-    )
-
-    await daudit.commit(request.app.state.db[MONGO_DB])
-
     logger.info(das)
+
+    await DAuditLog(
+        time=datetime.now(tz=UTC).timestamp(),
+        event_type=EVENT_EDIT_COMMENT if isinstance(query, EditComment) else EVENT_DELETE_COMMENT,
+        authentication_type=auth.type,
+        authenticator=auth.authenticator_id,
+        admin=auth.admin.mongo_admin_id if auth.admin else None,
+        new_item=dinf.dict(),
+        old_item=original_dinf_info.dict(),
+    ).commit(request.app.state.db[MONGO_DB])
 
     return await as_infraction(
         request.app,
@@ -1076,7 +1071,7 @@ async def edit_comment(
     request: Request,
     infraction_id: str,
     query: EditComment,
-    auth: Tuple[int, Optional[ObjectId], int] = Depends(check_access),
+    auth: AuthInfo = Depends(check_access),
 ):
     return await _update_or_delete_comment(request, infraction_id, query, auth)
 
@@ -1091,7 +1086,7 @@ async def delete_comment(
     request: Request,
     infraction_id: str,
     query: DeleteComment,
-    auth: Tuple[int, Optional[ObjectId], int] = Depends(check_access),
+    auth: AuthInfo = Depends(check_access),
 ):
     return await _update_or_delete_comment(request, infraction_id, query, auth)
 
@@ -1108,12 +1103,12 @@ async def add_attachment(
     infraction_id: str,
     filename: str,
     x_set_private: bool = Header(False),
-    auth: Tuple[int, Optional[ObjectId], int] = Depends(check_access),
+    auth: AuthInfo = Depends(check_access),
 ):
     if auth.type == NOT_AUTHED_USER:
         raise HTTPException(detail='You must be logged in to do this!', status_code=401)
 
-    acting_admin, acting_admin_id = await get_acting(request, None, auth.type, auth.actor_id)
+    acting_admin, acting_admin_id = await get_acting(request, None, auth.type, auth.authenticator_id)
 
     if (
         acting_admin.permissions & PERMISSION_ATTACH_FILE != PERMISSION_ATTACH_FILE
@@ -1152,22 +1147,19 @@ async def add_attachment(
 
     await dinf.append_to_array_field(request.app.state.db[MONGO_DB], 'files', dfile)
 
-    das = (
+    logger.info(
         f'{acting_admin.name} uploaded a new file {slugify(filename)} ({file_id}) to infraction {dinf.id} with size'
         f' {request.headers["Content-Length"]}'
     )
 
-    daudit = DAuditLog(
-        time=datetime.now(tz=UTC),
+    await DAuditLog(
+        time=datetime.now(tz=UTC).timestamp(),
         event_type=EVENT_UPLOAD_FILE,
-        initiator=acting_admin.mongo_admin_id,
-        key_pair=(auth.type, auth.actor_id),
-        message=das,
-    )
-
-    await daudit.commit(request.app.state.db[MONGO_DB])
-
-    logger.info(das)
+        authentication_type=auth.type,
+        authenticator=auth.authenticator_id,
+        admin=auth.admin.mongo_admin_id if auth.admin else None,
+        new_item=dfile.dict(),
+    ).commit(request.app.state.db[MONGO_DB])
 
     return FileInfo(
         name=slugify(filename), file_id=str(file_id), uploaded_by=acting_admin.ips_id, private=x_set_private
@@ -1185,12 +1177,12 @@ async def delete_attachment(
     request: Request,
     infraction_id: str,
     query: DeleteFile,
-    auth: Tuple[int, Optional[ObjectId], int] = Depends(check_access),
+    auth: AuthInfo = Depends(check_access),
 ):
     if auth.type == NOT_AUTHED_USER:
         raise HTTPException(detail='You must be logged in to do this!', status_code=401)
 
-    acting_admin, acting_admin_id = await get_acting(request, query.admin, auth.type, auth.actor_id)
+    acting_admin, acting_admin_id = await get_acting(request, query.admin, auth.type, auth.authenticator_id)
 
     dinf = await DInfraction.from_id(request.app.state.db[MONGO_DB], infraction_id)
 
@@ -1201,6 +1193,8 @@ async def delete_attachment(
         dinf.files[query.file_idx]
     except IndexError:
         raise HTTPException(detail='No such file in the specified infraction exists', status_code=404)
+
+    old_item = dinf.files[query.file_idx]  # For Audit logging purposes
 
     if (
         acting_admin.permissions & PERMISSION_ATTACH_FILE != PERMISSION_ATTACH_FILE
@@ -1222,19 +1216,16 @@ async def delete_attachment(
     del dfiles[query.file_idx]
     await dinf.update_field(request.app.state.db[MONGO_DB], 'files', dfiles)
 
-    das = f'{acting_admin.name} deleted file from infraction {dinf.id}'
+    logger.info(f'{acting_admin.name} deleted file from infraction {dinf.id}')
 
-    daudit = DAuditLog(
-        time=datetime.now(tz=UTC),
+    await DAuditLog(
+        time=datetime.now(tz=UTC).timestamp(),
         event_type=EVENT_UPLOAD_FILE,
-        initiator=acting_admin.mongo_admin_id,
-        key_pair=(auth.type, auth.actor_id),
-        message=das,
-    )
-
-    await daudit.commit(request.app.state.db[MONGO_DB])
-
-    logger.info(das)
+        authentication_type=auth.type,
+        authenticator=auth.authenticator_id,
+        admin=auth.admin.mongo_admin_id if auth.admin else None,
+        old_item=old_item.dict(),
+    ).commit(request.app.state.db[MONGO_DB])
 
     return await as_infraction(
         request.app,

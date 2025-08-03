@@ -1,4 +1,4 @@
-from typing import Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional, Union
 
 from pydantic import BaseModel, PositiveInt, conint, constr, root_validator
 
@@ -230,3 +230,15 @@ class InfractionDay(BaseModel):
     item_blocks: int = 0
     warnings: int = 0
     total: int = 0
+
+
+class AuditLog(BaseModel):
+    time: PositiveInt
+    event_type: int
+    authentication_type: int
+    authenticator: Optional[str]
+    admin: Optional[str]
+
+    # Store arbitrary structured data as dicts
+    old_item: Optional[Union[Dict[str, Any], Any]] = None
+    new_item: Optional[Union[Dict[str, Any], Any]] = None

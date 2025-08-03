@@ -11,7 +11,7 @@ PERMISSION_WEB_MODERATOR            = 1 << 7   # Can edit or delete all comments
 PERMISSION_MANAGE_SERVERS           = 1 << 8
 PERMISSION_MANAGE_VPNS              = 1 << 9
 # PERMISSION_PRUNE_INFRACTIONS      = 1 << 10  # Unimplemented
-# PERMISSION_VIEW_AUDIT_LOG         = 1 << 11  # Unimplemented
+PERMISSION_VIEW_AUDIT_LOGS          = 1 << 11
 PERMISSION_MANAGE_GROUPS_AND_ADMINS = 1 << 12
 PERMISSION_MANAGE_API_KEYS          = 1 << 13
 PERMISSION_BLOCK_ITEMS              = 1 << 14  # Add map item restrictions to infractions
@@ -42,6 +42,7 @@ ALL_PERMISSIONS = (
     | PERMISSION_WEB_MODERATOR
     | PERMISSION_MANAGE_SERVERS
     | PERMISSION_MANAGE_VPNS
+    | PERMISSION_VIEW_AUDIT_LOGS
     | PERMISSION_MANAGE_GROUPS_AND_ADMINS
     | PERMISSION_MANAGE_API_KEYS
     | PERMISSION_BLOCK_ITEMS
@@ -98,6 +99,7 @@ name2perms = {
     'Edit All Comments':         PERMISSION_WEB_MODERATOR,
     'Manage Servers':            PERMISSION_MANAGE_SERVERS,
     'Manage VPNs':               PERMISSION_MANAGE_VPNS,
+    'View Audit Logs':           PERMISSION_VIEW_AUDIT_LOGS,
     'Manage Groups and Admins':  PERMISSION_MANAGE_GROUPS_AND_ADMINS,
     'Manage API Keys':           PERMISSION_MANAGE_API_KEYS,
     'Restrict Voice':            PERMISSION_BLOCK_VOICE,
