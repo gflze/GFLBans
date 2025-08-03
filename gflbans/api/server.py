@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import List, Optional, Tuple
+from typing import List
 
 import bbcode
 from bson import ObjectId
@@ -9,9 +9,9 @@ from fastapi.responses import ORJSONResponse
 from pymongo import ASCENDING
 from starlette.requests import Request
 
-from gflbans.api.auth import check_access, csrf_protect
+from gflbans.api.auth import AuthInfo, check_access, csrf_protect
 from gflbans.internal.config import MONGO_DB
-from gflbans.internal.constants import AUTHED_USER, NOT_AUTHED_USER
+from gflbans.internal.constants import NOT_AUTHED_USER
 from gflbans.internal.database.audit_log import EVENT_EDIT_SERVER, EVENT_NEW_SERVER, DAuditLog
 from gflbans.internal.database.server import DServer, DUserIP
 from gflbans.internal.flags import PERMISSION_MANAGE_SERVERS, PERMISSION_VIEW_CHAT_LOGS, PERMISSION_VIEW_IP_ADDR
@@ -77,9 +77,7 @@ def _duserip_to_ply(ply: DUserIP) -> PlayerObj:
 @server_router.get(
     '/', response_model_exclude_unset=True, response_model_exclude_none=True, response_model=List[Server]
 )
-async def get_servers(
-    request: Request, enabled_only: bool = False, auth: Tuple[int, Optional[ObjectId], int] = Depends(check_access)
-):
+async def get_servers(request: Request, enabled_only: bool = False, auth: AuthInfo = Depends(check_access)):
     q = {}
 
     if enabled_only:
@@ -100,9 +98,7 @@ async def get_servers(
 @server_router.get(
     '/{server_id}', response_model_exclude_none=True, response_model_exclude_unset=True, response_model=Server
 )
-async def get_server(
-    request: Request, server_id: str, auth: Tuple[int, Optional[ObjectId], int] = Depends(check_access)
-):
+async def get_server(request: Request, server_id: str, auth: AuthInfo = Depends(check_access)):
     sv = await DServer.from_id(request.app.state.db[MONGO_DB], server_id)
 
     if sv is None:
@@ -144,9 +140,7 @@ async def get_players(request: Request, server_id: str):
     response_model_exclude_unset=True,
     response_model=ServerInternal,
 )
-async def get_server_internal(
-    request: Request, server_id: str, auth: Tuple[int, Optional[ObjectId], int] = Depends(check_access)
-):
+async def get_server_internal(request: Request, server_id: str, auth: AuthInfo = Depends(check_access)):
     if auth.type == NOT_AUTHED_USER:
         raise HTTPException(detail='This route requires authentication', status_code=401)
 
@@ -178,9 +172,7 @@ async def get_server_internal(
     response_model=AddServerReply,
     dependencies=[Depends(csrf_protect)],
 )
-async def create_server(
-    request: Request, n: AddServer, auth: Tuple[int, Optional[ObjectId], int] = Depends(check_access)
-):
+async def create_server(request: Request, n: AddServer, auth: AuthInfo = Depends(check_access)):
     if auth.type == NOT_AUTHED_USER:
         raise HTTPException(detail='This route requires authentication', status_code=401)
 
@@ -204,18 +196,20 @@ async def create_server(
 
     await dsv.commit(request.app.state.db[MONGO_DB])
 
-    ev_string = f'{auth.type}/{auth.actor_id} created a new server with ip {str(n.ip)} and name {dsv.friendly_name}'
+    logger.info(
+        f'{auth.type}/{auth.authenticator_id} created a new server with ip {str(n.ip)} and name {dsv.friendly_name}'
+    )
 
-    logger.info(ev_string)
-
-    i = auth.actor_id if auth.actor_id == AUTHED_USER else None
+    censored_srv = dsv
+    censored_srv.censor()
 
     await DAuditLog(
-        time=datetime.now(tz=UTC),
+        time=datetime.now(tz=UTC).timestamp(),
         event_type=EVENT_NEW_SERVER,
-        initiator=i,
-        message=ev_string,
-        key_pair=(auth.type, auth.actor_id),
+        authentication_type=auth.type,
+        authenticator=auth.authenticator_id,
+        admin=auth.admin.mongo_admin_id if auth.admin else None,
+        new_item=censored_srv.dict(),
     ).commit(request.app.state.db[MONGO_DB])
 
     return AddServerReply(
@@ -241,9 +235,7 @@ async def create_server(
     response_model=ServerInternal,
     dependencies=[Depends(csrf_protect)],
 )
-async def edit_server(
-    request: Request, e: EditServer, server_id: str, auth: Tuple[int, Optional[ObjectId], int] = Depends(check_access)
-):
+async def edit_server(request: Request, e: EditServer, server_id: str, auth: AuthInfo = Depends(check_access)):
     if auth.type == NOT_AUTHED_USER:
         raise HTTPException(detail='This route requires authentication', status_code=401)
 
@@ -254,6 +246,9 @@ async def edit_server(
 
     if srv is None:
         raise HTTPException(detail='Server does not exist', status_code=404)
+
+    original_srv_info = srv  # For Audit logging purposes
+    original_srv_info.censor()
 
     modifications = 'SET'
 
@@ -307,19 +302,19 @@ async def edit_server(
 
     await srv.commit(request.app.state.db[MONGO_DB])
 
-    ev_string = f'{auth.type}/{auth.actor_id} edited a server {srv.id}'
+    logger.info(f'{auth.type}/{auth.authenticator_id} edited a server {srv.id}')
 
-    logger.info(ev_string)
-
-    i = auth.actor_id if auth.actor_id == AUTHED_USER else None
+    logged_srv = srv
+    logged_srv.censor()
 
     await DAuditLog(
-        time=datetime.now(tz=UTC),
+        time=datetime.now(tz=UTC).timestamp(),
         event_type=EVENT_EDIT_SERVER,
-        initiator=i,
-        message=ev_string,
-        key_pair=(auth.type, auth.actor_id),
-        long_message=modifications,
+        authentication_type=auth.type,
+        authenticator=auth.authenticator_id,
+        admin=auth.admin.mongo_admin_id if auth.admin else None,
+        old_item=original_srv_info.dict(),
+        new_item=logged_srv.dict(),
     ).commit(request.app.state.db[MONGO_DB])
 
     return ServerInternal(
@@ -342,9 +337,7 @@ async def edit_server(
     response_model=RegenerateServerTokenReply,
     dependencies=[Depends(csrf_protect)],
 )
-async def regenerate_server_token(
-    request: Request, server_id: str, auth: Tuple[int, Optional[ObjectId], int] = Depends(check_access)
-):
+async def regenerate_server_token(request: Request, server_id: str, auth: AuthInfo = Depends(check_access)):
     if auth.type == NOT_AUTHED_USER:
         raise HTTPException(detail='This route requires authentication', status_code=401)
 
@@ -362,18 +355,16 @@ async def regenerate_server_token(
 
     await srv.commit(request.app.state.db[MONGO_DB])
 
-    ev_string = f'{auth.type}/{auth.actor_id} regenerated the server token for {server_id}'
+    logger.info(f'{auth.type}/{auth.authenticator_id} regenerated the server token for {server_id}')
 
-    logger.info(ev_string)
-
-    i = auth.actor_id if auth.actor_id == AUTHED_USER else None
-
+    srv.censor()
     await DAuditLog(
-        time=datetime.now(tz=UTC),
+        time=datetime.now(tz=UTC).timestamp(),
         event_type=EVENT_EDIT_SERVER,
-        initiator=i,
-        message=ev_string,
-        key_pair=(auth.type, auth.actor_id),
+        authentication_type=auth.type,
+        authenticator=auth.authenticator_id,
+        admin=auth.admin.mongo_admin_id if auth.admin else None,
+        new_item=srv.dict(),
     ).commit(request.app.state.db[MONGO_DB])
 
     return RegenerateServerTokenReply(server_secret_key=key)
@@ -389,7 +380,7 @@ async def regenerate_server_token(
 async def get_chat_logs(
     request: Request,
     server_id: str,
-    auth: Tuple[int, Optional[ObjectId], int] = Depends(check_access),
+    auth: AuthInfo = Depends(check_access),
     query: RequestChatLogs = Depends(RequestChatLogs),
 ):
     if auth.type == NOT_AUTHED_USER:

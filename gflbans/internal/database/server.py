@@ -81,3 +81,12 @@ class DServer(DBase):
         async for document in db_ref[cls.__collection__].find(query):
             logger.debug(f'DB: load {str(document["_id"])}')
             yield cls.load_document(document)
+
+    @classmethod
+    def censor(self):
+        self.discord_webhook = None
+        self.infract_webhook = None
+        self.server_key = None
+        self.server_key_salt = None
+        self.call_data = None
+        self.server_info = None

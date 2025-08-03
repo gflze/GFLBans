@@ -1,8 +1,7 @@
 import re
 from datetime import datetime
-from typing import Optional, Tuple
+from typing import Optional
 
-from bson import ObjectId
 from dateutil.tz import UTC
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import ORJSONResponse
@@ -11,9 +10,9 @@ from pymongo.errors import DuplicateKeyError
 from starlette.requests import Request
 from starlette.responses import Response
 
-from gflbans.api.auth import check_access, csrf_protect
+from gflbans.api.auth import AuthInfo, check_access, csrf_protect
 from gflbans.internal.config import MONGO_DB
-from gflbans.internal.constants import AUTHED_USER, NOT_AUTHED_USER
+from gflbans.internal.constants import NOT_AUTHED_USER
 from gflbans.internal.database.audit_log import EVENT_DELETE_VPN, EVENT_EDIT_VPN, EVENT_NEW_VPN, DAuditLog
 from gflbans.internal.database.vpn import DVPN
 from gflbans.internal.flags import PERMISSION_MANAGE_VPNS
@@ -25,7 +24,7 @@ vpn_router = APIRouter(default_response_class=ORJSONResponse)
 
 
 # Define a dependency since all of these require management perms
-async def ensure_management_privs(auth: Tuple[int, Optional[ObjectId], int] = Depends(check_access)):
+async def ensure_management_privs(auth: AuthInfo = Depends(check_access)):
     if auth.type == NOT_AUTHED_USER:
         raise HTTPException(status_code=401, detail='You must be authenticated to do this!')
 
@@ -45,7 +44,7 @@ async def ensure_management_privs(auth: Tuple[int, Optional[ObjectId], int] = De
         Depends(csrf_protect),
     ],
 )
-async def add_vpn(request: Request, vpn: AddVPN, auth: Tuple[int, Optional[ObjectId], int] = Depends(check_access)):
+async def add_vpn(request: Request, vpn: AddVPN, auth: AuthInfo = Depends(check_access)):
     b_asn = True if vpn.vpn_type == 'asn' else False
     payload = str(vpn.as_number) if b_asn else vpn.cidr
 
@@ -62,18 +61,15 @@ async def add_vpn(request: Request, vpn: AddVPN, auth: Tuple[int, Optional[Objec
     except DuplicateKeyError:
         raise HTTPException(detail='VPN is already on the blocklist', status_code=409)
 
-    ev_string = f'{auth.type}/{auth.actor_id} created a VPN {dv.id}'
-
-    logger.info(ev_string)
-
-    i = auth.actor_id if auth.actor_id == AUTHED_USER else None
+    logger.info(f'{auth.type}/{auth.authenticator_id} created a VPN {dv.id}')
 
     await DAuditLog(
-        time=datetime.now(tz=UTC),
+        time=datetime.now(tz=UTC).timestamp(),
         event_type=EVENT_NEW_VPN,
-        initiator=i,
-        message=ev_string,
-        key_pair=(auth.type, auth.actor_id),
+        authentication_type=auth.type,
+        authenticator=auth.authenticator_id,
+        admin=auth.admin.mongo_admin_id if auth.admin else None,
+        new_item=dv.dict(),
     ).commit(request.app.state.db[MONGO_DB])
 
     return VPNInfo(
@@ -96,14 +92,13 @@ async def add_vpn(request: Request, vpn: AddVPN, auth: Tuple[int, Optional[Objec
         Depends(csrf_protect),
     ],
 )
-async def patch_vpn(
-    request: Request, vpn_patch: PatchVPN, auth: Tuple[int, Optional[ObjectId], int] = Depends(check_access)
-):
+async def patch_vpn(request: Request, vpn_patch: PatchVPN, auth: AuthInfo = Depends(check_access)):
     vpn = await DVPN.from_id(request.app.state.db[MONGO_DB], vpn_patch.id)
 
     if vpn is None:
         raise HTTPException(detail='VPN does not exist', status_code=404)
 
+    original_vpn_info = vpn  # For Audit logging purposes
     modifications = 'SET'
 
     if vpn_patch.vpn_type is not None:
@@ -131,19 +126,16 @@ async def patch_vpn(
 
     await vpn.commit(request.app.state.db[MONGO_DB])
 
-    ev_string = f'{auth.type}/{auth.actor_id} edited a VPN {vpn.id}'
-
-    logger.info(ev_string)
-
-    i = auth.actor_id if auth.actor_id == AUTHED_USER else None
+    logger.info(f'{auth.type}/{auth.authenticator_id} edited a VPN {vpn.id}')
 
     await DAuditLog(
-        time=datetime.now(tz=UTC),
+        time=datetime.now(tz=UTC).timestamp(),
         event_type=EVENT_EDIT_VPN,
-        initiator=i,
-        message=ev_string,
-        key_pair=(auth.type, auth.actor_id),
-        long_message=modifications,
+        authentication_type=auth.type,
+        authenticator=auth.authenticator_id,
+        admin=auth.admin.mongo_admin_id if auth.admin else None,
+        old_item=original_vpn_info.dict(),
+        new_item=vpn.dict(),
     ).commit(request.app.state.db[MONGO_DB])
 
     return VPNInfo(
@@ -165,9 +157,7 @@ async def patch_vpn(
         Depends(csrf_protect),
     ],
 )
-async def remove_vpn(
-    request: Request, vpn: RemoveVPN, auth: Tuple[int, Optional[ObjectId], int] = Depends(check_access)
-):
+async def remove_vpn(request: Request, vpn: RemoveVPN, auth: AuthInfo = Depends(check_access)):
     delete_type = await request.app.state.db[MONGO_DB][DVPN.__collection__].delete_one(
         {'payload': vpn.as_number_or_cidr}
     )
@@ -175,18 +165,15 @@ async def remove_vpn(
     if delete_type.deleted_count is None or delete_type.deleted_count == 0:
         raise HTTPException(detail='No VPN exists with identifier: {vpn.as_number_or_cidr}', status_code=404)
 
-    ev_string = f'{auth.type}/{auth.actor_id} deleted VPN {vpn.as_number_or_cidr}'
-
-    logger.info(ev_string)
-
-    i = auth.actor_id if auth.actor_id == AUTHED_USER else None
+    logger.info(f'{auth.type}/{auth.authenticator_id} deleted VPN {vpn.as_number_or_cidr}')
 
     await DAuditLog(
-        time=datetime.now(tz=UTC),
+        time=datetime.now(tz=UTC).timestamp(),
         event_type=EVENT_DELETE_VPN,
-        initiator=i,
-        message=ev_string,
-        key_pair=(auth.type, auth.actor_id),
+        authentication_type=auth.type,
+        authenticator=auth.authenticator_id,
+        admin=auth.admin.mongo_admin_id if auth.admin else None,
+        old_item=vpn.dict(),
     ).commit(request.app.state.db[MONGO_DB])
     return Response(status_code=204)
 

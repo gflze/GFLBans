@@ -1,16 +1,15 @@
 from datetime import datetime
-from typing import List, Optional, Tuple
+from typing import List
 
-from bson import ObjectId
 from dateutil.tz import UTC
 from fastapi import APIRouter, Depends, HTTPException
 from pymongo import DESCENDING
 from starlette.requests import Request
 
-from gflbans.api.auth import check_access, csrf_protect
+from gflbans.api.auth import AuthInfo, check_access, csrf_protect
 from gflbans.api_util import as_admin
 from gflbans.internal.config import MONGO_DB
-from gflbans.internal.constants import AUTHED_USER, NOT_AUTHED_USER
+from gflbans.internal.constants import NOT_AUTHED_USER
 from gflbans.internal.database.audit_log import EVENT_SET_ADMIN_PERMISSIONS, DAuditLog
 from gflbans.internal.database.common import DFile
 from gflbans.internal.database.dadmin import DAdmin
@@ -68,9 +67,7 @@ async def get_admins(request: Request, query: GetAdmins = Depends(GetAdmins)):
 @admin_router.put(
     '/', response_model_exclude_unset=True, response_model_exclude_none=True, dependencies=[Depends(csrf_protect)]
 )
-async def update_admin(
-    request: Request, uai_query: UpdateAdminInfo, auth: Tuple[int, Optional[ObjectId], int] = Depends(check_access)
-):
+async def update_admin(request: Request, uai_query: UpdateAdminInfo, auth: AuthInfo = Depends(check_access)):
     if auth.type == NOT_AUTHED_USER:
         raise HTTPException(status_code=401, detail='You must be authenticated to do this!')
 
@@ -84,6 +81,7 @@ async def update_admin(
     if target_info is None:
         target_info = DAdmin(ips_user=ips_user)
 
+    original_admin_info = target_info  # For Audit logging purposes
     target_info.last_updated = datetime.now(tz=UTC).timestamp()
     target_info.groups = uai_query.groups
 
@@ -101,18 +99,16 @@ async def update_admin(
     if av is not None:
         target_info.avatar = av
 
-    ev_string = f'{auth.type}/{auth.actor_id} set the groups of {ips_user} to {uai_query.groups}'
-
-    logger.info(ev_string)
-
-    i = auth.actor_id if auth.actor_id == AUTHED_USER else None
+    logger.info(f'{auth.type}/{auth.authenticator_id} set the groups of {ips_user} to {uai_query.groups}')
 
     await DAuditLog(
-        time=datetime.now(tz=UTC),
+        time=datetime.now(tz=UTC).timestamp(),
         event_type=EVENT_SET_ADMIN_PERMISSIONS,
-        initiator=i,
-        message=ev_string,
-        key_pair=(auth.type, auth.actor_id),
+        authentication_type=auth.type,
+        authenticator=auth.authenticator_id,
+        admin=auth.admin.mongo_admin_id if auth.admin else None,
+        old_item=original_admin_info.dict(),
+        new_item=target_info.dict(),
     ).commit(request.app.state.db[MONGO_DB])
 
     await target_info.commit(request.app.state.db[MONGO_DB])

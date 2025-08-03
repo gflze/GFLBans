@@ -1,15 +1,14 @@
 from datetime import datetime
-from typing import List, Optional, Tuple
+from typing import List
 
-from bson import ObjectId
 from dateutil.tz import UTC
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import ORJSONResponse
 from starlette.requests import Request
 
-from gflbans.api.auth import check_access, csrf_protect
+from gflbans.api.auth import AuthInfo, check_access, csrf_protect
 from gflbans.internal.config import MONGO_DB
-from gflbans.internal.constants import AUTHED_USER, NOT_AUTHED_USER
+from gflbans.internal.constants import NOT_AUTHED_USER
 from gflbans.internal.database.audit_log import (
     EVENT_ADD_GROUP,
     EVENT_DELETE_GROUP,
@@ -54,9 +53,7 @@ async def get_group(request: Request, ips_group: PositiveIntIncl0):
 @group_router.post(
     '/', dependencies=[Depends(csrf_protect)], response_model_exclude_unset=True, response_model_exclude_none=True
 )
-async def update_group(
-    request: Request, ug_query: UpdateGroup, auth: Tuple[int, Optional[ObjectId], int] = Depends(check_access)
-):
+async def update_group(request: Request, ug_query: UpdateGroup, auth: AuthInfo = Depends(check_access)):
     if auth.type == NOT_AUTHED_USER:
         raise HTTPException(status_code=401, detail='You must be authenticated to do this!')
 
@@ -71,20 +68,18 @@ async def update_group(
 
     new_group = DGroup(ips_group=available_groups[0], name=ug_query.name, privileges=ug_query.privileges)
 
-    ev_string = (
-        f'{auth.type}/{auth.actor_id} created group {new_group.ips_group} with privileges {new_group.privileges}'
+    logger.info(
+        f'{auth.type}/{auth.authenticator_id} created group '
+        f'{new_group.ips_group} with privileges {new_group.privileges}'
     )
 
-    logger.info(ev_string)
-
-    i = auth.actor_id if auth.actor_id == AUTHED_USER else None
-
     await DAuditLog(
-        time=datetime.now(tz=UTC),
+        time=datetime.now(tz=UTC).timestamp(),
         event_type=EVENT_ADD_GROUP,
-        initiator=i,
-        message=ev_string,
-        key_pair=(auth.type, auth.actor_id),
+        authentication_type=auth.type,
+        authenticator=auth.authenticator_id,
+        admin=auth.admin.mongo_admin_id if auth.admin else None,
+        new_item=new_group.dict(),
     ).commit(request.app.state.db[MONGO_DB])
 
     await new_group.commit(request.app.state.db[MONGO_DB])
@@ -97,9 +92,7 @@ async def update_group(
     response_model_exclude_unset=True,
     response_model_exclude_none=True,
 )
-async def delete_group(
-    request: Request, ips_group: int, auth: Tuple[int, Optional[ObjectId], int] = Depends(check_access)
-):
+async def delete_group(request: Request, ips_group: int, auth: AuthInfo = Depends(check_access)):
     if auth.type == NOT_AUTHED_USER:
         raise HTTPException(status_code=401, detail='You must be authenticated to do this!')
 
@@ -118,18 +111,15 @@ async def delete_group(
         admin.groups.remove(ips_group)
         await admin.commit(request.app.state.db[MONGO_DB])
 
-    ev_string = f'{auth.type}/{auth.actor_id} deleted group {ips_group}'
-
-    logger.info(ev_string)
-
-    i = auth.actor_id if auth.actor_id == AUTHED_USER else None
+    logger.info(f'{auth.type}/{auth.authenticator_id} deleted group {ips_group}')
 
     await DAuditLog(
-        time=datetime.now(tz=UTC),
+        time=datetime.now(tz=UTC).timestamp(),
         event_type=EVENT_DELETE_GROUP,
-        initiator=i,
-        message=ev_string,
-        key_pair=(auth.type, auth.actor_id),
+        authentication_type=auth.type,
+        authenticator=auth.authenticator_id,
+        admin=auth.admin.mongo_admin_id if auth.admin else None,
+        old_item=dg.dict(),
     ).commit(request.app.state.db[MONGO_DB])
 
     await request.app.state.db[MONGO_DB][DGroup.__collection__].delete_one({'ips_group': ips_group})
@@ -146,7 +136,7 @@ async def patch_group(
     request: Request,
     ips_group: int,
     ug_query: UpdateGroup,
-    auth: Tuple[int, Optional[ObjectId], int] = Depends(check_access),
+    auth: AuthInfo = Depends(check_access),
 ):
     if auth.type == NOT_AUTHED_USER:
         raise HTTPException(status_code=401, detail='You must be authenticated to do this!')
@@ -158,21 +148,22 @@ async def patch_group(
     if dg is None:
         raise HTTPException(detail='No group exists with ips_group: {ips_group}', status_code=404)
 
+    original_group_info = dg  # For audit logging purposes
     dg.name = ug_query.name
     dg.privileges = ug_query.privileges
 
-    ev_string = f'{auth.type}/{auth.actor_id} patched the permissions of {dg.ips_group} to {ug_query.privileges}'
-
-    logger.info(ev_string)
-
-    i = auth.actor_id if auth.actor_id == AUTHED_USER else None
+    logger.info(
+        f'{auth.type}/{auth.authenticator_id} patched the permissions of {dg.ips_group} to {ug_query.privileges}'
+    )
 
     await DAuditLog(
-        time=datetime.now(tz=UTC),
+        time=datetime.now(tz=UTC).timestamp(),
         event_type=EVENT_SET_GROUP_PERMISSIONS,
-        initiator=i,
-        message=ev_string,
-        key_pair=(auth.type, auth.actor_id),
+        authentication_type=auth.type,
+        authenticator=auth.authenticator_id,
+        admin=auth.admin.mongo_admin_id if auth.admin else None,
+        old_item=original_group_info.dict(),
+        new_item=dg.dict(),
     ).commit(request.app.state.db[MONGO_DB])
 
     await dg.commit(request.app.state.db[MONGO_DB])
