@@ -8,7 +8,7 @@
     gap: 10px;
 }
 
-@media screen and (max-width: 925px) {
+@media screen and (max-width: 1100px) {
     #logs {
         grid-template-columns: 170px auto;
     }
@@ -18,12 +18,26 @@
     }
 }
 
+@media screen and (max-width: 800px) {
+    #logs {
+        display: none !important;
+    }
+
+    #min-size-warning {
+        display: block !important;
+        color: red;
+        font-size: 48pt;
+        text-align: center;
+    }
+}
+
 #logs > div {
     background-color: var(--background-primary);
     border: 1px solid black;
     font-size: 16px;
     display: flex;
     flex-direction: column;
+    overscroll-behavior: none;
 }
 
 #logs-category,
@@ -37,19 +51,22 @@
     overflow: hidden;
 }
 
-/* Logs Table Layout */
+/* MARK: Table Layout */
 #logs-table {
     flex: 1;
     display: flex;
     flex-direction: column;
     overflow: hidden;
-    border-bottom: 1px solid #ccc;
 }
 
 #logs-table-header {
     font-weight: bold;
     border-bottom: 1px solid #aaa;
     flex-shrink: 0;
+}
+
+#logs-table-header > div {
+    margin: 0 2px;
 }
 
 .logs-table-row {
@@ -60,7 +77,7 @@
 .logs-table-row,
 #logs-table-header {
     display: grid;
-    grid-template-columns: 10% 15% 10% 25% auto;
+    grid-template-columns: 200px 200px 15% 100px auto;
     padding: 5px;
     border-bottom: 1px solid #e0e0e0;
     cursor: pointer;
@@ -68,30 +85,35 @@
 
 .logs-table-row > div {
     overflow-x: hidden;
+    margin: 0 2px;
+    text-wrap: nowrap;
 }
 
 #logs-table-body {
     overflow-y: auto;
     flex: 1;
+    overscroll-behavior: none;
 }
 
 .logs-table-row:nth-child(odd) {
     background-color: rgba(100, 100, 100, 20%);
 }
 
+.logs-table-row.selected {
+    background-color: var(--background-accent-secondary) !important;
+}
+
 .logs-table-row:hover {
     background-color: var(--background-tertiary);
 }
 
-#logs-description {
-    display: none; /* Hide while WIP */
-    height: 30%;
-    padding: 10px;
-    background-color: var(--background-secondary);
-    overflow-y: auto;
-    border-top: 1px solid #ccc;
+.logs-table-header > div:last-child,
+.logs-table-row > div:last-child {
+    width: fit-content;
 }
 
+
+/* MARK: Filters */
 #logs-category,
 #logs-admin {
     overflow-y: auto;
@@ -110,6 +132,36 @@
     text-decoration: underline;
 }
 
+.category-item,
+.admin-item {
+    cursor: pointer;
+    color: var(--text-secondary);
+    border-radius: 4px;
+    position: relative;
+}
+
+.category-item {
+    margin-left: 6px;
+    padding: 2px 6px 2px 14px;
+    cursor: pointer;
+    color: var(--text-secondary);
+    border-radius: 4px;
+    position: relative;
+}
+
+.admin-item {
+    margin: 2px;
+    text-align: center;
+    padding: 2px 10px;
+}
+
+.category-item::before {
+    content: "↳";
+    position: absolute;
+    padding-left: 4px;
+    left: 0px;
+}
+
 /* All category */
 #logs-category > div:first-child,
 .admin-folder {
@@ -119,28 +171,6 @@
     border-bottom: 1px solid grey;
     margin: 0;
     text-decoration: none;
-}
-
-.category-item,
-.admin-item {
-    margin-left: 10px;
-    padding: 2px 6px 2px 12px;
-    cursor: pointer;
-    color: var(--text-secondary);
-    border-radius: 4px;
-    position: relative;
-}
-
-.admin-item {
-    margin-left: 0;
-    text-align: center;
-    padding: 2px 10px;
-}
-
-.category-item::before {
-    content: "↳";
-    position: absolute;
-    left: 0px;
 }
 
 /* Hover & selected styling */
@@ -156,5 +186,62 @@
 .admin-folder.selected,
 .admin-item.selected {
     background-color: var(--background-accent-primary);
+    color: var(--text-primary);
+}
+
+/* MARK: Description */
+#diff-viewer-container {
+    height: fit-content;
+    min-height: 200px;
+    max-height: 50%;
+    padding: 8px;
+    background-color: var(--background-secondary);
+    overflow-y: auto;
+    border-top: 1px solid #ccc;
+    font-family: monospace;
+    line-height: 1.1;
+    border: 3px solid #7c7c7c;
+}
+
+.diff-line {
+    padding: 0px 1px 0px 15px;
+    position: relative;
+    width: fit-content;
+}
+
+.diff-add {
+    background-color: #aceebb;
+}
+
+.diff-remove {
+    background-color: #ffcecb;
+}
+
+.diff-add::before,
+.diff-remove::before {
+    position: absolute;
+    left: 0px;
+    padding-left: 2px;
+}
+
+.diff-add::before {
+    content: "+";
+}
+
+.diff-remove::before {
+    content: "-";
+}
+
+@media (prefers-color-scheme: dark) {
+    .diff-add {
+        background-color: #3fb9504d;
+    }
+
+    .diff-remove {
+        background-color: #f851494d;
+    }
+}
+
+.diff-unchanged {
     color: var(--text-primary);
 }

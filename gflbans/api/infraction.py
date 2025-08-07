@@ -25,13 +25,14 @@ from gflbans.api_util import (
 from gflbans.internal.config import AUTO_STACK_MAX_AGE, AUTO_STACK_MULTIPLIER, AUTO_STACK_START_TIME, MONGO_DB
 from gflbans.internal.constants import AUTHED_USER, NOT_AUTHED_USER, SERVER_KEY
 from gflbans.internal.database.audit_log import (
-    EVENT_DELETE_COMMENT,
-    EVENT_EDIT_COMMENT,
-    EVENT_EDIT_INFRACTION,
-    EVENT_NEW_COMMENT,
-    EVENT_NEW_INFRACTION,
-    EVENT_REMOVE_INFRACTION,
-    EVENT_UPLOAD_FILE,
+    EVENT_COMMENT_DELETE,
+    EVENT_COMMENT_EDIT,
+    EVENT_COMMENT_NEW,
+    EVENT_FILE_DELETE,
+    EVENT_FILE_UPLOAD,
+    EVENT_INFRACTION_EDIT,
+    EVENT_INFRACTION_NEW,
+    EVENT_INFRACTION_REMOVE,
     DAuditLog,
 )
 from gflbans.internal.database.common import DFile
@@ -599,7 +600,7 @@ async def create_infraction(
         session=query.session,
         created=query.created,
         duration=duration_to_use,
-        admin=auth.admin,
+        admin=auth.admin.mongo_admin_id,
         playtime_based=query.playtime_based,
         server=server,
     )
@@ -631,7 +632,7 @@ async def create_infraction(
     # Create audit log entry
     await DAuditLog(
         time=datetime.now(tz=UTC).timestamp(),
-        event_type=EVENT_NEW_INFRACTION,
+        event_type=EVENT_INFRACTION_NEW,
         authentication_type=auth.type,
         authenticator=auth.authenticator_id,
         admin=auth.admin.mongo_admin_id,
@@ -787,7 +788,7 @@ async def remove_infraction(
 
         await DAuditLog(
             time=datetime.now(tz=UTC).timestamp(),
-            event_type=EVENT_REMOVE_INFRACTION,
+            event_type=EVENT_INFRACTION_REMOVE,
             authentication_type=auth.type,
             authenticator=auth.authenticator_id,
             admin=auth.admin.mongo_admin_id,
@@ -820,7 +821,7 @@ async def edit_infraction(
     if dinf is None:
         raise HTTPException(detail=f'Infraction {infraction_id} does not exist.', status_code=404)
 
-    original_dinf_info = dinf  # For Audit logging purposes
+    original_dinf_info = dinf.dict()  # For Audit logging purposes
 
     if not (
         auth.admin.permissions & PERMISSION_EDIT_ALL_INFRACTIONS == PERMISSION_EDIT_ALL_INFRACTIONS
@@ -920,12 +921,12 @@ async def edit_infraction(
 
     await DAuditLog(
         time=datetime.now(tz=UTC).timestamp(),
-        event_type=EVENT_REMOVE_INFRACTION if query.set_removal_state else EVENT_EDIT_INFRACTION,
+        event_type=EVENT_INFRACTION_REMOVE if query.set_removal_state else EVENT_INFRACTION_EDIT,
         authentication_type=auth.type,
         authenticator=auth.authenticator_id,
         admin=auth.admin.mongo_admin_id,
         new_item=dinf.dict(),
-        old_item=original_dinf_info.dict(),
+        old_item=original_dinf_info,
     ).commit(request.app.state.db[MONGO_DB])
 
     # Notify all servers that new state is available (uwu)
@@ -985,7 +986,7 @@ async def add_comment(
 
     await DAuditLog(
         time=datetime.now(tz=UTC).timestamp(),
-        event_type=EVENT_NEW_COMMENT,
+        event_type=EVENT_COMMENT_NEW,
         authentication_type=auth.type,
         authenticator=auth.authenticator_id,
         admin=auth.admin.mongo_admin_id,
@@ -1015,8 +1016,6 @@ async def _update_or_delete_comment(
     if dinf is None:
         raise HTTPException(detail='No such infraction exists!', status_code=404)
 
-    original_dinf_info = dinf  # For Audit logging purposes
-
     try:
         if (
             auth.admin.permissions & PERMISSION_COMMENT != PERMISSION_COMMENT
@@ -1027,6 +1026,8 @@ async def _update_or_delete_comment(
             or auth.permissions & PERMISSION_WEB_MODERATOR != PERMISSION_WEB_MODERATOR
         ):
             raise HTTPException(detail='You do not have permission to do that!', status_code=403)
+
+        original_comment_info = dinf.comments[query.comment_index].dict()  # For Audit logging purposes
 
         if isinstance(query, DeleteComment):
             das = (
@@ -1045,6 +1046,8 @@ async def _update_or_delete_comment(
 
             if auth.admin.mongo_admin_id is not None:
                 dinf.comments[query.comment_index].edit_data['admin'] = auth.admin.mongo_admin_id
+
+            new_comment_info = dinf.comments[query.comment_index].dict()  # For Audit logging purposes
     except IndexError:
         raise HTTPException(detail='There is no comment at that index', status_code=404)
 
@@ -1056,12 +1059,12 @@ async def _update_or_delete_comment(
 
     await DAuditLog(
         time=datetime.now(tz=UTC).timestamp(),
-        event_type=EVENT_EDIT_COMMENT if isinstance(query, EditComment) else EVENT_DELETE_COMMENT,
+        event_type=EVENT_COMMENT_EDIT if isinstance(query, EditComment) else EVENT_COMMENT_DELETE,
         authentication_type=auth.type,
         authenticator=auth.authenticator_id,
         admin=auth.admin.mongo_admin_id,
-        new_item=dinf.dict(),
-        old_item=original_dinf_info.dict(),
+        new_item=new_comment_info if 'new_comment_info' in locals() else None,
+        old_item=original_comment_info,
     ).commit(request.app.state.db[MONGO_DB])
 
     return await as_infraction(
@@ -1169,7 +1172,7 @@ async def add_attachment(
 
     await DAuditLog(
         time=datetime.now(tz=UTC).timestamp(),
-        event_type=EVENT_UPLOAD_FILE,
+        event_type=EVENT_FILE_UPLOAD,
         authentication_type=auth.type,
         authenticator=auth.authenticator_id,
         admin=auth.admin.mongo_admin_id,
@@ -1205,7 +1208,7 @@ async def delete_attachment(
     except IndexError:
         raise HTTPException(detail='No such file in the specified infraction exists', status_code=404)
 
-    old_item = dinf.files[query.file_idx]  # For Audit logging purposes
+    old_item = dinf.files[query.file_idx].dict()  # For Audit logging purposes
 
     if (
         auth.admin.permissions & PERMISSION_ATTACH_FILE != PERMISSION_ATTACH_FILE
@@ -1234,11 +1237,11 @@ async def delete_attachment(
 
     await DAuditLog(
         time=datetime.now(tz=UTC).timestamp(),
-        event_type=EVENT_UPLOAD_FILE,
+        event_type=EVENT_FILE_DELETE,
         authentication_type=auth.type,
         authenticator=auth.authenticator_id,
         admin=auth.admin.mongo_admin_id,
-        old_item=old_item.dict(),
+        old_item=old_item,
     ).commit(request.app.state.db[MONGO_DB])
 
     return await as_infraction(

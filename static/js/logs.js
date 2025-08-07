@@ -1,78 +1,82 @@
 const LOGS = Object.freeze({
     // Infraction
-    EVENT_NEW_INFRACTION: 0,
-    EVENT_REMOVE_INFRACTION: 1,
-    EVENT_EDIT_INFRACTION: 2,
-    EVENT_NEW_COMMENT: 3,
-    EVENT_EDIT_COMMENT: 4,
-    EVENT_DELETE_COMMENT: 5,
-    EVENT_UPLOAD_FILE: 6,
-    EVENT_DELETE_FILE: 7,
-    EVENT_RPC_KICK: 8,
+    EVENT_INFRACTION_NEW: 0,
+    EVENT_INFRACTION_REMOVE: 1,
+    EVENT_INFRACTION_EDIT: 2,
+    EVENT_COMMENT_NEW: 3,
+    EVENT_COMMENT_EDIT: 4,
+    EVENT_COMMENT_DELETE: 5,
+    EVENT_FILE_UPLOAD: 6,
+    EVENT_FILE_DELETE: 7,
+    EVENT_RPC_KICK: 17,
 
     // Server
-    EVENT_NEW_SERVER: 8,
-    EVENT_EDIT_SERVER: 9,
+    EVENT_SERVER_NEW: 8,
+    EVENT_SERVER_EDIT: 9,
+    EVENT_SERVER_REGENERATE_TOKEN: 18,
 
     // Group
-    EVENT_SET_GROUP_PERMISSIONS: 10,
-    EVENT_ADD_GROUP: 11,
-    EVENT_DELETE_GROUP: 12,
-    EVENT_SET_ADMIN_PERMISSIONS: 13,
+    EVENT_PERMISSIONS_GROUP_EDIT: 10,
+    EVENT_PERMISSIONS_GROUP_ADD: 11,
+    EVENT_PERMISSIONS_GROUP_DELETE: 12,
+    EVENT_PERMISSIONS_ADMIN_EDIT: 13,
 
     // VPN
-    EVENT_NEW_VPN: 14,
-    EVENT_DELETE_VPN: 15,
-    EVENT_EDIT_VPN: 16,
+    EVENT_VPN_NEW: 14,
+    EVENT_VPN_DELETE: 15,
+    EVENT_VPN_EDIT: 16,
 });
 
 const folderToEventTypes = {
     infraction: [
-        LOGS.EVENT_NEW_INFRACTION,
-        LOGS.EVENT_REMOVE_INFRACTION,
-        LOGS.EVENT_EDIT_INFRACTION,
-        LOGS.EVENT_NEW_COMMENT,
-        LOGS.EVENT_EDIT_COMMENT,
-        LOGS.EVENT_DELETE_COMMENT,
-        LOGS.EVENT_UPLOAD_FILE,
-        LOGS.EVENT_DELETE_FILE,
+        LOGS.EVENT_INFRACTION_NEW,
+        LOGS.EVENT_INFRACTION_REMOVE,
+        LOGS.EVENT_INFRACTION_EDIT,
+        LOGS.EVENT_COMMENT_NEW,
+        LOGS.EVENT_COMMENT_EDIT,
+        LOGS.EVENT_COMMENT_DELETE,
+        LOGS.EVENT_FILE_UPLOAD,
+        LOGS.EVENT_FILE_DELETE,
         LOGS.EVENT_RPC_KICK
     ],
     server: [
-        LOGS.EVENT_NEW_SERVER,
-        LOGS.EVENT_EDIT_SERVER
+        LOGS.EVENT_SERVER_NEW,
+        LOGS.EVENT_SERVER_EDIT,
+        LOGS.EVENT_SERVER_REGENERATE_TOKEN
     ],
     group: [
-        LOGS.EVENT_SET_GROUP_PERMISSIONS,
-        LOGS.EVENT_ADD_GROUP,
-        LOGS.EVENT_DELETE_GROUP,
-        LOGS.EVENT_SET_ADMIN_PERMISSIONS
+        LOGS.EVENT_PERMISSIONS_GROUP_EDIT,
+        LOGS.EVENT_PERMISSIONS_GROUP_ADD,
+        LOGS.EVENT_PERMISSIONS_GROUP_DELETE,
+        LOGS.EVENT_PERMISSIONS_ADMIN_EDIT
     ],
     vpn: [
-        LOGS.EVENT_NEW_VPN,
-        LOGS.EVENT_DELETE_VPN,
-        LOGS.EVENT_EDIT_VPN
+        LOGS.EVENT_VPN_NEW,
+        LOGS.EVENT_VPN_DELETE,
+        LOGS.EVENT_VPN_EDIT
     ]
 };
 
 const logs2name = {};
-logs2name[LOGS.EVENT_NEW_INFRACTION] = 'New Infraction';
-logs2name[LOGS.EVENT_REMOVE_INFRACTION] = 'Remove Infraction';
-logs2name[LOGS.EVENT_EDIT_INFRACTION] = 'Edit Infraction';
-logs2name[LOGS.EVENT_NEW_COMMENT] = 'New Comment';
-logs2name[LOGS.EVENT_DELETE_COMMENT] = 'Delete Comment';
-logs2name[LOGS.EVENT_UPLOAD_FILE] = 'Upload File';
-logs2name[LOGS.EVENT_DELETE_FILE] = 'Delete File';
+logs2name[LOGS.EVENT_INFRACTION_NEW] = 'New Infraction';
+logs2name[LOGS.EVENT_INFRACTION_REMOVE] = 'Remove Infraction';
+logs2name[LOGS.EVENT_INFRACTION_EDIT] = 'Edit Infraction';
+logs2name[LOGS.EVENT_COMMENT_NEW] = 'New Comment';
+logs2name[LOGS.EVENT_COMMENT_EDIT] = 'Edit Comment';
+logs2name[LOGS.EVENT_COMMENT_DELETE] = 'Delete Comment';
+logs2name[LOGS.EVENT_FILE_UPLOAD] = 'Upload File';
+logs2name[LOGS.EVENT_FILE_DELETE] = 'Delete File';
 logs2name[LOGS.EVENT_RPC_KICK] = 'RPC Kick';
-logs2name[LOGS.EVENT_NEW_SERVER] = 'New Server';
-logs2name[LOGS.EVENT_EDIT_SERVER] = 'Edit Server';
-logs2name[LOGS.EVENT_SET_GROUP_PERMISSIONS] = 'Set Group Permissions';
-logs2name[LOGS.EVENT_ADD_GROUP] = 'Add Group';
-logs2name[LOGS.EVENT_DELETE_GROUP] = 'Delete Group';
-logs2name[LOGS.EVENT_SET_ADMIN_PERMISSIONS] = 'Set Admin Permimssions';
-logs2name[LOGS.EVENT_NEW_VPN] = 'New VPN';
-logs2name[LOGS.EVENT_DELETE_VPN] = 'Delete VPN';
-logs2name[LOGS.EVENT_EDIT_VPN] = 'Edit VPN';
+logs2name[LOGS.EVENT_SERVER_NEW] = 'New Server';
+logs2name[LOGS.EVENT_SERVER_EDIT] = 'Edit Server';
+logs2name[LOGS.EVENT_SERVER_REGENERATE_TOKEN] = 'Regenerate Server Token';
+logs2name[LOGS.EVENT_PERMISSIONS_GROUP_EDIT] = 'Set Group Permissions';
+logs2name[LOGS.EVENT_PERMISSIONS_GROUP_ADD] = 'Add Group';
+logs2name[LOGS.EVENT_PERMISSIONS_GROUP_DELETE] = 'Delete Group';
+logs2name[LOGS.EVENT_PERMISSIONS_ADMIN_EDIT] = 'Set Admin Permissions';
+logs2name[LOGS.EVENT_VPN_NEW] = 'New VPN';
+logs2name[LOGS.EVENT_VPN_DELETE] = 'Delete VPN';
+logs2name[LOGS.EVENT_VPN_EDIT] = 'Edit VPN';
 
 const AUTH_TYPE = Object.freeze({
     SERVER_KEY: 0,
@@ -87,15 +91,33 @@ auth2name[AUTH_TYPE.API_KEY] = 'API Key';
 auth2name[AUTH_TYPE.AUTHED_USER] = 'User';
 auth2name[AUTH_TYPE.NOT_AUTHED_USER] = 'Unauthenticated';
 
+// For infinite scroll of audit logs
+let currentOffset = 0;
+let reachedEnd = false;
+let isLoading = false;
+const LOGS_LIMIT = 50;
+
+function ResetAndLoadLogs(el) {
+    currentOffset = 0;
+    reachedEnd = false;
+    LoadNewLogs(false);
+}
+
 $(document).ready(function () {
     LoadNewLogs();
     LoadAdminList();
 
     $('#logs-category div').on('click', function () {
-        $('#logs-category div').removeClass('selected');
+        $('#logs-category .selected').removeClass('selected');
         $(this).addClass('selected');
-        const type = $(this).val();
-        LoadNewLogs();
+        ResetAndLoadLogs();
+    });
+
+    $('#logs-table-body').on('scroll', function () {
+        const el = $(this).get(0);
+        if (el.scrollTop + el.clientHeight >= el.scrollHeight - 10) {
+            LoadNewLogs(true);
+        }
     });
 });
 
@@ -127,10 +149,9 @@ async function LoadAdminList() {
         .attr('data-type', 0).text('All Admins')
         .prop('selected', true)
         .on('click', function () {
-            $('#logs-admin div').removeClass('selected');
+            $('#logs-admin .selected').removeClass('selected');
             $(this).addClass('selected');
-            const type = $(this).val();
-            LoadNewLogs();
+            ResetAndLoadLogs();
         })
     );
 
@@ -140,10 +161,9 @@ async function LoadAdminList() {
         .text('System')
         .prop('selected', true)
         .on('click', function () {
-            $('#logs-admin div').removeClass('selected');
+            $('#logs-admin .selected').removeClass('selected');
             $(this).addClass('selected');
-            const type = $(this).val();
-            LoadNewLogs();
+            ResetAndLoadLogs();
         })
     );
 
@@ -162,7 +182,7 @@ async function LoadAdminList() {
         el.on('click', function () {
             $('#logs-admin div').removeClass('selected');
             $(this).addClass('selected');
-            const type = $(this).val();
+            ResetAndLoadLogs();
             LoadNewLogs();
         });
 
@@ -170,13 +190,23 @@ async function LoadAdminList() {
     }
 }
 
-function LoadNewLogs() {
+function LoadNewLogs(append = false) {
+    if (isLoading || reachedEnd) return;
+    isLoading = true;
+
     const start = new Date().getTime();
+    if (!append) {
+        $('#logs-table-body').empty();
+        $('#diff-viewer-container').empty().addClass('is-hidden');
+        currentOffset = 0;
+        reachedEnd = false;
+    }
+
     setLoading();
-    $('#logs-table-body').empty();
+
     const getAuditLogs = {
-        limit: 30,
-        skip: 0
+        limit: LOGS_LIMIT,
+        skip: currentOffset
     };
 
     const selectedCat = $('#logs-category .selected');
@@ -197,72 +227,139 @@ function LoadNewLogs() {
 
     gbRequest('POST', '/api/logs/', getAuditLogs, true).then(function (response) {
         if (!response.ok) {
-            const errorData = response.json();
-            throw new Error(errorData.detail || defaultAPIError);
+            throw new Error(response.json().detail || defaultAPIError);
         }
 
         response.json().then(data => {
             const dur = 200 - (new Date().getTime() - start);
 
-            function _LoadNewLogs() {
-                data.results.sort(function(a, b) {
-                    return ((a['time'] < b['time']) ? -1 : ((a['time'] > b['time']) ? 1 : 0));
-                });
+            function _ProcessLogs() {
+                if (data.results.length < LOGS_LIMIT) {
+                    reachedEnd = true;
+                }
 
-                for (let i = 0; i < data.results.length; i++) {
-                    const auditLog = data.results[i];
+                currentOffset += data.results.length;
 
+                data.results.sort((a, b) => b['time'] - a['time']);
+
+                if (!append && data.results.length === 0) {
+                    $('#logs-table-body')
+                        .html($('<h1 style="text-align: center; font-size: 30pt;">No audit logs found</h1>'));
+                }
+
+                for (const auditLog of data.results) {
                     const row = $('<div>').addClass('logs-table-row');
+                    row.append($('<div>').text(auditLog.time ? moment.unix(auditLog.time).format('LLL') : 'Unknown'));
+                    row.append($('<div>').text(logs2name[auditLog.event_type] ?? 'Unknown'));
+                    row.append($('<div>').text(auditLog.admin ?? 'Unknown'));
+                    row.append($('<div>').text(auth2name[auditLog.authentication_type] ?? 'Unknown'));
+                    row.append($('<div>').text(auditLog.authenticator ?? 'Unknown'));
 
-                    if (auditLog.hasOwnProperty('time'))
-                        row.append($('<div>').text(auditLog['time']));
-                    else
-                        row.append($('<div>').text('Unknown'));
+                    row.data('oldItem', auditLog.old_item || null);
+                    row.data('newItem', auditLog.new_item || null);
 
-                    if (auditLog.hasOwnProperty('event_type'))
-                        row.append($('<div>').text(logs2name[auditLog['event_type']]));
-                    else
-                        row.append($('<div>').text('Unknown'));
+                    row.on('click', function () {
+                        $('.logs-table-row.selected').removeClass('selected');
+                        $(this).addClass('selected');
+                        const oldItem = $(this).data('oldItem');
+                        const newItem = $(this).data('newItem');
+                        let diff;
 
-                    if (auditLog.hasOwnProperty('authentication_type'))
-                        row.append($('<div>').text(auth2name[auditLog['authentication_type']]));
-                    else
-                        row.append($('<div>').text('Unknown'));
+                        if (oldItem && newItem) {
+                            diff = renderJsonDiff(oldItem, newItem);
+                        } else if (oldItem) {
+                            diff = renderJsonSingle(oldItem, '', false);
+                        } else if (newItem) {
+                            diff = renderJsonSingle(newItem, '', true);
+                        } else {
+                            diff = '<p class="diff-line diff-unchanged">No item data available</p>';
+                        }
 
-                    if (auditLog.hasOwnProperty('authenticator'))
-                        row.append($('<div>').text(auditLog['authenticator']));
-                    else
-                        row.append($('<div>').text('Unknown'));
-
-                    if (auditLog.hasOwnProperty('admin'))
-                        row.append($('<div>').text(auditLog['admin']));
-                    else
-                        row.append($('<div>').text('Unknown'));
-
-                    /*
-                    row.attr('data-group', group['group_id']);
-
-                    row.click(function () {
-                        openGroupMenu(this.getAttribute('data-group'));
+                        $('#diff-viewer-container').html(diff).removeClass('is-hidden');
                     });
-                    */
 
                     $('#logs-table-body').append(row);
                 }
 
-                if (data.results.length === 0)
-                    $('#logs-table-body')
-                        .html($('<h1 style="text-align: center; font-size: 30pt;">No audit logs found</h1>'));
-
                 unsetLoading();
+                isLoading = false;
+
+                function isScrollableDown(el) {
+                    return el.scrollHeight > el.clientHeight;
+                }
+
+                // ✅ Check if we need to load more because content doesn't overflow yet
+                const bodyEl = $('#logs-table-body').get(0);
+                if (!reachedEnd && !isScrollableDown(bodyEl)) {
+                    LoadNewLogs(true);
+                }
             }
 
             if (dur > 0)
-                setTimeout(_LoadNewLogs, dur);
+                setTimeout(_ProcessLogs, dur);
             else
-                _LoadNewLogs();
+                _ProcessLogs();
         });
     }).catch(e => {
         logException(e);
+        isLoading = false;
+        unsetLoading();
     });
+}
+
+
+function renderJsonDiff(oldObj, newObj) {
+    const output = [];
+
+    function diff(o, n, prefix = '') {
+        const keys = new Set([...Object.keys(o || {}), ...Object.keys(n || {})]);
+
+        for (const key of Array.from(keys).sort()) {
+            const oldVal = o?.[key];
+            const newVal = n?.[key];
+            const path = prefix ? `${prefix}.${key}` : key;
+
+            const oldIsObj = typeof oldVal === 'object' && oldVal !== null;
+            const newIsObj = typeof newVal === 'object' && newVal !== null;
+
+            if (oldIsObj || newIsObj) {
+                diff(oldIsObj ? oldVal : {}, newIsObj ? newVal : {}, path);
+            } else if (JSON.stringify(oldVal) === JSON.stringify(newVal)) {
+                output.push(`<p class="diff-line diff-unchanged">${path}: ${JSON.stringify(newVal)}</p>`);
+            } else {
+                if (oldVal !== undefined) {
+                    output.push(`<p class="diff-line diff-remove">${path}: ${JSON.stringify(oldVal)}</p>`);
+                }
+                if (newVal !== undefined) {
+                    output.push(`<p class="diff-line diff-add">${path}: ${JSON.stringify(newVal)}</p>`);
+                }
+            }
+        }
+    }
+
+    diff(oldObj, newObj);
+    return output.join('\n');
+}
+
+function renderJsonSingle(jsonObj, prefix = '', isNew = true) {
+    const output = [];
+
+    function recurse(obj, path) {
+        for (const key of Object.keys(obj)) {
+            const val = obj[key];
+            const fullPath = path ? `${path}.${key}` : key;
+
+            if (val && typeof val === 'object' && !Array.isArray(val)) {
+                recurse(val, fullPath);
+            } else {
+                const displayVal = JSON.stringify(val);
+                output.push(
+                    `<p class="diff-line ${isNew ? 'diff-add' : 'diff-remove'}"> ${fullPath}: ${displayVal}</p>`
+                );
+            }
+        }
+    }
+
+    recurse(jsonObj, prefix);
+    return output.join('\n');
 }

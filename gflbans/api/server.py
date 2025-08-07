@@ -12,7 +12,12 @@ from starlette.requests import Request
 from gflbans.api.auth import AuthInfo, check_access, csrf_protect
 from gflbans.internal.config import MONGO_DB
 from gflbans.internal.constants import NOT_AUTHED_USER
-from gflbans.internal.database.audit_log import EVENT_EDIT_SERVER, EVENT_NEW_SERVER, DAuditLog
+from gflbans.internal.database.audit_log import (
+    EVENT_SERVER_EDIT,
+    EVENT_SERVER_NEW,
+    EVENT_SERVER_REGENERATE_TOKEN,
+    DAuditLog,
+)
 from gflbans.internal.database.server import DServer, DUserIP
 from gflbans.internal.flags import PERMISSION_MANAGE_SERVERS, PERMISSION_VIEW_CHAT_LOGS, PERMISSION_VIEW_IP_ADDR
 from gflbans.internal.log import logger
@@ -200,16 +205,13 @@ async def create_server(request: Request, n: AddServer, auth: AuthInfo = Depends
         f'{auth.type}/{auth.authenticator_id} created a new server with ip {str(n.ip)} and name {dsv.friendly_name}'
     )
 
-    censored_srv = dsv
-    censored_srv.censor()
-
     await DAuditLog(
         time=datetime.now(tz=UTC).timestamp(),
-        event_type=EVENT_NEW_SERVER,
+        event_type=EVENT_SERVER_NEW,
         authentication_type=auth.type,
         authenticator=auth.authenticator_id,
         admin=auth.admin.mongo_admin_id,
-        new_item=censored_srv.dict(),
+        new_item=dsv.censor(),
     ).commit(request.app.state.db[MONGO_DB])
 
     return AddServerReply(
@@ -247,8 +249,7 @@ async def edit_server(request: Request, e: EditServer, server_id: str, auth: Aut
     if srv is None:
         raise HTTPException(detail='Server does not exist', status_code=404)
 
-    original_srv_info = srv  # For Audit logging purposes
-    original_srv_info.censor()
+    original_srv_info = srv.censor()  # For Audit logging purposes
 
     modifications = 'SET'
 
@@ -304,17 +305,14 @@ async def edit_server(request: Request, e: EditServer, server_id: str, auth: Aut
 
     logger.info(f'{auth.type}/{auth.authenticator_id} edited a server {srv.id}')
 
-    logged_srv = srv
-    logged_srv.censor()
-
     await DAuditLog(
         time=datetime.now(tz=UTC).timestamp(),
-        event_type=EVENT_EDIT_SERVER,
+        event_type=EVENT_SERVER_EDIT,
         authentication_type=auth.type,
         authenticator=auth.authenticator_id,
         admin=auth.admin.mongo_admin_id,
-        old_item=original_srv_info.dict(),
-        new_item=logged_srv.dict(),
+        old_item=original_srv_info,
+        new_item=srv.censor(),
     ).commit(request.app.state.db[MONGO_DB])
 
     return ServerInternal(
@@ -357,14 +355,12 @@ async def regenerate_server_token(request: Request, server_id: str, auth: AuthIn
 
     logger.info(f'{auth.type}/{auth.authenticator_id} regenerated the server token for {server_id}')
 
-    srv.censor()
     await DAuditLog(
         time=datetime.now(tz=UTC).timestamp(),
-        event_type=EVENT_EDIT_SERVER,
+        event_type=EVENT_SERVER_REGENERATE_TOKEN,
         authentication_type=auth.type,
         authenticator=auth.authenticator_id,
         admin=auth.admin.mongo_admin_id,
-        new_item=srv.dict(),
     ).commit(request.app.state.db[MONGO_DB])
 
     return RegenerateServerTokenReply(server_secret_key=key)

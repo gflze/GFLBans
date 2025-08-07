@@ -10,40 +10,42 @@
     <body>
         {% include 'js_includes.html' %}
         {% include 'header.html' with context %}
+        <div id="min-size-warning" class="is-hidden">Audit Log viewing is not supported on thin monitors</div>
         <div id="logs">
             <div id="logs-category">
                 <div class="category-folder selected" data-type="all">All Log Types</div>
                 <div class="category-folder" data-type="infraction">Infraction</div>
-                <div class="category-item" data-type="EVENT_NEW_INFRACTION">New Infraction</div>
-                <div class="category-item" data-type="EVENT_REMOVE_INFRACTION">Remove Infraction</div>
-                <div class="category-item" data-type="EVENT_EDIT_INFRACTION">Edit Infraction</div>
-                <div class="category-item" data-type="EVENT_NEW_COMMENT">New Comment</div>
-                <div class="category-item" data-type="EVENT_EDIT_COMMENT">Edit Comment</div>
-                <div class="category-item" data-type="EVENT_DELETE_COMMENT">Delete Comment</div>
-                <div class="category-item" data-type="EVENT_UPLOAD_FILE">Upload File</div>
-                <div class="category-item" data-type="EVENT_DELETE_FILE">Delete File</div>
+                <div class="category-item" data-type="EVENT_INFRACTION_NEW">New Infraction</div>
+                <div class="category-item" data-type="EVENT_INFRACTION_REMOVE">Remove Infraction</div>
+                <div class="category-item" data-type="EVENT_INFRACTION_EDIT">Edit Infraction</div>
+                <div class="category-item" data-type="EVENT_COMMENT_NEW">New Comment</div>
+                <div class="category-item" data-type="EVENT_COMMENT_EDIT">Edit Comment</div>
+                <div class="category-item" data-type="EVENT_COMMENT_DELETE">Delete Comment</div>
+                <div class="category-item" data-type="EVENT_FILE_UPLOAD">Upload File</div>
+                <div class="category-item" data-type="EVENT_FILE_DELETE">Delete File</div>
                 <div class="category-item" data-type="EVENT_RPC_KICK">RPC Kick</div>
                 <div class="category-folder" data-type="server">Server</div>
-                <div class="category-item" data-type="EVENT_NEW_SERVER">New Server</div>
-                <div class="category-item" data-type="EVENT_EDIT_SERVER">Edit Server</div>
+                <div class="category-item" data-type="EVENT_SERVER_NEW">New Server</div>
+                <div class="category-item" data-type="EVENT_SERVER_EDIT">Edit Server</div>
+                <div class="category-item" data-type="EVENT_SERVER_REGENERATE_TOKEN">Regenerate Token</div>
                 <div class="category-folder" data-type="group">Permissions</div>
-                <div class="category-item" data-type="EVENT_SET_GROUP_PERMISSIONS">Edit Group</div>
-                <div class="category-item" data-type="EVENT_ADD_GROUP">Add Group</div>
-                <div class="category-item" data-type="EVENT_DELETE_GROUP">Delete Group</div>
-                <div class="category-item" data-type="EVENT_SET_ADMIN_PERMISSIONS">Edit Admin</div>
+                <div class="category-item" data-type="EVENT_PERMISSIONS_GROUP_EDIT">Edit Group</div>
+                <div class="category-item" data-type="EVENT_PERMISSIONS_GROUP_ADD">Add Group</div>
+                <div class="category-item" data-type="EVENT_PERMISSIONS_GROUP_DELETE">Delete Group</div>
+                <div class="category-item" data-type="EVENT_PERMISSIONS_ADMIN_EDIT">Edit Admin</div>
                 <div class="category-folder" data-type="vpn">VPN</div>
-                <div class="category-item" data-type="EVENT_NEW_VPN">New VPN</div>
-                <div class="category-item" data-type="EVENT_DELETE_VPN">Delete VPN</div>
-                <div class="category-item" data-type="EVENT_EDIT_VPN">Edit VPN</div>
+                <div class="category-item" data-type="EVENT_VPN_NEW">New VPN</div>
+                <div class="category-item" data-type="EVENT_VPN_DELETE">Delete VPN</div>
+                <div class="category-item" data-type="EVENT_VPN_EDIT">Edit VPN</div>
             </div>
             <div id="logs-body">
                 <div id="logs-table">
                     <div id="logs-table-header">
                         <div>Time</div>
                         <div>Type</div>
+                        <div>Admin</div>
                         <div>Auth Type</div>
                         <div>Authenticator</div>
-                        <div>Admin</div>
                     </div>
                     <div id="logs-table-body">
                         <div class="logs-table-row">
@@ -55,7 +57,7 @@
                         </div>
                     </div>
                 </div>
-                <div id="logs-description">Work in progress. Will display diff caused by event here in future.</div>
+                <div id="diff-viewer-container" class="is-hidden"></div>
             </div>
             <div id="logs-admin" class="is-hidden-mobile-tiny">
                 <div class="admin-folder selected" data-type="0">All Admins</div>
