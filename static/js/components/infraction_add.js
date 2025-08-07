@@ -82,6 +82,8 @@ function resetModal() {
     $('.rbtn').addClass('is-outlined');
 
     $(cTimeDecCheckField).removeClass('is-hidden');
+    $(cAutoStackCheckField).removeClass('is-hidden');
+    $(cPermCheckField).removeClass('is-hidden');
     $(cDurationField).removeClass('is-hidden');
 
     $(cTimeDecCheck).prop('checked', false);
