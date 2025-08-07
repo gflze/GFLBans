@@ -29,6 +29,18 @@ async def deprecation_cleanup(app):
         old_version = version_info['old_version']
     elif Version(version_info['version']) < Version(GB_VERSION):
         old_version = version_info['version']
+    elif Version(version_info['version']) > Version(GB_VERSION):
+        # Downgraded to an older version of GFLBans.
+        # Update database version so cleanup can happen again when we update in the future
+        await info_collection.find_one_and_update(
+            {'_id': DATABASE_INFO_KEY},
+            {
+                '$set': {
+                    'version': GB_VERSION,
+                },
+            },
+        )
+        return
     else:
         return  # Version is current, no cleanup needed
 
