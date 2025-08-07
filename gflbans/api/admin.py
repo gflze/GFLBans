@@ -10,7 +10,7 @@ from gflbans.api.auth import AuthInfo, check_access, csrf_protect
 from gflbans.api_util import as_admin
 from gflbans.internal.config import MONGO_DB
 from gflbans.internal.constants import NOT_AUTHED_USER
-from gflbans.internal.database.audit_log import EVENT_SET_ADMIN_PERMISSIONS, DAuditLog
+from gflbans.internal.database.audit_log import EVENT_PERMISSIONS_ADMIN_EDIT, DAuditLog
 from gflbans.internal.database.common import DFile
 from gflbans.internal.database.dadmin import DAdmin
 from gflbans.internal.flags import PERMISSION_MANAGE_GROUPS_AND_ADMINS
@@ -81,7 +81,7 @@ async def update_admin(request: Request, uai_query: UpdateAdminInfo, auth: AuthI
     if target_info is None:
         target_info = DAdmin(ips_user=ips_user)
 
-    original_admin_info = target_info  # For Audit logging purposes
+    original_admin_info = target_info.dict()  # For Audit logging purposes
     target_info.last_updated = datetime.now(tz=UTC).timestamp()
     target_info.groups = uai_query.groups
 
@@ -103,11 +103,11 @@ async def update_admin(request: Request, uai_query: UpdateAdminInfo, auth: AuthI
 
     await DAuditLog(
         time=datetime.now(tz=UTC).timestamp(),
-        event_type=EVENT_SET_ADMIN_PERMISSIONS,
+        event_type=EVENT_PERMISSIONS_ADMIN_EDIT,
         authentication_type=auth.type,
         authenticator=auth.authenticator_id,
         admin=auth.admin.mongo_admin_id,
-        old_item=original_admin_info.dict(),
+        old_item=original_admin_info,
         new_item=target_info.dict(),
     ).commit(request.app.state.db[MONGO_DB])
 

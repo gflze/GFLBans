@@ -82,11 +82,13 @@ class DServer(DBase):
             logger.debug(f'DB: load {str(document["_id"])}')
             yield cls.load_document(document)
 
-    @classmethod
-    def censor(self):
-        self.discord_webhook = None
-        self.infract_webhook = None
-        self.server_key = None
-        self.server_key_salt = None
-        self.call_data = None
-        self.server_info = None
+    def censor(self) -> dict:
+        censored_self = self.dict()
+        censored_self['discord_webhook'] = None
+        censored_self['infract_webhook'] = None
+        censored_self['server_key'] = None
+        censored_self['server_key_salt'] = None
+        censored_self['call_data'] = None
+        censored_self['server_info'] = None
+
+        return censored_self

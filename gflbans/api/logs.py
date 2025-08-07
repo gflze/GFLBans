@@ -98,7 +98,7 @@ async def get_audit_logs(request: Request, query: GetAuditLogs, auth: AuthInfo =
     logs = []
 
     async for dlog in DAuditLog.from_query(
-        request.app.state.db[MONGO_DB], q, limit=query.limit, skip=query.skip, sort=('created', DESCENDING)
+        request.app.state.db[MONGO_DB], q, limit=query.limit, skip=query.skip, sort=('time', DESCENDING)
     ):
         logs.append(await as_auditlog(request.app, dlog))
 

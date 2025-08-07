@@ -13,7 +13,7 @@ from starlette.responses import Response
 from gflbans.api.auth import AuthInfo, check_access, csrf_protect
 from gflbans.internal.config import MONGO_DB
 from gflbans.internal.constants import NOT_AUTHED_USER
-from gflbans.internal.database.audit_log import EVENT_DELETE_VPN, EVENT_EDIT_VPN, EVENT_NEW_VPN, DAuditLog
+from gflbans.internal.database.audit_log import EVENT_VPN_DELETE, EVENT_VPN_EDIT, EVENT_VPN_NEW, DAuditLog
 from gflbans.internal.database.vpn import DVPN
 from gflbans.internal.flags import PERMISSION_MANAGE_VPNS
 from gflbans.internal.log import logger
@@ -65,7 +65,7 @@ async def add_vpn(request: Request, vpn: AddVPN, auth: AuthInfo = Depends(check_
 
     await DAuditLog(
         time=datetime.now(tz=UTC).timestamp(),
-        event_type=EVENT_NEW_VPN,
+        event_type=EVENT_VPN_NEW,
         authentication_type=auth.type,
         authenticator=auth.authenticator_id,
         admin=auth.admin.mongo_admin_id,
@@ -98,7 +98,7 @@ async def patch_vpn(request: Request, vpn_patch: PatchVPN, auth: AuthInfo = Depe
     if vpn is None:
         raise HTTPException(detail='VPN does not exist', status_code=404)
 
-    original_vpn_info = vpn  # For Audit logging purposes
+    original_vpn_info = vpn.dict()  # For Audit logging purposes
     modifications = 'SET'
 
     if vpn_patch.vpn_type is not None:
@@ -130,11 +130,11 @@ async def patch_vpn(request: Request, vpn_patch: PatchVPN, auth: AuthInfo = Depe
 
     await DAuditLog(
         time=datetime.now(tz=UTC).timestamp(),
-        event_type=EVENT_EDIT_VPN,
+        event_type=EVENT_VPN_EDIT,
         authentication_type=auth.type,
         authenticator=auth.authenticator_id,
         admin=auth.admin.mongo_admin_id,
-        old_item=original_vpn_info.dict(),
+        old_item=original_vpn_info,
         new_item=vpn.dict(),
     ).commit(request.app.state.db[MONGO_DB])
 
@@ -169,7 +169,7 @@ async def remove_vpn(request: Request, vpn: RemoveVPN, auth: AuthInfo = Depends(
 
     await DAuditLog(
         time=datetime.now(tz=UTC).timestamp(),
-        event_type=EVENT_DELETE_VPN,
+        event_type=EVENT_VPN_DELETE,
         authentication_type=auth.type,
         authenticator=auth.authenticator_id,
         admin=auth.admin.mongo_admin_id,

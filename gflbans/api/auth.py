@@ -48,7 +48,7 @@ async def handle_auth_header(app, authorization, real_ip='') -> AuthInfo:
             logger.info(f'Rejected api key {auth_header["actorId"]} from {real_ip}')
             raise HTTPException(detail='Invalid API Key', status_code=401)
 
-        return AuthInfo(API_KEY, api_key['_id'], int(api_key['privileges']), None)
+        return AuthInfo(API_KEY, api_key['_id'], int(api_key['privileges']), Admin(0))
     elif auth_header['actorType'].lower() == 'server':
         server = await app.state.db[MONGO_DB].servers.find_one({'_id': actor_id})
 
@@ -61,7 +61,7 @@ async def handle_auth_header(app, authorization, real_ip='') -> AuthInfo:
             logger.info(f'Rejected server key for {auth_header["actorId"]} from {real_ip}')
             raise HTTPException(detail='Invalid API Key', status_code=401)
 
-        return AuthInfo(SERVER_KEY, server['_id'], SERVER_KEY_PERMISSIONS, None)
+        return AuthInfo(SERVER_KEY, server['_id'], SERVER_KEY_PERMISSIONS, Admin(0))
     else:
         raise HTTPException(detail='Invalid token type', status_code=401)
 

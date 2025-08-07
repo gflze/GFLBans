@@ -10,9 +10,9 @@ from gflbans.api.auth import AuthInfo, check_access, csrf_protect
 from gflbans.internal.config import MONGO_DB
 from gflbans.internal.constants import NOT_AUTHED_USER
 from gflbans.internal.database.audit_log import (
-    EVENT_ADD_GROUP,
-    EVENT_DELETE_GROUP,
-    EVENT_SET_GROUP_PERMISSIONS,
+    EVENT_PERMISSIONS_GROUP_ADD,
+    EVENT_PERMISSIONS_GROUP_DELETE,
+    EVENT_PERMISSIONS_GROUP_EDIT,
     DAuditLog,
 )
 from gflbans.internal.database.dadmin import DAdmin
@@ -75,7 +75,7 @@ async def update_group(request: Request, ug_query: UpdateGroup, auth: AuthInfo =
 
     await DAuditLog(
         time=datetime.now(tz=UTC).timestamp(),
-        event_type=EVENT_ADD_GROUP,
+        event_type=EVENT_PERMISSIONS_GROUP_ADD,
         authentication_type=auth.type,
         authenticator=auth.authenticator_id,
         admin=auth.admin.mongo_admin_id,
@@ -115,7 +115,7 @@ async def delete_group(request: Request, ips_group: int, auth: AuthInfo = Depend
 
     await DAuditLog(
         time=datetime.now(tz=UTC).timestamp(),
-        event_type=EVENT_DELETE_GROUP,
+        event_type=EVENT_PERMISSIONS_GROUP_DELETE,
         authentication_type=auth.type,
         authenticator=auth.authenticator_id,
         admin=auth.admin.mongo_admin_id,
@@ -148,7 +148,7 @@ async def patch_group(
     if dg is None:
         raise HTTPException(detail='No group exists with ips_group: {ips_group}', status_code=404)
 
-    original_group_info = dg  # For audit logging purposes
+    original_group_info = dg.dict()  # For audit logging purposes
     dg.name = ug_query.name
     dg.privileges = ug_query.privileges
 
@@ -158,11 +158,11 @@ async def patch_group(
 
     await DAuditLog(
         time=datetime.now(tz=UTC).timestamp(),
-        event_type=EVENT_SET_GROUP_PERMISSIONS,
+        event_type=EVENT_PERMISSIONS_GROUP_EDIT,
         authentication_type=auth.type,
         authenticator=auth.authenticator_id,
         admin=auth.admin.mongo_admin_id,
-        old_item=original_group_info.dict(),
+        old_item=original_group_info,
         new_item=dg.dict(),
     ).commit(request.app.state.db[MONGO_DB])
 
