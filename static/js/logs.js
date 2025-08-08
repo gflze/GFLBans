@@ -3,6 +3,7 @@ const LOGS = Object.freeze({
     EVENT_INFRACTION_NEW: 0,
     EVENT_INFRACTION_REMOVE: 1,
     EVENT_INFRACTION_EDIT: 2,
+    EVENT_INFRACTION_PURGE: 19,
     EVENT_COMMENT_NEW: 3,
     EVENT_COMMENT_EDIT: 4,
     EVENT_COMMENT_DELETE: 5,
@@ -32,6 +33,7 @@ const folderToEventTypes = {
         LOGS.EVENT_INFRACTION_NEW,
         LOGS.EVENT_INFRACTION_REMOVE,
         LOGS.EVENT_INFRACTION_EDIT,
+        LOGS.EVENT_INFRACTION_PURGE,
         LOGS.EVENT_COMMENT_NEW,
         LOGS.EVENT_COMMENT_EDIT,
         LOGS.EVENT_COMMENT_DELETE,
@@ -61,6 +63,7 @@ const logs2name = {};
 logs2name[LOGS.EVENT_INFRACTION_NEW] = 'New Infraction';
 logs2name[LOGS.EVENT_INFRACTION_REMOVE] = 'Remove Infraction';
 logs2name[LOGS.EVENT_INFRACTION_EDIT] = 'Edit Infraction';
+logs2name[LOGS.EVENT_INFRACTION_PURGE] = 'Purge Infraction';
 logs2name[LOGS.EVENT_COMMENT_NEW] = 'New Comment';
 logs2name[LOGS.EVENT_COMMENT_EDIT] = 'Edit Comment';
 logs2name[LOGS.EVENT_COMMENT_DELETE] = 'Delete Comment';

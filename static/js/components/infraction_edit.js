@@ -194,6 +194,12 @@ function prepareEdits(infraction) {
         startRemove(infraction);
     });
 
+    const purge = $('#triggerPurgeVis');
+
+    $('#triggerPurge').off('click').click(function () {
+        startPurge(infraction);
+    });
+
     const reinst = $('#triggerReinstVis');
 
     $('#triggerReinstate').off('click').click(function () {
@@ -213,6 +219,7 @@ function prepareEdits(infraction) {
     });
 
     rem.addClass('is-hidden');
+    if (purge.length) purge.addClass('is-hidden');
     reinst.addClass('is-hidden');
 
     if (infraction['flags'] & (INFRACTION.REMOVED)) {
@@ -220,6 +227,7 @@ function prepareEdits(infraction) {
     } else {
         rem.removeClass('is-hidden');
     }
+    if (purge.length) purge.removeClass('is-hidden');
 }
 
 function editTogglePerm() {
@@ -648,4 +656,44 @@ cr.click(function () {
     }
 
     $('#removeModal').removeClass('is-active');
+});
+
+// PURGE
+const cancelPurge = $('#cancelPurge');
+
+function startPurge(infraction) {
+    const pm = $('#purgeModal');
+    pm.addClass('is-active');
+
+    const pb = $('#purgeButton');
+    pb.prop('disabled', false).removeClass('is-loading');
+
+    pb.off('click').click(async function () {
+        if (this.hasAttribute('disabled')) return;
+        pb.addClass('is-loading').attr('disabled', '1');
+        cancelPurge.attr('disabled', '1');
+
+        try {
+            const resp = await gbRequest('DELETE', `/api/infractions/${infraction['id']}`, null, true);
+            if (!resp.ok) {
+                const err = await resp.json();
+                throw new Error(err.detail || defaultAPIError);
+            }
+            pm.removeClass('is-active');
+            // Close infraction view and refresh list
+            $('#infraction_view_modal').removeClass('is-active');
+            window.location.href = '../';
+        } catch (e) {
+            pm.removeClass('is-active');
+            logException(e);
+        } finally {
+            pb.removeClass('is-loading').removeAttr('disabled');
+            cancelPurge.removeAttr('disabled');
+        }
+    });
+}
+
+cancelPurge.click(function () {
+    if (this.hasAttribute('disabled')) return;
+    $('#purgeModal').removeClass('is-active');
 });

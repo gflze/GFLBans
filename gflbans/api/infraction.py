@@ -32,6 +32,7 @@ from gflbans.internal.database.audit_log import (
     EVENT_FILE_UPLOAD,
     EVENT_INFRACTION_EDIT,
     EVENT_INFRACTION_NEW,
+    EVENT_INFRACTION_PURGE,
     EVENT_INFRACTION_REMOVE,
     DAuditLog,
 )
@@ -59,6 +60,7 @@ from gflbans.internal.flags import (
     PERMISSION_COMMENT,
     PERMISSION_CREATE_INFRACTION,
     PERMISSION_EDIT_ALL_INFRACTIONS,
+    PERMISSION_PURGE_INFRACTIONS,
     PERMISSION_SCOPE_GLOBAL,
     PERMISSION_WEB_MODERATOR,
     str2pflag,
@@ -796,6 +798,70 @@ async def remove_infraction(
         ).commit(request.app.state.db[MONGO_DB])
 
     return RemoveInfractionsOfPlayerReply(num_removed=n_removed, num_considered=n_considered, num_not_removed=n_skipped)
+
+
+@infraction_router.delete(
+    '/{infraction_id}',
+    response_model_exclude_unset=True,
+    response_model_exclude_none=True,
+    dependencies=[Depends(csrf_protect)],
+)
+async def purge_infraction(
+    request: Request,
+    infraction_id: str,
+    auth: AuthInfo = Depends(check_access),
+    tasks: BackgroundTasks = None,
+):
+    if auth.type == NOT_AUTHED_USER:
+        raise HTTPException(detail='This route requires authorization', status_code=401)
+
+    if auth.admin.permissions & PERMISSION_PURGE_INFRACTIONS != PERMISSION_PURGE_INFRACTIONS and (
+        auth.permissions & PERMISSION_PURGE_INFRACTIONS != PERMISSION_PURGE_INFRACTIONS
+    ):
+        raise HTTPException(detail='You do not have permission to purge infractions', status_code=403)
+
+    try:
+        dinf = await DInfraction.from_id(request.app.state.db[MONGO_DB], infraction_id)
+    except bson.errors.InvalidId:
+        raise HTTPException(detail='Invalid id', status_code=400)
+
+    if dinf is None:
+        raise HTTPException(detail='No such infraction', status_code=404)
+
+    # Delete any GridFS files linked to the infraction
+    try:
+        if dinf.files:
+            gfs = AsyncIOMotorGridFSBucket(database=request.app.state.db[MONGO_DB])
+            for df in dinf.files:
+                try:
+                    await gfs.delete(ObjectId(df.gridfs_file))
+                except Exception:
+                    # Continue even if a file is already missing
+                    pass
+    except Exception:
+        pass
+
+    # Notify servers first so they can evict cached state
+    if tasks is not None:
+        try:
+            tasks.add_task(push_state_to_nodes, request.app, dinf)
+        except Exception:
+            pass
+
+    # Remove the infraction document itself
+    await request.app.state.db[MONGO_DB].infractions.delete_one({'_id': dinf.id})
+
+    # Audit log
+    await DAuditLog(
+        time=datetime.now(tz=UTC).timestamp(),
+        event_type=EVENT_INFRACTION_PURGE,
+        authentication_type=auth.type,
+        authenticator=auth.authenticator_id,
+        admin=auth.admin.mongo_admin_id,
+        old_item=dinf.dict(),
+    ).commit(request.app.state.db[MONGO_DB])
+
+    return ORJSONResponse({'status': 'ok'}, status_code=200)
 
 
 @infraction_router.patch(
