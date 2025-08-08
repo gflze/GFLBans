@@ -136,19 +136,27 @@
             {% endif %}
             <div id="cExpirationSection">
                 <label class="label text-primary">Expiration</label>
-                <div class="field" id="cPermCheckField">
-                    <div class="control">
-                        <label class="checkbox">
-                            <input id="permanentCheck" type="checkbox" name="isPermanent">
-                            This infraction shouldn't expire
-                        </label>
-                    </div>
-                </div>
                 <div class="field" id="cTimeDecCheckField">
                     <div class="control">
                         <label class="checkbox">
                             <input id="timeDecCheck" type="checkbox" name="isTimeDec">
                             Playtime (time remaining only decreases while the user is connected)
+                        </label>
+                    </div>
+                </div>
+                <div class="field" id="cAutoStackCheckField">
+                    <div class="control">
+                        <label class="checkbox">
+                            <input id="autoStackCheck" type="checkbox" name="isAutoStack">
+                            Automatically pick duration based on infraction history
+                        </label>
+                    </div>
+                </div>
+                <div class="field" id="cPermCheckField">
+                    <div class="control">
+                        <label class="checkbox">
+                            <input id="permanentCheck" type="checkbox" name="isPermanent">
+                            This infraction shouldn't expire
                         </label>
                     </div>
                 </div>

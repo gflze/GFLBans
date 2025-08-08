@@ -29,6 +29,18 @@ async def deprecation_cleanup(app):
         old_version = version_info['old_version']
     elif Version(version_info['version']) < Version(GB_VERSION):
         old_version = version_info['version']
+    elif Version(version_info['version']) > Version(GB_VERSION):
+        # Downgraded to an older version of GFLBans.
+        # Update database version so cleanup can happen again when we update in the future
+        await info_collection.find_one_and_update(
+            {'_id': DATABASE_INFO_KEY},
+            {
+                '$set': {
+                    'version': GB_VERSION,
+                },
+            },
+        )
+        return
     else:
         return  # Version is current, no cleanup needed
 
@@ -74,6 +86,9 @@ async def deprecation_cleanup(app):
     if Version(old_version) < Version('1.0.0'):
         PERMISSION_DEPRECATIONS |= 1 << 4  # PERMISSION_MANAGE_POLICY, tiering policies were removed
         INFRACTION_DEPRECATIONS |= 1 << 16  # INFRACTION_AUTO_TIER, tiering policies were removed
+
+    if Version(old_version) < Version('1.2.0') and 'action_log' in await db.list_collection_names():
+        await db.drop_collection('action_log')  # Old log format, now uses audit_log instead
 
     if PERMISSION_DEPRECATIONS > 0:
         async for grp in DGroup.from_query(db, {'privileges': {'$bitsAnySet': PERMISSION_DEPRECATIONS}}):

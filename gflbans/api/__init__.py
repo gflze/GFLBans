@@ -5,6 +5,7 @@ from gflbans.api.api_key import api_key_router
 from gflbans.api.group import group_router
 from gflbans.api.gs import gs_router
 from gflbans.api.infraction import infraction_router
+from gflbans.api.logs import log_router
 from gflbans.api.map_images import map_image_router
 from gflbans.api.rpc import rpc_router
 from gflbans.api.server import server_router
@@ -23,3 +24,4 @@ api.include_router(rpc_router, prefix='/rpc')
 api.include_router(server_router, prefix='/server')
 api.include_router(statistics_router, prefix='/statistics')
 api.include_router(vpn_router, prefix='/vpn')
+api.include_router(log_router, prefix='/logs')

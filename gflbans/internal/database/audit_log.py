@@ -1,42 +1,47 @@
-from datetime import datetime
-from typing import Optional, Tuple
+from typing import Any, Dict, Optional, Union
 
 from bson import ObjectId
 
 from gflbans.internal.database.base import DBase
 
-EVENT_NEW_INFRACTION = 0
-EVENT_REMOVE_INFRACTION = 1
-EVENT_EDIT_INFRACTION = 2
-EVENT_NEW_COMMENT = 3
-EVENT_EDIT_COMMENT = 4
-EVENT_DELETE_COMMENT = 5
-EVENT_UPLOAD_FILE = 6
-EVENT_DELETE_FILE = 7
-EVENT_RPC_KICK = 8
+# Infraction
+EVENT_INFRACTION_NEW = 0
+EVENT_INFRACTION_REMOVE = 1
+EVENT_INFRACTION_EDIT = 2
+EVENT_INFRACTION_PURGE = 19
+EVENT_COMMENT_NEW = 3
+EVENT_COMMENT_EDIT = 4
+EVENT_COMMENT_DELETE = 5
+EVENT_FILE_UPLOAD = 6
+EVENT_FILE_DELETE = 7
+EVENT_RPC_KICK = 17
 
 # Server
-EVENT_NEW_SERVER = 8
-EVENT_EDIT_SERVER = 9
+EVENT_SERVER_NEW = 8
+EVENT_SERVER_EDIT = 9
+EVENT_SERVER_REGENERATE_TOKEN = 18
 
 # Group
-EVENT_SET_GROUP_PERMISSIONS = 10
-EVENT_ADD_GROUP = 11
-EVENT_DELETE_GROUP = 12
-EVENT_SET_ADMIN_PERMISSIONS = 13
+EVENT_PERMISSIONS_GROUP_EDIT = 10
+EVENT_PERMISSIONS_GROUP_ADD = 11
+EVENT_PERMISSIONS_GROUP_DELETE = 12
+EVENT_PERMISSIONS_ADMIN_EDIT = 13
 
 # VPN
-EVENT_NEW_VPN = 14
-EVENT_DELETE_VPN = 15
-EVENT_EDIT_VPN = 16
+EVENT_VPN_NEW = 14
+EVENT_VPN_DELETE = 15
+EVENT_VPN_EDIT = 16
 
 
 class DAuditLog(DBase):
-    __collection__ = 'action_log'
+    __collection__ = 'audit_log'
 
-    time: datetime
+    time: int
     event_type: int
-    initiator: Optional[ObjectId]
-    message: str
-    key_pair: Tuple[int, Optional[ObjectId]]
-    long_msg: Optional[str]
+    authentication_type: int
+    authenticator: ObjectId
+    admin: Optional[ObjectId]
+
+    # Store arbitrary structured data as dicts
+    old_item: Optional[Union[Dict[str, Any], Any]] = None
+    new_item: Optional[Union[Dict[str, Any], Any]] = None

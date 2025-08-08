@@ -32,9 +32,9 @@ async def load_admin_from_initiator(app, admin: Initiator):
         return a
 
 
-async def load_admin(request, i):
+async def load_admin(request, admin_initiator):
     try:
-        return await load_admin_from_initiator(request.app, i)
+        return await load_admin_from_initiator(request.app, admin_initiator)
     except NoSuchAdminError:
         raise HTTPException(detail='Could not find an admin with which to associate this' 'infraction', status_code=403)
     except ClientResponseError as e:
@@ -42,17 +42,14 @@ async def load_admin(request, i):
         raise HTTPException(detail='Internal Server Error', status_code=500)
 
 
-async def get_acting(request, qa, auth0, auth1):
-    # Acting admin
-    if auth0 == AUTHED_USER:
-        acting_admin = await load_admin(request, Initiator(mongo_id=str(auth1)))
-        acting_admin_id = acting_admin.mongo_admin_id
-    elif qa is None:
+# Get admin that the authenticator is acting for (or at least claims to be acting for)
+async def get_acting(request, admin_initiator, auth_type, auth_id) -> Admin:
+    if auth_type == AUTHED_USER:
+        acting_admin = await load_admin(request, Initiator(mongo_id=str(auth_id)))
+    elif admin_initiator is None:
         acting_admin = Admin(0)
         await acting_admin.fetch_details(request.app)
-        acting_admin_id = None
     else:
-        acting_admin = await load_admin(request, qa)
-        acting_admin_id = acting_admin.mongo_admin_id
+        acting_admin = await load_admin(request, admin_initiator)
 
-    return acting_admin, acting_admin_id
+    return acting_admin

@@ -1,7 +1,6 @@
 import asyncio
 from asyncio import CancelledError
 from datetime import datetime
-from typing import Optional, Tuple
 
 import bson
 import orjson
@@ -14,7 +13,7 @@ from starlette.requests import Request
 from starlette.responses import Response
 from starlette.websockets import WebSocket, WebSocketDisconnect
 
-from gflbans.api.auth import check_access
+from gflbans.api.auth import AuthInfo, check_access
 from gflbans.internal.config import MONGO_DB
 from gflbans.internal.constants import API_KEY, AUTHED_USER, SERVER_KEY
 from gflbans.internal.database.audit_log import EVENT_RPC_KICK, DAuditLog
@@ -22,17 +21,16 @@ from gflbans.internal.database.rpc import DRPCEventBase, DRPCKickPlayer, add_ack
 from gflbans.internal.flags import PERMISSION_RPC_KICK
 from gflbans.internal.log import logger
 from gflbans.internal.models.protocol import RPCKickRequest
-from gflbans.internal.pyapi_utils import get_acting
 
 rpc_router = APIRouter()
 
 
 @rpc_router.get('/poll')
-async def rpc_poll(request: Request, auth: Tuple[int, Optional[ObjectId], int] = Depends(check_access)):
-    if auth[0] != SERVER_KEY:
+async def rpc_poll(request: Request, auth: AuthInfo = Depends(check_access)):
+    if auth.type != SERVER_KEY:
         raise HTTPException(detail='Only servers may use this route!', status_code=403)
 
-    devs = await DRPCEventBase.poll(request.app.state.db[MONGO_DB], auth[1], ack_on_read=True)
+    devs = await DRPCEventBase.poll(request.app.state.db[MONGO_DB], auth.authenticator_id, ack_on_read=True)
 
     evs = []
     for dev in devs:
@@ -49,7 +47,7 @@ async def rpc_ws(websocket: WebSocket):
 
     auth = await check_access(websocket, authorization=websocket.headers['Authorization'])
 
-    if auth[0] != SERVER_KEY:
+    if auth.type != SERVER_KEY:
         # Only servers can connect to the ws endpoint
         await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
         return
@@ -74,11 +72,11 @@ async def rpc_ws(websocket: WebSocket):
                 if dev_d is None:
                     continue
 
-                if dev_d['target'] == auth[1]:
+                if dev_d['target'] == auth.authenticator_id:
                     await websocket.app.state.db[MONGO_DB].rpc.delete_one({'_id': ack_id})
                 else:
                     await websocket.app.state.db[MONGO_DB].rpc.update_one(
-                        {'_id': ack_id}, {'$push': {'acknowledged_by': auth[1]}}
+                        {'_id': ack_id}, {'$push': {'acknowledged_by': auth.authenticator_id}}
                     )
             except CancelledError:
                 raise
@@ -89,41 +87,33 @@ async def rpc_ws(websocket: WebSocket):
 
     while True:
         await asyncio.sleep(1)
-        devs = await DRPCEventBase.poll(websocket.app.state.db[MONGO_DB], auth[1])
+        devs = await DRPCEventBase.poll(websocket.app.state.db[MONGO_DB], auth.authenticator_id)
 
         for dev in devs:
             await websocket.send_text(orjson.dumps(dev.as_api().dict()).decode('utf-8'))
 
 
 @rpc_router.post('/kick')
-async def rpc_kick(
-    request: Request, rpc_kick_req: RPCKickRequest, auth: Tuple[int, Optional[ObjectId], int] = Depends(check_access)
-):
-    if auth[0] != AUTHED_USER and auth[0] != API_KEY:
+async def rpc_kick(request: Request, rpc_kick_req: RPCKickRequest, auth: AuthInfo = Depends(check_access)):
+    if auth.type != AUTHED_USER and auth.type != API_KEY:
         raise HTTPException(status_code=403, detail='Bad key type')
 
-    if auth[2] & PERMISSION_RPC_KICK != PERMISSION_RPC_KICK:
+    if auth.permissions & PERMISSION_RPC_KICK != PERMISSION_RPC_KICK:
         raise HTTPException(status_code=403, detail='You do not have permission to do this!')
 
-    acting_admin, _ = await get_acting(request, None, auth[0], auth[1])
-
-    # Create audit log entry
-    log_msg = (
-        f'{acting_admin.name} ({acting_admin.ips_id}) kicked '
+    logger.info(
+        f'{auth.admin.name} ({auth.admin.ips_id}) kicked '
         f'{rpc_kick_req.player.gs_service}/{rpc_kick_req.player.gs_id} from {rpc_kick_req.server_id}'
     )
 
-    daudit = DAuditLog(
-        time=datetime.now(tz=UTC),
+    await DAuditLog(
+        time=datetime.now(tz=UTC).timestamp(),
         event_type=EVENT_RPC_KICK,
-        initiator=acting_admin.mongo_admin_id,
-        key_pair=(auth[0], auth[1]),
-        message=log_msg,
-    )
-
-    await daudit.commit(request.app.state.db[MONGO_DB])
-
-    logger.info(log_msg)
+        authentication_type=auth.type,
+        authenticator=auth.authenticator_id,
+        admin=auth.admin.mongo_admin_id,
+        new_item=rpc_kick_req.player.dict(),
+    ).commit(request.app.state.db[MONGO_DB])
 
     drpc = DRPCKickPlayer(
         time=datetime.now(tz=UTC), target=ObjectId(rpc_kick_req.server_id), target_player=rpc_kick_req.player
