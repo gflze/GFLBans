@@ -27,6 +27,11 @@
                                             <div class="dropdown-item" id="triggerRemoveVis">
                                                 <a id="triggerRemove">Remove</a>
                                             </div>
+                                            {% if user is not none and has_flag(user.permissions, p_nodes['Purge Infractions']) %}
+                                                <div class="dropdown-item" id="triggerPurgeVis">
+                                                    <a id="triggerPurge" class="has-text-danger">Purge</a>
+                                                </div>
+                                            {% endif %}
                                             <div class="dropdown-item" id="triggerReinstVis">
                                                 <a id="triggerReinstate">Reinstate</a>
                                             </div>
@@ -427,6 +432,24 @@
         <section class="modal-card-foot background-secondary">
             <button id="deleteButton" class="button is-danger">Delete</button>
             <button id="cancelDelete" class="button">Cancel</button>
+        </section>
+    </div>
+</div>
+<div class="modal" id="purgeModal">
+    <div class="modal-background"></div>
+    <div class="modal-card">
+        <section class="modal-card-head background-tertiary">
+            <p class="modal-card-title">Permanently Purge Infraction</p>
+        </section>
+        <section class="modal-card-body background-secondary">
+            <div class="field">
+                <label class="label">This action is irreversible. Click confirm to proceed.</label>
+                <div class="control"></div>
+            </div>
+        </section>
+        <section class="modal-card-foot background-secondary">
+            <button id="purgeButton" class="button is-danger">Confirm Purge</button>
+            <button id="cancelPurge" class="button">Cancel</button>
         </section>
     </div>
 </div>

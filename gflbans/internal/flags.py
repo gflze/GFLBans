@@ -10,7 +10,7 @@ PERMISSION_ATTACH_FILE              = 1 << 6
 PERMISSION_WEB_MODERATOR            = 1 << 7   # Can edit or delete all comments/files on infractions
 PERMISSION_MANAGE_SERVERS           = 1 << 8
 PERMISSION_MANAGE_VPNS              = 1 << 9
-# PERMISSION_PRUNE_INFRACTIONS      = 1 << 10  # Unimplemented
+PERMISSION_PURGE_INFRACTIONS        = 1 << 10  # Permanently delete infractions
 PERMISSION_VIEW_AUDIT_LOGS          = 1 << 11
 PERMISSION_MANAGE_GROUPS_AND_ADMINS = 1 << 12
 PERMISSION_MANAGE_API_KEYS          = 1 << 13
@@ -42,6 +42,7 @@ ALL_PERMISSIONS = (
     | PERMISSION_WEB_MODERATOR
     | PERMISSION_MANAGE_SERVERS
     | PERMISSION_MANAGE_VPNS
+    | PERMISSION_PURGE_INFRACTIONS
     | PERMISSION_VIEW_AUDIT_LOGS
     | PERMISSION_MANAGE_GROUPS_AND_ADMINS
     | PERMISSION_MANAGE_API_KEYS
@@ -99,6 +100,7 @@ name2perms = {
     'Edit All Comments':         PERMISSION_WEB_MODERATOR,
     'Manage Servers':            PERMISSION_MANAGE_SERVERS,
     'Manage VPNs':               PERMISSION_MANAGE_VPNS,
+    'Purge Infractions':         PERMISSION_PURGE_INFRACTIONS,
     'View Audit Logs':           PERMISSION_VIEW_AUDIT_LOGS,
     'Manage Groups and Admins':  PERMISSION_MANAGE_GROUPS_AND_ADMINS,
     'Manage API Keys':           PERMISSION_MANAGE_API_KEYS,
