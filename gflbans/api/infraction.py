@@ -71,6 +71,7 @@ from gflbans.internal.infraction_utils import (
     check_immunity,
     create_dinfraction,
     discord_notify_create_infraction,
+    discord_notify_purge_infraction,
     filter_badchars,
     get_permissions,
     get_user_data,
@@ -947,9 +948,6 @@ async def purge_infraction(
         except Exception:
             pass
 
-    # Remove the infraction document itself
-    await request.app.state.db[MONGO_DB].infractions.delete_one({'_id': dinf.id})
-
     # Audit log
     await DAuditLog(
         time=datetime.now(tz=UTC).timestamp(),
@@ -959,6 +957,13 @@ async def purge_infraction(
         admin=auth.admin.mongo_admin_id,
         old_item=dinf.dict(),
     ).commit(request.app.state.db[MONGO_DB])
+
+    try:
+        await discord_notify_purge_infraction(request.app, dinf, auth.admin.mongo_admin_id)
+    except Exception:
+        pass
+
+    await request.app.state.db[MONGO_DB].infractions.delete_one({'_id': dinf.id})
 
     return ORJSONResponse({'status': 'ok'}, status_code=200)
 

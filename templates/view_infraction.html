@@ -27,14 +27,14 @@
                                             <div class="dropdown-item" id="triggerRemoveVis">
                                                 <a id="triggerRemove">Remove</a>
                                             </div>
+                                            <div class="dropdown-item" id="triggerReinstVis">
+                                                <a id="triggerReinstate">Reinstate</a>
+                                            </div>
                                             {% if user is not none and has_flag(user.permissions, p_nodes['Purge Infractions']) %}
                                                 <div class="dropdown-item" id="triggerPurgeVis">
                                                     <a id="triggerPurge" class="has-text-danger">Purge</a>
                                                 </div>
                                             {% endif %}
-                                            <div class="dropdown-item" id="triggerReinstVis">
-                                                <a id="triggerReinstate">Reinstate</a>
-                                            </div>
                                         </div>
                                     </div>
                                 </div>

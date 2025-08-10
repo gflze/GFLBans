@@ -828,6 +828,57 @@ async def discord_notify_reinst_infraction(app, dinf: DInfraction, actor: Option
                 logger.error('Failed to post infraction to global infract webhook', exc_info=True)
 
 
+async def discord_notify_purge_infraction(app, dinf: DInfraction, actor: Optional[ObjectId]):
+    bot_name, bot_avatar = (
+        await get_var(app.state.db[MONGO_DB], 'bot.name', 'GFLBans Bot'),
+        await get_var(app.state.db[MONGO_DB], 'bot.avatar', COMMUNITY_ICON),
+    )
+
+    embed = {
+        'username': bot_name,
+        'avatar_url': bot_avatar,
+        'embeds': [
+            {
+                'title': f'Purged {punishment_noun(dinf)} on {target_name(dinf)}',
+                'color': 16711680,  # Red color for purge
+                'author': await embed_author(app, actor),
+                'url': f'http://{HOST}/infractions/{str(dinf.id)}/',
+                'thumbnail': {'url': target_avatar(dinf)},
+                'footer': {'icon_url': GFLBANS_ICON, 'text': await _embed_host(app.state.db[MONGO_DB], dinf.server)},
+                'timestamp': datetime.now(tz=UTC).strftime('%Y-%m-%dT%H:%M:%SZ'),
+                'fields': [
+                    {'name': 'Player', 'value': target_link(dinf), 'inline': True},
+                    {'name': 'Duration', 'value': embed_duration(dinf), 'inline': True},
+                    {'name': 'Reason', 'value': dinf.reason},
+                ],
+            }
+        ],
+    }
+
+    if dinf.server is not None:
+        srv = await DServer.from_id(app.state.db[MONGO_DB], dinf.server)
+    else:
+        srv = None
+
+    if srv is not None and srv.infract_webhook is not None:
+        async with app.state.aio_session.post(
+            srv.infract_webhook + '?wait=true', headers={'User-Agent': 'gflbans (gflclan.com, 1.0)'}, json=embed
+        ) as resp:
+            try:
+                resp.raise_for_status()
+            except Exception:
+                logger.error('Failed to post infraction to srv infract webhook', exc_info=True)
+
+    if GLOBAL_INFRACTION_WEBHOOK is not None:
+        async with app.state.aio_session.post(
+            GLOBAL_INFRACTION_WEBHOOK + '?wait=true', headers={'User-Agent': 'gflbans (gflclan.com, 1.0)'}, json=embed
+        ) as resp:
+            try:
+                resp.raise_for_status()
+            except Exception:
+                logger.error('Failed to post infraction to global infract webhook', exc_info=True)
+
+
 # If true, the target is immune!
 async def check_immunity(app, dinf: DInfraction, initiator_admin: Admin = None) -> bool:
     if dinf.user is None:
