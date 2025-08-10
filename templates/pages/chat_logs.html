@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html id="htmlRoot"
+      lang="en"
+      class="{% if opposite_theme %}theme-opposite {% endif %}background-primary">
+    <head>
+        {% include 'meta.html' with context %}
+        <title>{{ BRANDING }} - Chat Logs</title>
+        <link rel="stylesheet" href="/static/css/chat_logs.css?v={{ GB_VERSION }}">
+    </head>
+    <body>
+        {% include 'js_includes.html' %}
+        {% include 'header.html' with context %}
+        <div class="mt-5 container is-fluid">
+            <div class="columns">
+                <div class="column is-one-quarter-desktop is-full-tablet">
+                    <div class="panel background-secondary text-primary">
+                        <p class="panel-heading">Filters</p>
+                        <div class="panel-block">
+                            <div class="field w-100">
+                                <label class="label text-primary">Server</label>
+                                <div class="control">
+                                    <div class="select is-fullwidth">
+                                        <select id="filter-server"></select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="panel-block">
+                            <div class="field w-100">
+                                <label class="label text-primary">User</label>
+                                <div class="control has-icons-left">
+                                    <input id="filter-search"
+                                           class="input"
+                                           type="text"
+                                           placeholder="Name or Steam ID">
+                                    <span class="icon is-small is-left"><i class="fas fa-user"></i></span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="panel-block">
+                            <div class="field w-100">
+                                <label class="label text-primary">Commands</label>
+                                <div class="control">
+                                    <div class="select is-fullwidth">
+                                        <select id="filter-command-mode">
+                                            <option value="all">All messages</option>
+                                            <option value="only">Commands (!,/)</option>
+                                            <option value="exclude">Chat messages</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="panel-block">
+                            <div class="field w-100">
+                                <label class="label text-primary">Message Contains</label>
+                                <div class="control has-icons-left">
+                                    <input id="filter-content"
+                                           class="input"
+                                           type="text"
+                                           placeholder="Text in message">
+                                    <span class="icon is-small is-left"><i class="fas fa-align-left"></i></span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="panel-block">
+                            <div class="field w-100">
+                                <label class="label text-primary">Time Range</label>
+                                <div class="control">
+                                    <input id="filter-after" class="input mb-2" type="datetime-local">
+                                    <input id="filter-before" class="input" type="datetime-local">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="panel-block">
+                            <button id="filter-apply" class="button is-accent is-fullwidth">
+                                <i class="fas fa-filter mr-1"></i>Apply
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="column">
+                    <div class="panel background-secondary text-primary">
+                        <p class="panel-heading">Chat Logs</p>
+                        <div id="chatlogs-list" class="panel-block"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% include 'loading.html' with context %}
+        {% include 'footer.html' with context %}
+        <script src="/static/js/chat_logs.js?v={{ GB_VERSION }}"></script>
+        {% include 'create_infraction.html' with context %}
+    </body>
+</html>

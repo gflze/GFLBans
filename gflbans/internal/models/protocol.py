@@ -177,6 +177,17 @@ class CreateInfractionReply(BaseModel):
     infraction: Infraction
 
 
+class CreateInfractionFromChatLog(BaseModel):
+    chatlog_id: str
+    preset: constr(regex=r'^(warn|text|silence)$') = 'text'
+    reason: constr(min_length=1, max_length=280)
+    scope: constr(regex=r'^(server|global)$')
+    duration: Optional[PositiveInt]
+    auto_duration: bool = False
+    playtime_based: bool = False
+    permanent: bool = False
+
+
 class RemoveInfractionsOfPlayer(BaseModel):
     player: PlayerObjSimple
     remove_reason: constr(min_length=1, max_length=280)
@@ -422,11 +433,17 @@ class DeleteServerReply(BaseModel):
 
 class RequestChatLogs(BaseModel):
     user: Optional[PlayerObjSimple]
+    search: Optional[constr(min_length=1, max_length=256)]  # name or steamid
+    content: Optional[constr(min_length=1, max_length=256)]  # search by message contents
+    command_mode: Optional[constr(regex=r'^(all|only|exclude)$')] = 'all'  # only displays messages starting with ! or /
 
-    # Cursor control
-    limit: conint(gt=0, le=500) = 50
-    skip: PositiveIntIncl0 = 0
+    # Time range filters (unix seconds). 0 means unset.
     created_after: PositiveIntIncl0 = 0
+    created_before: PositiveIntIncl0 = 0
+    # Sort newest first for chat-style paging up
+    sort_desc: bool = True
+
+    limit: conint(gt=0, le=500) = 50
 
 
 # Group APIs

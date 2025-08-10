@@ -2,6 +2,7 @@ import json
 from datetime import datetime, timedelta
 from typing import List, Optional
 
+from bson import ObjectId
 from dateutil.tz import UTC
 from motor.motor_asyncio import AsyncIOMotorDatabase
 from pydantic import BaseModel, root_validator
@@ -15,6 +16,15 @@ from gflbans.internal.models.protocol import ExecuteCallAdmin
 
 class DUserIP(DUser):
     ip: Optional[str]
+
+
+class DChatLog(DBase):
+    __collection__ = 'chat_logs'
+
+    created: int
+    server: ObjectId
+    user: Optional[DUserIP]
+    content: str
 
 
 class DServerInfo(BaseModel):

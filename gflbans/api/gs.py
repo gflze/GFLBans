@@ -20,7 +20,7 @@ from gflbans.internal.config import MONGO_DB
 from gflbans.internal.constants import NOT_AUTHED_USER, SERVER_KEY
 from gflbans.internal.database.common import DFile
 from gflbans.internal.database.infraction import DInfraction, build_query_dict
-from gflbans.internal.database.server import DCallData, DServer, DServerInfo, DUserIP
+from gflbans.internal.database.server import DCallData, DChatLog, DServer, DServerInfo, DUserIP
 from gflbans.internal.discord_calladmin import (
     claim_monitor_task,
     execute_claim,
@@ -216,40 +216,31 @@ async def heartbeat(request: Request, beat: Heartbeat, auth: AuthInfo = Depends(
     if beat.messages:
         try:
             # Extract unique players from the messages and get their info
-            unique_users = {message.user.gs_id: message.user for message in beat.messages if message.user}.values()
+            unique_users = {}
+            for message in beat.messages:
+                if message.user and message.user.gs_id:
+                    unique_users[message.user.gs_id] = message.user
+
             processed_users = await asyncio.gather(
-                *[_process_heartbeat_player(request.app, PlayerObjIPOptional(**user.dict())) for user in unique_users]
+                *[
+                    _process_heartbeat_player(request.app, PlayerObjIPOptional(**user.dict()))
+                    for user in unique_users.values()
+                ]
             )
 
             # Create a map of gs_id to DUserIP
-            user_map = {user.gs_id: processed_user for user, processed_user in zip(unique_users, processed_users)}
+            user_map = {u.gs_id: pu for u, pu in zip(unique_users.values(), processed_users)}
 
             # Prepare chat log documents
-            chat_logs = [
-                {
-                    'user': {
-                        **user_map[message.user.gs_id].dict(
-                            exclude_unset=True,
-                            exclude_none=True,
-                            exclude={'gs_avatar'},
-                        ),
-                        'gs_avatar': {
-                            'gridfs_file': user_map[message.user.gs_id].gs_avatar.gridfs_file,
-                            'file_name': user_map[message.user.gs_id].gs_avatar.file_name,
-                        }
-                        if user_map[message.user.gs_id].gs_avatar
-                        else None,
-                    }
-                    if message.user
-                    else None,
-                    'content': message.content,
-                    'created': message.created,
-                    'server': ObjectId(auth.authenticator_id),
-                }
-                for message in beat.messages
-            ]
-
-            await request.app.state.db[MONGO_DB].chat_logs.insert_many(chat_logs)
+            for message in beat.messages:
+                if not message.user or not message.user.gs_id:
+                    continue
+                await DChatLog(
+                    created=message.created,
+                    server=ObjectId(auth.authenticator_id),
+                    user=user_map.get(message.user.gs_id),
+                    content=message.content,
+                ).commit(request.app.state.db[MONGO_DB])
         except Exception as e:
             logger.error('Failed to log chat messages.', exc_info=e)
 

@@ -83,6 +83,7 @@ async def gflbans_init(app):
         await app.state.db[MONGO_DB].chat_logs.create_index(
             [('created', ASCENDING)], background=True, expireAfterSeconds=RETAIN_CHAT_LOG_FOR
         )
+        await app.state.db[MONGO_DB].chat_logs.create_index([('created', DESCENDING)], background=True)
         await app.state.db[MONGO_DB].chat_logs.create_index('server')
         await app.state.db[MONGO_DB].chat_logs.create_index([('user.gs_service', ASCENDING), ('user.gs_id', ASCENDING)])
 
