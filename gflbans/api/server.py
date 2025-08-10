@@ -6,7 +6,6 @@ from bson import ObjectId
 from dateutil.tz import UTC
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import ORJSONResponse
-from pymongo import ASCENDING
 from starlette.requests import Request
 
 from gflbans.api.auth import AuthInfo, check_access, csrf_protect
@@ -29,6 +28,7 @@ from gflbans.internal.models.protocol import (
     RegenerateServerTokenReply,
     RequestChatLogs,
 )
+from gflbans.internal.search import contains_str, id64_or_none
 from gflbans.internal.utils import generate_api_key
 
 server_router = APIRouter(default_response_class=ORJSONResponse)
@@ -390,11 +390,29 @@ async def get_chat_logs(
     if srv is None:
         raise HTTPException(detail='No such server exists', status_code=404)
 
+    sort_dir = -1 if query.sort_desc else 1
     filter_query = {'server': ObjectId(server_id)}
 
-    if query.created_after > 0:
+    # Time range
+    if query.created_after > 0 and query.created_before > 0:
+        filter_query['created'] = {'$gte': query.created_after, '$lte': query.created_before}
+    elif query.created_after > 0:
         filter_query['created'] = {'$gte': query.created_after}
+    elif query.created_before > 0:
+        filter_query['created'] = {'$lte': query.created_before}
 
+    # Build pagination filter using created_before
+    pagination_filter = None
+    if query.created_before > 0:
+        if sort_dir == -1:
+            # descending order: get messages before the timestamp
+            pagination_filter = {'created': {'$lt': query.created_before}}
+        else:
+            # ascending order: get messages after the timestamp
+            pagination_filter = {'created': {'$gt': query.created_before}}
+
+    # Build user filter
+    user_filter = None
     if query.user:
         if (
             query.user.gs_id is not None
@@ -402,16 +420,57 @@ async def get_chat_logs(
             and auth.permissions & PERMISSION_VIEW_IP_ADDR == PERMISSION_VIEW_IP_ADDR
             and query.user.ip is not None
         ):
-            filter_query['$or'] = [
-                {'user.ip': query.user.ip},
-                {'$and': [{'user.gs_service': query.user.gs_service}, {'user.gs_id': query.user.gs_id}]},
-            ]
+            user_filter = {
+                '$or': [
+                    {'user.ip': query.user.ip},
+                    {'$and': [{'user.gs_service': query.user.gs_service}, {'user.gs_id': query.user.gs_id}]},
+                ]
+            }
         else:
             if query.user.gs_id is not None and query.user.gs_service is not None:
-                filter_query['user.gs_service'] = query.user.gs_service
-                filter_query['user.gs_id'] = query.user.gs_id
+                user_filter = {'$and': [{'user.gs_service': query.user.gs_service}, {'user.gs_id': query.user.gs_id}]}
             elif auth.permissions & PERMISSION_VIEW_IP_ADDR == PERMISSION_VIEW_IP_ADDR and query.user.ip is not None:
-                filter_query['user.ip'] = query.user.ip
+                user_filter = {'user.ip': query.user.ip}
+
+    # Build search filter
+    search_filter = None
+    if getattr(query, 'search', None):
+        id64 = await id64_or_none(request.app, query.search)
+        if id64 is not None:
+            search_filter = {'$and': [{'user.gs_service': 'steam'}, {'user.gs_id': id64}]}
+        else:
+            search_filter = {'user.gs_name': contains_str(query.search)}
+
+    # Build content filter
+    content_filter = None
+    if getattr(query, 'content', None):
+        content_filter = {'content': contains_str(query.content)}
+
+    # Build command mode filter
+    command_filter = None
+    if getattr(query, 'command_mode', None) and query.command_mode != 'all':
+        if query.command_mode == 'only':
+            command_filter = {'content': {'$regex': r'^[!/]', '$options': ''}}
+        elif query.command_mode == 'exclude':
+            command_filter = {'content': {'$not': {'$regex': r'^[!/]'}}}
+
+    # Combine all filters using $and
+    all_filters = []
+    if pagination_filter:
+        all_filters.append(pagination_filter)
+    if user_filter:
+        all_filters.append(user_filter)
+    if search_filter:
+        all_filters.append(search_filter)
+    if content_filter:
+        all_filters.append(content_filter)
+    if command_filter:
+        all_filters.append(command_filter)
+
+    if len(all_filters) > 1:
+        filter_query['$and'] = all_filters
+    elif len(all_filters) == 1:
+        filter_query.update(all_filters[0])
 
     ip_projection = {}
     if auth.permissions & PERMISSION_VIEW_IP_ADDR != PERMISSION_VIEW_IP_ADDR:
@@ -423,23 +482,28 @@ async def get_chat_logs(
             filter_query,
             projection=ip_projection,
         )
-        .sort('created', ASCENDING)
-        .skip(query.skip)
+        .sort('created', sort_dir)
         .limit(query.limit)
     )
 
     messages = await cursor.to_list(length=query.limit)
 
     for message in messages:
-        # Convert from DFile to FileInfo for PlayerObj
-        message['user']['gs_avatar'] = FileInfo(
-            file_id=message['user']['gs_avatar']['gridfs_file'], name=message['user']['gs_avatar']['file_name']
-        ).dict()
+        if message.get('user') and message['user'].get('gs_avatar'):
+            message['user']['gs_avatar'] = FileInfo(
+                file_id=message['user']['gs_avatar']['gridfs_file'],
+                name=message['user']['gs_avatar']['file_name'],
+            ).dict()
 
         # Display any html tags in message as plain text
         bbparser = bbcode.Parser()
         bbparser.recognized_tags = {}
         bbparser.replace_links = False
-        message['rendered'] = bbparser.format(message['content'])
+        # bbparser.format returns str with tags stripped; ensure no HTML is injected
+        message['rendered'] = bbparser.format(str(message.get('content', '')))
+
+        # Expose chat log id for frontend (string)
+        message['id'] = str(message['_id'])
+        del message['_id']
 
     return messages

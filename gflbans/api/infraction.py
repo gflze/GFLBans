@@ -38,6 +38,7 @@ from gflbans.internal.database.audit_log import (
 )
 from gflbans.internal.database.common import DFile
 from gflbans.internal.database.infraction import DComment, DInfraction, build_query_dict
+from gflbans.internal.database.server import DChatLog
 from gflbans.internal.errors import SearchError
 from gflbans.internal.flags import (
     INFRACTION_ADMIN_CHAT_BLOCK,
@@ -62,6 +63,7 @@ from gflbans.internal.flags import (
     PERMISSION_EDIT_ALL_INFRACTIONS,
     PERMISSION_PURGE_INFRACTIONS,
     PERMISSION_SCOPE_GLOBAL,
+    PERMISSION_VIEW_CHAT_LOGS,
     PERMISSION_WEB_MODERATOR,
     str2pflag,
 )
@@ -84,6 +86,7 @@ from gflbans.internal.models.protocol import (
     CheckInfractions,
     CheckInfractionsReply,
     CreateInfraction,
+    CreateInfractionFromChatLog,
     DeleteComment,
     DeleteFile,
     EditComment,
@@ -101,6 +104,102 @@ from gflbans.internal.search import contains_str, do_infraction_search
 from gflbans.internal.utils import slugify
 
 infraction_router = APIRouter(default_response_class=ORJSONResponse)
+
+
+@infraction_router.post(
+    '/chatlog',
+    response_model=Infraction,
+    response_model_exclude_unset=True,
+    response_model_exclude_none=True,
+    dependencies=[Depends(csrf_protect)],
+)
+async def create_infraction_from_chatlog(
+    request: Request,
+    query: CreateInfractionFromChatLog,
+    tasks: BackgroundTasks,
+    auth: AuthInfo = Depends(check_access),
+):
+    if auth.type == NOT_AUTHED_USER:
+        raise HTTPException(detail='This route requires authorization.', status_code=401)
+
+    required_perm = PERMISSION_CREATE_INFRACTION | PERMISSION_VIEW_CHAT_LOGS
+
+    if query.preset == 'text':
+        required_perm |= PERMISSION_BLOCK_CHAT
+    elif query.preset == 'silence':
+        required_perm |= PERMISSION_BLOCK_CHAT | PERMISSION_BLOCK_VOICE
+
+    if auth.admin.permissions & required_perm != required_perm or auth.permissions & required_perm != required_perm:
+        raise HTTPException(detail='You do not have permission to do this!', status_code=403)
+
+    # Fetch chat log and pull target details securely (allows IP attachment without revealing it to client)
+    try:
+        clog = await DChatLog.from_id(request.app.state.db[MONGO_DB], query.chatlog_id)
+    except Exception:
+        clog = None
+    if clog is None:
+        raise HTTPException(status_code=404, detail='Chat log not found')
+
+    # Build CreateInfraction object from chat log
+    punishments: list[str] = []
+    if query.preset == 'text':
+        punishments = ['chat_block']
+    elif query.preset == 'silence':
+        punishments = ['chat_block', 'voice_block']
+
+    duration = None
+    auto_duration = False
+    playtime_based = False
+    if not query.permanent:
+        if query.auto_duration:
+            auto_duration = True
+        else:
+            duration = query.duration
+            playtime_based = query.playtime_based
+
+    # Compose CreateInfraction request manually as dict for reuse of helper
+    ci_payload = {
+        'created': int(datetime.now(tz=UTC).timestamp()),
+        'duration': duration,
+        'auto_duration': auto_duration,
+        'player': {
+            'gs_service': clog.user.gs_service if clog.user else None,
+            'gs_id': clog.user.gs_id if clog.user else None,
+            'ip': clog.user.ip if clog.user else None,
+        },
+        'reason': query.reason,
+        'punishments': punishments,
+        'scope': query.scope,
+        'session': False,
+        'playtime_based': playtime_based,
+        'server': str(clog.server),
+        'do_full_infraction': True,
+        'allow_normalize': False,
+    }
+
+    # Create the infraction with existing path
+    # Reuse logic in create_infraction by constructing protocol model
+    created_inf = await create_infraction(
+        request,
+        CreateInfraction(**ci_payload),
+        tasks,
+        auth,
+    )
+
+    # Add a system comment with name + message content
+    try:
+        comment_text = f"{clog.user.gs_name if clog.user and clog.user.gs_name else 'Unknown Player'}: {clog.content}"
+        await add_comment(
+            request,
+            created_inf.id,
+            AddComment(content=comment_text, set_private=False),
+            auth,
+            x_system_comment=True,
+        )
+    except Exception:
+        pass
+
+    return created_inf
 
 
 @infraction_router.get(
@@ -1018,6 +1117,7 @@ async def add_comment(
     infraction_id: str,
     query: AddComment,
     auth: AuthInfo = Depends(check_access),
+    x_system_comment: bool = Header(False),
 ):
     if auth.type == NOT_AUTHED_USER:
         raise HTTPException(detail='You must be logged in to do this!', status_code=401)
@@ -1036,7 +1136,10 @@ async def add_comment(
     query.content = filter_badchars(query.content)
 
     dc = DComment(
-        content=query.content, author=auth.admin.mongo_admin_id, private=query.set_private, created=datetime.now(tz=UTC)
+        content=query.content,
+        author=None if x_system_comment else auth.admin.mongo_admin_id,
+        private=query.set_private,
+        created=datetime.now(tz=UTC),
     )
 
     await dinf.append_to_array_field(request.app.state.db[MONGO_DB], 'comments', dc)

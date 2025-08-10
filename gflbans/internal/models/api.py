@@ -88,6 +88,7 @@ class MessageLog(BaseModel):
     content: constr(min_length=1, max_length=256)
     rendered: Optional[str]
     created: int
+    id: Optional[str]
 
 
 def nn_len(v):
