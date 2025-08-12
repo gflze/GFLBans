@@ -87,8 +87,21 @@ async def deprecation_cleanup(app):
         PERMISSION_DEPRECATIONS |= 1 << 4  # PERMISSION_MANAGE_POLICY, tiering policies were removed
         INFRACTION_DEPRECATIONS |= 1 << 16  # INFRACTION_AUTO_TIER, tiering policies were removed
 
-    if Version(old_version) < Version('1.2.0') and 'action_log' in await db.list_collection_names():
-        await db.drop_collection('action_log')  # Old log format, now uses audit_log instead
+    if Version(old_version) < Version('1.2.0'):
+        if 'action_log' in await db.list_collection_names():
+            await db.drop_collection('action_log')  # Old log format, now uses audit_log instead
+
+        if 'confirmations' in await db.list_collection_names():
+            await db.drop_collection('confirmations')  # Was unused
+
+        if 'value_store' in await db.list_collection_names():
+            await db.drop_collection('value_store')  # Was unused
+
+        if 'blocks' in await db.list_collection_names():
+            await db.drop_collection('blocks')  # Was unused
+
+        if 'sessions' in await db.list_collection_names():
+            await db.drop_collection('sessions')  # Was unused
 
     if PERMISSION_DEPRECATIONS > 0:
         async for grp in DGroup.from_query(db, {'privileges': {'$bitsAnySet': PERMISSION_DEPRECATIONS}}):

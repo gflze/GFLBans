@@ -90,9 +90,6 @@ async def gflbans_init(app):
         # Admins
         await app.state.db[MONGO_DB].admin_cache.create_index([('ips_user', ASCENDING)], unique=True)
 
-        # Blocks
-        await app.state.db[MONGO_DB].blocks.create_index([('block_name', ASCENDING)], unique=True)
-
         # Avatars
         await app.state.db[MONGO_DB].fs.files.create_index(
             [('metadata.retrieved_from', ASCENDING)], name='gridfs_av_src_idx'
@@ -106,13 +103,6 @@ async def gflbans_init(app):
         # Call Admin images
         await app.state.db[MONGO_DB].fs.files.create_index(
             [('metadata.dispose_created', ASCENDING)], name='gridfs_cai_idx', expireAfterSeconds=2592000
-        )
-
-        # Sessions
-        await app.state.db[MONGO_DB].sessions.create_index([('_id', ASCENDING), ('session_token', ASCENDING)])
-
-        await app.state.db[MONGO_DB].sessions.create_index(
-            [('created', ASCENDING)], background=True, expireAfterSeconds=STEAM_OPENID_ACCESS_TOKEN_LIFETIME
         )
 
         # VPN
@@ -134,14 +124,6 @@ async def gflbans_init(app):
 
         await app.state.db[MONGO_DB].user_cache.create_index(
             [('created', ASCENDING)], background=True, expireAfterSeconds=(STEAM_OPENID_ACCESS_TOKEN_LIFETIME - 30)
-        )
-
-        # GKV
-        await app.state.db[MONGO_DB].value_store.create_index([('key', ASCENDING)], unique=True)
-
-        # Confirmation Links
-        await app.state.db[MONGO_DB].confirmations.create_index(
-            [('created', ASCENDING)], background=True, expireAfterSeconds=(60 * 10)
         )
 
         logger.info('Mongo Indexes created')

@@ -13,11 +13,10 @@ from fastapi import HTTPException
 from motor.motor_asyncio import AsyncIOMotorGridFSBucket
 from PIL import Image
 
-from gflbans.internal.config import COMMUNITY_ICON, DISCORD_BOT_TOKEN, GFLBANS_ICON, HOST, MONGO_DB
+from gflbans.internal.config import BRANDING, COMMUNITY_ICON, DISCORD_BOT_TOKEN, GFLBANS_ICON, HOST, MONGO_DB
 from gflbans.internal.constants import COLOR_SUCCESS, COLOR_WARNING, GB_VERSION
 from gflbans.internal.database.common import DFile
 from gflbans.internal.database.server import DCallData, DServer
-from gflbans.internal.kv import get_var
 from gflbans.internal.log import logger
 from gflbans.internal.models.api import PlayerObjNoIp
 from gflbans.internal.models.protocol import ClaimCallAdmin, ExecuteCallAdmin
@@ -115,10 +114,8 @@ async def execute_webhook(app, srv: DServer, call: ExecuteCallAdmin, image: Opti
             }
         )
 
-    bot_name, bot_avatar = (
-        await get_var(app.state.db[MONGO_DB], 'bot.name', 'GFLBans Bot'),
-        await get_var(app.state.db[MONGO_DB], 'bot.avatar', COMMUNITY_ICON),
-    )
+    bot_name = f'{BRANDING} Bot'
+    bot_avatar = COMMUNITY_ICON
 
     request_json = {
         'content': '@here' if srv.discord_staff_tag == 'here' else f'<@&{srv.discord_staff_tag}>',
@@ -131,7 +128,9 @@ async def execute_webhook(app, srv: DServer, call: ExecuteCallAdmin, image: Opti
     }
 
     async with app.state.aio_session.post(
-        srv.discord_webhook + '?wait=true', headers={'User-Agent': 'gflbans (gflclan.com, 1.0)'}, json=request_json
+        srv.discord_webhook + '?wait=true',
+        headers={'User-Agent': f'{BRANDING} ({HOST}, {GB_VERSION})'},
+        json=request_json,
     ) as resp:
         try:
             resp.raise_for_status()
@@ -227,7 +226,7 @@ async def execute_claim(app, srv: DServer, claim: ClaimCallAdmin, call: DCallDat
 
     async with app.state.aio_session.patch(
         srv.discord_webhook + f'/messages/{call.claim_token}',
-        headers={'User-Agent': 'gflbans (gflclan.com, 1.0)'},
+        headers={'User-Agent': f'{BRANDING} ({HOST}, {GB_VERSION})'},
         json={'embeds': [embed_info]},
     ) as resp:
         try:
@@ -254,7 +253,7 @@ async def claim_monitor_task(app, server_id: ObjectId, msg_id: str):
         return
 
     async with app.state.aio_session.get(
-        srv.discord_webhook, headers={'User-Agent': 'gflbans (gflclan.com, 1.0)'}
+        srv.discord_webhook, headers={'User-Agent': f'{BRANDING} ({HOST}, {GB_VERSION})'}
     ) as resp:
         resp.raise_for_status()
 
@@ -281,7 +280,10 @@ async def claim_monitor_task(app, server_id: ObjectId, msg_id: str):
 
             async with app.state.aio_session.get(
                 f'https://discord.com/api/v9/channels/{channel_id}/messages/{msg_id}/reactions/%F0%9F%90%AD?limit=1',
-                headers={'User-Agent': 'gflbans (gflclan.com, 1.0)', 'Authorization': f'Bot {DISCORD_BOT_TOKEN}'},
+                headers={
+                    'User-Agent': f'{BRANDING} ({HOST}, {GB_VERSION})',
+                    'Authorization': f'Bot {DISCORD_BOT_TOKEN}',
+                },
             ) as resp:
                 try:
                     resp.raise_for_status()

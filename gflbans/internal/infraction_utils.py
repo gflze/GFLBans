@@ -14,8 +14,8 @@ from pydantic import PositiveInt
 from gflbans.api_util import construct_ci_resp
 from gflbans.internal.asn import VPN_DUBIOUS, VPN_YES, check_vpn
 from gflbans.internal.avatar import process_avatar
-from gflbans.internal.config import COMMUNITY_ICON, GFLBANS_ICON, GLOBAL_INFRACTION_WEBHOOK, HOST, MONGO_DB
-from gflbans.internal.constants import SERVER_KEY
+from gflbans.internal.config import BRANDING, COMMUNITY_ICON, GFLBANS_ICON, GLOBAL_INFRACTION_WEBHOOK, HOST, MONGO_DB
+from gflbans.internal.constants import GB_VERSION, SERVER_KEY
 from gflbans.internal.database.admin import Admin
 from gflbans.internal.database.common import DFile
 from gflbans.internal.database.infraction import DInfraction, DUser, build_query_dict
@@ -49,7 +49,6 @@ from gflbans.internal.flags import (
 )
 from gflbans.internal.integrations.games import get_user_info, validate_id_ex
 from gflbans.internal.integrations.ips import ips_get_gsid_from_member_id
-from gflbans.internal.kv import get_var
 from gflbans.internal.log import logger
 from gflbans.internal.models.api import Initiator, PlayerObjNoIp, PlayerObjSimple, PositiveIntIncl0
 from gflbans.internal.pyapi_utils import load_admin_from_initiator
@@ -617,10 +616,8 @@ def embed_duration(dinf: DInfraction):
 
 
 async def discord_notify_create_infraction(app, dinf: DInfraction, print_map: bool = False):
-    bot_name, bot_avatar = (
-        await get_var(app.state.db[MONGO_DB], 'bot.name', 'GFLBans Bot'),
-        await get_var(app.state.db[MONGO_DB], 'bot.avatar', COMMUNITY_ICON),
-    )
+    bot_name = f'{BRANDING} Bot'
+    bot_avatar = COMMUNITY_ICON
 
     embed = {
         'username': bot_name,
@@ -658,7 +655,7 @@ async def discord_notify_create_infraction(app, dinf: DInfraction, print_map: bo
 
     if srv is not None and srv.infract_webhook is not None:
         async with app.state.aio_session.post(
-            srv.infract_webhook + '?wait=true', headers={'User-Agent': 'gflbans (gflclan.com, 1.0)'}, json=embed
+            srv.infract_webhook + '?wait=true', headers={'User-Agent': f'{BRANDING} ({HOST}, {GB_VERSION})'}, json=embed
         ) as resp:
             try:
                 resp.raise_for_status()
@@ -667,7 +664,9 @@ async def discord_notify_create_infraction(app, dinf: DInfraction, print_map: bo
 
     if GLOBAL_INFRACTION_WEBHOOK is not None:
         async with app.state.aio_session.post(
-            GLOBAL_INFRACTION_WEBHOOK + '?wait=true', headers={'User-Agent': 'gflbans (gflclan.com, 1.0)'}, json=embed
+            GLOBAL_INFRACTION_WEBHOOK + '?wait=true',
+            headers={'User-Agent': f'{BRANDING} ({HOST}, {GB_VERSION})'},
+            json=embed,
         ) as resp:
             try:
                 resp.raise_for_status()
@@ -676,10 +675,8 @@ async def discord_notify_create_infraction(app, dinf: DInfraction, print_map: bo
 
 
 async def discord_notify_edit_infraction(app, dinf: DInfraction, editor: Optional[ObjectId], changes):
-    bot_name, bot_avatar = (
-        await get_var(app.state.db[MONGO_DB], 'bot.name', 'GFLBans Bot'),
-        await get_var(app.state.db[MONGO_DB], 'bot.avatar', COMMUNITY_ICON),
-    )
+    bot_name = f'{BRANDING} Bot'
+    bot_avatar = COMMUNITY_ICON
 
     embed = {
         'username': bot_name,
@@ -708,7 +705,7 @@ async def discord_notify_edit_infraction(app, dinf: DInfraction, editor: Optiona
 
     if srv is not None and srv.infract_webhook is not None:
         async with app.state.aio_session.post(
-            srv.infract_webhook + '?wait=true', headers={'User-Agent': 'gflbans (gflclan.com, 1.0)'}, json=embed
+            srv.infract_webhook + '?wait=true', headers={'User-Agent': f'{BRANDING} ({HOST}, {GB_VERSION})'}, json=embed
         ) as resp:
             try:
                 resp.raise_for_status()
@@ -717,7 +714,9 @@ async def discord_notify_edit_infraction(app, dinf: DInfraction, editor: Optiona
 
     if GLOBAL_INFRACTION_WEBHOOK is not None:
         async with app.state.aio_session.post(
-            GLOBAL_INFRACTION_WEBHOOK + '?wait=true', headers={'User-Agent': 'gflbans (gflclan.com, 1.0)'}, json=embed
+            GLOBAL_INFRACTION_WEBHOOK + '?wait=true',
+            headers={'User-Agent': f'{BRANDING} ({HOST}, {GB_VERSION})'},
+            json=embed,
         ) as resp:
             try:
                 resp.raise_for_status()
@@ -726,10 +725,8 @@ async def discord_notify_edit_infraction(app, dinf: DInfraction, editor: Optiona
 
 
 async def discord_notify_revoke_infraction(app, dinf: DInfraction, actor: Optional[ObjectId]):
-    bot_name, bot_avatar = (
-        await get_var(app.state.db[MONGO_DB], 'bot.name', 'GFLBans Bot'),
-        await get_var(app.state.db[MONGO_DB], 'bot.avatar', COMMUNITY_ICON),
-    )
+    bot_name = f'{BRANDING} Bot'
+    bot_avatar = COMMUNITY_ICON
 
     embed = {
         'username': bot_name,
@@ -760,7 +757,7 @@ async def discord_notify_revoke_infraction(app, dinf: DInfraction, actor: Option
 
     if srv is not None and srv.infract_webhook is not None:
         async with app.state.aio_session.post(
-            srv.infract_webhook + '?wait=true', headers={'User-Agent': 'gflbans (gflclan.com, 1.0)'}, json=embed
+            srv.infract_webhook + '?wait=true', headers={'User-Agent': f'{BRANDING} ({HOST}, {GB_VERSION})'}, json=embed
         ) as resp:
             try:
                 resp.raise_for_status()
@@ -769,7 +766,9 @@ async def discord_notify_revoke_infraction(app, dinf: DInfraction, actor: Option
 
     if GLOBAL_INFRACTION_WEBHOOK is not None:
         async with app.state.aio_session.post(
-            GLOBAL_INFRACTION_WEBHOOK + '?wait=true', headers={'User-Agent': 'gflbans (gflclan.com, 1.0)'}, json=embed
+            GLOBAL_INFRACTION_WEBHOOK + '?wait=true',
+            headers={'User-Agent': f'{BRANDING} ({HOST}, {GB_VERSION})'},
+            json=embed,
         ) as resp:
             try:
                 resp.raise_for_status()
@@ -778,10 +777,8 @@ async def discord_notify_revoke_infraction(app, dinf: DInfraction, actor: Option
 
 
 async def discord_notify_reinst_infraction(app, dinf: DInfraction, actor: Optional[ObjectId]):
-    bot_name, bot_avatar = (
-        await get_var(app.state.db[MONGO_DB], 'bot.name', 'GFLBans Bot'),
-        await get_var(app.state.db[MONGO_DB], 'bot.avatar', COMMUNITY_ICON),
-    )
+    bot_name = f'{BRANDING} Bot'
+    bot_avatar = COMMUNITY_ICON
 
     embed = {
         'username': bot_name,
@@ -811,7 +808,7 @@ async def discord_notify_reinst_infraction(app, dinf: DInfraction, actor: Option
 
     if srv is not None and srv.infract_webhook is not None:
         async with app.state.aio_session.post(
-            srv.infract_webhook + '?wait=true', headers={'User-Agent': 'gflbans (gflclan.com, 1.0)'}, json=embed
+            srv.infract_webhook + '?wait=true', headers={'User-Agent': f'{BRANDING} ({HOST}, {GB_VERSION})'}, json=embed
         ) as resp:
             try:
                 resp.raise_for_status()
@@ -820,7 +817,9 @@ async def discord_notify_reinst_infraction(app, dinf: DInfraction, actor: Option
 
     if GLOBAL_INFRACTION_WEBHOOK is not None:
         async with app.state.aio_session.post(
-            GLOBAL_INFRACTION_WEBHOOK + '?wait=true', headers={'User-Agent': 'gflbans (gflclan.com, 1.0)'}, json=embed
+            GLOBAL_INFRACTION_WEBHOOK + '?wait=true',
+            headers={'User-Agent': f'{BRANDING} ({HOST}, {GB_VERSION})'},
+            json=embed,
         ) as resp:
             try:
                 resp.raise_for_status()
@@ -829,10 +828,8 @@ async def discord_notify_reinst_infraction(app, dinf: DInfraction, actor: Option
 
 
 async def discord_notify_purge_infraction(app, dinf: DInfraction, actor: Optional[ObjectId]):
-    bot_name, bot_avatar = (
-        await get_var(app.state.db[MONGO_DB], 'bot.name', 'GFLBans Bot'),
-        await get_var(app.state.db[MONGO_DB], 'bot.avatar', COMMUNITY_ICON),
-    )
+    bot_name = f'{BRANDING} Bot'
+    bot_avatar = COMMUNITY_ICON
 
     embed = {
         'username': bot_name,
@@ -862,7 +859,7 @@ async def discord_notify_purge_infraction(app, dinf: DInfraction, actor: Optiona
 
     if srv is not None and srv.infract_webhook is not None:
         async with app.state.aio_session.post(
-            srv.infract_webhook + '?wait=true', headers={'User-Agent': 'gflbans (gflclan.com, 1.0)'}, json=embed
+            srv.infract_webhook + '?wait=true', headers={'User-Agent': f'{BRANDING} ({HOST}, {GB_VERSION})'}, json=embed
         ) as resp:
             try:
                 resp.raise_for_status()
@@ -871,7 +868,9 @@ async def discord_notify_purge_infraction(app, dinf: DInfraction, actor: Optiona
 
     if GLOBAL_INFRACTION_WEBHOOK is not None:
         async with app.state.aio_session.post(
-            GLOBAL_INFRACTION_WEBHOOK + '?wait=true', headers={'User-Agent': 'gflbans (gflclan.com, 1.0)'}, json=embed
+            GLOBAL_INFRACTION_WEBHOOK + '?wait=true',
+            headers={'User-Agent': f'{BRANDING} ({HOST}, {GB_VERSION})'},
+            json=embed,
         ) as resp:
             try:
                 resp.raise_for_status()
