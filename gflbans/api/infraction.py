@@ -928,6 +928,12 @@ async def purge_infraction(
     if dinf is None:
         raise HTTPException(detail='No such infraction', status_code=404)
 
+    if dinf.admin != auth.admin.mongo_admin_id and (
+        auth.admin.permissions & PERMISSION_EDIT_ALL_INFRACTIONS != PERMISSION_EDIT_ALL_INFRACTIONS
+        or auth.permissions & PERMISSION_EDIT_ALL_INFRACTIONS != PERMISSION_EDIT_ALL_INFRACTIONS
+    ):
+        raise HTTPException(detail="You do not have permission to edit other admins' infractions", status_code=403)
+
     # Delete any GridFS files linked to the infraction
     try:
         if dinf.files:
