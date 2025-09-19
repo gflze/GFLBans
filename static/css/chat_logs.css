@@ -33,3 +33,7 @@
 .columns > .column > div {
     border: 1px solid grey;
 }
+
+#filter-apply {
+    color: #fff;
+}
