@@ -616,7 +616,7 @@ def embed_duration(dinf: DInfraction):
 
 
 async def discord_notify_create_infraction(app, dinf: DInfraction, print_map: bool = False):
-    bot_name = f'{BRANDING} Bot'
+    bot_name = f'{BRANDING}'
     bot_avatar = COMMUNITY_ICON
 
     embed = {
@@ -675,7 +675,7 @@ async def discord_notify_create_infraction(app, dinf: DInfraction, print_map: bo
 
 
 async def discord_notify_edit_infraction(app, dinf: DInfraction, editor: Optional[ObjectId], changes):
-    bot_name = f'{BRANDING} Bot'
+    bot_name = f'{BRANDING}'
     bot_avatar = COMMUNITY_ICON
 
     embed = {
@@ -725,7 +725,7 @@ async def discord_notify_edit_infraction(app, dinf: DInfraction, editor: Optiona
 
 
 async def discord_notify_revoke_infraction(app, dinf: DInfraction, actor: Optional[ObjectId]):
-    bot_name = f'{BRANDING} Bot'
+    bot_name = f'{BRANDING}'
     bot_avatar = COMMUNITY_ICON
 
     embed = {
@@ -777,7 +777,7 @@ async def discord_notify_revoke_infraction(app, dinf: DInfraction, actor: Option
 
 
 async def discord_notify_reinst_infraction(app, dinf: DInfraction, actor: Optional[ObjectId]):
-    bot_name = f'{BRANDING} Bot'
+    bot_name = f'{BRANDING}'
     bot_avatar = COMMUNITY_ICON
 
     embed = {
@@ -828,7 +828,7 @@ async def discord_notify_reinst_infraction(app, dinf: DInfraction, actor: Option
 
 
 async def discord_notify_purge_infraction(app, dinf: DInfraction, actor: Optional[ObjectId]):
-    bot_name = f'{BRANDING} Bot'
+    bot_name = f'{BRANDING}'
     bot_avatar = COMMUNITY_ICON
 
     embed = {

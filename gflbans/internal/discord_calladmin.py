@@ -114,7 +114,7 @@ async def execute_webhook(app, srv: DServer, call: ExecuteCallAdmin, image: Opti
             }
         )
 
-    bot_name = f'{BRANDING} Bot'
+    bot_name = f'{BRANDING}'
     bot_avatar = COMMUNITY_ICON
 
     request_json = {
