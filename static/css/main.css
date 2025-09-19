@@ -66,7 +66,7 @@
 }
 
 #server_map {
-    filter: invert();
+    filter: brightness(70%);
 }
 
 .theme-opposite #server_map {
@@ -109,7 +109,7 @@
     }
 
     .theme-opposite #server_map {
-        filter: invert();
+        filter: brightness(70%);
     }
 
     #server_map {
