@@ -645,7 +645,9 @@ async def create_infraction(
 
     duration_to_use = query.duration
 
-    if query.auto_duration:
+    # Possible future TODO: Make auto-stacking smarter and re-enable this check
+    # if query.auto_duration:
+    if False:
         # Base query
         q = build_query_dict(
             auth.type,
