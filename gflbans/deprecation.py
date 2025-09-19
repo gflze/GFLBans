@@ -91,6 +91,9 @@ async def deprecation_cleanup(app):
         if 'action_log' in await db.list_collection_names():
             await db.drop_collection('action_log')  # Old log format, now uses audit_log instead
 
+        if 'audit_log' in await db.list_collection_names():
+            await db.drop_collection('audit_log')  # Also an old log format, this collection already exists with data in the original GFL database
+
         if 'confirmations' in await db.list_collection_names():
             await db.drop_collection('confirmations')  # Was unused
 
