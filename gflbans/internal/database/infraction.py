@@ -77,7 +77,7 @@ def build_query_dict(
 
         f['server'] = ObjectId(actor_id)
 
-    # Filter out expired bans, vpn bans (on ip only), removed bans, session
+    # Filter out expired bans, removed bans, session
     if active_only:
         w = [
             {'expires': {'$gt': datetime.now(tz=UTC).timestamp()}},
@@ -98,15 +98,6 @@ def build_query_dict(
         ]
 
         cond2 = {'$or': w}
-        _branch(f, cond2)
-
-        vpnf = [
-            {'$and': [{'flags': {'$bitsAllClear': INFRACTION_VPN}}, {'user.gs_service': None}, {'user.gs_id': None}]},
-            {'$and': [{'user.gs_service': {'$ne': None}}, {'user.gs_id': {'$ne': None}}]},
-        ]
-
-        # Once again, $or might already exist
-        cond2 = {'$or': vpnf}
         _branch(f, cond2)
 
     if active_only or exclude_removed:
