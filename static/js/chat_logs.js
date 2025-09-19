@@ -1,4 +1,4 @@
-let CHATLOGS_LIMIT = 40;
+let CHATLOGS_LIMIT = 80;
 let oldestMessageTimestamp = null;
 let reachedEnd = false; // true when we've scrolled to end
 let isLoading = false;
