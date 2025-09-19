@@ -162,7 +162,7 @@ function renderMessageGroup(user, messages) {
 
         const content = document.createElement('div');
         content.classList.add('is-size-7');
-        content.textContent = m.rendered || m.content;
+        content.textContent = m.content;
         row.appendChild(content);
         right.appendChild(row);
     }
