@@ -191,8 +191,8 @@ async def fetch_blocklist(request: Request, block_filter: Optional[str] = None):
     else:
         q = {
             '$or': [
-                {'payload': {'$regex': re.escape(block_filter), '$options': 'i'}},
-                {'comment': {'$regex': re.escape(block_filter), '$options': 'i'}},
+                {'payload': {'$regex': '^' + re.escape(block_filter) + '$', '$options': 'i'}},
+                {'comment': {'$regex': '^' + re.escape(block_filter) + '$', '$options': 'i'}},
             ]
         }
 
