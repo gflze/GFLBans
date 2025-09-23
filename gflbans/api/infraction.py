@@ -1004,7 +1004,7 @@ async def edit_infraction(
     if not (
         auth.admin.permissions & PERMISSION_EDIT_ALL_INFRACTIONS == PERMISSION_EDIT_ALL_INFRACTIONS
         or (
-            dinf.admin == auth.admin
+            dinf.admin == auth.admin.mongo_admin_id
             and auth.admin.permissions & PERMISSION_CREATE_INFRACTION == PERMISSION_CREATE_INFRACTION
         )
     ):
