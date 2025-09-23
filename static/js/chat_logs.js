@@ -363,6 +363,7 @@ function loadMore(append=true, scrollToBottom=false) {
                 const renderBatch = (items) => {
                     let group = [];
                     let lastKey = null;
+                    let firstMessageCreated = 9999999999;
                     function flush(target, grp) {
                         if (grp.length === 0)
                             return;
@@ -375,13 +376,17 @@ function loadMore(append=true, scrollToBottom=false) {
 
                     for (const m of chronologicalItems) {
                         const key = getAuthorKey(m);
-                        if (lastKey === null || key === lastKey) {
+                        if (lastKey === null || (m.created < (firstMessageCreated + 300) && key === lastKey)) {
+                            if (group.length === 0)
+                                firstMessageCreated = m.created
+
                             group.push(m);
                             lastKey = key;
                         } else {
                             flush(container, group);
                             group = [m];
                             lastKey = key;
+                            firstMessageCreated = m.created
                         }
                     }
                     flush(container, group);
