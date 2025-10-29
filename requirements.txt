@@ -17,7 +17,7 @@ defusedxml==0.7.1
 djlint==1.36.3
 dnspython==2.6.1
 exceptiongroup==1.2.2
-fastapi==0.116.1
+fastapi==0.120.1
 frozenlist==1.4.1
 h11==0.16.0
 humanize==4.10.0
