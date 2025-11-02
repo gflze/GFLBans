@@ -85,7 +85,7 @@ class Comment(BaseModel):
 
 class MessageLog(BaseModel):
     user: PlayerObj
-    content: constr(min_length=1, max_length=256)
+    content: constr(min_length=1, max_length=512)
     rendered: Optional[str]
     created: int
     id: Optional[str]
