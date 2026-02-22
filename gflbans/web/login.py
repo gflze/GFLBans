@@ -92,7 +92,7 @@ async def finish_login(request: Request):
         or data['openid.return_to'] != f'http://{HOST}/login/finish'
         or not id_regex.match(data['openid.identity'])
     ):
-        raise HTTPException(status_code=502, detail='Login rejected')
+        raise HTTPException(status_code=403, detail='Login rejected')
     steam_id = int(id_regex.findall(data['openid.identity'])[0])
     data['openid.sig'] = response_data['openid.sig'][0]
     data['openid.ns'] = 'http://specs.openid.net/auth/2.0'
@@ -125,7 +125,7 @@ async def finish_login(request: Request):
                 or resp_keys['is_valid'] is None
                 or resp_keys['is_valid'] != 'true'
             ):
-                raise HTTPException(status_code=502, detail='Login rejected')
+                raise HTTPException(status_code=403, detail='Login rejected')
             ips_user = ips_get_member_id_from_gsid(steam_id)
 
             response = await request.app.state.db[MONGO_DB]['user_cache'].find_one({'authed_as': ips_user})
@@ -134,7 +134,7 @@ async def finish_login(request: Request):
                 # No such user already logged in. Make sure they are allowed to login
                 admin_object = await load_admin_from_initiator(request.app, Initiator(ips_id=ips_user))
                 if admin_object is None or not (admin_object.permissions & PERMISSION_LOGIN):
-                    raise HTTPException(status_code=502, detail='Login rejected')
+                    raise HTTPException(status_code=403, detail='Login rejected')
 
                 # Generate a new token to save their login
                 token = random.SystemRandom().randint(1, 1 << 64)
