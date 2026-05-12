@@ -79,7 +79,7 @@ async def update_group(request: Request, ug_query: UpdateGroup, auth: AuthInfo =
         authentication_type=auth.type,
         authenticator=auth.authenticator_id,
         admin=auth.admin.mongo_admin_id,
-        new_item=new_group.dict(),
+        new_item=new_group.model_dump(),
     ).commit(request.app.state.db[MONGO_DB])
 
     await new_group.commit(request.app.state.db[MONGO_DB])
@@ -119,7 +119,7 @@ async def delete_group(request: Request, ips_group: int, auth: AuthInfo = Depend
         authentication_type=auth.type,
         authenticator=auth.authenticator_id,
         admin=auth.admin.mongo_admin_id,
-        old_item=dg.dict(),
+        old_item=dg.model_dump(),
     ).commit(request.app.state.db[MONGO_DB])
 
     await request.app.state.db[MONGO_DB][DGroup.__collection__].delete_one({'ips_group': ips_group})
@@ -148,7 +148,7 @@ async def patch_group(
     if dg is None:
         raise HTTPException(detail='No group exists with ips_group: {ips_group}', status_code=404)
 
-    original_group_info = dg.dict()  # For audit logging purposes
+    original_group_info = dg.model_dump()  # For audit logging purposes
     dg.name = ug_query.name
     dg.privileges = ug_query.privileges
 
@@ -163,7 +163,7 @@ async def patch_group(
         authenticator=auth.authenticator_id,
         admin=auth.admin.mongo_admin_id,
         old_item=original_group_info,
-        new_item=dg.dict(),
+        new_item=dg.model_dump(),
     ).commit(request.app.state.db[MONGO_DB])
 
     await dg.commit(request.app.state.db[MONGO_DB])

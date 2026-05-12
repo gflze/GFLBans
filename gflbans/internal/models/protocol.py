@@ -3,7 +3,7 @@ from datetime import datetime
 from typing import Dict, List, Optional, Union
 
 from fastapi import Depends, Query
-from pydantic import BaseModel, Field, IPvAnyAddress, PositiveInt, conint, constr, root_validator, validator
+from pydantic import BaseModel, Field, IPvAnyAddress, PositiveInt, conint, constr, field_validator, model_validator
 
 # Infraction related API calls
 from gflbans.internal.config import MAX_UPLOAD_SIZE
@@ -31,7 +31,7 @@ from gflbans.internal.models.api import (
 
 class GetInfractions(BaseModel):
     player: PlayerObjNoIpOptional = Depends(PlayerObjNoIpOptional)
-    ip: Optional[str]
+    ip: Optional[str] = None
     include_other_servers: bool = True
     active_only: bool = False
 
@@ -50,44 +50,42 @@ class GetSingleInfractionReply(BaseModel):
 
 
 class Search(BaseModel):
-    search: Optional[constr(min_length=1, max_length=256)]
+    search: Optional[constr(min_length=1, max_length=256)] = None
 
-    created: Optional[int]
-    created_comparison_mode: Optional[constr(min_length=1, max_length=3)]
-    expires: Optional[int]
-    expires_comparison_mode: Optional[constr(min_length=1, max_length=3)]
-    time_left: Optional[int]
-    time_left_comparison_mode: Optional[constr(min_length=1, max_length=3)]
-    duration: Optional[int]
-    duration_comparison_mode: Optional[constr(min_length=1, max_length=3)]
+    created: Optional[int] = None
+    created_comparison_mode: Optional[constr(min_length=1, max_length=3)] = None
+    expires: Optional[int] = None
+    expires_comparison_mode: Optional[constr(min_length=1, max_length=3)] = None
+    time_left: Optional[int] = None
+    time_left_comparison_mode: Optional[constr(min_length=1, max_length=3)] = None
+    duration: Optional[int] = None
+    duration_comparison_mode: Optional[constr(min_length=1, max_length=3)] = None
 
-    gs_service: Optional[constr(min_length=1, max_length=7)]
-    gs_id: Optional[constr(min_length=1, max_length=256)]
-    gs_name: Optional[constr(min_length=1, max_length=30)]
-    ip: Optional[constr(min_length=1, max_length=15)]
-    admin_id: Optional[constr(min_length=1, max_length=256)]
-    admin: Optional[constr(min_length=1, max_length=30)]
-    server: Optional[constr(min_length=1, max_length=30)]
-    reason: Optional[constr(min_length=1, max_length=256)]
-    ureason: Optional[constr(min_length=1, max_length=256)]
-    is_active: Optional[bool]
-    is_expired: Optional[bool]
-    is_system: Optional[bool]
-    is_global: Optional[bool]
-    is_permanent: Optional[bool]
-    is_playtime_duration: Optional[bool]
-    is_vpn: Optional[bool]
-    is_web: Optional[bool]
-    is_active: Optional[bool]
-    is_expired: Optional[bool]
-    is_removed: Optional[bool]
-    is_voice: Optional[bool]
-    is_text: Optional[bool]
-    is_ban: Optional[bool]
-    is_admin_chat: Optional[bool]
-    is_call_admin: Optional[bool]
-    is_item: Optional[bool]
-    is_session: Optional[bool]
+    gs_service: Optional[constr(min_length=1, max_length=7)] = None
+    gs_id: Optional[constr(min_length=1, max_length=256)] = None
+    gs_name: Optional[constr(min_length=1, max_length=30)] = None
+    ip: Optional[constr(min_length=1, max_length=15)] = None
+    admin_id: Optional[constr(min_length=1, max_length=256)] = None
+    admin: Optional[constr(min_length=1, max_length=30)] = None
+    server: Optional[constr(min_length=1, max_length=30)] = None
+    reason: Optional[constr(min_length=1, max_length=256)] = None
+    ureason: Optional[constr(min_length=1, max_length=256)] = None
+    is_active: Optional[bool] = None
+    is_expired: Optional[bool] = None
+    is_system: Optional[bool] = None
+    is_global: Optional[bool] = None
+    is_permanent: Optional[bool] = None
+    is_playtime_duration: Optional[bool] = None
+    is_vpn: Optional[bool] = None
+    is_web: Optional[bool] = None
+    is_removed: Optional[bool] = None
+    is_voice: Optional[bool] = None
+    is_text: Optional[bool] = None
+    is_ban: Optional[bool] = None
+    is_admin_chat: Optional[bool] = None
+    is_call_admin: Optional[bool] = None
+    is_item: Optional[bool] = None
+    is_session: Optional[bool] = None
 
     # Cursor control
     limit: conint(gt=0, le=50) = 50
@@ -100,8 +98,8 @@ class SearchReply(BaseModel):
 
 class CheckInfractions(BaseModel):
     player: PlayerObjNoIpOptional = Depends(PlayerObjNoIpOptional)
-    ip: Optional[str]
-    reason: Optional[str]
+    ip: Optional[str] = None
+    reason: Optional[str] = None
     include_other_servers: bool = True
     active_only: bool = True
     exclude_removed: bool = False
@@ -110,9 +108,9 @@ class CheckInfractions(BaseModel):
 
 
 class RecursiveSearch(BaseModel):
-    gs_service: Optional[constr(min_length=1, max_length=7)]
-    gs_id: Optional[constr(min_length=1, max_length=256)]
-    ip: Optional[constr(min_length=1, max_length=15)]
+    gs_service: Optional[constr(min_length=1, max_length=7)] = None
+    gs_id: Optional[constr(min_length=1, max_length=256)] = None
+    ip: Optional[constr(min_length=1, max_length=15)] = None
     depth: conint(gt=0, le=10) = 3
 
     # Cursor control
@@ -121,48 +119,49 @@ class RecursiveSearch(BaseModel):
 
 
 class CheckInfractionsReply(BaseModel):
-    voice_block: Optional[CInfractionSummary]
-    chat_block: Optional[CInfractionSummary]
-    ban: Optional[CInfractionSummary]
-    admin_chat_block: Optional[CInfractionSummary]
-    call_admin_block: Optional[CInfractionSummary]
-    item_block: Optional[CInfractionSummary]
+    voice_block: Optional[CInfractionSummary] = None
+    chat_block: Optional[CInfractionSummary] = None
+    ban: Optional[CInfractionSummary] = None
+    admin_chat_block: Optional[CInfractionSummary] = None
+    call_admin_block: Optional[CInfractionSummary] = None
+    item_block: Optional[CInfractionSummary] = None
 
 
 class InfractionStatisticsReply(BaseModel):
     voice_block_count: PositiveIntIncl0
-    voice_block_longest: Optional[int]
+    voice_block_longest: Optional[int] = None
     text_block_count: PositiveIntIncl0
-    text_block_longest: Optional[int]
+    text_block_longest: Optional[int] = None
     ban_count: PositiveIntIncl0
-    ban_longest: Optional[int]
+    ban_longest: Optional[int] = None
     admin_chat_block_count: PositiveIntIncl0
-    admin_chat_block_longest: Optional[int]
+    admin_chat_block_longest: Optional[int] = None
     call_admin_block_count: PositiveIntIncl0
-    call_admin_block_longest: Optional[int]
+    call_admin_block_longest: Optional[int] = None
     item_block_count: PositiveIntIncl0
-    item_block_longest: Optional[int]
+    item_block_longest: Optional[int] = None
     warning_count: PositiveIntIncl0
-    warning_longest: Optional[int]
+    warning_longest: Optional[int] = None
 
 
 class CreateInfraction(BaseModel):
-    created: Optional[PositiveInt]
-    duration: Optional[PositiveInt]
+    created: Optional[PositiveInt] = None
+    duration: Optional[PositiveInt] = None
     auto_duration: bool = False  # If True, ignores duration
     player: PlayerObjSimple
-    admin: Optional[Initiator]
+    admin: Optional[Initiator] = None
     reason: constr(min_length=1, max_length=280)
-    punishments: List[constr(regex=valid_types_regex)]
-    scope: constr(regex=r'^(server|global)$')
+    punishments: List[constr(pattern=valid_types_regex)]
+    scope: constr(pattern=r'^(server|global)$')
     session: bool = False
     playtime_based: bool = False
     do_full_infraction: bool = False  # Get user data / vpn check before replying to the request
-    server: Optional[str]  # Override the server
-    allow_normalize = False  # Attempt to convert steamid to steamid64, etc
-    import_mode = False  # skip check of admin perms and just use perms of api key/server
+    server: Optional[str] = None  # Override the server
+    allow_normalize: bool = False  # Attempt to convert steamid to steamid64, etc
+    import_mode: bool = False  # skip check of admin perms and just use perms of api key/server
 
-    @root_validator(pre=True)
+    @model_validator(mode='before')
+    @classmethod
     def check_conflicts(cls, values):
         if 'playtime_based' in values and values['playtime_based'] and 'ban' in values['punishments']:
             raise ValueError('Cannot have a ban that is based on playtime')
@@ -179,10 +178,10 @@ class CreateInfractionReply(BaseModel):
 
 class CreateInfractionFromChatLog(BaseModel):
     chatlog_id: str
-    preset: constr(regex=r'^(warn|text|silence)$') = 'text'
+    preset: constr(pattern=r'^(warn|text|silence)$') = 'text'
     reason: constr(min_length=1, max_length=280)
-    scope: constr(regex=r'^(server|global)$')
-    duration: Optional[PositiveInt]
+    scope: constr(pattern=r'^(server|global)$')
+    duration: Optional[PositiveInt] = None
     auto_duration: bool = False
     playtime_based: bool = False
     permanent: bool = False
@@ -191,9 +190,9 @@ class CreateInfractionFromChatLog(BaseModel):
 class RemoveInfractionsOfPlayer(BaseModel):
     player: PlayerObjSimple
     remove_reason: constr(min_length=1, max_length=280)
-    admin: Optional[Initiator]
+    admin: Optional[Initiator] = None
     include_other_servers: bool = True
-    restrict_types: Optional[List[constr(regex=valid_types_regex)]]
+    restrict_types: Optional[List[constr(pattern=valid_types_regex)]] = None
 
 
 class RemoveInfractionsOfPlayerReply(BaseModel):
@@ -203,33 +202,36 @@ class RemoveInfractionsOfPlayerReply(BaseModel):
 
 
 class ModifyInfraction(BaseModel):
-    admin: Optional[Initiator]  # The admin making the change
+    admin: Optional[Initiator] = None  # The admin making the change
 
     # Change the author
-    author: Union[Initiator, constr(regex=r'^SYSTEM$'), None]  # string SYSTEM for SYSTEM
+    author: Union[Initiator, constr(pattern=r'^SYSTEM$'), None] = None  # string SYSTEM for SYSTEM
 
     # Change the expiration. All of these groups are mutually exclusive
     make_session: bool = False  # If true, make this a session infraction
     make_permanent: bool = False  # If true, make this infraction not expire
-    expiration: Optional[PositiveInt]  # UNIX time that the infraction expires at.
-    time_left: Optional[PositiveIntIncl0]  # Sets PLAYTIME_DURATION and uses this time in seconds as the initial count
+    expiration: Optional[PositiveInt] = None  # UNIX time that the infraction expires at.
+    # Sets PLAYTIME_DURATION and uses this time in seconds as the initial count
+    time_left: Optional[PositiveIntIncl0] = None
 
     # Misc attrs
     make_web: bool = False
-    server: Optional[str]
-    reason: Optional[constr(min_length=1, max_length=280)]
+    server: Optional[str] = None
+    reason: Optional[constr(min_length=1, max_length=280)] = None
 
     # Removal related stuff.
-    set_removal_state: Optional[bool]  # None -> No change, True -> removed (following fields required), False -> not
-    removed_by: Optional[Initiator]
-    removal_reason: Optional[constr(min_length=1, max_length=280)]
+    # None -> No change, True -> removed (following fields required), False -> not
+    set_removal_state: Optional[bool] = None
+    removed_by: Optional[Initiator] = None
+    removal_reason: Optional[constr(min_length=1, max_length=280)] = None
 
     # Other flag stuff
-    punishments: Optional[List[constr(regex=valid_types_regex)]]
-    scope: Optional[constr(regex=r'^(server|global)$')]
-    vpn: Optional[bool]  # Set whether or not this is a VPN IP
+    punishments: Optional[List[constr(pattern=valid_types_regex)]] = None
+    scope: Optional[constr(pattern=r'^(server|global)$')] = None
+    vpn: Optional[bool] = None  # Set whether or not this is a VPN IP
 
-    @root_validator(pre=True)
+    @model_validator(mode='before')
+    @classmethod
     def check_conflicts(cls, values):
         if 'set_removal_state' in values and values['set_removal_state']:
             if 'removal_reason' not in values:
@@ -242,26 +244,26 @@ class ModifyInfractionReply(BaseModel):
 
 
 class AddComment(BaseModel):
-    admin: Optional[Initiator]
+    admin: Optional[Initiator] = None
     content: constr(min_length=1, max_length=280)
     set_private: bool = False
 
 
 class EditComment(BaseModel):
     comment_index: PositiveIntIncl0  # The index of the comment in the infraction's comment list
-    admin: Optional[Initiator]
+    admin: Optional[Initiator] = None
     content: constr(min_length=1, max_length=280)
 
 
 class DeleteComment(BaseModel):
     comment_index: PositiveIntIncl0  # The index of the comment in the infraction's comment list
-    admin: Optional[Initiator]
+    admin: Optional[Initiator] = None
 
 
 class AddFile(BaseModel):
     file_name: str
     contents: str = Query(..., description='Base64 encoded contents', max_length=MAX_UPLOAD_SIZE)
-    admin: Optional[Initiator]
+    admin: Optional[Initiator] = None
 
 
 class DownloadFileByIndex(BaseModel):
@@ -275,7 +277,7 @@ class DownloadFileReply(BaseModel):
 
 class DeleteFile(BaseModel):
     infraction: str
-    admin: Optional[Initiator]
+    admin: Optional[Initiator] = None
     file_idx: PositiveIntIncl0
 
 
@@ -290,7 +292,7 @@ class Heartbeat(BaseModel):
     hostname: constr(max_length=96)
     max_slots: int
     players: List[PlayerObjIPOptional]
-    messages: Optional[List[MessageLog]]
+    messages: Optional[List[MessageLog]] = None
     operating_system: str
     mod: str
     map: str
@@ -306,7 +308,8 @@ class HeartbeatChange(BaseModel):
 class CheckVPN(BaseModel):
     player: PlayerObjSimple = Depends(PlayerObjSimple)
 
-    @validator('player')
+    @field_validator('player')
+    @classmethod
     def check_validity(cls, ply):
         if ply.ip is None:
             raise ValueError('must have an ip address')
@@ -317,7 +320,7 @@ class CheckVPNReply(BaseModel):
     is_vpn: bool
     is_dubious: bool
     is_immune: bool
-    countryName: Optional[str]
+    countryName: Optional[str] = None
 
 
 class ExecuteCallAdmin(BaseModel):
@@ -325,16 +328,16 @@ class ExecuteCallAdmin(BaseModel):
     caller_name: str = 'UNKNOWN PLAYER'
     include_other_servers: bool = False
     message: constr(min_length=1, max_length=120)
-    image: Optional[constr(max_length=5 * 1024 * 1024)]
+    image: Optional[constr(max_length=5 * 1024 * 1024)] = None
     cooldown: PositiveInt = 600
-    report_target: Optional[PlayerObjNoIp]
+    report_target: Optional[PlayerObjNoIp] = None
     report_target_name: str = 'UNKNOWN PLAYER'
 
 
 class ExecuteCallAdminReply(BaseModel):
     sent: bool
     is_banned: bool
-    cooldown: Optional[PositiveIntIncl0]
+    cooldown: Optional[PositiveIntIncl0] = None
 
 
 class ClaimCallAdmin(BaseModel):
@@ -343,7 +346,7 @@ class ClaimCallAdmin(BaseModel):
 
 class ClaimCallAdminReply(BaseModel):
     success: bool
-    msg: Optional[str]
+    msg: Optional[str] = None
 
 
 class QueryAdminInfo(BaseModel):
@@ -381,11 +384,12 @@ class AddServer(BaseModel):
     enabled: bool = False
     friendly_name: constr(min_length=1, max_length=32)
     allow_unknown: bool = False
-    discord_webhook: Optional[str]
-    infract_webhook: Optional[str]
-    discord_staff_tag: Optional[str]
+    discord_webhook: Optional[str] = None
+    infract_webhook: Optional[str] = None
+    discord_staff_tag: Optional[str] = None
 
-    @root_validator(pre=True)
+    @model_validator(mode='before')
+    @classmethod
     def check_discord(cls, values):
         if ('discord_webhook' in values and 'discord_staff_tag' not in values) or (
             'discord_staff_tag' in values and 'discord_webhook' not in values
@@ -401,14 +405,14 @@ class AddServerReply(BaseModel):
 
 
 class EditServer(BaseModel):
-    ip: Optional[IPvAnyAddress]
-    game_port: Optional[conint(gt=0, le=65535)]
-    enabled: Optional[bool]
-    friendly_name: Optional[constr(min_length=1, max_length=32)]
-    allow_unknown: Optional[bool]
-    discord_webhook: Optional[str]
-    infract_webhook: Optional[str]
-    discord_staff_tag: Optional[str]
+    ip: Optional[IPvAnyAddress] = None
+    game_port: Optional[conint(gt=0, le=65535)] = None
+    enabled: Optional[bool] = None
+    friendly_name: Optional[constr(min_length=1, max_length=32)] = None
+    allow_unknown: Optional[bool] = None
+    discord_webhook: Optional[str] = None
+    infract_webhook: Optional[str] = None
+    discord_staff_tag: Optional[str] = None
 
 
 class EditServerReply(BaseModel):
@@ -432,10 +436,11 @@ class DeleteServerReply(BaseModel):
 
 
 class RequestChatLogs(BaseModel):
-    user: Optional[PlayerObjSimple]
-    search: Optional[constr(min_length=1, max_length=256)]  # name or steamid
-    content: Optional[constr(min_length=1, max_length=256)]  # search by message contents
-    command_mode: Optional[constr(regex=r'^(all|only|exclude)$')] = 'all'  # only displays messages starting with ! or /
+    user: Optional[PlayerObjSimple] = None
+    search: Optional[constr(min_length=1, max_length=256)] = None  # name or steamid
+    content: Optional[constr(min_length=1, max_length=256)] = None  # search by message contents
+    # Only displays messages starting with ! or /
+    command_mode: Optional[constr(pattern=r'^(all|only|exclude)$')] = 'all'
 
     # Time range filters (unix seconds). 0 means unset.
     created_after: PositiveIntIncl0 = 0
@@ -464,10 +469,10 @@ class GetGroupsReply(BaseModel):
 
 # VPN APIs
 class AddVPN(BaseModel):
-    vpn_type: constr(regex=r'^(asn|cidr)$')
+    vpn_type: constr(pattern=r'^(asn|cidr)$')
     is_dubious: bool = False
-    as_number: Optional[int]
-    cidr: Optional[str]
+    as_number: Optional[int] = None
+    cidr: Optional[str] = None
     comment: constr(min_length=1, max_length=120)
 
 
@@ -477,13 +482,14 @@ class AddVPNReply(BaseModel):
 
 class PatchVPN(BaseModel):
     id: str
-    vpn_type: Optional[constr(regex=r'^(asn|cidr)$')]
-    is_dubious: Optional[bool]
-    as_number: Optional[int]
-    cidr: Optional[str]
-    comment: Optional[constr(min_length=1, max_length=120)]
+    vpn_type: Optional[constr(pattern=r'^(asn|cidr)$')] = None
+    is_dubious: Optional[bool] = None
+    as_number: Optional[int] = None
+    cidr: Optional[str] = None
+    comment: Optional[constr(min_length=1, max_length=120)] = None
 
-    @root_validator(pre=True)
+    @model_validator(mode='before')
+    @classmethod
     def check_type(cls, values):
         if ('vpn_type' in values and values['vpn_type'] == 'cidr' and 'cidr' not in values) or (
             'vpn_type' in values and values['vpn_type'] == 'asn' and 'as_number' not in values
@@ -518,7 +524,7 @@ class RemoveVPNReply(BaseModel):
 
 
 class PollRPC(BaseModel):
-    timeout: PositiveInt = None
+    timeout: Optional[PositiveInt] = None
 
 
 class RPCEventBase(BaseModel):
@@ -528,7 +534,7 @@ class RPCEventBase(BaseModel):
 
 
 class RPCPlayerUpdated(RPCEventBase):
-    target_type: constr(regex=r'^(player|ip)$')
+    target_type: constr(pattern=r'^(player|ip)$')
     target: Union[PlayerObjNoIp, str]
 
     local: CheckInfractionsReply
@@ -565,14 +571,14 @@ class GetAdmins(BaseModel):
     admin: FetchAdminInfo = Depends(FetchAdminInfo)
 
     # Cursor control
-    limit: Optional[conint(gt=0, le=50)]
+    limit: Optional[conint(gt=0, le=50)] = None
     skip: PositiveIntIncl0 = 0
 
 
 class GetAuditLogs(BaseModel):
-    event_type: Optional[List[int]]
-    authenticator: Optional[str]
-    admin: Optional[str]
+    event_type: Optional[List[int]] = None
+    authenticator: Optional[str] = None
+    admin: Optional[str] = None
 
     # Cursor control
     limit: conint(gt=0, le=50) = 30

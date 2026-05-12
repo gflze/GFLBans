@@ -1,10 +1,10 @@
 import json
-from typing import Any, Optional, Tuple, Union
+from typing import Any, ClassVar, Optional, Tuple, Union
 from warnings import warn
 
 from bson import ObjectId
 from motor.motor_asyncio import AsyncIOMotorDatabase
-from pydantic import BaseModel, ValidationError
+from pydantic import BaseModel, ConfigDict, Field, ValidationError
 from pymongo.results import InsertOneResult, UpdateResult
 
 from gflbans.internal.log import logger
@@ -23,15 +23,11 @@ def _clean(d):
 # Only use this for areas where it doesn't really matter if the data is a little bit out of a date.
 # (Such as various frontend requests)
 class DBase(BaseModel):
-    __collection__ = 'base'
+    model_config = ConfigDict(arbitrary_types_allowed=True, from_attributes=True, populate_by_name=True)
 
-    id: Optional[ObjectId]
+    __collection__: ClassVar[str] = 'base'
 
-    class Config:
-        arbitrary_types_allowed = True
-        underscore_attrs_are_private = False
-        orm_mode = True
-        fields = {'id': '_id'}
+    id: Optional[ObjectId] = Field(default=None, alias='_id')
 
     @classmethod
     def load_document(cls, doc):
@@ -117,13 +113,13 @@ class DBase(BaseModel):
             if self.__collection__ == 'rpc':
                 ur: UpdateResult = await db_ref[self.__collection__].replace_one(
                     {'_id': self.id},
-                    _clean(self.dict(by_alias=True, exclude_none=True, exclude_unset=False)),
+                    _clean(self.model_dump(by_alias=True, exclude_none=True, exclude_unset=False)),
                     upsert=True,
                 )
             else:
                 ur: UpdateResult = await db_ref[self.__collection__].replace_one(
                     {'_id': self.id},
-                    _clean(self.dict(by_alias=True, exclude_none=True, exclude_unset=True)),
+                    _clean(self.model_dump(by_alias=True, exclude_none=True, exclude_unset=True)),
                     upsert=True,
                 )
 
@@ -138,11 +134,11 @@ class DBase(BaseModel):
             self.id = None
             if self.__collection__ == 'rpc':
                 ior: InsertOneResult = await db_ref[self.__collection__].insert_one(
-                    _clean(self.dict(by_alias=True, exclude_unset=False, exclude_none=True))
+                    _clean(self.model_dump(by_alias=True, exclude_unset=False, exclude_none=True))
                 )
             else:
                 ior: InsertOneResult = await db_ref[self.__collection__].insert_one(
-                    _clean(self.dict(by_alias=True, exclude_unset=True, exclude_none=True))
+                    _clean(self.model_dump(by_alias=True, exclude_unset=True, exclude_none=True))
                 )
 
             assert ior.acknowledged
@@ -156,7 +152,7 @@ class DBase(BaseModel):
         if self.id is None:
             raise ValueError("Tried to unset a field when this object doesn't exist in the DB")
 
-        if field not in self.__fields__:
+        if field not in type(self).model_fields:
             raise KeyError(f'{field} is not a valid field for this type.')
 
         setattr(self, field, None)
@@ -164,7 +160,7 @@ class DBase(BaseModel):
         validate(self)
 
         return await db_ref[self.__collection__].update_one(
-            {'_id': self.id}, {'$unset': {self.__fields__[field].alias: ''}}, session=session
+            {'_id': self.id}, {'$unset': {self._field_alias(field): ''}}, session=session
         )
 
     async def update_field(self, db_ref: AsyncIOMotorDatabase, field: str, value: Any, session=None):
@@ -173,7 +169,7 @@ class DBase(BaseModel):
                 'Tried to prepare a field update for this object when it has not yet been ' 'written to the database'
             )
 
-        if field not in self.__fields__:
+        if field not in type(self).model_fields:
             raise KeyError(f'{field} is not a field of this object')
 
         if value is None:
@@ -183,28 +179,28 @@ class DBase(BaseModel):
 
         validate(self)
 
-        if hasattr(value, 'dict'):
-            value = value.dict(by_alias=True, exclude_unset=True, exclude_none=True)
+        if hasattr(value, 'model_dump'):
+            value = value.model_dump(by_alias=True, exclude_unset=True, exclude_none=True)
 
         if isinstance(value, list):
             nl = []
 
             for v in value:
-                if hasattr(v, 'dict'):
-                    nl.append(v.dict(by_alias=True, exclude_unset=True, exclude_none=True))
+                if hasattr(v, 'model_dump'):
+                    nl.append(v.model_dump(by_alias=True, exclude_unset=True, exclude_none=True))
                 else:
                     nl.append(v)
             value = nl
 
         return await db_ref[self.__collection__].update_one(
-            {'_id': self.id}, {'$set': {self.__fields__[field].alias: value}}, session=session
+            {'_id': self.id}, {'$set': {self._field_alias(field): value}}, session=session
         )
 
     async def add_bit_flag(self, db_ref: AsyncIOMotorDatabase, field: str, value: int, session=None):
         if self.id is None:
             raise ValueError('Cannot add bit flag to this object that has not been committed yet')
 
-        if field not in self.__fields__:
+        if field not in type(self).model_fields:
             raise KeyError(f'No such field {field}')
 
         setattr(self, field, getattr(self, field) | value)
@@ -212,14 +208,14 @@ class DBase(BaseModel):
         validate(self)
 
         return await db_ref[self.__collection__].update_one(
-            {'_id': self.id}, {'$bit': {self.__fields__[field].alias: {'or': value}}}, session=session
+            {'_id': self.id}, {'$bit': {self._field_alias(field): {'or': value}}}, session=session
         )
 
     async def remove_bit_flag(self, db_ref: AsyncIOMotorDatabase, field: str, value: int, session=None):
         if self.id is None:
             raise ValueError('Cannot add bit flag to this object that has not been committed yet')
 
-        if field not in self.__fields__:
+        if field not in type(self).model_fields:
             raise KeyError(f'No such field {field}')
 
         setattr(self, field, getattr(self, field) & ~value)
@@ -227,14 +223,14 @@ class DBase(BaseModel):
         validate(self)
 
         return await db_ref[self.__collection__].update_one(
-            {'_id': self.id}, {'$bit': {self.__fields__[field].alias: {'and': ~value}}}, session=session
+            {'_id': self.id}, {'$bit': {self._field_alias(field): {'and': ~value}}}, session=session
         )
 
     async def append_to_array_field(self, db_ref: AsyncIOMotorDatabase, field: str, value: Any, session=None):
         if self.id is None:
             raise ValueError('Cannot modify a document that has not yet been committed.')
 
-        if field not in self.__fields__:
+        if field not in type(self).model_fields:
             raise KeyError(f'No such field {field}')
 
         arr = getattr(self, field)
@@ -245,9 +241,13 @@ class DBase(BaseModel):
 
         validate(self)
 
-        if hasattr(value, 'dict'):
-            value = value.dict(by_alias=True, exclude_unset=True, exclude_none=True)
+        if hasattr(value, 'model_dump'):
+            value = value.model_dump(by_alias=True, exclude_unset=True, exclude_none=True)
 
         return await db_ref[self.__collection__].update_one(
-            {'_id': self.id}, {'$push': {self.__fields__[field].alias: value}}
+            {'_id': self.id}, {'$push': {self._field_alias(field): value}}
         )
+
+    @classmethod
+    def _field_alias(cls, field: str) -> str:
+        return cls.model_fields[field].alias or field

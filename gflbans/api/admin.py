@@ -81,7 +81,7 @@ async def update_admin(request: Request, uai_query: UpdateAdminInfo, auth: AuthI
     if target_info is None:
         target_info = DAdmin(ips_user=ips_user)
 
-    original_admin_info = target_info.dict()  # For Audit logging purposes
+    original_admin_info = target_info.model_dump()  # For Audit logging purposes
     target_info.last_updated = datetime.now(tz=UTC).timestamp()
     target_info.groups = uai_query.groups
 
@@ -108,7 +108,7 @@ async def update_admin(request: Request, uai_query: UpdateAdminInfo, auth: AuthI
         authenticator=auth.authenticator_id,
         admin=auth.admin.mongo_admin_id,
         old_item=original_admin_info,
-        new_item=target_info.dict(),
+        new_item=target_info.model_dump(),
     ).commit(request.app.state.db[MONGO_DB])
 
     await target_info.commit(request.app.state.db[MONGO_DB])

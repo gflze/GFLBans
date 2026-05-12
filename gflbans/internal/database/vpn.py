@@ -1,3 +1,5 @@
+from typing import ClassVar
+
 from motor.motor_asyncio import AsyncIOMotorDatabase
 from netaddr import IPAddress, IPNetwork
 
@@ -5,7 +7,7 @@ from gflbans.internal.database.base import DBase
 
 
 class DVPN(DBase):
-    __collection__ = 'vpns'
+    __collection__: ClassVar[str] = 'vpns'
     is_asn: bool
     is_dubious: bool = False  # May be a VPN, but is prone to false positives
 

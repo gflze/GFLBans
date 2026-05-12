@@ -121,6 +121,6 @@ async def generate_statistics(request: Request):
     )
 
     with suppress(RedisError):
-        await request.app.state.cache.set('HOME_PAGE_STATS', result.dict(), 'graph_cache', expire_time=3600)
+        await request.app.state.cache.set('HOME_PAGE_STATS', result.model_dump(), 'graph_cache', expire_time=3600)
 
     return result

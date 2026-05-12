@@ -70,7 +70,7 @@ async def check_access(
     request: Request,
     authorization: str = Header(
         None,
-        regex=r'^(server|api|SERVER|API|Server|Api)( |_)[a-z0-9A-Z]+( |_)[a-z0-9A-Z]+$',
+        pattern=r'^(server|api|SERVER|API|Server|Api)( |_)[a-z0-9A-Z]+( |_)[a-z0-9A-Z]+$',
         description='Use for server or api key auth',
     ),
     token_type: str = Query(None, description='TYPE component of auth header if headers are not available'),

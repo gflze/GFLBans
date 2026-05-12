@@ -1,4 +1,4 @@
-from typing import Any, Dict, Optional, Union
+from typing import Any, ClassVar, Dict, Optional, Union
 
 from bson import ObjectId
 
@@ -34,13 +34,13 @@ EVENT_VPN_EDIT = 16
 
 
 class DAuditLog(DBase):
-    __collection__ = 'audit_log'
+    __collection__: ClassVar[str] = 'audit_log'
 
     time: int
     event_type: int
     authentication_type: int
     authenticator: ObjectId
-    admin: Optional[ObjectId]
+    admin: Optional[ObjectId] = None
 
     # Store arbitrary structured data as dicts
     old_item: Optional[Union[Dict[str, Any], Any]] = None

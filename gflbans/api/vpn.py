@@ -69,7 +69,7 @@ async def add_vpn(request: Request, vpn: AddVPN, auth: AuthInfo = Depends(check_
         authentication_type=auth.type,
         authenticator=auth.authenticator_id,
         admin=auth.admin.mongo_admin_id,
-        new_item=dv.dict(),
+        new_item=dv.model_dump(),
     ).commit(request.app.state.db[MONGO_DB])
 
     return VPNInfo(
@@ -98,7 +98,7 @@ async def patch_vpn(request: Request, vpn_patch: PatchVPN, auth: AuthInfo = Depe
     if vpn is None:
         raise HTTPException(detail='VPN does not exist', status_code=404)
 
-    original_vpn_info = vpn.dict()  # For Audit logging purposes
+    original_vpn_info = vpn.model_dump()  # For Audit logging purposes
     modifications = 'SET'
 
     if vpn_patch.vpn_type is not None:
@@ -135,7 +135,7 @@ async def patch_vpn(request: Request, vpn_patch: PatchVPN, auth: AuthInfo = Depe
         authenticator=auth.authenticator_id,
         admin=auth.admin.mongo_admin_id,
         old_item=original_vpn_info,
-        new_item=vpn.dict(),
+        new_item=vpn.model_dump(),
     ).commit(request.app.state.db[MONGO_DB])
 
     return VPNInfo(
@@ -173,7 +173,7 @@ async def remove_vpn(request: Request, vpn: RemoveVPN, auth: AuthInfo = Depends(
         authentication_type=auth.type,
         authenticator=auth.authenticator_id,
         admin=auth.admin.mongo_admin_id,
-        old_item=vpn.dict(),
+        old_item=vpn.model_dump(),
     ).commit(request.app.state.db[MONGO_DB])
     return Response(status_code=204)
 

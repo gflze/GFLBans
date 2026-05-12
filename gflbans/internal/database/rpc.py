@@ -1,10 +1,10 @@
 import asyncio
 from datetime import datetime
-from typing import List, Optional, Union
+from typing import ClassVar, List, Optional, Union
 
 from bson import ObjectId
 from motor.motor_asyncio import AsyncIOMotorDatabase
-from pydantic.types import constr
+from pydantic import constr
 
 from gflbans.internal.database.base import DBase
 from gflbans.internal.models.api import PlayerObjNoIp
@@ -12,10 +12,10 @@ from gflbans.internal.models.protocol import CheckInfractionsReply, RPCKick, RPC
 
 
 class DRPCEventBase(DBase):
-    __collection__ = 'rpc'
+    __collection__: ClassVar[str] = 'rpc'
 
     time: datetime
-    target: Optional[ObjectId]  # Omit for broadcast
+    target: Optional[ObjectId] = None  # Omit for broadcast
     acknowledged_by: List[ObjectId] = []  # All servers that have ack'd this. Broadcast only
 
     @classmethod
@@ -48,7 +48,7 @@ class DRPCEventBase(DBase):
 class DRPCPlayerUpdated(DRPCEventBase):
     event: str = 'player_updated'
 
-    target_type: constr(regex=r'^(player|ip)$')
+    target_type: constr(pattern=r'^(player|ip)$')
     target_payload: Union[PlayerObjNoIp, str]
 
     local: CheckInfractionsReply

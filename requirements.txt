@@ -34,7 +34,7 @@ pillow==12.2.0
 pre-commit==4.0.1
 pycares==4.9.0
 pycparser==2.22
-pydantic==1.10.25
+pydantic==2.13.4
 pymongo==4.9.1
 python-dateutil==2.9.0
 python-multipart==0.0.27
@@ -45,7 +45,7 @@ rfc3339==6.2
 six==1.16.0
 sniffio==1.3.1
 starlette==0.49.1
-typing_extensions==4.12.2
+typing_extensions==4.15.0
 ujson==5.12.1
 urllib3==2.7.0
 uvicorn==0.27.0.post1

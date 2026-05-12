@@ -36,7 +36,7 @@ async def download_file(
     request: Request,
     gridfs_id: str,
     file_name: str,
-    convert_webp: Optional[constr(regex='^(png|jpg)$')] = None,
+    convert_webp: Optional[constr(pattern='^(png|jpg)$')] = None,
     auth: AuthInfo = Depends(check_access),
 ):
     client = AsyncIOMotorGridFSBucket(database=request.app.state.db[MONGO_DB])

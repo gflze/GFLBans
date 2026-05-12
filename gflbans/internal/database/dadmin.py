@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import ClassVar, List, Optional
 
 from motor.motor_asyncio import AsyncIOMotorDatabase
 
@@ -8,13 +8,13 @@ from gflbans.internal.log import logger
 
 
 class DAdmin(DBase):
-    __collection__ = 'admin_cache'
+    __collection__: ClassVar[str] = 'admin_cache'
 
     ips_user: int
     last_updated: int = 0
     groups: List[int] = []
-    name: Optional[str]
-    avatar: Optional[DFile]
+    name: Optional[str] = None
+    avatar: Optional[DFile] = None
 
     @classmethod
     async def from_ips_user(cls, db_ref: AsyncIOMotorDatabase, ips_user: int):

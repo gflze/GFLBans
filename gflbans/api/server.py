@@ -493,7 +493,7 @@ async def get_chat_logs(
             message['user']['gs_avatar'] = FileInfo(
                 file_id=message['user']['gs_avatar']['gridfs_file'],
                 name=message['user']['gs_avatar']['file_name'],
-            ).dict()
+            ).model_dump()
 
         # Display any html tags in message as plain text
         bbparser = bbcode.Parser()

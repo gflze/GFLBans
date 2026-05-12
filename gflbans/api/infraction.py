@@ -740,7 +740,7 @@ async def create_infraction(
         authentication_type=auth.type,
         authenticator=auth.authenticator_id,
         admin=auth.admin.mongo_admin_id,
-        new_item=dinf.dict(),
+        new_item=dinf.model_dump(),
     ).commit(request.app.state.db[MONGO_DB])
 
     # Notify all servers that new state is available (uwu)
@@ -896,7 +896,7 @@ async def remove_infraction(
             authentication_type=auth.type,
             authenticator=auth.authenticator_id,
             admin=auth.admin.mongo_admin_id,
-            old_item=dinf.dict(),
+            old_item=dinf.model_dump(),
         ).commit(request.app.state.db[MONGO_DB])
 
     return RemoveInfractionsOfPlayerReply(num_removed=n_removed, num_considered=n_considered, num_not_removed=n_skipped)
@@ -963,7 +963,7 @@ async def purge_infraction(
         authentication_type=auth.type,
         authenticator=auth.authenticator_id,
         admin=auth.admin.mongo_admin_id,
-        old_item=dinf.dict(),
+        old_item=dinf.model_dump(),
     ).commit(request.app.state.db[MONGO_DB])
 
     try:
@@ -999,7 +999,7 @@ async def edit_infraction(
     if dinf is None:
         raise HTTPException(detail=f'Infraction {infraction_id} does not exist.', status_code=404)
 
-    original_dinf_info = dinf.dict()  # For Audit logging purposes
+    original_dinf_info = dinf.model_dump()  # For Audit logging purposes
 
     if not (
         auth.admin.permissions & PERMISSION_EDIT_ALL_INFRACTIONS == PERMISSION_EDIT_ALL_INFRACTIONS
@@ -1103,7 +1103,7 @@ async def edit_infraction(
         authentication_type=auth.type,
         authenticator=auth.authenticator_id,
         admin=auth.admin.mongo_admin_id,
-        new_item=dinf.dict(),
+        new_item=dinf.model_dump(),
         old_item=original_dinf_info,
     ).commit(request.app.state.db[MONGO_DB])
 
@@ -1172,7 +1172,7 @@ async def add_comment(
         authentication_type=auth.type,
         authenticator=auth.authenticator_id,
         admin=auth.admin.mongo_admin_id,
-        new_item=dc.dict(),
+        new_item=dc.model_dump(),
     ).commit(request.app.state.db[MONGO_DB])
 
     return await as_infraction(
@@ -1209,7 +1209,7 @@ async def _update_or_delete_comment(
         ):
             raise HTTPException(detail='You do not have permission to do that!', status_code=403)
 
-        original_comment_info = dinf.comments[query.comment_index].dict()  # For Audit logging purposes
+        original_comment_info = dinf.comments[query.comment_index].model_dump()  # For Audit logging purposes
 
         if isinstance(query, DeleteComment):
             das = (
@@ -1229,7 +1229,7 @@ async def _update_or_delete_comment(
             if auth.admin.mongo_admin_id is not None:
                 dinf.comments[query.comment_index].edit_data['admin'] = auth.admin.mongo_admin_id
 
-            new_comment_info = dinf.comments[query.comment_index].dict()  # For Audit logging purposes
+            new_comment_info = dinf.comments[query.comment_index].model_dump()  # For Audit logging purposes
     except IndexError:
         raise HTTPException(detail='There is no comment at that index', status_code=404)
 
@@ -1358,7 +1358,7 @@ async def add_attachment(
         authentication_type=auth.type,
         authenticator=auth.authenticator_id,
         admin=auth.admin.mongo_admin_id,
-        new_item=dfile.dict(),
+        new_item=dfile.model_dump(),
     ).commit(request.app.state.db[MONGO_DB])
 
     return FileInfo(name=slugify(filename), file_id=str(file_id), uploaded_by=auth.admin.ips_id, private=x_set_private)
@@ -1390,7 +1390,7 @@ async def delete_attachment(
     except IndexError:
         raise HTTPException(detail='No such file in the specified infraction exists', status_code=404)
 
-    old_item = dinf.files[query.file_idx].dict()  # For Audit logging purposes
+    old_item = dinf.files[query.file_idx].model_dump()  # For Audit logging purposes
 
     if (
         auth.admin.permissions & PERMISSION_ATTACH_FILE != PERMISSION_ATTACH_FILE

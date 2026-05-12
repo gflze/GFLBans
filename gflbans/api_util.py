@@ -195,9 +195,9 @@ def as_player(user: Optional[DUser], ip: Optional[str], include_ip: bool = True)
             pf['gs_name'] = user.gs_name
 
         if user.gs_avatar is not None:
-            pf['gs_avatar'] = as_file_info(user.gs_avatar).dict()
+            pf['gs_avatar'] = as_file_info(user.gs_avatar).model_dump()
 
-    return PlayerObj(**pos.dict(), **pf)
+    return PlayerObj(**pos.model_dump(), **pf)
 
 
 async def as_infraction(app, infraction: DInfraction, include_ip=True, exclude_private=False) -> Infraction:

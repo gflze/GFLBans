@@ -34,7 +34,7 @@ async def rpc_poll(request: Request, auth: AuthInfo = Depends(check_access)):
 
     evs = []
     for dev in devs:
-        evs.append(dev.as_api().dict())
+        evs.append(dev.as_api().model_dump())
 
     return ORJSONResponse(evs, status_code=200)
 
@@ -90,7 +90,7 @@ async def rpc_ws(websocket: WebSocket):
         devs = await DRPCEventBase.poll(websocket.app.state.db[MONGO_DB], auth.authenticator_id)
 
         for dev in devs:
-            await websocket.send_text(orjson.dumps(dev.as_api().dict()).decode('utf-8'))
+            await websocket.send_text(orjson.dumps(dev.as_api().model_dump()).decode('utf-8'))
 
 
 @rpc_router.post('/kick')
@@ -112,7 +112,7 @@ async def rpc_kick(request: Request, rpc_kick_req: RPCKickRequest, auth: AuthInf
         authentication_type=auth.type,
         authenticator=auth.authenticator_id,
         admin=auth.admin.mongo_admin_id,
-        new_item=rpc_kick_req.player.dict(),
+        new_item=rpc_kick_req.player.model_dump(),
     ).commit(request.app.state.db[MONGO_DB])
 
     drpc = DRPCKickPlayer(

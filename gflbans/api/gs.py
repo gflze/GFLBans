@@ -64,7 +64,7 @@ async def _process_heartbeat_player(app, ply: PlayerObjIPOptional) -> DUserIP:
     except Exception as e:
         logger.error('Failed to download avatar image or fetch user info.', exc_info=e)
 
-    return DUserIP(**ply.dict(), gs_name=name, gs_avatar=avatar)
+    return DUserIP(**ply.model_dump(), gs_name=name, gs_avatar=avatar)
 
 
 async def _process_heartbeat_multiple_players(app, ply_list: list[PlayerObjIPOptional]) -> list[DUserIP]:
@@ -78,7 +78,7 @@ async def _process_heartbeat_multiple_players(app, ply_list: list[PlayerObjIPOpt
     except Exception as e:
         logger.error('Failed to fetch user info.', exc_info=e)
         for ply in ply_list:
-            user_list.append(DUserIP(**ply.dict(), gs_name='Unknown Player', gs_avatar=None))
+            user_list.append(DUserIP(**ply.model_dump(), gs_name='Unknown Player', gs_avatar=None))
         return user_list
 
     for ply in ply_list:
@@ -92,7 +92,7 @@ async def _process_heartbeat_multiple_players(app, ply_list: list[PlayerObjIPOpt
         except Exception as e:
             logger.error('Failed to fetch name or download avatar image.', exc_info=e)
 
-        user_list.append(DUserIP(**ply.dict(), gs_name=name, gs_avatar=avatar))
+        user_list.append(DUserIP(**ply.model_dump(), gs_name=name, gs_avatar=avatar))
 
     return user_list
 
@@ -112,7 +112,7 @@ async def heartbeat(request: Request, beat: Heartbeat, auth: AuthInfo = Depends(
     if srv is None:
         raise HTTPException(status_code=500, detail='This should not happen')
 
-    dsi: DServerInfo = DServerInfo.construct()
+    dsi: DServerInfo = DServerInfo.model_construct()
 
     dsi.last_updated = datetime.now(tz=UTC).replace(tzinfo=None)
 
@@ -192,7 +192,7 @@ async def heartbeat(request: Request, beat: Heartbeat, auth: AuthInfo = Depends(
             for p in pc:
                 changes.append(
                     HeartbeatChange(
-                        player=PlayerObjNoIp(**p.dict(by_alias=True)),
+                        player=PlayerObjNoIp(**p.model_dump(by_alias=True)),
                         check=await construct_ci_resp(
                             request.app.state.db[MONGO_DB],
                             build_query_dict(
@@ -223,7 +223,7 @@ async def heartbeat(request: Request, beat: Heartbeat, auth: AuthInfo = Depends(
 
             processed_users = await asyncio.gather(
                 *[
-                    _process_heartbeat_player(request.app, PlayerObjIPOptional(**user.dict()))
+                    _process_heartbeat_player(request.app, PlayerObjIPOptional(**user.model_dump()))
                     for user in unique_users.values()
                 ]
             )
@@ -415,7 +415,7 @@ async def get_admin_info(
 
     with suppress(RedisError):
         await request.app.state.cache.set(
-            f'admin_info:{init_str(init)}', ai.dict(), 'get_admin_info_cache', expire_time=300
+            f'admin_info:{init_str(init)}', ai.model_dump(), 'get_admin_info_cache', expire_time=300
         )
 
     return ai

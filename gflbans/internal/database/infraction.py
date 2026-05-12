@@ -1,9 +1,9 @@
 from datetime import datetime
-from typing import Dict, Optional, Union
+from typing import ClassVar, Dict, Optional, Union
 
 from bson import ObjectId
 from dateutil.tz import UTC
-from pydantic import BaseModel, PositiveInt, conint, conlist, constr
+from pydantic import BaseModel, ConfigDict, PositiveInt, conint, conlist, constr
 
 from gflbans.internal.constants import SERVER_KEY
 from gflbans.internal.database.base import DBase
@@ -18,15 +18,14 @@ from gflbans.internal.flags import (
 
 
 class DComment(BaseModel):
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+
     ctype: int = 0  # Deprecated
     content: constr(min_length=1, max_length=280)
-    author: Optional[ObjectId]
+    author: Optional[ObjectId] = None
     edit_data: Optional[Dict[str, Union[datetime, ObjectId]]] = {}  # admin_id, unix time
     private: bool = False
-    created: Optional[datetime]
-
-    class Config:
-        arbitrary_types_allowed = True
+    created: Optional[datetime] = None
 
 
 def _branch(f, new_cond):
@@ -123,30 +122,30 @@ def build_query_dict(
 
 
 class DInfraction(DBase):
-    __collection__ = 'infractions'
+    __collection__: ClassVar[str] = 'infractions'
 
     # General attributes
     flags: conint(ge=0) = 0
-    server: Optional[ObjectId]
+    server: Optional[ObjectId] = None
     created: int
-    user: Optional[DUser]
-    ip: Optional[str]
-    admin: Optional[ObjectId]
+    user: Optional[DUser] = None
+    ip: Optional[str] = None
+    admin: Optional[ObjectId] = None
     reason: constr(min_length=1, max_length=280)
 
     # Present if using regular expiration
-    expires: Optional[PositiveInt]  # UNIX
+    expires: Optional[PositiveInt] = None  # UNIX
 
     # Present if using 'time_left' style expiration
-    time_left: Optional[conint(ge=0)]
-    original_time: Optional[conint(ge=0)]
-    last_heartbeat: Optional[conint(ge=0)]
+    time_left: Optional[conint(ge=0)] = None
+    original_time: Optional[conint(ge=0)] = None
+    last_heartbeat: Optional[conint(ge=0)] = None
 
     # Present if the infraction was removed
-    ureason: Optional[constr(min_length=1, max_length=280)]
-    removed: Optional[PositiveInt]  # UNIX
-    remover: Optional[ObjectId]
+    ureason: Optional[constr(min_length=1, max_length=280)] = None
+    removed: Optional[PositiveInt] = None  # UNIX
+    remover: Optional[ObjectId] = None
 
     # Web attributes
-    comments: conlist(DComment, max_items=255) = []
-    files: conlist(DFile, max_items=255) = []
+    comments: conlist(DComment, max_length=255) = []
+    files: conlist(DFile, max_length=255) = []

@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import ClassVar
 
 from dateutil.tz import UTC
 from motor.motor_asyncio import AsyncIOMotorDatabase
@@ -9,7 +10,7 @@ from gflbans.internal.log import logger
 
 
 class DTask(DBase):
-    __collection__ = 'tasks'
+    __collection__: ClassVar[str] = 'tasks'
 
     run_at: PositiveInt
     failure_count: conint(ge=0) = 0

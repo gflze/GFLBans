@@ -4,7 +4,7 @@ import unicodedata
 from hashlib import sha512
 
 import orjson
-from pydantic import BaseModel, validate_model
+from pydantic import BaseModel
 from redis.exceptions import RedisError
 from starlette.requests import Request
 
@@ -68,10 +68,7 @@ def get_real_ip(request: Request):
 
 
 def validate(model: BaseModel):
-    *_, ve = validate_model(model.__class__, model.__dict__)
-
-    if ve:
-        raise ve
+    model.__class__.model_validate(model.model_dump(by_alias=True, exclude_unset=False))
 
 
 class ORJSONSerializer:

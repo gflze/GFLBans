@@ -1,11 +1,11 @@
 import json
 from datetime import datetime, timedelta
-from typing import List, Optional
+from typing import ClassVar, List, Optional
 
 from bson import ObjectId
 from dateutil.tz import UTC
 from motor.motor_asyncio import AsyncIOMotorDatabase
-from pydantic import BaseModel, root_validator
+from pydantic import BaseModel, model_validator
 
 from gflbans.internal.config import SERVER_CACHE_STALE_AFTER
 from gflbans.internal.database.base import DBase
@@ -15,15 +15,15 @@ from gflbans.internal.models.protocol import ExecuteCallAdmin
 
 
 class DUserIP(DUser):
-    ip: Optional[str]
+    ip: Optional[str] = None
 
 
 class DChatLog(DBase):
-    __collection__ = 'chat_logs'
+    __collection__: ClassVar[str] = 'chat_logs'
 
     created: int
     server: ObjectId
-    user: Optional[DUserIP]
+    user: Optional[DUserIP] = None
     content: str
 
 
@@ -44,24 +44,25 @@ class DCallData(BaseModel):
 
 
 class DServer(DBase):
-    __collection__ = 'servers'
+    __collection__: ClassVar[str] = 'servers'
     enabled: bool = True
     ip: str
     game_port: int
-    friendly_name: Optional[str]
+    friendly_name: Optional[str] = None
     allow_unknown: bool = False
-    discord_webhook: Optional[str]
-    infract_webhook: Optional[str]
-    discord_staff_tag: Optional[str]
-    server_key: Optional[str]
-    server_key_salt: Optional[str]
+    discord_webhook: Optional[str] = None
+    infract_webhook: Optional[str] = None
+    discord_staff_tag: Optional[str] = None
+    server_key: Optional[str] = None
+    server_key_salt: Optional[str] = None
 
     last_calladmin: int = 0
-    call_data: Optional[DCallData]
+    call_data: Optional[DCallData] = None
 
-    server_info: Optional[DServerInfo]
+    server_info: Optional[DServerInfo] = None
 
-    @root_validator(pre=True)
+    @model_validator(mode='before')
+    @classmethod
     def check_discord(cls, values):
         if ('discord_webhook' in values and 'discord_staff_tag' not in values) or (
             'discord_staff_tag' in values and 'discord_webhook' not in values
@@ -93,7 +94,7 @@ class DServer(DBase):
             yield cls.load_document(document)
 
     def censor(self) -> dict:
-        censored_self = self.dict()
+        censored_self = self.model_dump()
         censored_self['discord_webhook'] = None
         censored_self['infract_webhook'] = None
         censored_self['server_key'] = None

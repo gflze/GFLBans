@@ -70,7 +70,7 @@ def create_dinfraction(
     playtime_based: bool = False,
     server: ObjectId = None,
 ) -> DInfraction:
-    dinf = DInfraction.construct()
+    dinf = DInfraction.model_construct()
 
     if player.gs_service is not None:
         validate_id_ex(PlayerObjNoIp(gs_service=player.gs_service, gs_id=player.gs_id))
