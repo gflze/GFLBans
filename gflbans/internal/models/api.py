@@ -7,6 +7,7 @@ from pydantic import (
     NonNegativeInt,
     PositiveFloat,
     PositiveInt,
+    conint,
     constr,
     model_validator,
 )
@@ -153,7 +154,7 @@ class Infraction(BaseModel):
 class Server(BaseModel):
     id: str
     ip: str
-    game_port: str
+    game_port: conint(gt=0, le=65535)
     enabled: bool
     friendly_name: Optional[str] = None
     online: bool  # True if there is data in the cache for this server
@@ -173,7 +174,7 @@ class Server(BaseModel):
 class ServerInternal(BaseModel):
     id: str
     ip: str
-    game_port: str
+    game_port: conint(gt=0, le=65535)
     enabled: bool
     friendly_name: Optional[constr(min_length=1, max_length=48)] = None
     allow_unknown: bool
