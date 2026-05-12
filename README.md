@@ -2,9 +2,9 @@
 ## Ban Management system for GFL
 #### GFLBans (C) Aurora 2021. Licensed Under GPLv3
 
-Windows: Not Tested
-macOS: Working
-Linux: Working
+Windows: Limited support & not fully tested\
+macOS: Working\
+Linux: Working\
 FreeBSD: Working
 
 ## Setup
@@ -16,7 +16,7 @@ FreeBSD: Working
 4) Open a terminal in the repository directory
 5) Create a virtualenv in the repo directory called `venv` using the `python3 -m venv venv` command.
 6) Copy `.env.sample` to `.env` and change as required
-7) Activate your virtual environment using `source venv/bin/activate`
+7) Activate your virtual environment using `source venv/bin/activate` on Unix, `venv\Scripts\activate` on Windows
 8) Install dependencies using `pip install -r requirements.txt`
 9) Start gflbans using `python3 -m gflbans.main` and goto http://localhost:3335 and confirm that GFLBans is running
 

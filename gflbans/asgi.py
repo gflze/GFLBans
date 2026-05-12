@@ -1,7 +1,6 @@
 import asyncio
 import re
 
-import uvloop
 from fastapi import FastAPI
 from fastapi.responses import ORJSONResponse
 from jinja2 import select_autoescape
@@ -10,6 +9,11 @@ from starlette.middleware.sessions import SessionMiddleware
 from starlette.requests import Request
 from starlette.staticfiles import StaticFiles
 from starlette.templating import Jinja2Templates
+
+try:
+    import uvloop
+except ImportError:
+    uvloop = None
 
 from gflbans.api import api
 from gflbans.deprecation import deprecation_cleanup, full_vpn_check
@@ -25,7 +29,8 @@ from gflbans.web import web_router
 from gflbans.web.context_funcs import bit_or, has_flag, render_time, tostring
 from gflbans.web.pages import sctx
 
-asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
+if uvloop is not None:
+    asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
 
 
 def new_app():

@@ -49,4 +49,4 @@ typing_extensions==4.12.2
 ujson==5.12.1
 urllib3==2.7.0
 uvicorn==0.27.0.post1
-uvloop==0.22.1
+uvloop==0.22.1; sys_platform != "win32"
