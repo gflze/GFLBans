@@ -34,7 +34,7 @@ exclude = [
 line-length = 120
 indent-width = 4
 
-target-version = "py310"
+target-version = "py313"
 
 [lint]
 select = ["E", "W", "F", "I"]

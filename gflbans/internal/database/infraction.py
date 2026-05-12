@@ -14,7 +14,6 @@ from gflbans.internal.flags import (
     INFRACTION_PLAYTIME_DURATION,
     INFRACTION_REMOVED,
     INFRACTION_SESSION,
-    INFRACTION_VPN,
 )
 
 

@@ -378,7 +378,7 @@ function loadMore(append=true, scrollToBottom=false) {
                         const key = getAuthorKey(m);
                         if (lastKey === null || (m.created < (firstMessageCreated + 300) && key === lastKey)) {
                             if (group.length === 0)
-                                firstMessageCreated = m.created
+                                firstMessageCreated = m.created;
 
                             group.push(m);
                             lastKey = key;
@@ -386,7 +386,7 @@ function loadMore(append=true, scrollToBottom=false) {
                             flush(container, group);
                             group = [m];
                             lastKey = key;
-                            firstMessageCreated = m.created
+                            firstMessageCreated = m.created;
                         }
                     }
                     flush(container, group);
