@@ -8,6 +8,7 @@ from bson import ObjectId
 from dateutil.tz import UTC
 from fastapi import HTTPException
 from motor.motor_asyncio import AsyncIOMotorDatabase
+from pydantic import NonNegativeInt
 from redis.exceptions import RedisError
 
 from gflbans.internal.config import MONGO_DB, ROOT_USER
@@ -33,7 +34,6 @@ from gflbans.internal.models.api import (
     Infraction,
     PlayerObj,
     PlayerObjSimple,
-    PositiveIntIncl0,
 )
 from gflbans.internal.models.protocol import CheckInfractionsReply
 from gflbans.internal.utils import validate
@@ -230,7 +230,7 @@ async def as_groups(app, groups: List[int]) -> List[Group]:
 
 
 async def as_admin(app, admin: DAdmin) -> AdminInfo:
-    admin_info = AdminInfo(admin_id=PositiveIntIncl0(admin.ips_user), admin_name=admin.name, permissions=0)
+    admin_info = AdminInfo(admin_id=NonNegativeInt(admin.ips_user), admin_name=admin.name, permissions=0)
     if admin.avatar is not None and admin.avatar.gridfs_file is not None:
         admin_info.avatar_id = admin.avatar.gridfs_file
     admin_info.groups = await as_groups(app, admin.groups)

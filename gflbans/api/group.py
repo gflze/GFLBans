@@ -4,6 +4,7 @@ from typing import List
 from dateutil.tz import UTC
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import ORJSONResponse
+from pydantic import NonNegativeInt
 from starlette.requests import Request
 
 from gflbans.api.auth import AuthInfo, check_access, csrf_protect
@@ -20,7 +21,7 @@ from gflbans.internal.database.group import DGroup
 from gflbans.internal.flags import PERMISSION_MANAGE_GROUPS_AND_ADMINS
 from gflbans.internal.integrations.ips import get_groups as py_get_groups
 from gflbans.internal.log import logger
-from gflbans.internal.models.api import Group, PositiveIntIncl0
+from gflbans.internal.models.api import Group
 from gflbans.internal.models.protocol import UpdateGroup
 
 group_router = APIRouter(default_response_class=ORJSONResponse)
@@ -41,7 +42,7 @@ async def get_groups(request: Request):
 @group_router.get(
     '/{ips_group}', response_model_exclude_unset=True, response_model_exclude_none=True, response_model=Group
 )
-async def get_group(request: Request, ips_group: PositiveIntIncl0):
+async def get_group(request: Request, ips_group: NonNegativeInt):
     group = await request.app.state.db[MONGO_DB]['groups'].find_one({'ips_group': ips_group})
 
     if group is None:

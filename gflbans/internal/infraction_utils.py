@@ -7,7 +7,7 @@ from bson import ObjectId
 from dateutil.tz import UTC
 from fastapi import HTTPException
 from humanize import naturaldelta
-from pydantic import PositiveInt
+from pydantic import NonNegativeInt, PositiveInt
 
 # This function does no permission checks. It merely constructs a DInfraction object without saving it
 # with the desired parameters
@@ -50,7 +50,7 @@ from gflbans.internal.flags import (
 from gflbans.internal.integrations.games import get_user_info, validate_id_ex
 from gflbans.internal.integrations.ips import ips_get_gsid_from_member_id
 from gflbans.internal.log import logger
-from gflbans.internal.models.api import Initiator, PlayerObjNoIp, PlayerObjSimple, PositiveIntIncl0
+from gflbans.internal.models.api import Initiator, PlayerObjNoIp, PlayerObjSimple
 from gflbans.internal.pyapi_utils import load_admin_from_initiator
 
 
@@ -224,7 +224,7 @@ async def modify_infraction(
     make_session: bool = False,
     make_permanent: bool = False,
     expiration: Optional[PositiveInt] = None,
-    time_left: Optional[PositiveIntIncl0] = None,
+    time_left: Optional[NonNegativeInt] = None,
     server: Optional[ObjectId] = None,
     reason: Optional[str] = None,
     set_removal_state: Optional[bool] = None,

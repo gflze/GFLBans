@@ -3,7 +3,7 @@ from typing import ClassVar
 
 from dateutil.tz import UTC
 from motor.motor_asyncio import AsyncIOMotorDatabase
-from pydantic import PositiveInt, conint
+from pydantic import PositiveFloat, conint
 
 from gflbans.internal.database.base import DBase
 from gflbans.internal.log import logger
@@ -12,7 +12,7 @@ from gflbans.internal.log import logger
 class DTask(DBase):
     __collection__: ClassVar[str] = 'tasks'
 
-    run_at: PositiveInt
+    run_at: PositiveFloat
     failure_count: conint(ge=0) = 0
     task_data: dict
     ev_handler: str

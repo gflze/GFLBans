@@ -3,7 +3,18 @@ from datetime import datetime
 from typing import Dict, List, Optional, Union
 
 from fastapi import Depends, Query
-from pydantic import BaseModel, Field, IPvAnyAddress, PositiveInt, conint, constr, field_validator, model_validator
+from pydantic import (
+    BaseModel,
+    Field,
+    IPvAnyAddress,
+    NonNegativeFloat,
+    NonNegativeInt,
+    PositiveInt,
+    conint,
+    constr,
+    field_validator,
+    model_validator,
+)
 
 # Infraction related API calls
 from gflbans.internal.config import MAX_UPLOAD_SIZE
@@ -22,7 +33,6 @@ from gflbans.internal.models.api import (
     PlayerObjNoIp,
     PlayerObjNoIpOptional,
     PlayerObjSimple,
-    PositiveIntIncl0,
     Server,
     ServerInternal,
     VPNInfo,
@@ -37,7 +47,7 @@ class GetInfractions(BaseModel):
 
     # Cursor control
     limit: conint(gt=0, le=50) = 30
-    skip: PositiveIntIncl0 = 0
+    skip: NonNegativeInt = 0
 
 
 class GetInfractionsReply(BaseModel):
@@ -89,7 +99,7 @@ class Search(BaseModel):
 
     # Cursor control
     limit: conint(gt=0, le=50) = 50
-    skip: PositiveIntIncl0 = 0
+    skip: NonNegativeInt = 0
 
 
 class SearchReply(BaseModel):
@@ -115,7 +125,7 @@ class RecursiveSearch(BaseModel):
 
     # Cursor control
     limit: conint(gt=0, le=50) = 50
-    skip: PositiveIntIncl0 = 0
+    skip: NonNegativeInt = 0
 
 
 class CheckInfractionsReply(BaseModel):
@@ -128,20 +138,20 @@ class CheckInfractionsReply(BaseModel):
 
 
 class InfractionStatisticsReply(BaseModel):
-    voice_block_count: PositiveIntIncl0
-    voice_block_longest: Optional[int] = None
-    text_block_count: PositiveIntIncl0
-    text_block_longest: Optional[int] = None
-    ban_count: PositiveIntIncl0
-    ban_longest: Optional[int] = None
-    admin_chat_block_count: PositiveIntIncl0
-    admin_chat_block_longest: Optional[int] = None
-    call_admin_block_count: PositiveIntIncl0
-    call_admin_block_longest: Optional[int] = None
-    item_block_count: PositiveIntIncl0
-    item_block_longest: Optional[int] = None
-    warning_count: PositiveIntIncl0
-    warning_longest: Optional[int] = None
+    voice_block_count: NonNegativeInt
+    voice_block_longest: Optional[float] = None
+    text_block_count: NonNegativeInt
+    text_block_longest: Optional[float] = None
+    ban_count: NonNegativeInt
+    ban_longest: Optional[float] = None
+    admin_chat_block_count: NonNegativeInt
+    admin_chat_block_longest: Optional[float] = None
+    call_admin_block_count: NonNegativeInt
+    call_admin_block_longest: Optional[float] = None
+    item_block_count: NonNegativeInt
+    item_block_longest: Optional[float] = None
+    warning_count: NonNegativeInt
+    warning_longest: Optional[float] = None
 
 
 class CreateInfraction(BaseModel):
@@ -196,9 +206,9 @@ class RemoveInfractionsOfPlayer(BaseModel):
 
 
 class RemoveInfractionsOfPlayerReply(BaseModel):
-    num_removed: PositiveIntIncl0
-    num_considered: PositiveIntIncl0
-    num_not_removed: PositiveIntIncl0
+    num_removed: NonNegativeInt
+    num_considered: NonNegativeInt
+    num_not_removed: NonNegativeInt
 
 
 class ModifyInfraction(BaseModel):
@@ -212,7 +222,7 @@ class ModifyInfraction(BaseModel):
     make_permanent: bool = False  # If true, make this infraction not expire
     expiration: Optional[PositiveInt] = None  # UNIX time that the infraction expires at.
     # Sets PLAYTIME_DURATION and uses this time in seconds as the initial count
-    time_left: Optional[PositiveIntIncl0] = None
+    time_left: Optional[NonNegativeInt] = None
 
     # Misc attrs
     make_web: bool = False
@@ -250,13 +260,13 @@ class AddComment(BaseModel):
 
 
 class EditComment(BaseModel):
-    comment_index: PositiveIntIncl0  # The index of the comment in the infraction's comment list
+    comment_index: NonNegativeInt  # The index of the comment in the infraction's comment list
     admin: Optional[Initiator] = None
     content: constr(min_length=1, max_length=280)
 
 
 class DeleteComment(BaseModel):
-    comment_index: PositiveIntIncl0  # The index of the comment in the infraction's comment list
+    comment_index: NonNegativeInt  # The index of the comment in the infraction's comment list
     admin: Optional[Initiator] = None
 
 
@@ -268,7 +278,7 @@ class AddFile(BaseModel):
 
 class DownloadFileByIndex(BaseModel):
     infraction_id: str
-    file_idx: PositiveIntIncl0
+    file_idx: NonNegativeInt
 
 
 class DownloadFileReply(BaseModel):
@@ -278,7 +288,7 @@ class DownloadFileReply(BaseModel):
 class DeleteFile(BaseModel):
     infraction: str
     admin: Optional[Initiator] = None
-    file_idx: PositiveIntIncl0
+    file_idx: NonNegativeInt
 
 
 class DeleteFileReply(BaseModel):
@@ -337,7 +347,7 @@ class ExecuteCallAdmin(BaseModel):
 class ExecuteCallAdminReply(BaseModel):
     sent: bool
     is_banned: bool
-    cooldown: Optional[PositiveIntIncl0] = None
+    cooldown: Optional[NonNegativeFloat] = None
 
 
 class ClaimCallAdmin(BaseModel):
@@ -443,8 +453,8 @@ class RequestChatLogs(BaseModel):
     command_mode: Optional[constr(pattern=r'^(all|only|exclude)$')] = 'all'
 
     # Time range filters (unix seconds). 0 means unset.
-    created_after: PositiveIntIncl0 = 0
-    created_before: PositiveIntIncl0 = 0
+    created_after: NonNegativeInt = 0
+    created_before: NonNegativeInt = 0
     # Sort newest first for chat-style paging up
     sort_desc: bool = True
 
@@ -456,7 +466,7 @@ class RequestChatLogs(BaseModel):
 
 class UpdateGroup(BaseModel):
     name: str
-    privileges: PositiveIntIncl0
+    privileges: NonNegativeInt
 
 
 class GetGroups(BaseModel):
@@ -502,7 +512,7 @@ class PatchVPN(BaseModel):
 
 
 class FetchBlocklist(BaseModel):
-    skip: PositiveIntIncl0
+    skip: NonNegativeInt
     limit: conint(gt=0, le=50)
     filter: str
 
@@ -572,7 +582,7 @@ class GetAdmins(BaseModel):
 
     # Cursor control
     limit: Optional[conint(gt=0, le=50)] = None
-    skip: PositiveIntIncl0 = 0
+    skip: NonNegativeInt = 0
 
 
 class GetAuditLogs(BaseModel):
@@ -582,7 +592,7 @@ class GetAuditLogs(BaseModel):
 
     # Cursor control
     limit: conint(gt=0, le=50) = 30
-    skip: PositiveIntIncl0 = 0
+    skip: NonNegativeInt = 0
 
 
 class GetAuditLogsReply(BaseModel):

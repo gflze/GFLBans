@@ -1,9 +1,15 @@
 from typing import Any, Dict, List, Optional, Union
 
-from pydantic import BaseModel, ConfigDict, PositiveInt, conint, constr, model_validator
-
-PositiveIntIncl0 = conint(ge=0)
-
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    NonNegativeFloat,
+    NonNegativeInt,
+    PositiveFloat,
+    PositiveInt,
+    constr,
+    model_validator,
+)
 
 # These are objects commonly used in the API, but they do not define the protocol in itself
 
@@ -77,7 +83,7 @@ class PlayerObj(PlayerObjSimple):
 
 
 class Comment(BaseModel):
-    author: Optional[PositiveIntIncl0] = None
+    author: Optional[NonNegativeInt] = None
     content: constr(min_length=1, max_length=280)
     edit_data: Optional[Dict[str, Union[int, str]]] = None  # admin_id, unix time
     private: bool = False
@@ -125,23 +131,23 @@ class Infraction(BaseModel):
     comments: List[Comment]
     files: List[FileInfo] = []
     server: Optional[str] = None
-    created: int
-    expires: Optional[PositiveIntIncl0] = None
+    created: float
+    expires: Optional[NonNegativeFloat] = None
     player: PlayerObj
     reason: constr(min_length=1, max_length=280)
-    admin: Optional[PositiveIntIncl0] = None
+    admin: Optional[NonNegativeInt] = None
 
     # Removed data
-    removed_on: Optional[PositiveIntIncl0] = None
-    removed_by: Optional[PositiveIntIncl0] = None
+    removed_on: Optional[NonNegativeFloat] = None
+    removed_by: Optional[NonNegativeInt] = None
     removal_reason: Optional[constr(min_length=1, max_length=280)] = None
 
     # For PLAYTIME_DURATION
-    time_left: Optional[PositiveIntIncl0] = None
-    orig_length: Optional[PositiveIntIncl0] = None
+    time_left: Optional[NonNegativeInt] = None
+    orig_length: Optional[NonNegativeInt] = None
 
     # When was the last time a heartbeat caused this to be updated?
-    last_heartbeat: Optional[PositiveIntIncl0] = None
+    last_heartbeat: Optional[NonNegativeFloat] = None
 
 
 class Server(BaseModel):
@@ -153,8 +159,8 @@ class Server(BaseModel):
     online: bool  # True if there is data in the cache for this server
     hostname: Optional[str] = None  # Unset if server hasn't connected to gflbans
     os: Optional[str] = None  # Unset if server hasn't connected to gflbans
-    player_count: Optional[PositiveIntIncl0] = None  # Unset if server hasn't connected to gflbans
-    max_players: Optional[PositiveIntIncl0] = None  # Unset if server hasn't connected to gflbans
+    player_count: Optional[NonNegativeInt] = None  # Unset if server hasn't connected to gflbans
+    max_players: Optional[NonNegativeInt] = None  # Unset if server hasn't connected to gflbans
     mod: Optional[str] = None
     map: Optional[str] = None
     is_locked: bool = False
@@ -178,22 +184,22 @@ class ServerInternal(BaseModel):
 
 class Group(BaseModel):
     group_name: str
-    group_id: PositiveIntIncl0
-    permissions: PositiveIntIncl0
+    group_id: NonNegativeInt
+    permissions: NonNegativeInt
 
 
 class AdminInfo(BaseModel):
     admin_name: Optional[str] = None
-    admin_id: PositiveIntIncl0
+    admin_id: NonNegativeInt
     avatar_id: Optional[str] = None
-    permissions: Optional[PositiveIntIncl0] = None
+    permissions: Optional[NonNegativeInt] = None
     groups: Optional[List[Group]] = None
 
 
 class FetchAdminInfo(BaseModel):
     admin_name: Optional[str] = None
-    admin_id: Optional[PositiveIntIncl0] = None
-    permissions: Optional[PositiveIntIncl0] = None
+    admin_id: Optional[NonNegativeInt] = None
+    permissions: Optional[NonNegativeInt] = None
     group_id: Optional[int] = None
 
 
@@ -205,7 +211,7 @@ class UpdateAdminInfo(BaseModel):
 
 class AdminMinimal(BaseModel):
     admin_name: Optional[str] = None
-    admin_id: PositiveIntIncl0
+    admin_id: NonNegativeInt
     avatar_id: Optional[str] = None
 
 
@@ -219,7 +225,7 @@ class VPNInfo(BaseModel):
 
 
 class CInfractionSummary(BaseModel):
-    expiration: Optional[PositiveInt] = None
+    expiration: Optional[PositiveFloat] = None
     reason: str
     admin_name: str
 
@@ -236,7 +242,7 @@ class InfractionDay(BaseModel):
 
 
 class AuditLog(BaseModel):
-    time: PositiveInt
+    time: PositiveFloat
     event_type: int
     authentication_type: int
     authenticator: Optional[str] = None

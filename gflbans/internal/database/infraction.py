@@ -3,7 +3,7 @@ from typing import ClassVar, Dict, Optional, Union
 
 from bson import ObjectId
 from dateutil.tz import UTC
-from pydantic import BaseModel, ConfigDict, PositiveInt, conint, conlist, constr
+from pydantic import BaseModel, ConfigDict, NonNegativeFloat, PositiveFloat, conint, conlist, constr
 
 from gflbans.internal.constants import SERVER_KEY
 from gflbans.internal.database.base import DBase
@@ -127,23 +127,23 @@ class DInfraction(DBase):
     # General attributes
     flags: conint(ge=0) = 0
     server: Optional[ObjectId] = None
-    created: int
+    created: float
     user: Optional[DUser] = None
     ip: Optional[str] = None
     admin: Optional[ObjectId] = None
     reason: constr(min_length=1, max_length=280)
 
     # Present if using regular expiration
-    expires: Optional[PositiveInt] = None  # UNIX
+    expires: Optional[PositiveFloat] = None  # UNIX
 
     # Present if using 'time_left' style expiration
     time_left: Optional[conint(ge=0)] = None
     original_time: Optional[conint(ge=0)] = None
-    last_heartbeat: Optional[conint(ge=0)] = None
+    last_heartbeat: Optional[NonNegativeFloat] = None
 
     # Present if the infraction was removed
     ureason: Optional[constr(min_length=1, max_length=280)] = None
-    removed: Optional[PositiveInt] = None  # UNIX
+    removed: Optional[PositiveFloat] = None  # UNIX
     remover: Optional[ObjectId] = None
 
     # Web attributes

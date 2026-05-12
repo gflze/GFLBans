@@ -11,7 +11,7 @@ class DAdmin(DBase):
     __collection__: ClassVar[str] = 'admin_cache'
 
     ips_user: int
-    last_updated: int = 0
+    last_updated: float = 0
     groups: List[int] = []
     name: Optional[str] = None
     avatar: Optional[DFile] = None

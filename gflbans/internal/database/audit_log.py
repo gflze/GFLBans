@@ -36,7 +36,7 @@ EVENT_VPN_EDIT = 16
 class DAuditLog(DBase):
     __collection__: ClassVar[str] = 'audit_log'
 
-    time: int
+    time: float
     event_type: int
     authentication_type: int
     authenticator: ObjectId

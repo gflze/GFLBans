@@ -471,7 +471,7 @@ async def check_infractions(
     return ci_resp
 
 
-async def find_longest_infraction_duration(app, query) -> Optional[int]:
+async def find_longest_infraction_duration(app, query) -> Optional[float]:
     longest = None
     async for dinf in DInfraction.from_query(app.state.db[MONGO_DB], query, sort=('created', DESCENDING)):
         if (

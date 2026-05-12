@@ -21,7 +21,7 @@ class DUserIP(DUser):
 class DChatLog(DBase):
     __collection__: ClassVar[str] = 'chat_logs'
 
-    created: int
+    created: float
     server: ObjectId
     user: Optional[DUserIP] = None
     content: str
@@ -56,7 +56,7 @@ class DServer(DBase):
     server_key: Optional[str] = None
     server_key_salt: Optional[str] = None
 
-    last_calladmin: int = 0
+    last_calladmin: float = 0
     call_data: Optional[DCallData] = None
 
     server_info: Optional[DServerInfo] = None
