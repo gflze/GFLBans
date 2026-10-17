@@ -817,7 +817,22 @@ function setupSheetDrag() {
     let canGrow = false;
     let dy = 0;
 
+    function cancelDrag() {
+        startY = null;
+        sheet.css({transition: '', transform: '', 'max-height': ''});
+    }
+    function isPinchZoom(e){
+        return e.originalEvent.touches.length > 1
+    }
+
     sheet.on('touchstart', function (e) {
+        if (isPinchZoom(e)) {
+            if (startY !== null) {
+                cancelDrag();
+            }
+            return;
+        }
+
         const touch = e.originalEvent.touches[0];
         const onHandle = touch.clientY - this.getBoundingClientRect().top < 64;
 
@@ -836,6 +851,11 @@ function setupSheetDrag() {
 
     sheet.on('touchmove', function (e) {
         if (startY === null) {
+            return;
+        }
+
+        if (isPinchZoom(e)) {
+            cancelDrag();
             return;
         }
 
