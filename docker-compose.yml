@@ -1,0 +1,19 @@
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: "${CONTAINER_NAME}"
+    restart: unless-stopped
+    init: true
+    expose:
+      - "${PORT}"
+    environment:
+      - WEB_USE_UNIX=False
+      - HTTP_HOST=0.0.0.0
+      - HTTP_PORT=${PORT}
+    volumes:
+      - ${CONFIG_PATH}:/app/.env:ro
+      - ${TEMPLATE_CONFIGS_PATH}:/app/templates/configs:ro
+      - ${MONGODB_SOCKET_DIR}:/run/mongodb:ro
+      - ${REDIS_SOCKET_DIR}:/run/redis:ro

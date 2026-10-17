@@ -8,7 +8,7 @@ from time import sleep
 import uvicorn
 from pytz import UTC
 
-from gflbans.internal.config import WEB_PORT, WEB_UNIX, WEB_USE_UNIX, WORKERS
+from gflbans.internal.config import WEB_HOST, WEB_PORT, WEB_UNIX, WEB_USE_UNIX, WORKERS
 from gflbans.internal.constants import GB_VERSION
 from gflbans.internal.log import logger
 
@@ -30,7 +30,7 @@ def start_gflbans():
         logger.debug('Will bind to a TCP socket')
         uvicorn.run(
             'gflbans.asgi:new_app',
-            host='127.0.0.1',
+            host=WEB_HOST,
             port=WEB_PORT,
             workers=WORKERS,
             factory=True,

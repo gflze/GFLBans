@@ -14,6 +14,8 @@ GFLBans is a Python ASGI web application. Core application code lives in `gflban
 
 Copy `.env.sample` to `.env` before running locally. Redis and MongoDB are required services.
 
+- `docker compose --env-file .env.docker up --build -d`: build and run the container used for Dokploy deployments. Compose variables are documented in `.env.docker.example`; the application config file is mounted as `/app/.env`, and host MongoDB/Redis are reached through mounted unix sockets.
+
 ## Coding Style & Naming Conventions
 
 Python targets 3.13 and is formatted by Ruff with 4-space indentation, single quotes, import sorting, and a 120-character line limit. Use `snake_case` for modules, functions, and variables; keep route modules grouped by resource, such as `gflbans/api/infraction.py`.

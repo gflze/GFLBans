@@ -50,5 +50,6 @@ IPHUB_CACHE_TIME = config('IPHUB_CACHE_TIME', cast=int, default=(60 * 60 * 24 * 
 # Web Server Configuration
 WEB_USE_UNIX = config('WEB_USE_UNIX', default=True, cast=bool)  # True = use unix socket, False = use HTTP/TCP
 WEB_UNIX = config('UNIX_SOCKET', default='/run/gflbans.sock')  # UDS to listen on.
+WEB_HOST = config('HTTP_HOST', default='127.0.0.1')  # Address to bind to if using HTTP/TCP
 WEB_PORT = config('HTTP_PORT', default=3335, cast=int)  # Port to listen on if using HTTP/TCP
 WORKERS = config('GFLBANS_WORKERS', default=3, cast=int)

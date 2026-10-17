@@ -1,4 +1,5 @@
 .env
+.env.docker
 .venv/
 venv/
 .testing_keys

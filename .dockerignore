@@ -1,0 +1,12 @@
+**/__pycache__
+.git
+.env
+.env.*
+!.env.sample
+.idea
+.venv
+.vscode
+venv
+logs
+public
+templates/configs/*.html
