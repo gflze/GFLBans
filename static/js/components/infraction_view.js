@@ -61,6 +61,7 @@ const restrictionsCancel = $('#restrictionsCancel');
 let server_data = [];
 
 function resetViewModal() {
+    viewModal.find('.infraction-details').removeClass('is-expanded');
     $('.ptag').addClass('is-hidden');
     $('.ftag').addClass('is-hidden');
 
@@ -281,7 +282,9 @@ async function setupViewModal(infraction) {
             sv = await sv.json();
 
             if (sv.hasOwnProperty('friendly_name')) {
-                serverValue.text(sv['friendly_name'] + ' (' + sv['ip'] + ')');
+                serverValue.text(sv['friendly_name'] + ' ').append(
+                    $('<span class="inf-muted"></span>').text('(' + sv['ip'] + ')')
+                );
             } else {
                 serverValue.text(sv['ip']);
             }
@@ -806,6 +809,71 @@ function restoreInfractionUri() {
     setInfractionUri(null);
 }
 
+function setupSheetDrag() {
+    const sheet = $('#infraction_view_modal .infraction-details');
+    const isPhone = window.matchMedia('(max-width: 600px)');
+    let startY = null;
+    let startHeight = 0;
+    let canGrow = false;
+    let dy = 0;
+
+    sheet.on('touchstart', function (e) {
+        const touch = e.originalEvent.touches[0];
+        const onHandle = touch.clientY - this.getBoundingClientRect().top < 64;
+
+        // Leave normal scrolling and form inputs alone
+        if (!isPhone.matches || $(e.target).is('input, textarea, select') || (!onHandle && this.scrollTop > 0)) {
+            return;
+        }
+
+        startY = touch.clientY;
+        startHeight = this.offsetHeight;
+
+        canGrow = !sheet.hasClass('is-expanded') && this.scrollHeight > this.clientHeight;
+        dy = 0;
+        sheet.css('transition', 'none');
+    });
+
+    sheet.on('touchmove', function (e) {
+        if (startY === null) {
+            return;
+        }
+
+        dy = e.originalEvent.touches[0].clientY - startY;
+
+        if (dy > 0) {
+            e.preventDefault();
+            sheet.css({transform: 'translateY(' + dy + 'px)', 'max-height': ''});
+        } else if (canGrow) {
+            // Grow the sheet with the finger instead of scrolling its content
+            e.preventDefault();
+            sheet.css({transform: '', 'max-height': Math.min(startHeight - dy, window.innerHeight) + 'px'});
+        }
+    });
+
+    sheet.on('touchend touchcancel', function () {
+        if (startY === null) {
+            return;
+        }
+
+        startY = null;
+        sheet.css({transition: '', 'max-height': ''});
+
+        if (dy > 100 && sheet.hasClass('is-expanded')) {
+            sheet.removeClass('is-expanded').css('transform', '');
+        } else if (dy > 100) {
+            sheet.css('transform', '');
+            $('#ivm-close').click();
+        } else {
+            sheet.css('transform', '');
+
+            if (dy < -50) {
+                sheet.addClass('is-expanded');
+            }
+        }
+    });
+}
+
 $(document).ready(function () {
     $('#commentToggle').click(function () {
         const cind = $('#commentState');
@@ -823,6 +891,8 @@ $(document).ready(function () {
 
     $('#ivm-back').click(restoreInfractionUri);
     $('#ivm-close').click(restoreInfractionUri);
+
+    setupSheetDrag();
 
     window.onpopstate = function (ev) {
         if (ev.state.hasOwnProperty('gb_state')) {
