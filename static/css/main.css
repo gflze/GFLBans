@@ -377,6 +377,10 @@ th {
     min-height: 200px;
 }
 
+.inf-muted {
+    color: var(--text-placeholder);
+}
+
 /* max-height dvh and vh usage here is for backward compat */
 @media screen and (max-width: 600px) {
     #infraction_view_modal {
@@ -586,10 +590,6 @@ th {
     .inf-view-tab > .rmEl,
     .inf-view-tab > tr:has(#total-blocks) {
         order: 1;
-    }
-
-    .inf-muted {
-        color: var(--text-placeholder);
     }
 
     #commentToggle {
