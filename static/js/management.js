@@ -78,16 +78,16 @@ function loadMgmt(start) {
     let endpoint = '';
     switch(MGMT_MODE) {
     case MGMT.ADMIN:
-        endpoint = '/api/admin';
+        endpoint = '/api/admin/';
         break;
     case MGMT.GROUP:
-        endpoint = '/api/group';
+        endpoint = '/api/group/';
         break;
     case MGMT.SERVER:
-        endpoint = '/api/server';
+        endpoint = '/api/server/';
         break;
     case MGMT.VPN:
-        endpoint = '/api/vpn';
+        endpoint = '/api/vpn/';
         break;
     default:
         $('#mgmt-table').html($('<div style="text-align: center; font-size: 40pt">WORK IN PROGRESS</div>'));
