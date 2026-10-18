@@ -341,7 +341,7 @@ function createAndValidateInfraction() {
 
     if ($(cIpEntry).val().trim() !== '') {
         if (!isValidIPv4($(cIpEntry).val().trim()))
-            return [false, 'Invalid IP address, only IPv4 addresses are supported'];
+            return [false, 'Invalid IP address format'];
 
         infraction['player']['ip'] = $(cIpEntry).val().trim();
     }

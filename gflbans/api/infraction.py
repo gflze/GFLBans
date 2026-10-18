@@ -663,7 +663,7 @@ async def create_infraction(
         server = None
 
     if query.player.ip is not None and not is_valid_ipv4(query.player.ip):
-        raise HTTPException(detail='Invalid IP address, only IPv4 addresses are supported', status_code=400)
+        raise HTTPException(detail='Invalid IP address format', status_code=400)
 
     if query.player.gs_service is not None:
         try:
