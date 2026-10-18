@@ -143,7 +143,10 @@
                 <div class="field" id="cTimeDecCheckField">
                     <div class="control">
                         <label class="checkbox">
-                            <input id="timeDecCheck" type="checkbox" name="isTimeDec">
+                            <input id="timeDecCheck"
+                                   type="checkbox"
+                                   name="isTimeDec"
+                                   data-auto-select="{{ '1' if AUTO_SELECT_PLAYTIME else '0' }}">
                             Playtime (time remaining only decreases while the user is connected)
                         </label>
                     </div>

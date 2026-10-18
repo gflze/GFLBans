@@ -86,13 +86,31 @@ function resetModal() {
     $(cPermCheckField).removeClass('is-hidden');
     $(cDurationField).removeClass('is-hidden');
 
-    $(cTimeDecCheck).prop('checked', false);
+    $(cTimeDecCheck).prop('checked', autoSelectPlaytime());
     $(cAutoStackCheck).prop('checked', false);
     $(cPermanentCheck).prop('checked', false);
+    handleNonPermCheck();
     $(cDurationEntry).val('');
     setSelection(cDurationUnit, 'h');
     $('#cInfractionSubmit').off('click');
 
+}
+
+function autoSelectPlaytime() {
+    return $(cTimeDecCheck).attr('data-auto-select') === '1';
+}
+
+// Bans cannot be playtime based, so un-select playtime when banning and re-select it when no longer banning
+function handleBanToggled() {
+    if (!autoSelectPlaytime())
+        return;
+
+    if (!$(cBanBtn).hasClass('is-outlined'))
+        $(cTimeDecCheck).prop('checked', false);
+    else if (!$(cPermanentCheck).prop('checked'))
+        $(cTimeDecCheck).prop('checked', true);
+
+    handleNonPermCheck();
 }
 
 function handleWebCheckChanged() {
@@ -261,6 +279,7 @@ $(document).ready(function () {
     $('.rbtn').click(function (ev) {
         toggleButton(ev.target);
     });
+    $(cBanBtn).click(handleBanToggled);
 
     $(cFileInput).change(function () {
         const fn = $(cFileInput)[0].files[0].name;
