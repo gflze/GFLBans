@@ -467,4 +467,11 @@ $(document).ready(function () {
     $('#filter-apply').on('click', function () {
         resetAndLoad();
     });
+
+    $('#filter-search, #filter-content, #filter-after, #filter-before').on('keydown', function (e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            $('#filter-apply').trigger('click');
+        }
+    });
 });
