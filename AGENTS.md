@@ -18,7 +18,7 @@ Copy `.env.sample` to `.env` before running locally. Redis and MongoDB are requi
 
 ## Coding Style & Naming Conventions
 
-Python targets 3.13 and is formatted by Ruff with 4-space indentation, single quotes, import sorting, and a 120-character line limit. Use `snake_case` for modules, functions, and variables; keep route modules grouped by resource, such as `gflbans/api/infraction.py`.
+Python targets 3.14 and is formatted by Ruff with 4-space indentation, single quotes, import sorting, and a 120-character line limit. Use `snake_case` for modules, functions, and variables; keep route modules grouped by resource, such as `gflbans/api/infraction.py`.
 
 JavaScript in `static/js/` uses ESLint with 4-space indentation, single quotes, semicolons, 1TBS brace style, and a 120-character line limit. Template formatting is handled by djLint; do not reformat or modify vendored files under `static/3rdparty/`.
 

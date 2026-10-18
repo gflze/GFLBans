@@ -707,7 +707,7 @@ async def create_infraction(
             if query.player.gs_id and query.allow_normalize:
                 query.player.gs_id = await normalize_id(request.app, query.player.gs_service, query.player.gs_id)
             validate_id(query.player.gs_service, query.player.gs_id)
-        except (ValueError, TypeError):
+        except ValueError, TypeError:
             raise HTTPException(detail='Invalid Steam ID', status_code=400) from None
 
     duration_to_use = query.duration
