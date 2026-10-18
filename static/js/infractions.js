@@ -26,7 +26,7 @@ function handleResp(d, page, s, m) {
                 insertParam('page', total_pages);
             }
 
-            setupNav(page, total_pages);
+            setupNav(page, total_pages, data['results'].length);
 
             if (m !== '') {
                 resetViewModal();

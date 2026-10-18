@@ -1,18 +1,33 @@
 // Also must change python definition
 const INFRACTIONS_PER_PAGE = 30;
 
-function setupNav(current_page, total_pages) {
-    // Reset the block
+// Show the bottom page navigation when a page has more than this many infractions
+const BOTTOM_NAV_THRESHOLD = 15;
 
-    const nav = document.getElementById('infraction-pages');
+function setupNav(current_page, total_pages, page_rows) {
+    // Reset the blocks
 
-    $(nav).empty();
+    const top_nav = document.getElementById('infraction-pages');
+    const bottom_nav = document.getElementById('infraction-pages-bottom');
+
+    $(top_nav).empty();
+    $(bottom_nav).empty();
+    $('#infraction-pages-bottom-nav').addClass('is-hidden');
 
     // We do not render the navbar when there are only one page of bans to show
-    if (total_pages === 1) {
+    if (total_pages <= 1) {
         return;
     }
 
+    renderNav(top_nav, current_page, total_pages);
+
+    if (page_rows > BOTTOM_NAV_THRESHOLD) {
+        renderNav(bottom_nav, current_page, total_pages);
+        $('#infraction-pages-bottom-nav').removeClass('is-hidden');
+    }
+}
+
+function renderNav(nav, current_page, total_pages) {
     // Embedded function to make us a button
     function make_button(page_n) {
         const page_li = document.createElement('li');
@@ -71,7 +86,6 @@ function setupNav(current_page, total_pages) {
             }
         }
     }
-
 }
 
 
