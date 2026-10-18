@@ -653,7 +653,7 @@ async def discord_notify_create_infraction(app, dinf: DInfraction, print_map: bo
             },
         )
 
-    if srv is not None and srv.infract_webhook is not None:
+    if srv is not None and srv.infract_webhook:
         async with app.state.aio_session.post(
             srv.infract_webhook + '?wait=true', headers={'User-Agent': f'{BRANDING} ({HOST}, {GB_VERSION})'}, json=embed
         ) as resp:
@@ -703,7 +703,7 @@ async def discord_notify_edit_infraction(app, dinf: DInfraction, editor: Optiona
     else:
         srv = None
 
-    if srv is not None and srv.infract_webhook is not None:
+    if srv is not None and srv.infract_webhook:
         async with app.state.aio_session.post(
             srv.infract_webhook + '?wait=true', headers={'User-Agent': f'{BRANDING} ({HOST}, {GB_VERSION})'}, json=embed
         ) as resp:
@@ -755,7 +755,7 @@ async def discord_notify_revoke_infraction(app, dinf: DInfraction, actor: Option
     else:
         srv = None
 
-    if srv is not None and srv.infract_webhook is not None:
+    if srv is not None and srv.infract_webhook:
         async with app.state.aio_session.post(
             srv.infract_webhook + '?wait=true', headers={'User-Agent': f'{BRANDING} ({HOST}, {GB_VERSION})'}, json=embed
         ) as resp:
@@ -806,7 +806,7 @@ async def discord_notify_reinst_infraction(app, dinf: DInfraction, actor: Option
     else:
         srv = None
 
-    if srv is not None and srv.infract_webhook is not None:
+    if srv is not None and srv.infract_webhook:
         async with app.state.aio_session.post(
             srv.infract_webhook + '?wait=true', headers={'User-Agent': f'{BRANDING} ({HOST}, {GB_VERSION})'}, json=embed
         ) as resp:
@@ -857,7 +857,7 @@ async def discord_notify_purge_infraction(app, dinf: DInfraction, actor: Optiona
     else:
         srv = None
 
-    if srv is not None and srv.infract_webhook is not None:
+    if srv is not None and srv.infract_webhook:
         async with app.state.aio_session.post(
             srv.infract_webhook + '?wait=true', headers={'User-Agent': f'{BRANDING} ({HOST}, {GB_VERSION})'}, json=embed
         ) as resp:

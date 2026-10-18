@@ -41,7 +41,7 @@ GFLBANS_ICON = config(
 
 # Integrations with other services
 DISCORD_BOT_TOKEN = config('DISCORD_BOT_TOKEN', default=None)
-GLOBAL_INFRACTION_WEBHOOK = config('GLOBAL_INFRACT_WEBHOOK', default=None)  # For global monitoring
+GLOBAL_INFRACTION_WEBHOOK = config('GLOBAL_INFRACTION_WEBHOOK', default=None) or None  # For global monitoring
 STEAM_API_KEY = config('STEAM_API_KEY', default=None)
 STEAM_OPENID_ACCESS_TOKEN_LIFETIME = config('STEAM_OPENID_ACCESS_TOKEN_LIFETIME', cast=int, default=604800)
 IPHUB_API_KEY = config('IPHUB_API_KEY', default=None)

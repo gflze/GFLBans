@@ -59,9 +59,9 @@ def dserver_to_server(dsrv: DServer, indicate_webhooks: bool) -> Server:
 
     if indicate_webhooks:
         mf.discord_staff_tag = dsrv.discord_staff_tag
-        if getattr(dsrv, 'discord_webhook', None) is not None:
+        if getattr(dsrv, 'discord_webhook', None):
             mf.has_discord_webhook = True
-        if getattr(dsrv, 'infract_webhook', None) is not None:
+        if getattr(dsrv, 'infract_webhook', None):
             mf.has_infract_webhook = True
 
     return mf
@@ -165,8 +165,8 @@ async def get_server_internal(request: Request, server_id: str, auth: AuthInfo =
         friendly_name=sv.friendly_name,
         allow_unknown=sv.allow_unknown,
         discord_staff_tag=sv.discord_staff_tag,
-        discord_webhook_set=sv.discord_webhook is not None,
-        infract_webhook_set=sv.infract_webhook is not None,
+        discord_webhook_set=bool(sv.discord_webhook),
+        infract_webhook_set=bool(sv.infract_webhook),
     )
 
 
@@ -191,10 +191,10 @@ async def create_server(request: Request, n: AddServer, auth: AuthInfo = Depends
         game_port=n.game_port,
         friendly_name=n.friendly_name,
         allow_unknown=n.allow_unknown,
-        discord_webhook=n.discord_webhook,
+        discord_webhook=n.discord_webhook or None,
         enabled=n.enabled,
-        infract_webhook=n.infract_webhook,
-        discord_staff_tag=n.discord_staff_tag,
+        infract_webhook=n.infract_webhook or None,
+        discord_staff_tag=n.discord_staff_tag or None,
         server_key=key_hash,
         server_key_salt=salt,
     )
@@ -223,8 +223,8 @@ async def create_server(request: Request, n: AddServer, auth: AuthInfo = Depends
             enabled=dsv.enabled,
             friendly_name=dsv.friendly_name,
             allow_unknown=dsv.allow_unknown,
-            discord_webhook_set=dsv.discord_webhook is not None,
-            infract_webhook_set=dsv.infract_webhook is not None,
+            discord_webhook_set=bool(dsv.discord_webhook),
+            infract_webhook_set=bool(dsv.infract_webhook),
             discord_staff_tag=dsv.discord_staff_tag,
         ),
     )
@@ -322,8 +322,8 @@ async def edit_server(request: Request, e: EditServer, server_id: str, auth: Aut
         enabled=srv.enabled,
         friendly_name=srv.friendly_name,
         allow_unknown=srv.allow_unknown,
-        discord_webhook_set=srv.discord_webhook is not None,
-        infract_webhook_set=srv.infract_webhook is not None,
+        discord_webhook_set=bool(srv.discord_webhook),
+        infract_webhook_set=bool(srv.infract_webhook),
         discord_staff_tag=srv.discord_staff_tag,
     )
 

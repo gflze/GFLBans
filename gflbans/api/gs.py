@@ -295,7 +295,7 @@ async def call_admin(request: Request, exe: ExecuteCallAdmin, auth: AuthInfo = D
     if srv is None:
         raise HTTPException(status_code=500, detail='This should not happen lol')
 
-    if srv.discord_staff_tag is None or srv.discord_webhook is None:
+    if not srv.discord_staff_tag or not srv.discord_webhook:
         raise HTTPException(status_code=405, detail='Call Admin is not configured on this server')
 
     # Check if the target is banned
@@ -351,7 +351,7 @@ async def claim_call(request: Request, claim: ClaimCallAdmin, auth: AuthInfo = D
     if srv is None:
         raise HTTPException(status_code=500, detail='This should not happen lol')
 
-    if srv.discord_staff_tag is None or srv.discord_webhook is None:
+    if not srv.discord_staff_tag or not srv.discord_webhook:
         raise HTTPException(status_code=405, detail='Call Admin is not configured on this server')
 
     if srv.call_data is None:
