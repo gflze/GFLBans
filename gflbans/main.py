@@ -1,8 +1,8 @@
 # Use a virtualenv and execute this script with `python3 -m gflbans.main` to start gflbans
 
+import multiprocessing
 import sys
 from datetime import datetime
-from multiprocessing import Process
 from time import sleep
 
 import uvicorn
@@ -11,6 +11,9 @@ from pytz import UTC
 from gflbans.internal.config import WEB_HOST, WEB_PORT, WEB_UNIX, WEB_USE_UNIX, WORKERS
 from gflbans.internal.constants import GB_VERSION
 from gflbans.internal.log import logger
+
+# Python 3.14 defaults to forkserver on Linux, which leaves uvicorn's spawned workers with an invalid stdin fd
+mp = multiprocessing.get_context('fork' if 'fork' in multiprocessing.get_all_start_methods() else None)
 
 
 def start_gflbans():
@@ -41,7 +44,7 @@ def start_gflbans():
 if __name__ == '__main__':
     logger.info(f'GFLBans {GB_VERSION} by Aurora')
 
-    api = Process(target=start_gflbans)
+    api = mp.Process(target=start_gflbans)
     api.start()
 
     proc_t = {'api': []}
@@ -62,7 +65,7 @@ if __name__ == '__main__':
 
             logger.error(f'API died! Restarting... ({num_last30} / 3)')
 
-            api = Process(target=start_gflbans)
+            api = mp.Process(target=start_gflbans)
             api.start()
 
             proc_t['api'].append(datetime.now(tz=UTC).timestamp())
