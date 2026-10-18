@@ -381,6 +381,17 @@ th {
     color: var(--text-placeholder);
 }
 
+.copy-btn {
+    margin-left: 0.5em;
+    font-size: 0.85em;
+    opacity: 0.6;
+    cursor: pointer;
+}
+
+.copy-btn:hover {
+    opacity: 1;
+}
+
 /* max-height dvh and vh usage here is for backward compat */
 @media screen and (max-width: 600px) {
     #infraction_view_modal {

@@ -184,14 +184,18 @@ async function setupViewModal(infraction) {
         } else {
             idValue.text(infraction['player']['gs_id']);
         }
+
+        idValue.append(createCopyButton(infraction['player']['gs_id']));
     } else {
         idContainer.addClass('is-hidden');
     }
 
     if (infraction['player'].hasOwnProperty('ip')) {
-        if (infraction['player']['ip'] !== 'MISSING_PERMISSIONS')
-            search.push('ip=' + infraction['player']['ip']);
         ipValue.text(infraction['player']['ip']);
+        if (infraction['player']['ip'] !== 'MISSING_PERMISSIONS') {
+            search.push('ip=' + infraction['player']['ip']);
+            ipValue.append(createCopyButton(infraction['player']['ip']));
+        }
     } else {
         ipContainer.addClass('is-hidden');
     }

@@ -183,6 +183,20 @@ function getProfileUrl(ply) {
     }
 }
 
+// Small icon button that copies text to the clipboard, briefly showing a check mark on success
+function createCopyButton(text) {
+    return $('<a class="fas fa-copy copy-btn text-primary" title="Copy to clipboard"></a>').click(function (e) {
+        e.preventDefault();
+        const btn = $(this);
+        navigator.clipboard.writeText(text).then(function () {
+            btn.removeClass('fa-copy').addClass('fa-check');
+            setTimeout(function () {
+                btn.removeClass('fa-check').addClass('fa-copy');
+            }, 1500);
+        }).catch(logException);
+    });
+}
+
 // The API omits the address of password protected servers for viewers who can't see them
 function serverAddress(server, with_port = true) {
     if (!server.hasOwnProperty('ip')) {
