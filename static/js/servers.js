@@ -260,6 +260,7 @@ function showServerModal(mod, map, hostname, ip, players, id) {
 
         const player_name = document.createElement('span');
         player_name.innerText = players[i]['gs_name'];
+        avatar_row.setAttribute('title', players[i]['gs_name']);
 
         avatar_wrapper.appendChild(player_name);
 

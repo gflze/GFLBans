@@ -610,10 +610,24 @@ th {
 
 .table-player-ditem {
     width: calc(32em - 110px);
+    max-width: calc(32em - 110px);
 }
 
 .table-player-ditem2 {
     width: calc(32em - 60px);
+    max-width: calc(32em - 60px);
+}
+
+.table-player-ditem,
+.table-player-ditem2 {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.w-100px,
+.w-50px {
+    white-space: nowrap;
 }
 
 .crop-to-container.server-map-image > img {
