@@ -331,21 +331,50 @@ async function setupViewModal(infraction) {
         altSearchUrlParams = altSearchUrlParams.concat('&' + search[i]);
     }
 
-    let altSearchLink = $('<a>')
+    let blocksUrlParams = '';
+    if (infraction['player'].hasOwnProperty('gs_id'))
+        blocksUrlParams = search.filter(s => !s.startsWith('ip=')).join('&');
+    else
+        blocksUrlParams = search.join('&');
+
+    const blocksLink = $('<a>')
+        .attr('href', '/infractions/?' + blocksUrlParams)
+        .text('(search)');
+
+    const altSearchLink = $('<a>')
         .attr('href', '/infractions/?alt_search=true&depth=3' + altSearchUrlParams)
         .text('(search)');
 
     $('#total-blocks').empty();
+    $('#alt-search').empty();
+    $('#altSearchRow').addClass('is-hidden');
 
-    let totalBlocks = 'Unknown';
-    let altBlocks = await gbRequest('GET', '/api/infractions/alt_search?depth=3' + altSearchUrlParams, null);
-    if (altBlocks.ok) {
-        altBlocksJson = await altBlocks.json();
+    if (search.length === 0) {
+        $('#total-blocks').text('Unknown');
+    } else {
+        const [blocksResp, altBlocksResp] = await Promise.all([
+            gbRequest('GET', '/api/infractions/search?limit=1&' + blocksUrlParams, null),
+            gbRequest('GET', '/api/infractions/alt_search?depth=3&limit=1' + altSearchUrlParams, null),
+        ]);
 
-        if (altBlocksJson.hasOwnProperty('total_matched'))
-            totalBlocks = altBlocksJson['total_matched'];
+        let totalBlocks = 'Unknown';
+        if (blocksResp.ok) {
+            const blocksJson = await blocksResp.json();
+
+            if (blocksJson.hasOwnProperty('total_matched'))
+                totalBlocks = blocksJson['total_matched'];
+        }
+        $('#total-blocks').append($('<p>').text(totalBlocks + ' ').append(blocksLink));
+
+        if (altBlocksResp.ok) {
+            const altBlocksJson = await altBlocksResp.json();
+
+            if (altBlocksJson.hasOwnProperty('total_matched') && altBlocksJson['total_matched'] !== totalBlocks) {
+                $('#alt-search').append($('<p>').text(altBlocksJson['total_matched'] + ' ').append(altSearchLink));
+                $('#altSearchRow').removeClass('is-hidden');
+            }
+        }
     }
-    $('#total-blocks').append($('<p>').text(totalBlocks + ' ').append(altSearchLink));
 
     addComments(mergeCommentFiles(infraction));
 
