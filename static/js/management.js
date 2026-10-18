@@ -963,7 +963,7 @@ function showNewToken(serverInfo) {
 
     // Setup and show the error modal
     $('.modal-card-title').text('CS2Fixes Convars');
-    $('#setupURL').text(window.location.host + '/api/');
+    $('#setupURL').text(window.location.origin + '/api/');
     if (serverInfo.hasOwnProperty('server'))
         $('#setupID').text(serverInfo['server']['id']);
     else
