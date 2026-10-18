@@ -191,10 +191,19 @@ async function setupViewModal(infraction) {
     }
 
     if (infraction['player'].hasOwnProperty('ip')) {
-        ipValue.text(infraction['player']['ip']);
         if (infraction['player']['ip'] !== 'MISSING_PERMISSIONS') {
+            const ipLookup = document.createElement('a');
+            ipLookup.text = infraction['player']['ip'];
+            ipLookup.setAttribute(
+                'href', 'https://whatismyipaddress.com/ip/' + encodeURIComponent(infraction['player']['ip'])
+            );
+            ipLookup.setAttribute('target', '_blank');
+
+            ipValue.append(ipLookup);
             search.push('ip=' + infraction['player']['ip']);
             ipValue.append(createCopyButton(infraction['player']['ip']));
+        } else {
+            ipValue.text(infraction['player']['ip']);
         }
     } else {
         ipContainer.addClass('is-hidden');
