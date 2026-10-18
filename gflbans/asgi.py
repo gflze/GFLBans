@@ -3,11 +3,11 @@ import re
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
-from fastapi.responses import ORJSONResponse
 from jinja2 import select_autoescape
 from starlette.middleware.gzip import GZipMiddleware
 from starlette.middleware.sessions import SessionMiddleware
 from starlette.requests import Request
+from starlette.responses import JSONResponse
 from starlette.staticfiles import StaticFiles
 from starlette.templating import Jinja2Templates
 
@@ -64,7 +64,7 @@ async def lifespan(app: FastAPI):
 
 def new_app():
     # Create the FastAPI app
-    app = FastAPI(redoc_url='/doc', default_response_class=ORJSONResponse, lifespan=lifespan)
+    app = FastAPI(redoc_url='/doc', lifespan=lifespan)
 
     # Add our middleware
     app.add_middleware(SessionMiddleware, secret_key=SECRET_KEY, session_cookie='gb_session', https_only=PRODUCTION)
@@ -108,4 +108,4 @@ async def handle_exception(request: Request, exc):
         )
 
     # API clients will receive a proper JSON error response
-    return ORJSONResponse({'detail': detail}, status_code=status_code)
+    return JSONResponse({'detail': detail}, status_code=status_code)

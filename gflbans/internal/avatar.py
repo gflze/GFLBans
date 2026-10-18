@@ -4,7 +4,7 @@ from concurrent.futures.process import ProcessPoolExecutor
 from functools import partial
 
 import PIL
-from motor.motor_asyncio import AsyncIOMotorGridFSBucket
+from gridfs import AsyncGridFSBucket
 from PIL import Image
 
 from gflbans.internal.config import MONGO_DB
@@ -65,7 +65,7 @@ async def process_avatar(app, avatar_url) -> dict:
 
     new_image = await current_loop.run_in_executor(avatar_thread_pool, partial(sync_process_avatar, image_bytes))
 
-    file_id = await AsyncIOMotorGridFSBucket(database=app.state.db[MONGO_DB]).upload_from_stream(
+    file_id = await AsyncGridFSBucket(app.state.db[MONGO_DB]).upload_from_stream(
         'avatar.webp', new_image, metadata={'retrieved_from': avatar_url, 'content-type': 'image/webp'}
     )
 

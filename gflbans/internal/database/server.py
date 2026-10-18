@@ -4,8 +4,8 @@ from typing import ClassVar, List, Optional
 
 from bson import ObjectId
 from dateutil.tz import UTC
-from motor.motor_asyncio import AsyncIOMotorDatabase
 from pydantic import BaseModel, model_validator
+from pymongo.asynchronous.database import AsyncDatabase
 
 from gflbans.internal.config import SERVER_CACHE_STALE_AFTER
 from gflbans.internal.database.base import DBase
@@ -74,7 +74,7 @@ class DServer(DBase):
         return values
 
     @classmethod
-    async def find_player(cls, db_ref: AsyncIOMotorDatabase, gs_service: str, gs_id: str):
+    async def find_player(cls, db_ref: AsyncDatabase, gs_service: str, gs_id: str):
         ds = await db_ref[cls.__collection__].find_one(
             {
                 'server_info.last_updated': {'$lt': datetime.now(tz=UTC) + timedelta(seconds=SERVER_CACHE_STALE_AFTER)},
@@ -89,7 +89,7 @@ class DServer(DBase):
         return cls.load_document(ds)
 
     @classmethod
-    async def from_query_ex(cls, db_ref: AsyncIOMotorDatabase, query: dict):
+    async def from_query_ex(cls, db_ref: AsyncDatabase, query: dict):
         logger.debug(f'DB: running query {json.dumps(query, default=lambda o: str(o))}')
 
         async for document in db_ref[cls.__collection__].find(query):

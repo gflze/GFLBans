@@ -6,8 +6,7 @@ from typing import Optional
 import bson
 from bson import ObjectId
 from fastapi import APIRouter, Depends, HTTPException
-from gridfs import NoFile
-from motor.motor_asyncio import AsyncIOMotorGridFSBucket
+from gridfs import AsyncGridFSBucket, NoFile
 from PIL import Image
 from pydantic import constr
 from starlette.requests import Request
@@ -39,7 +38,7 @@ async def download_file(
     convert_webp: Optional[constr(pattern='^(png|jpg)$')] = None,
     auth: AuthInfo = Depends(check_access),
 ):
-    client = AsyncIOMotorGridFSBucket(database=request.app.state.db[MONGO_DB])
+    client = AsyncGridFSBucket(request.app.state.db[MONGO_DB])
 
     try:
         fid = ObjectId(gridfs_id)
@@ -65,6 +64,7 @@ async def download_file(
             raise HTTPException(detail='Must be either a server or an api key to make this request', status_code=403)
 
         file_contents = await fos.read()
+        await fos.close()
 
         image_data = await asyncio.get_running_loop().run_in_executor(
             request.app.state.sync_processes, partial(sync_convert_image, file_contents, convert_webp)
@@ -81,8 +81,11 @@ async def download_file(
     else:
 
         async def gridfs_read():
-            while fos.tell() < fos.length:
-                yield await fos.readchunk()
+            try:
+                while fos.tell() < fos.length:
+                    yield await fos.readchunk()
+            finally:
+                await fos.close()
 
         return StreamingResponse(
             gridfs_read(),

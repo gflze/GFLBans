@@ -3,8 +3,8 @@ from datetime import datetime
 from typing import ClassVar, List, Optional, Union
 
 from bson import ObjectId
-from motor.motor_asyncio import AsyncIOMotorDatabase
 from pydantic import constr
+from pymongo.asynchronous.database import AsyncDatabase
 
 from gflbans.internal.database.base import DBase
 from gflbans.internal.models.api import PlayerObjNoIp
@@ -19,7 +19,7 @@ class DRPCEventBase(DBase):
     acknowledged_by: List[ObjectId] = []  # All servers that have ack'd this. Broadcast only
 
     @classmethod
-    async def poll(cls, db_ref: AsyncIOMotorDatabase, server: ObjectId, limit=10, ack_on_read=False):
+    async def poll(cls, db_ref: AsyncDatabase, server: ObjectId, limit=10, ack_on_read=False):
         m_cur = db_ref[cls.__collection__].find({'target': server})
         m_cur.limit(limit)
 

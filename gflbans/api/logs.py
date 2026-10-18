@@ -1,6 +1,5 @@
 from bson import ObjectId
 from fastapi import APIRouter, Depends, HTTPException
-from fastapi.responses import ORJSONResponse
 from pymongo import DESCENDING
 from starlette.requests import Request
 
@@ -15,7 +14,7 @@ from gflbans.internal.models.api import AuditLog, Initiator
 from gflbans.internal.models.protocol import GetAuditLogs, GetAuditLogsReply
 from gflbans.internal.pyapi_utils import load_admin_from_initiator
 
-log_router = APIRouter(default_response_class=ORJSONResponse)
+log_router = APIRouter()
 
 
 # Makes it so FastAPI can parse ObjectIDs by converting them recursively to strings

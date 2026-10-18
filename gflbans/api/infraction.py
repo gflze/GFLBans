@@ -7,11 +7,11 @@ import bson
 from bson import ObjectId
 from dateutil.tz import UTC
 from fastapi import APIRouter, Depends, Header, HTTPException
-from fastapi.responses import ORJSONResponse
-from motor.motor_asyncio import AsyncIOMotorGridFSBucket
+from gridfs import AsyncGridFSBucket
 from pymongo import DESCENDING
 from starlette.background import BackgroundTasks
 from starlette.requests import Request
+from starlette.responses import JSONResponse
 
 from gflbans.api.auth import AuthInfo, check_access, csrf_protect
 from gflbans.api_util import (
@@ -115,7 +115,7 @@ from gflbans.internal.pyapi_utils import load_admin
 from gflbans.internal.search import contains_str, do_infraction_search
 from gflbans.internal.utils import is_valid_ipv4, slugify
 
-infraction_router = APIRouter(default_response_class=ORJSONResponse)
+infraction_router = APIRouter()
 
 
 @infraction_router.post(
@@ -1015,7 +1015,7 @@ async def purge_infraction(
     # Delete any GridFS files linked to the infraction
     try:
         if dinf.files:
-            gfs = AsyncIOMotorGridFSBucket(database=request.app.state.db[MONGO_DB])
+            gfs = AsyncGridFSBucket(request.app.state.db[MONGO_DB])
             for df in dinf.files:
                 try:
                     await gfs.delete(ObjectId(df.gridfs_file))
@@ -1049,7 +1049,7 @@ async def purge_infraction(
 
     await request.app.state.db[MONGO_DB].infractions.delete_one({'_id': dinf.id})
 
-    return ORJSONResponse({'status': 'ok'}, status_code=200)
+    return JSONResponse({'status': 'ok'}, status_code=200)
 
 
 @infraction_router.patch(
@@ -1450,7 +1450,7 @@ async def add_attachment(
     if dinf is None:
         raise HTTPException(detail='There is no such infraction.', status_code=404)
 
-    gfs = AsyncIOMotorGridFSBucket(database=request.app.state.db[MONGO_DB])
+    gfs = AsyncGridFSBucket(request.app.state.db[MONGO_DB])
 
     fis = request.stream()
 
@@ -1535,9 +1535,7 @@ async def delete_attachment(
         raise HTTPException(detail='You do not have permission to do that!', status_code=403)
 
     # Delete backend file object
-    await AsyncIOMotorGridFSBucket(database=request.app.state.db[MONGO_DB]).delete(
-        ObjectId(dinf.files[query.file_idx].gridfs_file)
-    )
+    await AsyncGridFSBucket(request.app.state.db[MONGO_DB]).delete(ObjectId(dinf.files[query.file_idx].gridfs_file))
 
     # Unlink from dinf
     dfiles = dinf.files

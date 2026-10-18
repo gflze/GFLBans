@@ -1,7 +1,7 @@
 from typing import ClassVar
 
-from motor.motor_asyncio import AsyncIOMotorDatabase
 from netaddr import IPAddress, IPNetwork
+from pymongo.asynchronous.database import AsyncDatabase
 
 from gflbans.internal.database.base import DBase
 
@@ -16,7 +16,7 @@ class DVPN(DBase):
     added_on: int
 
     @classmethod
-    async def find_cidr_rule(cls, db_ref: AsyncIOMotorDatabase, ip: IPAddress):
+    async def find_cidr_rule(cls, db_ref: AsyncDatabase, ip: IPAddress):
         async for doc in db_ref[cls.__collection__].find({'is_asn': False}):
             a = cls.load_document(doc)
 

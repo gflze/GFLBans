@@ -3,7 +3,6 @@ from typing import List
 
 from dateutil.tz import UTC
 from fastapi import APIRouter, Depends, HTTPException
-from fastapi.responses import ORJSONResponse
 from pydantic import NonNegativeInt
 from starlette.requests import Request
 
@@ -24,7 +23,7 @@ from gflbans.internal.log import logger
 from gflbans.internal.models.api import Group
 from gflbans.internal.models.protocol import UpdateGroup
 
-group_router = APIRouter(default_response_class=ORJSONResponse)
+group_router = APIRouter()
 
 
 @group_router.get('/', response_model_exclude_unset=True, response_model_exclude_none=True, response_model=List[Group])

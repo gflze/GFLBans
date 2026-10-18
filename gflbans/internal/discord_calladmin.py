@@ -10,7 +10,7 @@ import PIL
 from bson.objectid import ObjectId
 from dateutil.tz import UTC
 from fastapi import HTTPException
-from motor.motor_asyncio import AsyncIOMotorGridFSBucket
+from gridfs import AsyncGridFSBucket
 from PIL import Image
 
 from gflbans.internal.config import BRANDING, COMMUNITY_ICON, DISCORD_BOT_TOKEN, GFLBANS_ICON, HOST, MONGO_DB
@@ -173,7 +173,7 @@ async def prepare_calladmin_image(db_ref, image: str) -> DFile:
             calladmin_thread_pool, sync_process_calladmin_image, decoded
         )
 
-        file_id = await AsyncIOMotorGridFSBucket(database=db_ref).upload_from_stream(
+        file_id = await AsyncGridFSBucket(db_ref).upload_from_stream(
             'callimg.webp', converted, metadata={'dispose_created': datetime.now(tz=UTC), 'content-type': 'image/webp'}
         )
 

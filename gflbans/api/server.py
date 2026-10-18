@@ -5,7 +5,6 @@ import bbcode
 from bson import ObjectId
 from dateutil.tz import UTC
 from fastapi import APIRouter, Depends, HTTPException
-from fastapi.responses import ORJSONResponse
 from starlette.requests import Request
 
 from gflbans.api.auth import AuthInfo, check_access, csrf_protect
@@ -36,7 +35,7 @@ from gflbans.internal.models.protocol import (
 from gflbans.internal.search import contains_str, id64_or_none
 from gflbans.internal.utils import generate_api_key
 
-server_router = APIRouter(default_response_class=ORJSONResponse)
+server_router = APIRouter()
 
 
 def can_view_locked_servers(auth: AuthInfo) -> bool:

@@ -6,7 +6,6 @@ import bson
 import orjson
 from bson import ObjectId
 from fastapi import APIRouter, Depends, HTTPException
-from fastapi.responses import ORJSONResponse
 from pytz import UTC
 from starlette import status
 from starlette.requests import Request
@@ -36,7 +35,7 @@ async def rpc_poll(request: Request, auth: AuthInfo = Depends(check_access)):
     for dev in devs:
         evs.append(dev.as_api().model_dump())
 
-    return ORJSONResponse(evs, status_code=200)
+    return evs
 
 
 @rpc_router.websocket('/ws')

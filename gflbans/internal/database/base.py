@@ -3,8 +3,8 @@ from typing import Any, ClassVar, Optional, Tuple, Union
 from warnings import warn
 
 from bson import ObjectId
-from motor.motor_asyncio import AsyncIOMotorDatabase
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
+from pymongo.asynchronous.database import AsyncDatabase
 from pymongo.results import InsertOneResult, UpdateResult
 
 from gflbans.internal.log import logger
@@ -39,7 +39,7 @@ class DBase(BaseModel):
             raise
 
     @classmethod
-    async def from_id(cls, db_ref: AsyncIOMotorDatabase, obj_id: Union[str, ObjectId]):
+    async def from_id(cls, db_ref: AsyncDatabase, obj_id: Union[str, ObjectId]):
         if isinstance(obj_id, str):
             p_id = ObjectId(obj_id)
         else:
@@ -56,7 +56,7 @@ class DBase(BaseModel):
         return cls.load_document(p)
 
     @classmethod
-    async def find_one_from_query(cls, db_ref: AsyncIOMotorDatabase, query: dict):
+    async def find_one_from_query(cls, db_ref: AsyncDatabase, query: dict):
         p = await db_ref[cls.__collection__].find_one(query)
 
         if p is None:
@@ -67,7 +67,7 @@ class DBase(BaseModel):
         return cls.load_document(p)
 
     @classmethod
-    def _from_query(cls, db_ref: AsyncIOMotorDatabase, query: dict, limit=None, skip=0, sort: Tuple[str, Any] = None):
+    def _from_query(cls, db_ref: AsyncDatabase, query: dict, limit=None, skip=0, sort: Tuple[str, Any] = None):
         qk = json.dumps(query, default=lambda o: str(o))
 
         logger.debug(f'DB: running query {qk} with limit {limit}' f', skip {skip}, and sort {sort}')
@@ -86,24 +86,20 @@ class DBase(BaseModel):
         return dcur
 
     @classmethod
-    async def from_query(
-        cls, db_ref: AsyncIOMotorDatabase, query: dict, limit=None, skip=0, sort: Tuple[str, Any] = None
-    ):
+    async def from_query(cls, db_ref: AsyncDatabase, query: dict, limit=None, skip=0, sort: Tuple[str, Any] = None):
         async for document in cls._from_query(db_ref, query, limit, skip, sort):
             logger.debug(f'DB: load {str(document["_id"])} of {cls.__collection__}')
             yield cls.load_document(document)
 
     @classmethod
-    async def list_from_query(
-        cls, db_ref: AsyncIOMotorDatabase, query: dict, limit=30, skip=0, sort: Tuple[str, Any] = None
-    ):
+    async def list_from_query(cls, db_ref: AsyncDatabase, query: dict, limit=30, skip=0, sort: Tuple[str, Any] = None):
         return [cls.load_document(x) for x in await cls._from_query(db_ref, query, limit, skip, sort).to_list(limit)]
 
     @classmethod
-    async def count(cls, db_ref: AsyncIOMotorDatabase, query: dict):
+    async def count(cls, db_ref: AsyncDatabase, query: dict):
         return await db_ref[cls.__collection__].count_documents(query)
 
-    async def commit(self, db_ref: AsyncIOMotorDatabase) -> Union[UpdateResult, InsertOneResult]:
+    async def commit(self, db_ref: AsyncDatabase) -> Union[UpdateResult, InsertOneResult]:
         validate(self)
 
         if self.id is not None and isinstance(self.id, ObjectId):
@@ -148,7 +144,7 @@ class DBase(BaseModel):
 
             return ior
 
-    async def unset_field(self, db_ref: AsyncIOMotorDatabase, field: str, session=None):
+    async def unset_field(self, db_ref: AsyncDatabase, field: str, session=None):
         if self.id is None:
             raise ValueError("Tried to unset a field when this object doesn't exist in the DB")
 
@@ -163,7 +159,7 @@ class DBase(BaseModel):
             {'_id': self.id}, {'$unset': {self._field_alias(field): ''}}, session=session
         )
 
-    async def update_field(self, db_ref: AsyncIOMotorDatabase, field: str, value: Any, session=None):
+    async def update_field(self, db_ref: AsyncDatabase, field: str, value: Any, session=None):
         if self.id is None:
             raise ValueError(
                 'Tried to prepare a field update for this object when it has not yet been ' 'written to the database'
@@ -196,7 +192,7 @@ class DBase(BaseModel):
             {'_id': self.id}, {'$set': {self._field_alias(field): value}}, session=session
         )
 
-    async def add_bit_flag(self, db_ref: AsyncIOMotorDatabase, field: str, value: int, session=None):
+    async def add_bit_flag(self, db_ref: AsyncDatabase, field: str, value: int, session=None):
         if self.id is None:
             raise ValueError('Cannot add bit flag to this object that has not been committed yet')
 
@@ -211,7 +207,7 @@ class DBase(BaseModel):
             {'_id': self.id}, {'$bit': {self._field_alias(field): {'or': value}}}, session=session
         )
 
-    async def remove_bit_flag(self, db_ref: AsyncIOMotorDatabase, field: str, value: int, session=None):
+    async def remove_bit_flag(self, db_ref: AsyncDatabase, field: str, value: int, session=None):
         if self.id is None:
             raise ValueError('Cannot add bit flag to this object that has not been committed yet')
 
@@ -226,7 +222,7 @@ class DBase(BaseModel):
             {'_id': self.id}, {'$bit': {self._field_alias(field): {'and': ~value}}}, session=session
         )
 
-    async def append_to_array_field(self, db_ref: AsyncIOMotorDatabase, field: str, value: Any, session=None):
+    async def append_to_array_field(self, db_ref: AsyncDatabase, field: str, value: Any, session=None):
         if self.id is None:
             raise ValueError('Cannot modify a document that has not yet been committed.')
 

@@ -4,7 +4,6 @@ from datetime import datetime, time, timedelta
 
 from dateutil.tz import UTC
 from fastapi import APIRouter
-from fastapi.responses import ORJSONResponse
 from redis.exceptions import RedisError
 from starlette.requests import Request
 
@@ -21,7 +20,7 @@ from gflbans.internal.flags import (
 from gflbans.internal.models.api import InfractionDay
 from gflbans.internal.models.protocol import ServerStats
 
-statistics_router = APIRouter(default_response_class=ORJSONResponse)
+statistics_router = APIRouter()
 
 
 @statistics_router.get(

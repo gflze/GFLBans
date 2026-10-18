@@ -4,7 +4,6 @@ from typing import Optional
 
 from dateutil.tz import UTC
 from fastapi import APIRouter, Depends, HTTPException
-from fastapi.responses import ORJSONResponse
 from pymongo import ASCENDING
 from pymongo.errors import DuplicateKeyError
 from starlette.requests import Request
@@ -20,7 +19,7 @@ from gflbans.internal.log import logger
 from gflbans.internal.models.api import VPNInfo
 from gflbans.internal.models.protocol import AddVPN, FetchBlocklistReply, PatchVPN, RemoveVPN
 
-vpn_router = APIRouter(default_response_class=ORJSONResponse)
+vpn_router = APIRouter()
 
 
 # Define a dependency since all of these require management perms

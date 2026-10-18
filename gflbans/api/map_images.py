@@ -2,11 +2,9 @@ import asyncio
 
 from aiohttp import ClientResponseError
 from fastapi import APIRouter, Depends, File, Header, HTTPException, UploadFile
-from fastapi.responses import ORJSONResponse
-from gridfs import NoFile
-from motor.motor_asyncio import AsyncIOMotorGridFSBucket
+from gridfs import AsyncGridFSBucket, NoFile
 from starlette.requests import Request
-from starlette.responses import RedirectResponse, StreamingResponse
+from starlette.responses import JSONResponse, RedirectResponse, StreamingResponse
 
 from gflbans.api.auth import AuthInfo, check_access
 from gflbans.internal.config import MONGO_DB
@@ -33,7 +31,7 @@ async def get_map_image(request: Request, mod_name: str, map_name: str):
             logger.debug('Failed to check if GameTracker has the map image we wanted', exc_info=True)
             return RedirectResponse(status_code=307, url='/static/images/map_icon.png')
 
-    client = AsyncIOMotorGridFSBucket(database=request.app.state.db[MONGO_DB])
+    client = AsyncGridFSBucket(request.app.state.db[MONGO_DB])
 
     try:
         fos = await client.open_download_stream(mf)
@@ -41,8 +39,11 @@ async def get_map_image(request: Request, mod_name: str, map_name: str):
         raise HTTPException(detail='No such file', status_code=404)
 
     async def gridfs_read():
-        while fos.tell() < fos.length:
-            yield await fos.readchunk()
+        try:
+            while fos.tell() < fos.length:
+                yield await fos.readchunk()
+        finally:
+            await fos.close()
 
     return StreamingResponse(
         gridfs_read(),
@@ -76,11 +77,11 @@ async def write_map_image(
 
     converted = await asyncio.get_running_loop().run_in_executor(None, conv_map_image, b)
 
-    gridfs_client = AsyncIOMotorGridFSBucket(database=request.app.state.db[MONGO_DB])
+    gridfs_client = AsyncGridFSBucket(request.app.state.db[MONGO_DB])
     file_id = await gridfs_client.upload_from_stream(
         f'{mod_name}.{map_name}.webp',
         converted,
         metadata={'map_image': True, 'mod_name': mod_name, 'map_name': map_name, 'content-type': 'image/webp'},
     )
 
-    return ORJSONResponse({'file_id': str(file_id)}, status_code=201)
+    return JSONResponse({'file_id': str(file_id)}, status_code=201)

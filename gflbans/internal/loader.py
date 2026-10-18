@@ -3,8 +3,7 @@ from concurrent.futures.process import ProcessPoolExecutor
 from hashlib import md5
 
 import aiohttp
-from motor.motor_asyncio import AsyncIOMotorClient
-from pymongo import ASCENDING, DESCENDING
+from pymongo import ASCENDING, DESCENDING, AsyncMongoClient
 from redis.asyncio import Redis
 
 from gflbans.internal import shard
@@ -47,7 +46,7 @@ class RedisCache:
 
 
 def configure_app(app):
-    app.state.db = AsyncIOMotorClient(MONGO_URI)
+    app.state.db = AsyncMongoClient(MONGO_URI)
     app.state.redis_client = Redis.from_url(REDIS_URI, db=3)
 
     app.state.cache = RedisCache(app.state.redis_client, 'GlobalCache', ORJSONSerializer())
@@ -141,5 +140,5 @@ async def gflbans_init(app):
 
 
 async def gflbans_unload(app):
-    await app.state.db.disconnect()
+    await app.state.db.close()
     await app.state.aio_session.close()

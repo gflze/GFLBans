@@ -7,8 +7,8 @@ import bbcode
 from bson import ObjectId
 from dateutil.tz import UTC
 from fastapi import HTTPException
-from motor.motor_asyncio import AsyncIOMotorDatabase
 from pydantic import NonNegativeInt
+from pymongo.asynchronous.database import AsyncDatabase
 from redis.exceptions import RedisError
 
 from gflbans.internal.config import MONGO_DB, ROOT_USER
@@ -61,7 +61,7 @@ async def admin_as_int(app, a: Optional[ObjectId]):
     return None
 
 
-async def find_admin_name(db_ref: AsyncIOMotorDatabase, a: Optional[ObjectId]):
+async def find_admin_name(db_ref: AsyncDatabase, a: Optional[ObjectId]):
     if a is None:
         return 'SYSTEM'
 
@@ -303,7 +303,7 @@ def cinfsum_cmp_sef(c1: Optional[CInfractionSummary], c2: Optional[CInfractionSu
         return True
 
 
-async def cinfsum_inf(db_ref: AsyncIOMotorDatabase, inf: DInfraction) -> CInfractionSummary:
+async def cinfsum_inf(db_ref: AsyncDatabase, inf: DInfraction) -> CInfractionSummary:
     c = CInfractionSummary(reason=inf.reason, admin_name=await find_admin_name(db_ref, inf.admin))
 
     if inf.flags & INFRACTION_PERMANENT == INFRACTION_PERMANENT:

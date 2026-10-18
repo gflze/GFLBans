@@ -1,6 +1,6 @@
 from typing import ClassVar, List, Optional
 
-from motor.motor_asyncio import AsyncIOMotorDatabase
+from pymongo.asynchronous.database import AsyncDatabase
 
 from gflbans.internal.database.base import DBase
 from gflbans.internal.database.common import DFile
@@ -17,7 +17,7 @@ class DAdmin(DBase):
     avatar: Optional[DFile] = None
 
     @classmethod
-    async def from_ips_user(cls, db_ref: AsyncIOMotorDatabase, ips_user: int):
+    async def from_ips_user(cls, db_ref: AsyncDatabase, ips_user: int):
         d = await db_ref[cls.__collection__].find_one({'ips_user': ips_user})
 
         if d is None:

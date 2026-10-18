@@ -1,4 +1,4 @@
-from motor.motor_asyncio import AsyncIOMotorGridFSBucket
+from gridfs import AsyncGridFSBucket
 
 from gflbans.internal.config import HOST, MONGO_DB
 from gflbans.internal.log import logger
@@ -20,7 +20,7 @@ async def get_media_file_url_for_template(id: str, name: str) -> str:
 # Takes a string name and the byte string file contents. Returns the file id
 async def save_to_gridfs(app, name, contents):
     try:
-        gridfs_client = AsyncIOMotorGridFSBucket(database=app.state.db[MONGO_DB])
+        gridfs_client = AsyncGridFSBucket(app.state.db[MONGO_DB])
         file_id = await gridfs_client.upload_from_stream(name, contents)
         return file_id
     except Exception:
