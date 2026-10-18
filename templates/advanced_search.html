@@ -12,12 +12,14 @@
             </div>
             <h2 class="text-primary">User</h2>
             <div class="search-area">
-                <div class="control field">
-                    <label class="checkbox">
-                        <input id="search-user-vpn-check" type="checkbox" name="isWebInfract">
-                        VPN
-                    </label>
-                </div>
+                {% if user is not none %}
+                    <div class="control field">
+                        <label class="checkbox">
+                            <input id="search-user-vpn-check" type="checkbox" name="isWebInfract">
+                            VPN
+                        </label>
+                    </div>
+                {% endif %}
                 <div id="search-user-info" class="field has-addons">
                     <input id="search-user-name"
                            class="input"

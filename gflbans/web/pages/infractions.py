@@ -52,7 +52,7 @@ async def preload_infraction(request: Request, infraction_id: str, query: Search
             incl_ip = sc['user'].permissions & PERMISSION_VIEW_IP_ADDR == PERMISSION_VIEW_IP_ADDR
 
         try:
-            cq = await do_infraction_search(request.app, query, include_ip=incl_ip)
+            cq = await do_infraction_search(request.app, query, include_ip=incl_ip, include_vpn=sc['user'] is not None)
         except SearchError as e:
             raise HTTPException(detail=f'SearchError: {e.args[0]}', status_code=400)
 

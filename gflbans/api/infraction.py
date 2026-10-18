@@ -19,6 +19,7 @@ from gflbans.api_util import (
     exclude_private_comments,
     obj_id,
     should_include_ip,
+    should_include_vpn,
     str_id,
     user_str,
 )
@@ -240,7 +241,11 @@ async def get_infractions(
         if load_fast:
             dinf.comments = []
             dinf.files = []
-        infs.append(await as_infraction(request.app, dinf, incl_ip, exclude_priv_comments))
+        infs.append(
+            await as_infraction(
+                request.app, dinf, incl_ip, exclude_priv_comments, include_vpn=should_include_vpn(auth.type)
+            )
+        )
 
     return GetInfractionsReply(results=infs, total_matched=await DInfraction.count(request.app.state.db[MONGO_DB], q))
 
@@ -265,6 +270,7 @@ async def get_infraction(request: Request, infraction_id: str, auth: AuthInfo = 
         inf,
         should_include_ip(auth.type, auth.permissions),
         exclude_private_comments(auth.type, auth.permissions),
+        include_vpn=should_include_vpn(auth.type),
     )
 
 
@@ -281,9 +287,10 @@ async def search_infractions(
     auth: AuthInfo = Depends(check_access),
 ):
     incl_ip = should_include_ip(auth.type, auth.permissions)
+    incl_vpn = should_include_vpn(auth.type)
 
     try:
-        cq = await do_infraction_search(request.app, query, include_ip=incl_ip)
+        cq = await do_infraction_search(request.app, query, include_ip=incl_ip, include_vpn=incl_vpn)
     except SearchError as e:
         raise HTTPException(detail=f'SearchError: {e.args[0]}', status_code=400)
 
@@ -301,7 +308,13 @@ async def search_infractions(
             dinf.expires = None
 
         infs.append(
-            await as_infraction(request.app, dinf, incl_ip, exclude_private_comments(auth.type, auth.permissions))
+            await as_infraction(
+                request.app,
+                dinf,
+                incl_ip,
+                exclude_private_comments(auth.type, auth.permissions),
+                include_vpn=incl_vpn,
+            )
         )
 
     return GetInfractionsReply(results=infs, total_matched=await DInfraction.count(request.app.state.db[MONGO_DB], cq))
@@ -432,7 +445,10 @@ async def search_recursive_infractions(
 
     return GetInfractionsReply(
         results=[
-            await as_infraction(request.app, inf, incl_ip, exclude_priv_comments) for inf in paginated_infractions
+            await as_infraction(
+                request.app, inf, incl_ip, exclude_priv_comments, include_vpn=should_include_vpn(auth.type)
+            )
+            for inf in paginated_infractions
         ],
         total_matched=len(infractions),  # Total before pagination
     )

@@ -281,7 +281,9 @@ FIELD_MAP = {
 }
 
 
-async def do_infraction_search(app, query: Search, include_ip: bool = False) -> Dict[str, Any]:
+async def do_infraction_search(
+    app, query: Search, include_ip: bool = False, include_vpn: bool = False
+) -> Dict[str, Any]:
     logger.info(f'Performing search with: {query}')
 
     parsed_query = []
@@ -293,6 +295,9 @@ async def do_infraction_search(app, query: Search, include_ip: bool = False) -> 
 
         if not include_ip and field == 'ip' and value is not None:
             raise SearchError('Cannot search by IP without proper permissions.')
+
+        if not include_vpn and field == 'is_vpn' and value is not None:
+            raise SearchError('Cannot search by VPN status without being logged in.')
 
         if value is None or not (callable(field_type) or isinstance(value, field_type)):
             continue

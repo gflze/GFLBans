@@ -21,6 +21,7 @@ from gflbans.internal.flags import (
     INFRACTION_PERMANENT,
     INFRACTION_PLAYTIME_DURATION,
     INFRACTION_SESSION,
+    INFRACTION_VPN,
     PERMISSION_COMMENT,
     PERMISSION_VIEW_IP_ADDR,
     str2pflag,
@@ -200,10 +201,12 @@ def as_player(user: Optional[DUser], ip: Optional[str], include_ip: bool = True)
     return PlayerObj(**pos.model_dump(), **pf)
 
 
-async def as_infraction(app, infraction: DInfraction, include_ip=True, exclude_private=False) -> Infraction:
+async def as_infraction(
+    app, infraction: DInfraction, include_ip=True, exclude_private=False, include_vpn=True
+) -> Infraction:
     return Infraction(
         id=str_id(infraction.id),
-        flags=infraction.flags,
+        flags=infraction.flags if include_vpn else infraction.flags & ~INFRACTION_VPN,
         comments=await as_comments(app, infraction.comments, exclude_priv=exclude_private),
         files=await as_files(app, infraction.files, exclude_priv=exclude_private),
         server=str_id(infraction.server),
@@ -258,6 +261,10 @@ def obj_id(o: Optional[str]) -> Optional[ObjectId]:
 
 def should_include_ip(actor_type: int, actor_perms: int):
     return actor_type != NOT_AUTHED_USER and actor_perms & PERMISSION_VIEW_IP_ADDR == PERMISSION_VIEW_IP_ADDR
+
+
+def should_include_vpn(actor_type: int):
+    return actor_type != NOT_AUTHED_USER
 
 
 def exclude_private_comments(actor_type: int, actor_perms: int):
