@@ -87,29 +87,54 @@ def server_ip_port_to_mongo_id(s: str):
     return r
 
 
-# Regex
-REGEX_STEAMID = re.compile('(?P<steamid>(STEAM_)(\\d):(\\d):(\\d+))')
-REGEX_STEAM32 = re.compile('(?P<steamid32>(U):(\\d):(\\d+))')
-REGEX_STEAM64 = re.compile('(?P<steamid64>(\\d){17})')
-REGEX_IDLINK = re.compile('(http(s)?:\\/\\/)?(www\\.)?steamcommunity.com\\/profiles\\/(?P<steamid64>(\\d){17})')
-REGEX_CUSTOM_URL = re.compile('(http(s)?:\\/\\/)?(www\\.)?steamcommunity.com\\/id\\/(?P<profile_name>[^\\/]+)')
-REGEX_IS_NUMBER = re.compile('(\\d){17}')
+# Regex (used with fullmatch, so the whole input must be a Steam ID)
+REGEX_STEAMID = re.compile('(?P<steamid>(STEAM_)(\\d):([01]):(\\d+))', re.ASCII)
+REGEX_STEAM32 = re.compile('\\[?(?P<steamid32>(U):(1):(\\d+))\\]?', re.ASCII)
+REGEX_STEAM64 = re.compile('(?P<steamid64>(\\d){17})', re.ASCII)
+REGEX_IDLINK = re.compile(
+    '(http(s)?:\\/\\/)?(www\\.)?steamcommunity.com\\/profiles\\/(?P<steamid64>(\\d){17})\\/?', re.ASCII
+)
+REGEX_CUSTOM_URL = re.compile('(http(s)?:\\/\\/)?(www\\.)?steamcommunity.com\\/id\\/(?P<profile_name>[^\\/?#]+)\\/?')
+
+STEAM64_BASE = 0x0110000100000000  # Universe public, individual account type, desktop instance
+
+
+def is_valid_steam64(steamid64) -> bool:
+    s = str(steamid64)
+    if not (s.isascii() and s.isdigit()):
+        return False
+    n = int(s)
+    return n >> 32 == STEAM64_BASE >> 32 and n & 0xFFFFFFFF != 0
 
 
 def wut(gs_id):
-    if REGEX_STEAMID.match(gs_id):
-        return 'id', REGEX_STEAMID.match(gs_id).groupdict()['steamid']
-    elif REGEX_STEAM32.match(gs_id):
-        return 'id32', REGEX_STEAM32.match(gs_id).groupdict()['steamid32'][4:]
-    elif REGEX_STEAM64.match(gs_id):
-        return 'id64', REGEX_STEAM64.match(gs_id).groupdict()['steamid64']
-    elif REGEX_IDLINK.match(gs_id):
-        return 'id64', REGEX_IDLINK.match(gs_id).groupdict()['steamid64']
-    elif REGEX_CUSTOM_URL.match(gs_id):
-        return 'custom', REGEX_CUSTOM_URL.match(gs_id).groupdict()['profile_name']
-    elif gs_id.isdigit() and len(str(int(gs_id) + 76561197960265728)) == 17:
-        return 'id32', ips_get_member_id_from_gsid(int(gs_id) + 76561197960265728)
+    if m := REGEX_STEAMID.fullmatch(gs_id):
+        return 'id', m.group('steamid')
+    elif m := REGEX_STEAM32.fullmatch(gs_id):
+        return 'id32', m.group('steamid32')[4:]
+    elif m := REGEX_STEAM64.fullmatch(gs_id):
+        return 'id64', m.group('steamid64')
+    elif m := REGEX_IDLINK.fullmatch(gs_id):
+        return 'id64', m.group('steamid64')
+    elif m := REGEX_CUSTOM_URL.fullmatch(gs_id):
+        return 'custom', m.group('profile_name')
+    elif gs_id.isascii() and gs_id.isdigit() and len(str(int(gs_id) + STEAM64_BASE)) == 17:
+        return 'id32', ips_get_member_id_from_gsid(int(gs_id) + STEAM64_BASE)
     else:
+        return None
+
+
+async def _resolve_custom_url(app, profile_name):
+    try:
+        async with app.state.aio_session.get(f'https://steamcommunity.com/id/{profile_name}/?xml=1') as resp:
+            resp.raise_for_status()
+
+            data = await resp.text()
+
+            el = ElementTree.fromstring(data).find('steamID64')
+            return el.text if el is not None else None
+    except Exception:
+        logger.warning(f'Failed to resolve Steam custom URL {profile_name}', exc_info=True)
         return None
 
 
@@ -121,21 +146,15 @@ async def id64_or_none(app, gs_id):
         id64 = None
 
         if typ == 'custom':
-            async with app.state.aio_session.get(f'https://steamcommunity.com/id/{idt}/?xml=1') as resp:
-                resp.raise_for_status()
-
-                data = await resp.text()
-
-                a = ElementTree.fromstring(data)
-                id64 = a.find('steamID64').text
+            id64 = await _resolve_custom_url(app, idt)
         elif typ == 'id64':
             id64 = idt
         elif typ == 'id32':
-            id64 = str(int(idt) + 76561197960265728)
+            id64 = str(int(idt) + STEAM64_BASE)
         elif typ == 'id':
             id64 = steamid_to_64(idt)
 
-        if id64 is not None:
+        if id64 is not None and is_valid_steam64(id64):
             return id64
 
     return None
@@ -150,13 +169,18 @@ def id64_or_none_no_web(gs_id):
     typ, idt = steam_id_type
 
     if typ == 'id':
-        return steamid_to_64(idt)
+        id64 = steamid_to_64(idt)
     elif typ == 'id64':
-        return idt
+        id64 = idt
     elif typ == 'id32':
-        return str(int(idt) + 76561197960265728)
+        id64 = str(int(idt) + STEAM64_BASE)
+    else:
+        raise SearchError('Invalid Steam ID type')
 
-    raise SearchError('Invalid Steam ID type')
+    if not is_valid_steam64(id64):
+        raise SearchError('Invalid Steam ID')
+
+    return id64
 
 
 def steamid_to_64(steamid):

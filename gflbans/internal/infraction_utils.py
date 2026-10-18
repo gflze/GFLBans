@@ -52,6 +52,7 @@ from gflbans.internal.integrations.ips import ips_get_gsid_from_member_id
 from gflbans.internal.log import logger
 from gflbans.internal.models.api import Initiator, PlayerObjNoIp, PlayerObjSimple
 from gflbans.internal.pyapi_utils import load_admin_from_initiator
+from gflbans.internal.utils import is_valid_ipv4
 
 
 def filter_badchars(s):
@@ -170,6 +171,11 @@ async def get_vpn_data(app, infraction_id: ObjectId, reschedule_on_fail=False):
             return
 
         assert dinf.ip is not None
+
+        # Retrying can never succeed for a malformed IP, so bail out without raising (and rescheduling)
+        if not is_valid_ipv4(dinf.ip):
+            logger.warning(f'Skipping get_vpn_data for {str(infraction_id)}, invalid IP address {dinf.ip!r}.')
+            return
 
         vpn_state = await check_vpn(app, dinf.ip)
 

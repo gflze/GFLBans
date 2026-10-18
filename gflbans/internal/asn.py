@@ -6,6 +6,7 @@ from redis.exceptions import RedisError
 from gflbans.internal.config import IPHUB_API_KEY, IPHUB_CACHE_TIME, MONGO_DB
 from gflbans.internal.database.vpn import DVPN
 from gflbans.internal.log import logger
+from gflbans.internal.utils import is_valid_ipv4
 
 VPN_NO = 0
 VPN_YES = 1
@@ -13,6 +14,10 @@ VPN_DUBIOUS = 2
 
 
 async def check_vpn(app, ip_addr: str) -> int:
+    if not is_valid_ipv4(ip_addr):
+        logger.warning(f'Skipping VPN check for invalid IP address {ip_addr!r}')
+        return VPN_NO
+
     iphub_data = None
     iphub_call_exception = None
     with suppress(RedisError):
@@ -81,6 +86,9 @@ async def check_vpn(app, ip_addr: str) -> int:
 
 
 async def check_location(app, ip_addr: str) -> str:
+    if not is_valid_ipv4(ip_addr):
+        return None
+
     iphub_data = None
     with suppress(RedisError):
         iphub_data = await app.state.ip_info_cache.get(ip_addr, 'iphubinfo')

@@ -822,7 +822,7 @@ function setupSheetDrag() {
         sheet.css({transition: '', transform: '', 'max-height': ''});
     }
     function isPinchZoom(e){
-        return e.originalEvent.touches.length > 1
+        return e.originalEvent.touches.length > 1;
     }
 
     sheet.on('touchstart', function (e) {

@@ -2,6 +2,7 @@ import os
 import re
 import unicodedata
 from hashlib import sha512
+from ipaddress import AddressValueError, IPv4Address
 
 import orjson
 from pydantic import BaseModel
@@ -65,6 +66,14 @@ def get_real_ip(request: Request):
         return x[0]
     else:
         return request.client.host
+
+
+def is_valid_ipv4(ip: str) -> bool:
+    try:
+        IPv4Address(ip)
+    except AddressValueError:
+        return False
+    return True
 
 
 def validate(model: BaseModel):

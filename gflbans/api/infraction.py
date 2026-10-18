@@ -1,4 +1,5 @@
 import asyncio
+from contextlib import suppress
 from datetime import datetime, timedelta
 from typing import List, Optional, Set, Union
 
@@ -86,7 +87,7 @@ from gflbans.internal.infraction_utils import (
     modify_infraction,
     push_state_to_nodes,
 )
-from gflbans.internal.integrations.games import normalize_id
+from gflbans.internal.integrations.games import normalize_id, validate_id
 from gflbans.internal.log import logger
 from gflbans.internal.models.api import FileInfo, Infraction, Initiator
 from gflbans.internal.models.protocol import (
@@ -109,7 +110,7 @@ from gflbans.internal.models.protocol import (
 )
 from gflbans.internal.pyapi_utils import load_admin
 from gflbans.internal.search import contains_str, do_infraction_search
-from gflbans.internal.utils import slugify
+from gflbans.internal.utils import is_valid_ipv4, slugify
 
 infraction_router = APIRouter(default_response_class=ORJSONResponse)
 
@@ -661,8 +662,16 @@ async def create_infraction(
     else:
         server = None
 
-    if query.player.gs_id and query.allow_normalize:
-        query.player.gs_id = await normalize_id(request.app, query.player.gs_service, query.player.gs_id)
+    if query.player.ip is not None and not is_valid_ipv4(query.player.ip):
+        raise HTTPException(detail='Invalid IP address, only IPv4 addresses are supported', status_code=400)
+
+    if query.player.gs_service is not None:
+        try:
+            if query.player.gs_id and query.allow_normalize:
+                query.player.gs_id = await normalize_id(request.app, query.player.gs_service, query.player.gs_id)
+            validate_id(query.player.gs_service, query.player.gs_id)
+        except (ValueError, TypeError):
+            raise HTTPException(detail='Invalid Steam ID', status_code=400) from None
 
     duration_to_use = query.duration
 
@@ -769,12 +778,16 @@ async def create_infraction(
 
     # For the front end, we want to make sure we have all the information before returning
     if query.do_full_infraction:
-        if dinf.user is not None:
-            await get_user_data(request.app, dinf.id, True, auth.type == SERVER_KEY)
-        else:
-            await discord_notify_create_infraction(request.app, dinf, auth.type == SERVER_KEY)
+        # The infraction is already committed, so lookup failures (logged and rescheduled by the
+        # helpers) must not turn this into an error response that invites a duplicate submission
+        with suppress(Exception):
+            if dinf.user is not None:
+                await get_user_data(request.app, dinf.id, True, auth.type == SERVER_KEY)
+            else:
+                await discord_notify_create_infraction(request.app, dinf, auth.type == SERVER_KEY)
         if dinf.ip is not None:
-            await get_vpn_data(request.app, dinf.id, True)
+            with suppress(Exception):
+                await get_vpn_data(request.app, dinf.id, True)
 
         # Refetch this!
         dinf = await DInfraction.from_id(request.app.state.db[MONGO_DB], dinf.id)

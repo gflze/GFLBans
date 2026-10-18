@@ -4,7 +4,7 @@ from redis.exceptions import RedisError
 
 from gflbans.internal.config import STEAM_API_KEY
 from gflbans.internal.log import logger
-from gflbans.internal.search import id64_or_none
+from gflbans.internal.search import id64_or_none, is_valid_steam64
 
 
 async def _get_steam_user_info(app, steamid64: str):
@@ -92,9 +92,8 @@ async def get_steam_multiple_user_info(app, steamid64_list: list[str]):
     return user_list
 
 
-# This will raise an exception if it isn't a number
 def steam_validate_id(steamid64: str):
-    if int(steamid64) & 0x0110000100000000 != 0x0110000100000000:
+    if not is_valid_steam64(steamid64):
         raise ValueError('Bad SteamID64')
 
 

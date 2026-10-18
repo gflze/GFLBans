@@ -279,10 +279,7 @@ function submitInfraction() {
 
     // Failure, the second index is the error
     if (!createCall[0]) {
-        $('#infractionCreateErrorMsg').text(createCall[1]);
-        $('#infractionCreateError').removeClass('is-hidden');
-        $('#loadingModal').removeClass('is-active');
-        $('#createModal .modal-card-body').get(0).scrollTo(0,0);
+        showCreateError(createCall[1]);
         return;
     }
 
@@ -293,13 +290,22 @@ function submitInfraction() {
     gbRequest('POST', route, createCall[2], true).then(handleInfractionSubmission).catch(logException);
 }
 
-function handleInfractionSubmission(resp) {
+function showCreateError(msg) {
+    $('#infractionCreateErrorMsg').text(msg);
+    $('#infractionCreateError').removeClass('is-hidden');
+    $('#loadingModal').removeClass('is-active');
+    $('#createModal .modal-card-body').get(0).scrollTo(0,0);
+}
+
+async function handleInfractionSubmission(resp) {
     if (!resp.ok) {
-        console.log(resp);
-        resp.text().then(function (t) {
-            console.log(t);
-        });
-        throw 'Server returned a non-OK error code.';
+        // Validation errors (e.g. a bad Steam ID) are shown in the form so they can be corrected
+        const errorData = await resp.json().catch(() => ({}));
+        if (resp.status === 400 && typeof errorData.detail === 'string') {
+            showCreateError(errorData.detail);
+            return;
+        }
+        throw new Error(errorData.detail || defaultAPIError);
     }
 
     if ($(cFileInput).val() !== '') {
@@ -334,6 +340,9 @@ function createAndValidateInfraction() {
     }
 
     if ($(cIpEntry).val().trim() !== '') {
+        if (!isValidIPv4($(cIpEntry).val().trim()))
+            return [false, 'Invalid IP address, only IPv4 addresses are supported'];
+
         infraction['player']['ip'] = $(cIpEntry).val().trim();
     }
 
@@ -425,6 +434,13 @@ const multipliers = {
     'mo': 3600 * 24 * 30,
     'y': 3600 * 24 * 365
 };
+
+// Four dot-separated octets 0-255, no leading zeros (matches Python's ipaddress.IPv4Address)
+const ipv4Regex = /^((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)\.){3}(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)$/;
+
+function isValidIPv4(ip) {
+    return ipv4Regex.test(ip);
+}
 
 function getInfractionSeconds() {
     const n = parseInt($(cDurationEntry).val());
