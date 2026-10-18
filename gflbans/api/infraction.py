@@ -160,7 +160,6 @@ async def create_infraction_from_chatlog(
 
     # Compose CreateInfraction request manually as dict for reuse of helper
     ci_payload = {
-        'created': int(datetime.now(tz=UTC).timestamp()),
         'duration': duration,
         'auto_duration': auto_duration,
         'player': {
@@ -690,7 +689,7 @@ async def create_infraction(
         elif longest == 0:
             duration_to_use = None  # Permanent
         else:
-            duration_to_use = longest * AUTO_STACK_MULTIPLIER
+            duration_to_use = int(longest * AUTO_STACK_MULTIPLIER)
 
     ten_years = 60 * 60 * 24 * 365 * 10
     if duration_to_use and duration_to_use > ten_years:

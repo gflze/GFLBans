@@ -71,6 +71,7 @@ def create_dinfraction(
     server: ObjectId = None,
 ) -> DInfraction:
     dinf = DInfraction.model_construct()
+    now = datetime.now(tz=UTC).timestamp()
 
     if player.gs_service is not None:
         validate_id_ex(PlayerObjNoIp(gs_service=player.gs_service, gs_id=player.gs_id))
@@ -96,13 +97,13 @@ def create_dinfraction(
         dinf.time_left = duration
         dinf.flags |= INFRACTION_PLAYTIME_DURATION
     else:
-        dinf.expires = datetime.now(tz=UTC).timestamp() + duration
+        dinf.expires = now + duration
 
     # creation timestamp
     if created:
         dinf.created = created
     else:
-        dinf.created = datetime.now(tz=UTC).timestamp()
+        dinf.created = now
 
     # server or web
     if server:

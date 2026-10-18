@@ -173,6 +173,9 @@ class CreateInfraction(BaseModel):
     @model_validator(mode='before')
     @classmethod
     def check_conflicts(cls, values):
+        if not isinstance(values, dict) or not isinstance(values.get('punishments'), list):
+            return values
+
         if 'playtime_based' in values and values['playtime_based'] and 'ban' in values['punishments']:
             raise ValueError('Cannot have a ban that is based on playtime')
 
@@ -243,6 +246,9 @@ class ModifyInfraction(BaseModel):
     @model_validator(mode='before')
     @classmethod
     def check_conflicts(cls, values):
+        if not isinstance(values, dict):
+            return values
+
         if 'set_removal_state' in values and values['set_removal_state']:
             if 'removal_reason' not in values:
                 raise ValueError('Missing required fields for a removal')
@@ -401,6 +407,9 @@ class AddServer(BaseModel):
     @model_validator(mode='before')
     @classmethod
     def check_discord(cls, values):
+        if not isinstance(values, dict):
+            return values
+
         if ('discord_webhook' in values and 'discord_staff_tag' not in values) or (
             'discord_staff_tag' in values and 'discord_webhook' not in values
         ):
@@ -501,6 +510,9 @@ class PatchVPN(BaseModel):
     @model_validator(mode='before')
     @classmethod
     def check_type(cls, values):
+        if not isinstance(values, dict):
+            return values
+
         if ('vpn_type' in values and values['vpn_type'] == 'cidr' and 'cidr' not in values) or (
             'vpn_type' in values and values['vpn_type'] == 'asn' and 'as_number' not in values
         ):

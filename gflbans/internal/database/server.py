@@ -64,6 +64,9 @@ class DServer(DBase):
     @model_validator(mode='before')
     @classmethod
     def check_discord(cls, values):
+        if not isinstance(values, dict):
+            return values
+
         if ('discord_webhook' in values and 'discord_staff_tag' not in values) or (
             'discord_staff_tag' in values and 'discord_webhook' not in values
         ):

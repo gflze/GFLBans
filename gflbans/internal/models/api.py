@@ -27,6 +27,9 @@ class PlayerObjNoIpOptional(BaseModel):
     @model_validator(mode='before')
     @classmethod
     def val(cls, values):
+        if not isinstance(values, dict):
+            return values
+
         if 'gs_id' in values and 'gs_service' not in values:
             raise ValueError('Incomplete admin object')
 
@@ -56,6 +59,9 @@ class PlayerObjSimple(BaseModel):
     @model_validator(mode='before')
     @classmethod
     def check_validity(cls, values):
+        if not isinstance(values, dict):
+            return values
+
         if 'gs_id' in values and 'gs_service' not in values:
             raise ValueError('Incomplete admin object')
 
@@ -120,6 +126,9 @@ class Initiator(BaseModel):
     @model_validator(mode='before')
     @classmethod
     def validate_admin(cls, values):
+        if not isinstance(values, dict):
+            return values
+
         if nn_len(values) > 1:
             raise ValueError('Too much information about this admin was provided')
 
@@ -226,7 +235,7 @@ class VPNInfo(BaseModel):
 
 
 class CInfractionSummary(BaseModel):
-    expiration: Optional[PositiveFloat] = None
+    expiration: Optional[NonNegativeFloat] = None  # 0 for session infractions
     reason: str
     admin_name: str
 

@@ -37,7 +37,7 @@ async def as_auditlog(app, log: DAuditLog) -> AuditLog:
     if admin and admin.name:
         admin = admin.name
     elif admin:
-        admin = admin.ips_user
+        admin = str(admin.ips_user)
     else:
         admin = 'System'
 
