@@ -10,5 +10,5 @@ servers_router = APIRouter()
 @servers_router.get('/')
 async def servers(request: Request):
     return request.app.state.templates.TemplateResponse(
-        'pages/servers.html', {**await sctx(request), 'page': 'servers', 'GB_VERSION': GB_VERSION}
+        request, 'pages/servers.html', {**await sctx(request), 'page': 'servers', 'GB_VERSION': GB_VERSION}
     )

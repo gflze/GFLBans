@@ -21,6 +21,7 @@ async def index(request: Request):
         page_index_links = 'index_links.html'
 
     return request.app.state.templates.TemplateResponse(
+        request,
         'pages/index.html',
         {
             **await sctx(request),

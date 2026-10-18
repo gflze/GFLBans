@@ -30,7 +30,7 @@ async def default_mgmt(request: Request):
         raise HTTPException(detail='You do not have permission to view this page.', status_code=403)
     else:
         return request.app.state.templates.TemplateResponse(
-            'pages/management.html', {**sc, 'page': 'manage', 'mode': mode, 'GB_VERSION': GB_VERSION}
+            request, 'pages/management.html', {**sc, 'page': 'manage', 'mode': mode, 'GB_VERSION': GB_VERSION}
         )
 
 
@@ -42,7 +42,7 @@ async def admin_mgmt(request: Request):
         raise HTTPException(detail='You do not have permission to view this page.', status_code=403)
 
     return request.app.state.templates.TemplateResponse(
-        'pages/management.html', {**sc, 'page': 'manage', 'mode': 'admin', 'GB_VERSION': GB_VERSION}
+        request, 'pages/management.html', {**sc, 'page': 'manage', 'mode': 'admin', 'GB_VERSION': GB_VERSION}
     )
 
 
@@ -54,7 +54,7 @@ async def group_mgmt(request: Request):
         raise HTTPException(detail='You do not have permission to view this page.', status_code=403)
 
     return request.app.state.templates.TemplateResponse(
-        'pages/management.html', {**sc, 'page': 'manage', 'mode': 'group', 'GB_VERSION': GB_VERSION}
+        request, 'pages/management.html', {**sc, 'page': 'manage', 'mode': 'group', 'GB_VERSION': GB_VERSION}
     )
 
 
@@ -66,7 +66,7 @@ async def server_mgmt(request: Request):
         raise HTTPException(detail='You do not have permission to view this page.', status_code=403)
 
     return request.app.state.templates.TemplateResponse(
-        'pages/management.html', {**sc, 'page': 'manage', 'mode': 'server', 'GB_VERSION': GB_VERSION}
+        request, 'pages/management.html', {**sc, 'page': 'manage', 'mode': 'server', 'GB_VERSION': GB_VERSION}
     )
 
 
@@ -78,5 +78,5 @@ async def api_mgmt(request: Request):
         raise HTTPException(detail='You do not have permission to view this page.', status_code=403)
 
     return request.app.state.templates.TemplateResponse(
-        'pages/management.html', {**sc, 'page': 'manage', 'mode': 'vpn', 'GB_VERSION': GB_VERSION}
+        request, 'pages/management.html', {**sc, 'page': 'manage', 'mode': 'vpn', 'GB_VERSION': GB_VERSION}
     )

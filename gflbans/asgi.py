@@ -1,5 +1,6 @@
 import asyncio
 import re
+from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.responses import ORJSONResponse
@@ -33,9 +34,37 @@ if uvloop is not None:
     asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
 
 
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    await gflbans_init(app)
+    app.state.templates = Jinja2Templates(directory='templates')
+    app.state.templates.env.autoescape = select_autoescape(default=True, default_for_string=True)
+    app.state.templates.env.globals.update(
+        has_flag=has_flag,
+        bit_or=bit_or,
+        embed_duration=embed_duration,
+        punishment_noun=punishment_noun,
+        render_time=render_time,
+        tostring=tostring,
+    )
+
+    if SECRET_KEY == 'testing':
+        logger.warning(
+            "SECRET_KEY is set to 'testing'. This is fine for development purposes, but is unsuitable for"
+            ' usage in production environments.'
+        )
+
+    await deprecation_cleanup(app)
+    await full_vpn_check(app)
+
+    yield
+
+    await gflbans_unload(app)
+
+
 def new_app():
     # Create the FastAPI app
-    app = FastAPI(redoc_url='/doc', default_response_class=ORJSONResponse)
+    app = FastAPI(redoc_url='/doc', default_response_class=ORJSONResponse, lifespan=lifespan)
 
     # Add our middleware
     app.add_middleware(SessionMiddleware, secret_key=SECRET_KEY, session_cookie='gb_session', https_only=PRODUCTION)
@@ -52,33 +81,6 @@ def new_app():
     app.add_exception_handler(404, handle_exception)
     app.add_exception_handler(403, handle_exception)
     app.add_exception_handler(400, handle_exception)
-
-    @app.on_event('shutdown')
-    async def unload():
-        await gflbans_unload(app)
-
-    @app.on_event('startup')
-    async def init():
-        await gflbans_init(app)
-        app.state.templates = Jinja2Templates(directory='templates')
-        app.state.templates.env.autoescape = select_autoescape(default=True, default_for_string=True)
-        app.state.templates.env.globals.update(
-            has_flag=has_flag,
-            bit_or=bit_or,
-            embed_duration=embed_duration,
-            punishment_noun=punishment_noun,
-            render_time=render_time,
-            tostring=tostring,
-        )
-
-        if SECRET_KEY == 'testing':
-            logger.warning(
-                "SECRET_KEY is set to 'testing'. This is fine for development purposes, but is unsuitable for"
-                ' usage in production environments.'
-            )
-
-        await deprecation_cleanup(app)
-        await full_vpn_check(app)
 
     return app
 
@@ -99,6 +101,7 @@ async def handle_exception(request: Request, exc):
     ):
         # Probably a web browser, return a standard error page with error details
         return request.app.state.templates.TemplateResponse(
+            request,
             'pages/error.html',
             {**await sctx(request), 'code': status_code, 'detail': detail, 'GB_VERSION': GB_VERSION},
             status_code=status_code,

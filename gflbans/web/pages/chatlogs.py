@@ -15,6 +15,7 @@ async def chat_logs(request: Request):
         raise HTTPException(detail='You do not have permission to view this page.', status_code=403)
 
     return request.app.state.templates.TemplateResponse(
+        request,
         'pages/chat_logs.html',
         {**sc, 'page': 'chatlogs', 'GB_VERSION': GB_VERSION},
     )

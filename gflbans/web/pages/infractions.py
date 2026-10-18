@@ -18,7 +18,7 @@ infractions_router = APIRouter()
 @infractions_router.get('/')
 async def infractions(request: Request):
     return request.app.state.templates.TemplateResponse(
-        'pages/infractions.html', {**await sctx(request), 'page': 'infractions', 'GB_VERSION': GB_VERSION}
+        request, 'pages/infractions.html', {**await sctx(request), 'page': 'infractions', 'GB_VERSION': GB_VERSION}
     )
 
 
@@ -67,6 +67,7 @@ async def preload_infraction(request: Request, infraction_id: str, query: Search
     doc_page = (doc_pos // 30) + 1
 
     return request.app.state.templates.TemplateResponse(
+        request,
         'pages/infractions.html',
         {
             **sc,
