@@ -189,7 +189,8 @@ async function setupViewModal(infraction) {
     }
 
     if (infraction['player'].hasOwnProperty('ip')) {
-        search.push('ip=' + infraction['player']['ip']);
+        if (infraction['player']['ip'] !== 'MISSING_PERMISSIONS')
+            search.push('ip=' + infraction['player']['ip']);
         ipValue.text(infraction['player']['ip']);
     } else {
         ipContainer.addClass('is-hidden');
