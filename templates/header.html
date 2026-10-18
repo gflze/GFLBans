@@ -20,9 +20,9 @@
         <div class="navbar-start">
             <a href="/"
                class="navbar-item {% if page == 'index' %}is-active{% endif %}"><i class="fas fa-tachometer-alt nav-icon"></i>Dashboard</a>
-            <a href="/servers"
+            <a href="/servers/"
                class="navbar-item {% if page == 'servers' %}is-active{% endif %}"><i class="fas fa-server nav-icon"></i>Servers</a>
-            <a href="/infractions"
+            <a href="/infractions/"
                class="navbar-item {% if page == 'infractions' %}is-active{% endif %}"><i class="fas fa-gavel nav-icon"></i>Infractions</a>
             {% if user is not none and has_flag(user.permissions, p_nodes['View Chat Logs']) %}
                 <a href="/chatlogs/"
@@ -70,7 +70,7 @@
                     <i class="fa fa-search nav-icon-mobile"></i>
                 </div>
                 <div class="navbar-dropdown background-secondary">
-                    <form method="get" action="/infractions">
+                    <form method="get" action="/infractions/">
                         <div class="field search has-addons px-2">
                             <div class="control is-flex-grow-1">
                                 <input class="input is-small"
@@ -95,7 +95,7 @@
                data-modeset="{% if opposite_theme %}opposite{% endif %}"
                class="navbar-item"><i class="fas nav-icon-mobile"></i><span class="is-hidden-desktop">Toggle Dark Mode</span></a>
             {% if user is none %}
-                <a id="login" class="navbar-item" href="/login">
+                <a id="login" class="navbar-item" href="/login/">
                     <img src="/static/images/steam_login.png" alt="Login with Steam">
                 </a>
             {% else %}

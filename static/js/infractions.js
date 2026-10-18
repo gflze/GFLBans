@@ -77,7 +77,7 @@ function setupEmptyINotice() {
 }
 
 function loadInfractions(page = 1, s, m) {
-    gbRequest('GET', '/api/infractions?limit=30&skip=' + ((page - 1) * 30), null).then(function (a) {
+    gbRequest('GET', '/api/infractions/?limit=30&skip=' + ((page - 1) * 30), null).then(function (a) {
         handleResp(a, page, s, m);
     }).catch(e => {
         logException(e);
