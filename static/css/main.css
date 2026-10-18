@@ -377,6 +377,237 @@ th {
     min-height: 200px;
 }
 
+.inf-muted {
+    color: var(--text-placeholder);
+}
+
+/* max-height dvh and vh usage here is for backward compat */
+@media screen and (max-width: 600px) {
+    #infraction_view_modal {
+        display: flex;
+        justify-content: flex-end;
+        visibility: hidden;
+        pointer-events: none;
+        transition: visibility 0s linear 0.2s;
+    }
+
+    #infraction_view_modal.is-active {
+        visibility: visible;
+        pointer-events: auto;
+        transition-delay: 0s;
+    }
+
+    #infraction_view_modal .infraction-details {
+        width: 100%;
+        max-height: 90vh;
+        max-height: 90dvh;
+        margin: 0;
+        border-radius: 16px 16px 0 0;
+        transition:
+            transform 0.2s ease-out,
+            max-height 0.2s ease-out;
+    }
+
+    #infraction_view_modal .infraction-details.is-expanded {
+        max-height: 100vh;
+        max-height: 100dvh;
+    }
+
+    #infraction_view_modal .modal-background {
+        transition: opacity 0.2s ease-out;
+    }
+
+    #infraction_view_modal:not(.is-active) .modal-background {
+        opacity: 0;
+    }
+
+    #infraction_view_modal:not(.is-active) .infraction-details {
+        transform: translateY(100%);
+    }
+
+    #infraction_view_modal .infraction-details::before {
+        content: '';
+        position: sticky;
+        top: 0;
+        z-index: 1;
+        display: block;
+        height: 20px;
+        background:
+            linear-gradient(var(--background-tertiary), var(--background-tertiary)) center / 36px 4px no-repeat,
+            var(--background-secondary);
+    }
+
+    .infraction-details > .box {
+        padding: 0.25rem 1rem calc(1rem + env(safe-area-inset-bottom));
+        border-radius: 0;
+        box-shadow: none;
+    }
+
+    .infraction-details > .box > .media {
+        display: grid;
+        grid-template-columns: auto auto minmax(0, 1fr) auto auto;
+        grid-template-areas:
+            'avatar name tags menu close'
+            'avatar date date menu close';
+        align-items: center;
+    }
+
+    .infraction-details > .box > .media > .media-content,
+    .infraction-details > .box > .media > .media-content > .content,
+    .infraction-details .content > .text-primary,
+    .infraction-details .text-primary > .is-flex {
+        display: contents !important;
+    }
+
+    #infraction_view_modal .media-left > .is-64x64,
+    #infraction_view_modal .server-map-image > img {
+        width: 52px;
+        height: 52px;
+    }
+
+    .infraction-details .media-left {
+        grid-area: avatar;
+        margin-right: 0.75rem;
+    }
+
+    #user_name {
+        grid-area: name;
+        align-self: end;
+    }
+
+    .infraction-details .text-primary > .tags {
+        grid-area: tags;
+        align-self: end;
+        margin: 0 0 0 0.5rem;
+    }
+
+    .infraction-details .text-primary > .tags .tag {
+        margin-bottom: 0;
+    }
+
+    #createdAt {
+        grid-area: date;
+        align-self: start;
+        color: var(--text-secondary);
+    }
+
+    #infMenu {
+        grid-area: menu;
+        margin-right: 1rem;
+    }
+
+    #infraction_view_modal #ivm-close {
+        grid-area: close;
+        position: relative;
+        top: auto;
+        right: auto;
+        height: 24px;
+        max-height: 24px;
+        min-height: 24px;
+        width: 24px;
+        max-width: 24px;
+        min-width: 24px;
+    }
+
+    #ivm-close::before,
+    #ivm-close::after {
+        background-color: var(--text-primary);
+    }
+
+    .infraction-details .table-container,
+    #commentToggle,
+    #iComments,
+    .infraction-details .media-content > .media {
+        grid-column: 1 / -1;
+    }
+
+    .infraction-details .table-container {
+        margin: 1.5rem 0 0;
+    }
+
+    .infraction-details .table {
+        display: block;
+        margin-bottom: 0;
+    }
+
+    .infraction-details .inf-view-tab {
+        display: flex;
+        flex-wrap: wrap;
+        min-height: 0;
+        overflow: visible !important;
+    }
+
+    .infraction-details .inf-view-tab > tr {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: baseline;
+        align-content: flex-start;
+        width: 100%;
+        margin-bottom: 1.5rem;
+    }
+
+    .infraction-details .inf-view-tab > tr > td {
+        padding: 0;
+        border: none;
+    }
+
+    .infraction-details .inf-view-tab > tr > td:first-child {
+        width: auto;
+        margin-bottom: 0.25rem;
+        font-size: 0.75rem;
+        color: var(--text-placeholder);
+    }
+
+    /* Edit/undo icons sit next to the label */
+    .infraction-details .inf-view-tab > tr > td:not(:first-child, .data-cell, .edit-cell) {
+        order: 1;
+        margin-left: 0.375rem;
+        font-size: 0.75rem;
+    }
+
+    .infraction-details .inf-view-tab > tr > .data-cell,
+    .infraction-details .inf-view-tab > tr > .edit-cell {
+        order: 2;
+        width: 100%;
+    }
+
+    .inf-view-tab > tr:has(#timeValue),
+    .inf-view-tab > #adminContainer,
+    .inf-view-tab > tr:has(#scopeValue),
+    .inf-view-tab > tr:has(#restrictionsValue),
+    .inf-view-tab > tr:has(#removedOnValue),
+    .inf-view-tab > tr:has(#removedByValue) {
+        width: 50%;
+        padding-right: 0.75rem;
+    }
+
+    #infraction_view_modal .inf-view-tab > tr:has(> .edit-cell:not(.is-hidden)) {
+        width: 100%;
+    }
+
+    /* Restrictions next to Scope, before Reason */
+    .inf-view-tab > tr:has(#reasonValue),
+    .inf-view-tab > .rmEl,
+    .inf-view-tab > tr:has(#total-blocks) {
+        order: 1;
+    }
+
+    #commentToggle {
+        display: block;
+        padding-top: 1rem;
+        border-top: 1px solid var(--background-tertiary);
+    }
+
+    #commentState {
+        float: right;
+    }
+
+    #iComments,
+    .infraction-details .media-content > .media {
+        margin-top: 1rem;
+    }
+}
+
 .table-player-ditem {
     width: calc(32em - 110px);
 }
@@ -734,6 +965,12 @@ img {
 
 #iComments > .media:hover .edit-comment {
     visibility: visible;
+}
+
+@media (hover: none) {
+    #iComments > .media .edit-comment {
+        visibility: visible;
+    }
 }
 
 #deleteCommentModal .modal-card-body {
