@@ -231,11 +231,13 @@ class ModifyInfraction(BaseModel):
     make_web: bool = False
     server: Optional[str] = None
     reason: Optional[constr(min_length=1, max_length=280)] = None
+    ip: Optional[str] = None  # Empty string to clear
 
     # Removal related stuff.
     # None -> No change, True -> removed (following fields required), False -> not
     set_removal_state: Optional[bool] = None
     removed_by: Optional[Initiator] = None
+    # Also accepted alone to change the removal reason of an already removed infraction
     removal_reason: Optional[constr(min_length=1, max_length=280)] = None
 
     # Other flag stuff

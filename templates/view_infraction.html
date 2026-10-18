@@ -57,6 +57,30 @@
                                         <tr id="ipContainer">
                                             <td id="ipLabel">IP Address</td>
                                             <td id="ipValue" class="data-cell"></td>
+                                            <td id="ipEditCell" class="edit-cell min-50p">
+                                                <div class="field has-addons">
+                                                    <div class="control is-expanded">
+                                                        <input id="editIpValue"
+                                                               type="text"
+                                                               maxlength="15"
+                                                               class="input is-small"
+                                                               placeholder="IP Address">
+                                                    </div>
+                                                    <div class="control">
+                                                        <a id="cancelEditIp" class="button is-danger is-small">
+                                                            <i class="fas fa-ban"></i>
+                                                        </a>
+                                                    </div>
+                                                    <div class="control">
+                                                        <a id="submitEditIp" class="button is-success is-small">
+                                                            <i class="fas fa-save"></i>
+                                                        </a>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <a id="editIp" class="fas fa-pen edit text-primary"></a>
+                                            </td>
                                         </tr>
                                         <tr>
                                             <td>Time Left</td>
@@ -331,7 +355,31 @@
                                         </tr>
                                         <tr class="rmEl">
                                             <td>Rm. Reason</td>
-                                            <td id="removedReasonValue" class="data-cell"></td>
+                                            <td id="removedReasonValue" class="mw-100 data-cell wrappable"></td>
+                                            <td id="removalReasonEditCell" class="edit-cell mw-100">
+                                                <div class="field has-addons">
+                                                    <div class="control is-expanded">
+                                                        <input id="editRemovalReasonValue"
+                                                               type="text"
+                                                               maxlength="280"
+                                                               class="input is-small"
+                                                               placeholder="Removal Reason">
+                                                    </div>
+                                                    <div class="control">
+                                                        <a id="cancelEditRemovalReason" class="button is-danger is-small">
+                                                            <i class="fas fa-ban"></i>
+                                                        </a>
+                                                    </div>
+                                                    <div class="control">
+                                                        <a id="submitEditRemovalReason" class="button is-success is-small">
+                                                            <i class="fas fa-save"></i>
+                                                        </a>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <a id="editRemovalReason" class="fas fa-pen edit text-primary"></a>
+                                            </td>
                                         </tr>
                                         <tr>
                                             <td>Total Blocks</td>

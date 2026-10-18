@@ -72,6 +72,7 @@ from gflbans.internal.flags import (
     PERMISSION_PURGE_INFRACTIONS,
     PERMISSION_SCOPE_GLOBAL,
     PERMISSION_VIEW_CHAT_LOGS,
+    PERMISSION_VIEW_IP_ADDR,
     PERMISSION_WEB_MODERATOR,
     str2pflag,
 )
@@ -1088,6 +1089,24 @@ async def edit_infraction(
             elif not adding_punishment and dinf.flags & INFRACTION_ITEM_BLOCK == INFRACTION_ITEM_BLOCK:
                 query.punishments.append('item_block')
 
+    if query.ip is not None:
+        if auth.permissions & PERMISSION_VIEW_IP_ADDR != PERMISSION_VIEW_IP_ADDR:
+            raise HTTPException(detail='You do not have permission to edit IP addresses', status_code=403)
+
+        # An empty string clears the IP
+        if query.ip == '':
+            if dinf.user is None:
+                raise HTTPException(
+                    detail='Cannot clear the IP address of an infraction without a Steam ID', status_code=400
+                )
+        elif not is_valid_ipv4(query.ip):
+            raise HTTPException(detail='Invalid IP address, only IPv4 addresses are supported', status_code=400)
+
+        if query.ip == (dinf.ip or ''):
+            query.ip = None
+
+    old_ip = dinf.ip
+
     a = query.admin
 
     if query.admin is not None and isinstance(query.admin, Initiator):
@@ -1114,6 +1133,7 @@ async def edit_infraction(
             make_web=query.make_web,
             server=obj_id(query.server),
             reason=query.reason,
+            ip=query.ip,
             set_removal_state=query.set_removal_state,
             removed_by=c,
             removal_reason=query.removal_reason,
@@ -1143,6 +1163,14 @@ async def edit_infraction(
 
     # Notify all servers that new state is available (uwu)
     tasks.add_task(push_state_to_nodes, request.app, dinf)
+
+    if query.ip is not None:
+        # Servers holding state for the old IP need to drop this infraction
+        if old_ip:
+            tasks.add_task(push_state_to_nodes, request.app, dinf.model_copy(update={'ip': old_ip, 'user': None}))
+
+        if query.ip and query.vpn is None:
+            tasks.add_task(get_vpn_data, request.app, dinf.id, True)
 
     return await as_infraction(
         request.app,

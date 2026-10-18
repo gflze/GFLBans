@@ -50,6 +50,26 @@ $(document).ready(function () {
         $('#editReason').removeClass('is-hidden');
     });
 
+    $('#cancelEditIp').click(function () {
+        if (this.hasAttribute('disabled')) {
+            return;
+        }
+
+        $('#ipEditCell').addClass('is-hidden');
+        $('#ipValue').removeClass('is-hidden');
+        $('#editIp').removeClass('is-hidden');
+    });
+
+    $('#cancelEditRemovalReason').click(function () {
+        if (this.hasAttribute('disabled')) {
+            return;
+        }
+
+        $('#removalReasonEditCell').addClass('is-hidden');
+        $('#removedReasonValue').removeClass('is-hidden');
+        $('#editRemovalReason').removeClass('is-hidden');
+    });
+
     restrictionsCancel.click(function () {
         if (this.hasAttribute('disabled')) {
             return;
@@ -176,6 +196,25 @@ function prepareEdits(infraction) {
 
     $('#editReason').click(function () {
         editReason(infraction);
+    });
+
+    // Let editors add an IP to an infraction that has none
+    const canViewIp = parseInt(getMeta('active_permissions')) & PERMISSION.VIEW_IP_ADDR;
+
+    if (!infraction['player'].hasOwnProperty('ip') && canViewIp) {
+        $('#ipValue').empty().append($('<span class="inf-muted"></span>').text('None'));
+        $('#ipContainer').removeClass('is-hidden');
+    }
+
+    // The IP can only be cleared if the infraction still targets a Steam ID
+    $('#editIp').click(function () {
+        editTextField(
+            infraction, 'ip', 'ipValue', infraction['player']['ip'], infraction['player'].hasOwnProperty('gs_id')
+        );
+    });
+
+    $('#editRemovalReason').click(function () {
+        editTextField(infraction, 'removalReason', 'removedReasonValue', infraction['removal_reason']);
     });
 
     if (restrictionsCancel.hasClass('is-hidden')) {
@@ -522,6 +561,73 @@ function process_reason_edit(infraction, val) {
     submit_edit(infraction['id'], mod).then(function (j) {
         wrapSetupView(j, 0);
     }).catch(logException);
+}
+
+const textFieldKeys = {
+    'ip': 'ip',
+    'removalReason': 'removal_reason'
+};
+
+// Inline editor for a single text value, using the {name}EditCell / edit{Name}Value / submitEdit{Name} elements
+function editTextField(infraction, name, valueId, currentValue, allowEmpty = false) {
+    currentValue = currentValue || '';
+
+    const cap = name.charAt(0).toUpperCase() + name.slice(1);
+
+    $('#' + name + 'EditCell').removeClass('is-hidden');
+    $('#' + valueId).addClass('is-hidden');
+    $('#edit' + cap).addClass('is-hidden');
+
+    const input = $('#edit' + cap + 'Value');
+    const submit = $('#submitEdit' + cap);
+    const cancel = $('#cancelEdit' + cap);
+
+    input.val(currentValue).prop('disabled', false);
+    cancel.removeAttr('disabled');
+
+    function unsetFieldLoading() {
+        submit.removeAttr('disabled').removeClass('is-loading');
+        cancel.removeAttr('disabled');
+        input.prop('disabled', false);
+    }
+
+    input.off('keydown').keydown(function (event) {
+        if (event.key === 'Enter') {
+            submit.click();
+        }
+    });
+
+    submit.off('click').click(function () {
+        if ($(this).attr('disabled')) {
+            return;
+        }
+
+        const val = input.val().trim();
+
+        if (val.length < 1 && !allowEmpty) {
+            return;
+        }
+
+        if (val === currentValue) {
+            cancel.click();
+            return;
+        }
+
+        submit.attr('disabled', '1').addClass('is-loading');
+        cancel.attr('disabled', '1');
+        input.prop('disabled', true);
+
+        const mod = {};
+        mod[textFieldKeys[name]] = val;
+
+        submit_edit(infraction['id'], mod).then(function (j) {
+            unsetFieldLoading();
+            wrapSetupView(j, 0);
+        }).catch(function (e) {
+            unsetFieldLoading();
+            logException(e);
+        });
+    }).removeClass('is-loading').removeAttr('disabled');
 }
 
 function editRestrictions(infraction) {

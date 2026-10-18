@@ -234,6 +234,7 @@ async def modify_infraction(
     time_left: Optional[NonNegativeInt] = None,
     server: Optional[ObjectId] = None,
     reason: Optional[str] = None,
+    ip: Optional[str] = None,
     set_removal_state: Optional[bool] = None,
     removed_by: Optional[ObjectId] = None,
     removal_reason: Optional[str] = None,
@@ -362,6 +363,18 @@ async def modify_infraction(
         uwu('Reason', dinf.reason, reason)
         commit_list.append(dinf.update_field(db, 'reason', filter_badchars(reason)))
 
+    if ip is not None:
+        # Don't leak IPs into Discord, only note that it changed
+        changes['IP Address'] = 'Removed' if ip == '' else 'Changed'
+        if ip == '':
+            commit_list.append(dinf.unset_field(db, 'ip'))
+        else:
+            commit_list.append(dinf.update_field(db, 'ip', ip))
+
+        # The VPN status belonged to the old IP, so drop it unless it is being set explicitly
+        if vpn is None:
+            commit_list.append(dinf.remove_bit_flag(db, 'flags', INFRACTION_VPN))
+
     if set_removal_state is not None:
         if set_removal_state:
             if dinf.flags & INFRACTION_REMOVED == INFRACTION_REMOVED:
@@ -383,6 +396,12 @@ async def modify_infraction(
             commit_list.append(dinf.unset_field(db, 'ureason'))
             commit_list.append(dinf.unset_field(db, 'removed'))
             commit_list.append(dinf.unset_field(db, 'remover'))
+    elif removal_reason is not None:
+        if dinf.flags & INFRACTION_REMOVED != INFRACTION_REMOVED:
+            raise ValueError('Tried to edit the removal reason of an infraction that was not removed.')
+
+        uwu('Removal Reason', dinf.ureason, removal_reason)
+        commit_list.append(dinf.update_field(db, 'ureason', filter_badchars(removal_reason)))
 
     def _lang(a):
         if a == 'voice_block':
@@ -703,7 +722,8 @@ async def discord_notify_edit_infraction(app, dinf: DInfraction, editor: Optiona
     }
 
     for k, v in changes.items():
-        embed['embeds'][0]['fields'].append({'name': k, 'value': f'~~{v["old"]}~~ → {v["new"]}'})
+        value = v if isinstance(v, str) else f'~~{v["old"]}~~ → {v["new"]}'
+        embed['embeds'][0]['fields'].append({'name': k, 'value': value})
 
     if dinf.server is not None:
         srv = await DServer.from_id(app.state.db[MONGO_DB], dinf.server)
