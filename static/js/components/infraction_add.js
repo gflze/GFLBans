@@ -102,14 +102,11 @@ function autoSelectPlaytime() {
 
 // Bans cannot be playtime based, so un-select playtime when banning and re-select it when no longer banning
 function handleBanToggled() {
-    if (!autoSelectPlaytime())
+    // Permanent infractions have no playtime option, so leave them untouched
+    if (!autoSelectPlaytime() || $(cPermanentCheck).prop('checked'))
         return;
 
-    if (!$(cBanBtn).hasClass('is-outlined'))
-        $(cTimeDecCheck).prop('checked', false);
-    else if (!$(cPermanentCheck).prop('checked'))
-        $(cTimeDecCheck).prop('checked', true);
-
+    $(cTimeDecCheck).prop('checked', $(cBanBtn).hasClass('is-outlined'));
     handleNonPermCheck();
 }
 
