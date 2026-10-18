@@ -1100,7 +1100,7 @@ async def edit_infraction(
                     detail='Cannot clear the IP address of an infraction without a Steam ID', status_code=400
                 )
         elif not is_valid_ipv4(query.ip):
-            raise HTTPException(detail='Invalid IP address, only IPv4 addresses are supported', status_code=400)
+            raise HTTPException(detail='Invalid IP address format', status_code=400)
 
         if query.ip == (dinf.ip or ''):
             query.ip = None

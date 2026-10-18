@@ -613,6 +613,11 @@ function editTextField(infraction, name, valueId, currentValue, allowEmpty = fal
             return;
         }
 
+        if (name === 'ip' && val.length > 0 && !isValidIPv4(val)) {
+            logException(new Error('Invalid IP address format'));
+            return;
+        }
+
         submit.attr('disabled', '1').addClass('is-loading');
         cancel.attr('disabled', '1');
         input.prop('disabled', true);

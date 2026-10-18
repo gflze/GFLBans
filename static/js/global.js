@@ -254,3 +254,10 @@ function logException(e) {
     console.log(e);
     showError(e);
 }
+
+// Four dot-separated octets 0-255, no leading zeros (matches Python's ipaddress.IPv4Address)
+const ipv4Regex = /^((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)\.){3}(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)$/;
+
+function isValidIPv4(ip) {
+    return ipv4Regex.test(ip);
+}
