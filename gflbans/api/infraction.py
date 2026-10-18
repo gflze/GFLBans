@@ -53,6 +53,7 @@ from gflbans.internal.flags import (
     INFRACTION_BAN,
     INFRACTION_CALL_ADMIN_BAN,
     INFRACTION_CHAT_BLOCK,
+    INFRACTION_GLOBAL,
     INFRACTION_ITEM_BLOCK,
     INFRACTION_PERMANENT,
     INFRACTION_PLAYTIME_DURATION,
@@ -74,6 +75,7 @@ from gflbans.internal.flags import (
     PERMISSION_VIEW_CHAT_LOGS,
     PERMISSION_VIEW_IP_ADDR,
     PERMISSION_WEB_MODERATOR,
+    scope_to_flag,
     str2pflag,
 )
 from gflbans.internal.infraction_utils import (
@@ -514,6 +516,40 @@ async def find_longest_infraction_duration(app, query) -> Optional[float]:
     return longest
 
 
+async def find_conflicting_block(app, dinf: DInfraction, exclude_id: Optional[ObjectId] = None) -> Optional[str]:
+    """Return a description of an active infraction on the same player sharing a block type with dinf, if any"""
+    punishment_flags = dinf.flags & sum(str2pflag.values())
+
+    # Warnings never conflict
+    if punishment_flags == 0:
+        return None
+
+    # Match on the Steam ID when present, falling back to the IP for IP-only infractions
+    if dinf.user is not None:
+        q = build_query_dict(AUTHED_USER, gs_service=dinf.user.gs_service, gs_id=dinf.user.gs_id, active_only=True)
+    elif dinf.ip is not None:
+        q = build_query_dict(AUTHED_USER, ip=dinf.ip, active_only=True)
+    else:
+        return None
+
+    conds = [q, {'flags': {'$bitsAnySet': punishment_flags}}]
+
+    # Server only infractions only overlap with global ones or ones on the same server
+    if dinf.flags & INFRACTION_GLOBAL != INFRACTION_GLOBAL:
+        conds.append({'$or': [{'flags': {'$bitsAllSet': INFRACTION_GLOBAL}}, {'server': dinf.server}]})
+
+    if exclude_id is not None:
+        conds.append({'_id': {'$ne': exclude_id}})
+
+    existing = await app.state.db[MONGO_DB].infractions.find_one({'$and': conds}, {'flags': 1})
+
+    if existing is None:
+        return None
+
+    shared = [ps.replace('_', ' ') for ps, pm in str2pflag.items() if existing['flags'] & punishment_flags & pm == pm]
+    return f'Player already has an active {", ".join(shared)} (infraction {existing["_id"]})'
+
+
 @infraction_router.get(
     '/stats',
     response_model=InfractionStatisticsReply,
@@ -749,6 +785,11 @@ async def create_infraction(
 
     if await check_immunity(request.app, dinf, aa):
         raise HTTPException(detail='Your target is immune', status_code=403)
+
+    if not query.import_mode:
+        conflict = await find_conflicting_block(request.app, dinf)
+        if conflict is not None:
+            raise HTTPException(detail=conflict, status_code=409)
 
     # Write the dinfraction
     await dinf.commit(request.app.state.db[MONGO_DB])
@@ -1088,6 +1129,35 @@ async def edit_infraction(
                 query.punishments.remove('item_block')
             elif not adding_punishment and dinf.flags & INFRACTION_ITEM_BLOCK == INFRACTION_ITEM_BLOCK:
                 query.punishments.append('item_block')
+
+    # Adding block types or widening to global scope on an active infraction must not duplicate another active block
+    all_pflags = sum(str2pflag.values())
+    old_pflags = dinf.flags & all_pflags
+    new_pflags = old_pflags
+    if query.punishments is not None:
+        new_pflags = 0
+        for punishment in query.punishments:
+            new_pflags |= str2pflag[punishment]
+
+    widened = query.scope is not None and query.scope.lower() == 'global' and dinf.flags & INFRACTION_GLOBAL == 0
+    check_pflags = new_pflags if widened else new_pflags & ~old_pflags
+
+    if check_pflags and await DInfraction.count(
+        request.app.state.db[MONGO_DB],
+        {'$and': [{'_id': dinf.id}, build_query_dict(AUTHED_USER, active_only=True)]},
+    ):
+        new_scope_flag = (
+            scope_to_flag[query.scope.lower()] if query.scope is not None else dinf.flags & INFRACTION_GLOBAL
+        )
+        prospective = dinf.model_copy(
+            update={
+                'flags': (dinf.flags & ~all_pflags & ~INFRACTION_GLOBAL) | check_pflags | new_scope_flag,
+                'server': obj_id(query.server) if query.server is not None else dinf.server,
+            }
+        )
+        conflict = await find_conflicting_block(request.app, prospective, exclude_id=dinf.id)
+        if conflict is not None:
+            raise HTTPException(detail=conflict, status_code=409)
 
     if query.ip is not None:
         if auth.permissions & PERMISSION_VIEW_IP_ADDR != PERMISSION_VIEW_IP_ADDR:
