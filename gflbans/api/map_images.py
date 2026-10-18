@@ -48,7 +48,7 @@ async def get_map_image(request: Request, mod_name: str, map_name: str):
     return StreamingResponse(
         gridfs_read(),
         media_type='image/webp',
-        headers={'Content-Length': str(fos.length), 'Cache-Control': 'public, max-age=604800,' ' immutable'},
+        headers={'Content-Length': str(fos.length), 'Cache-Control': 'public, max-age=604800, immutable'},
     )
 
 

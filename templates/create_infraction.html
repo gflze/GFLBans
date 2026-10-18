@@ -64,7 +64,7 @@
                       placeholder="Reason"></textarea>
             <br>
             <div class="file is-normal has-name">
-                <label class="file-label ">
+                <label class="file-label">
                     <input id="fileInput" class="file-input" type="file" name="resume">
                     <span class="file-cta">
                         <span class="file-icon">
@@ -76,14 +76,14 @@
                 </label>
             </div>
             <br>
-            {% if user is not none and has_flag(user.permissions, bit_or(p_nodes['Restrict Text'], p_nodes['Restrict Voice'], p_nodes['Restrict Admin Chat'], p_nodes['Restrict Call Admin'], p_nodes['Ban'], p_nodes['Restrict Map Items'])) %}
+            {% if user is not none and has_flag(user.permissions, bit_or(p_nodes["Restrict Text"], p_nodes["Restrict Voice"], p_nodes["Restrict Admin Chat"], p_nodes["Restrict Call Admin"], p_nodes["Ban"], p_nodes["Restrict Map Items"])) %}
                 <div id="cRestrictionsSection">
                     <label class="label text-primary">Restrictions</label>
                     <p>To issue a warning, deselect all restrictions.</p>
                     <br>
                     <div class="is-flex is-justify-content-center">
                         <div class="buttons is-justify-content-center">
-                            {% if user is not none and has_flag(user.permissions, p_nodes['Restrict Voice']) %}
+                            {% if user is not none and has_flag(user.permissions, p_nodes["Restrict Voice"]) %}
                                 <button id="restrictVoice" class="rbtn button is-voice-btn is-outlined">
                                     <span class="icon is-small ricon">
                                         <i class="fas fa-volume-mute ricon"></i>
@@ -91,7 +91,7 @@
                                     Voice
                                 </button>
                             {% endif %}
-                            {% if user is not none and has_flag(user.permissions, p_nodes['Restrict Text']) %}
+                            {% if user is not none and has_flag(user.permissions, p_nodes["Restrict Text"]) %}
                                 <button id="restrictText" class="rbtn button is-text-btn is-outlined">
                                     <span class="icon is-small ricon">
                                         <i class="fas fa-comment-slash ricon"></i>
@@ -99,7 +99,7 @@
                                     Text
                                 </button>
                             {% endif %}
-                            {% if user is not none and has_flag(user.permissions, p_nodes['Ban']) %}
+                            {% if user is not none and has_flag(user.permissions, p_nodes["Ban"]) %}
                                 <button id="restrictJoin" class="rbtn button is-ban-btn is-outlined">
                                     <span class="icon is-small ricon">
                                         <i class="fas fa-ban ricon"></i>
@@ -107,7 +107,7 @@
                                     Ban
                                 </button>
                             {% endif %}
-                            {% if user is not none and has_flag(user.permissions, p_nodes['Restrict Admin Chat']) %}
+                            {% if user is not none and has_flag(user.permissions, p_nodes["Restrict Admin Chat"]) %}
                                 <button id="restrictAdminChat"
                                         class="rbtn button is-admin-chat-btn is-outlined">
                                     <span class="icon is-small ricon">
@@ -116,7 +116,7 @@
                                     Admin Chat
                                 </button>
                             {% endif %}
-                            {% if user is not none and has_flag(user.permissions, p_nodes['Restrict Call Admin']) %}
+                            {% if user is not none and has_flag(user.permissions, p_nodes["Restrict Call Admin"]) %}
                                 <button id="restrictCallAdmin"
                                         class="rbtn button is-call-admin-btn is-outlined">
                                     <span class="icon is-small ricon">
@@ -125,7 +125,7 @@
                                     Call Admin
                                 </button>
                             {% endif %}
-                            {% if user is not none and has_flag(user.permissions, p_nodes['Restrict Map Items']) %}
+                            {% if user is not none and has_flag(user.permissions, p_nodes["Restrict Map Items"]) %}
                                 <button id="restrictItem" class="rbtn button is-item-btn is-outlined">
                                     <span class="icon is-small ricon">
                                         <i class="fas fa-virus-slash ricon"></i>

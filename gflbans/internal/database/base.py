@@ -70,7 +70,7 @@ class DBase(BaseModel):
     def _from_query(cls, db_ref: AsyncDatabase, query: dict, limit=None, skip=0, sort: Tuple[str, Any] = None):
         qk = json.dumps(query, default=lambda o: str(o))
 
-        logger.debug(f'DB: running query {qk} with limit {limit}' f', skip {skip}, and sort {sort}')
+        logger.debug(f'DB: running query {qk} with limit {limit}, skip {skip}, and sort {sort}')
 
         dcur = db_ref[cls.__collection__].find(query)
 
@@ -162,7 +162,7 @@ class DBase(BaseModel):
     async def update_field(self, db_ref: AsyncDatabase, field: str, value: Any, session=None):
         if self.id is None:
             raise ValueError(
-                'Tried to prepare a field update for this object when it has not yet been ' 'written to the database'
+                'Tried to prepare a field update for this object when it has not yet been written to the database'
             )
 
         if field not in type(self).model_fields:

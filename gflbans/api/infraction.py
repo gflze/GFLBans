@@ -199,7 +199,7 @@ async def create_infraction_from_chatlog(
 
     # Add a system comment with name + message content
     try:
-        comment_text = f"{clog.user.gs_name if clog.user and clog.user.gs_name else 'Unknown Player'}: {clog.content}"
+        comment_text = f'{clog.user.gs_name if clog.user and clog.user.gs_name else "Unknown Player"}: {clog.content}'
         await add_comment(
             request,
             created_inf.id,
@@ -958,12 +958,11 @@ async def remove_infraction(
 
         if auth.admin.mongo_admin_id is not None:
             logger.info(
-                f'{auth.admin.name} ({auth.admin.ips_id}) removed an infraction {dinf.id} '
-                f' for {query.remove_reason}'
+                f'{auth.admin.name} ({auth.admin.ips_id}) removed an infraction {dinf.id} for {query.remove_reason}'
             )
         else:
             logger.info(
-                f'{auth.type}/{auth.authenticator_id} removed an infraction {dinf.id} ' f' for {query.remove_reason}'
+                f'{auth.type}/{auth.authenticator_id} removed an infraction {dinf.id} for {query.remove_reason}'
             )
 
         await DAuditLog(

@@ -13,7 +13,7 @@
                     </figure>
                 </div>
                 <div class="media-content">
-                    <div class="content ">
+                    <div class="content">
                         <div class="text-primary">
                             <div class="is-flex is-justify-content-flex-center is-align-items-center">
                                 <strong id="user_name" class="text-primary">Aurora</strong>
@@ -30,7 +30,7 @@
                                             <div class="dropdown-item" id="triggerReinstVis">
                                                 <a id="triggerReinstate">Reinstate</a>
                                             </div>
-                                            {% if user is not none and has_flag(user.permissions, p_nodes['Purge Infractions']) %}
+                                            {% if user is not none and has_flag(user.permissions, p_nodes["Purge Infractions"]) %}
                                                 <div class="dropdown-item" id="triggerPurgeVis">
                                                     <a id="triggerPurge" class="has-text-danger">Purge</a>
                                                 </div>
@@ -106,7 +106,8 @@
                                                         </div>
                                                     </div>
                                                     <div class="control has-tooltip-warning" data-tooltip="Permanent">
-                                                        <a id="editTimePerm" class="button is-light is-warning is-small">
+                                                        <a id="editTimePerm"
+                                                           class="button is-light is-warning is-small">
                                                             <i class="fas fa-infinity"></i>
                                                         </a>
                                                     </div>
@@ -171,7 +172,9 @@
                                                     <div class="control is-expanded">
                                                         <div class="select is-small is-fullwidth">
                                                             <select id="editScopeScope">
-                                                                <option class="oeserver" value="server" selected>Server Only</option>
+                                                                <option class="oeserver"
+                                                                        value="server"
+                                                                        selected>Server Only</option>
                                                                 <option class="oeserver" value="global">Global</option>
                                                             </select>
                                                         </div>
@@ -270,7 +273,7 @@
                                             </td>
                                             <td id="restrictionsEditCell" class="is-hidden edit-cell">
                                                 <div class="tags">
-                                                    {% if user is not none and has_flag(user.permissions, p_nodes['Restrict Voice']) %}
+                                                    {% if user is not none and has_flag(user.permissions, p_nodes["Restrict Voice"]) %}
                                                         <a id="voiceChatFlagEdit"
                                                            data-punishment="voice_block"
                                                            data-target="voiceChatFlag"
@@ -281,7 +284,7 @@
                                                             Voice
                                                         </a>
                                                     {% endif %}
-                                                    {% if user is not none and has_flag(user.permissions, p_nodes['Restrict Text']) %}
+                                                    {% if user is not none and has_flag(user.permissions, p_nodes["Restrict Text"]) %}
                                                         <a id="textChatFlagEdit"
                                                            data-punishment="chat_block"
                                                            data-target="textChatFlag"
@@ -292,7 +295,7 @@
                                                             Text
                                                         </a>
                                                     {% endif %}
-                                                    {% if user is not none and has_flag(user.permissions, p_nodes['Ban']) %}
+                                                    {% if user is not none and has_flag(user.permissions, p_nodes["Ban"]) %}
                                                         <a id="banFlagEdit"
                                                            data-punishment="ban"
                                                            data-target="banFlag"
@@ -303,7 +306,7 @@
                                                             Ban
                                                         </a>
                                                     {% endif %}
-                                                    {% if user is not none and has_flag(user.permissions, p_nodes['Restrict Admin Chat']) %}
+                                                    {% if user is not none and has_flag(user.permissions, p_nodes["Restrict Admin Chat"]) %}
                                                         <a id="adminChatFlagEdit"
                                                            data-punishment="admin_chat_block"
                                                            data-target="adminChatFlag"
@@ -314,7 +317,7 @@
                                                             Admin Chat
                                                         </a>
                                                     {% endif %}
-                                                    {% if user is not none and has_flag(user.permissions, p_nodes['Restrict Call Admin']) %}
+                                                    {% if user is not none and has_flag(user.permissions, p_nodes["Restrict Call Admin"]) %}
                                                         <a id="callAdminFlagEdit"
                                                            data-punishment="call_admin_block"
                                                            data-target="callAdminFlag"
@@ -325,7 +328,7 @@
                                                             Call Admin
                                                         </a>
                                                     {% endif %}
-                                                    {% if user is not none and has_flag(user.permissions, p_nodes['Restrict Map Items']) %}
+                                                    {% if user is not none and has_flag(user.permissions, p_nodes["Restrict Map Items"]) %}
                                                         <a id="itemFlagEdit"
                                                            data-punishment="item_block"
                                                            data-target="itemFlag"
@@ -366,12 +369,14 @@
                                                                placeholder="Removal Reason">
                                                     </div>
                                                     <div class="control">
-                                                        <a id="cancelEditRemovalReason" class="button is-danger is-small">
+                                                        <a id="cancelEditRemovalReason"
+                                                           class="button is-danger is-small">
                                                             <i class="fas fa-ban"></i>
                                                         </a>
                                                     </div>
                                                     <div class="control">
-                                                        <a id="submitEditRemovalReason" class="button is-success is-small">
+                                                        <a id="submitEditRemovalReason"
+                                                           class="button is-success is-small">
                                                             <i class="fas fa-save"></i>
                                                         </a>
                                                     </div>
@@ -397,7 +402,7 @@
                     <a id="commentToggle" class="text-primary">Comments (<span id="commentCount">0</span>)
                         <span id="commentState" class="fas fa-sort-up text-primary"></span></a>
                     <div id="iComments" class="mb-2 text-primary"></div>
-                    {% if user is not none and has_flag(user.permissions, p_nodes['Can Comment']) %}
+                    {% if user is not none and has_flag(user.permissions, p_nodes["Can Comment"]) %}
                         <article class="media">
                             <figure class="media-left">
                                 <p class="image is-48x48">
@@ -423,7 +428,7 @@
                                             <span class="text-primary">Mark as private</span>
                                         </label>
                                     </div>
-                                    {% if user is not none and has_flag(user.permissions, p_nodes['Attach Files']) %}
+                                    {% if user is not none and has_flag(user.permissions, p_nodes["Attach Files"]) %}
                                         <div class="control">
                                             <div id="FileButton" class="button click is-accent">
                                                 <input id="doFileUpload" class="file-input" type="file">

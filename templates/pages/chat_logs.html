@@ -3,13 +3,13 @@
       lang="en"
       class="{% if opposite_theme %}theme-opposite {% endif %}background-primary">
     <head>
-        {% include 'meta.html' with context %}
+        {% include "meta.html" with context %}
         <title>{{ BRANDING }} - Chat Logs</title>
         <link rel="stylesheet" href="/static/css/chat_logs.css?v={{ GB_VERSION }}">
     </head>
     <body>
-        {% include 'js_includes.html' %}
-        {% include 'header.html' with context %}
+        {% include "js_includes.html" %}
+        {% include "header.html" with context %}
         <div class="mt-5 container is-fluid">
             <div class="columns">
                 <div class="column is-one-quarter-desktop is-full-tablet">
@@ -87,9 +87,9 @@
                 </div>
             </div>
         </div>
-        {% include 'loading.html' with context %}
-        {% include 'footer.html' with context %}
+        {% include "loading.html" with context %}
+        {% include "footer.html" with context %}
         <script src="/static/js/chat_logs.js?v={{ GB_VERSION }}"></script>
-        {% include 'create_infraction.html' with context %}
+        {% include "create_infraction.html" with context %}
     </body>
 </html>

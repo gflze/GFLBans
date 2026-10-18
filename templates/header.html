@@ -24,17 +24,17 @@
                class="navbar-item {% if page == 'servers' %}is-active{% endif %}"><i class="fas fa-server nav-icon"></i>Servers</a>
             <a href="/infractions/"
                class="navbar-item {% if page == 'infractions' %}is-active{% endif %}"><i class="fas fa-gavel nav-icon"></i>Infractions</a>
-            {% if user is not none and has_flag(user.permissions, p_nodes['View Chat Logs']) %}
+            {% if user is not none and has_flag(user.permissions, p_nodes["View Chat Logs"]) %}
                 <a href="/chatlogs/"
                    class="navbar-item {% if page == 'chatlogs' %}is-active{% endif %}"><i class="far fa-comments nav-icon"></i>Chat Logs
                 </a>
             {% endif %}
-            {% if user is not none and has_flag(user.permissions, p_nodes['Manage Servers']) %}
+            {% if user is not none and has_flag(user.permissions, p_nodes["Manage Servers"]) %}
                 <a href="/logs/"
                    class="navbar-item {% if page == 'logs' %}is-active{% endif %}"><i class="fas fa-file-alt nav-icon"></i>Audit Logs
                 </a>
             {% endif %}
-            {% if user is not none and has_flag(user.permissions, bit_or(p_nodes['Manage Servers'], p_nodes['Manage Groups and Admins'], p_nodes['Manage VPNs'])) %}
+            {% if user is not none and has_flag(user.permissions, bit_or(p_nodes["Manage Servers"], p_nodes["Manage Groups and Admins"], p_nodes["Manage VPNs"])) %}
                 <div class="navbar-item has-dropdown is-hoverable">
                     <a href="/manage/"
                        class="navbar-link is-arrowless is-hoverable is-hidden-touch {% if page == 'manage' %}is-active{% endif %}"><i class="fas fa-user-shield nav-icon"></i>Manage
@@ -42,7 +42,7 @@
                     <div class="navbar-dropdown is-paddingless is-accent">
                         <div class="has-addons">
                             <div class="is-flex-grow-1">
-                                {% if user is not none and has_flag(user.permissions, p_nodes['Manage Groups and Admins']) %}
+                                {% if user is not none and has_flag(user.permissions, p_nodes["Manage Groups and Admins"]) %}
                                     <a id="admin-mgmt"
                                        href="/manage/admin/"
                                        class="panel-block{% if mode == 'admin' %} is-active{% endif %}">Admins</a>
@@ -50,12 +50,12 @@
                                        href="/manage/group/"
                                        class="panel-block{% if mode == 'group' %} is-active{% endif %}">Groups</a>
                                 {% endif %}
-                                {% if user is not none and has_flag(user.permissions, p_nodes['Manage Servers']) %}
+                                {% if user is not none and has_flag(user.permissions, p_nodes["Manage Servers"]) %}
                                     <a id="server-mgmt"
                                        href="/manage/server/"
                                        class="panel-block{% if mode == 'server' %} is-active{% endif %}">Servers</a>
                                 {% endif %}
-                                {% if user is not none and has_flag(user.permissions, p_nodes['Manage VPNs']) %}
+                                {% if user is not none and has_flag(user.permissions, p_nodes["Manage VPNs"]) %}
                                     <a id="API-mgmt"
                                        href="/manage/vpn/"
                                        class="panel-block{% if mode == 'vpn' %} is-active{% endif %}">VPNs</a>

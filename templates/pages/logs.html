@@ -3,13 +3,13 @@
       lang="en"
       class="{% if opposite_theme %}theme-opposite {% endif %}background-primary">
     <head>
-        {% include 'meta.html' with context %}
+        {% include "meta.html" with context %}
         <link rel="stylesheet" href="/static/css/logs.css?v={{ GB_VERSION }}">
         <title>{{ BRANDING }} - Logs</title>
     </head>
     <body>
-        {% include 'js_includes.html' %}
-        {% include 'header.html' with context %}
+        {% include "js_includes.html" %}
+        {% include "header.html" with context %}
         <div id="min-size-warning" class="is-hidden">Audit Log viewing is not supported on thin monitors</div>
         <div id="logs">
             <div id="logs-category">
@@ -70,7 +70,7 @@
             </div>
         </div>
         <script src="/static/js/logs.js?v={{ GB_VERSION }}"></script>
-        {% include 'loading.html' with context %}
-        {% include 'footer.html' with context %}
+        {% include "loading.html" with context %}
+        {% include "footer.html" with context %}
     </body>
 </html>

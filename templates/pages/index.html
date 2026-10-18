@@ -3,19 +3,19 @@
       lang="en"
       class="{% if opposite_theme %}theme-opposite {% endif %}background-primary">
     <head>
-        {% include 'meta.html' with context %}
+        {% include "meta.html" with context %}
         <link rel="stylesheet" href="/static/3rdparty/css/chart.css">
         <title>{{ BRANDING }} - Dashboard</title>
     </head>
     <body>
-        {% include 'js_includes.html' %}
-        {% include 'header.html' with context %}
+        {% include "js_includes.html" %}
+        {% include "header.html" with context %}
         <div class="m-5">
             <div class="columns is-desktop">
                 <div class="column is-three-quarters-fullhd is-three-fifths-desktop is-three-fifth-tablet">
                     <div class="panel text-primary background-secondary">
                         <p class="panel-heading">Welcome to {{ BRANDING }}!</p>
-                        <div class="panel-block no-bottom-border">{% include ('configs/' + page_index_info) with context %}</div>
+                        <div class="panel-block no-bottom-border">{% include ("configs/" + page_index_info) with context %}</div>
                         <div class="panel-block">
                             <form method="get" action="/infractions/" class="index-search">
                                 <div class="field has-addons">
@@ -106,15 +106,15 @@
                                 External
                                 Links
                             </p>
-                            {% include ('configs/' + page_index_links) with context %}
+                            {% include ("configs/" + page_index_links) with context %}
                         </nav>
                     </div>
                 </div>
             </div>
         </div>
-        {% include 'error.html' %}
+        {% include "error.html" %}
         <script src="/static/3rdparty/js/chart.js"></script>
         <script src="/static/js/index.js?v={{ GB_VERSION }}"></script>
-        {% include 'footer.html' with context %}
+        {% include "footer.html" with context %}
     </body>
 </html>

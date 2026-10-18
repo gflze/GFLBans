@@ -32,7 +32,7 @@
                            maxlength="256"
                            placeholder="Steam ID">
                 </div>
-                {% if user is not none and has_flag(user.permissions, p_nodes['Can See IP Addresses']) %}
+                {% if user is not none and has_flag(user.permissions, p_nodes["Can See IP Addresses"]) %}
                     <div class="field">
                         <input id="search-user-ip"
                                class="input"
@@ -195,7 +195,7 @@
                        placeholder="Removal Reason">
             </div>
             <h2 class="text-primary">Time</h2>
-            <div class="search-area ">
+            <div class="search-area">
                 <div>
                     <label id="earch-status-any-label" class="time-radio-button">
                         <input id="search-time-any-check" type="radio" name="time-type">

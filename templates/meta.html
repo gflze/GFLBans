@@ -1,7 +1,7 @@
 <!--Global Meta-->
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-{% if 'csrf_token' in request.session %}
+{% if "csrf_token" in request.session %}
     <meta name="csrf_token" content="{{ request.session['csrf_token'] }}">
 {% endif %}
 <meta name="theme-opposite" content="{{ opposite_theme }}">
