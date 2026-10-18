@@ -109,17 +109,13 @@ async function loadSearchModal() {
         const servers = await servers_req.json();
 
         servers.sort(function(a, b) {
-            let aName = a['ip'];
+            let aName = serverAddress(a);
             if (a.hasOwnProperty('group_name'))
                 aName = a['group_name'].toLowerCase();
-            else if (a.hasOwnProperty('game_port'))
-                aName = `${a['ip']}:${a['game_port']}`;
 
-            let bName = b['ip'];
+            let bName = serverAddress(b);
             if (b.hasOwnProperty('group_name'))
                 bName = b['group_name'].toLowerCase();
-            else if (b.hasOwnProperty('game_port'))
-                bName = `${b['ip']}:${b['game_port']}`;
 
             return ((aName < bName) ? -1 : ((aName > bName) ? 1 : 0));
         });
@@ -137,10 +133,8 @@ async function loadSearchModal() {
 
             if (servers[i].hasOwnProperty('friendly_name'))
                 el.text(servers[i]['friendly_name']);
-            else if (servers[i].hasOwnProperty('game_port'))
-                el.text(`${servers[i]['ip']}:${servers[i]['game_port']}`);
             else
-                el.text(servers[i]['ip']);
+                el.text(serverAddress(servers[i]));
 
             serverSel.append(el);
         }

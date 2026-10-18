@@ -283,10 +283,10 @@ async function setupViewModal(infraction) {
 
             if (sv.hasOwnProperty('friendly_name')) {
                 serverValue.text(sv['friendly_name'] + ' ').append(
-                    $('<span class="inf-muted"></span>').text('(' + sv['ip'] + ')')
+                    $('<span class="inf-muted"></span>').text('(' + serverAddress(sv, false) + ')')
                 );
             } else {
-                serverValue.text(sv['ip']);
+                serverValue.text(serverAddress(sv, false));
             }
         }
     }

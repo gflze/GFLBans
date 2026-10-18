@@ -183,6 +183,19 @@ function getProfileUrl(ply) {
     }
 }
 
+// The API omits the address of password protected servers for viewers who can't see them
+function serverAddress(server, with_port = true) {
+    if (!server.hasOwnProperty('ip')) {
+        return 'Password Protected';
+    }
+
+    if (with_port && server.hasOwnProperty('game_port')) {
+        return `${server['ip']}:${server['game_port']}`;
+    }
+
+    return server['ip'];
+}
+
 function openLinkInNewTab(url) {
     window.open(url, '_blank');
 }

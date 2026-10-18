@@ -400,7 +400,20 @@ $(document).ready(function () {
                             full_name = item['hostname'];
                         }
 
-                        if (!item['online']) {
+                        if (!item.hasOwnProperty('ip')) {
+                            // Password protected server, details are hidden when not logged in
+                            addServer(
+                                name,
+                                serverAddress(item),
+                                '',
+                                '',
+                                '',
+                                item['online'] ? 'Online' : 'Offline',
+                                item['id'],
+                                true,
+                                full_name
+                            );
+                        } else if (!item['online']) {
                             addServer(
                                 name,
                                 `${item['ip']}:${item['game_port']}`,

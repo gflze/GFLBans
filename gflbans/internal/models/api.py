@@ -162,8 +162,8 @@ class Infraction(BaseModel):
 
 class Server(BaseModel):
     id: str
-    ip: str
-    game_port: conint(gt=0, le=65535)
+    ip: Optional[str] = None  # Unset if the server is password protected and the viewer isn't logged in
+    game_port: Optional[conint(gt=0, le=65535)] = None
     enabled: bool
     friendly_name: Optional[str] = None
     online: bool  # True if there is data in the cache for this server

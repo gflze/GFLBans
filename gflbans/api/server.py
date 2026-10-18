@@ -10,7 +10,7 @@ from starlette.requests import Request
 
 from gflbans.api.auth import AuthInfo, check_access, csrf_protect
 from gflbans.internal.config import MONGO_DB
-from gflbans.internal.constants import NOT_AUTHED_USER
+from gflbans.internal.constants import API_KEY, AUTHED_USER, NOT_AUTHED_USER, SERVER_KEY
 from gflbans.internal.database.audit_log import (
     EVENT_SERVER_EDIT,
     EVENT_SERVER_NEW,
@@ -18,7 +18,12 @@ from gflbans.internal.database.audit_log import (
     DAuditLog,
 )
 from gflbans.internal.database.server import DServer, DUserIP
-from gflbans.internal.flags import PERMISSION_MANAGE_SERVERS, PERMISSION_VIEW_CHAT_LOGS, PERMISSION_VIEW_IP_ADDR
+from gflbans.internal.flags import (
+    PERMISSION_LOGIN,
+    PERMISSION_MANAGE_SERVERS,
+    PERMISSION_VIEW_CHAT_LOGS,
+    PERMISSION_VIEW_IP_ADDR,
+)
 from gflbans.internal.log import logger
 from gflbans.internal.models.api import FileInfo, MessageLog, PlayerObj, Server, ServerInternal
 from gflbans.internal.models.protocol import (
@@ -34,7 +39,36 @@ from gflbans.internal.utils import generate_api_key
 server_router = APIRouter(default_response_class=ORJSONResponse)
 
 
-def dserver_to_server(dsrv: DServer, indicate_webhooks: bool) -> Server:
+def can_view_locked_servers(auth: AuthInfo) -> bool:
+    # Checked by permission rather than auth type, since an admin whose access was revoked may still hold a session
+    if auth.type in (SERVER_KEY, API_KEY):
+        return True
+
+    return auth.type == AUTHED_USER and auth.permissions & PERMISSION_LOGIN == PERMISSION_LOGIN
+
+
+def is_server_locked(dsrv: DServer) -> bool:
+    # Use the last known state even if the server has since gone offline
+    return dsrv.server_info is not None and dsrv.server_info.locked
+
+
+def is_server_online(dsrv: DServer) -> bool:
+    return (
+        dsrv.server_info is not None
+        and (datetime.now(tz=UTC).replace(tzinfo=None) - dsrv.server_info.last_updated).total_seconds() <= 900
+    )
+
+
+def dserver_to_server(dsrv: DServer, indicate_webhooks: bool, hide_locked: bool) -> Server:
+    if hide_locked and is_server_locked(dsrv):
+        return Server(
+            id=str(dsrv.id),
+            enabled=dsrv.enabled,
+            friendly_name=dsrv.friendly_name,
+            online=is_server_online(dsrv),
+            is_locked=True,
+        )
+
     mf = Server(
         id=str(dsrv.id),
         ip=dsrv.ip,
@@ -44,10 +78,7 @@ def dserver_to_server(dsrv: DServer, indicate_webhooks: bool) -> Server:
         online=False,
     )
 
-    if (
-        dsrv.server_info is not None
-        and (datetime.now(tz=UTC).replace(tzinfo=None) - dsrv.server_info.last_updated).total_seconds() <= 900
-    ):
+    if is_server_online(dsrv):
         mf.online = True
         mf.hostname = dsrv.server_info.hostname
         mf.os = dsrv.server_info.os
@@ -94,8 +125,10 @@ async def get_servers(request: Request, enabled_only: bool = False, auth: AuthIn
     if auth.permissions & PERMISSION_MANAGE_SERVERS == PERMISSION_MANAGE_SERVERS:
         indicate_webhooks = True
 
+    hide_locked = not can_view_locked_servers(auth)
+
     async for dsv in DServer.from_query_ex(request.app.state.db[MONGO_DB], q):
-        svs.append(dserver_to_server(dsv, indicate_webhooks))
+        svs.append(dserver_to_server(dsv, indicate_webhooks, hide_locked))
 
     return svs
 
@@ -113,7 +146,7 @@ async def get_server(request: Request, server_id: str, auth: AuthInfo = Depends(
     if auth.permissions & PERMISSION_MANAGE_SERVERS == PERMISSION_MANAGE_SERVERS:
         indicate_webhooks = True
 
-    return dserver_to_server(sv, indicate_webhooks)
+    return dserver_to_server(sv, indicate_webhooks, not can_view_locked_servers(auth))
 
 
 @server_router.get(
@@ -122,16 +155,16 @@ async def get_server(request: Request, server_id: str, auth: AuthInfo = Depends(
     response_model_exclude_none=True,
     response_model=List[PlayerObj],
 )
-async def get_players(request: Request, server_id: str):
+async def get_players(request: Request, server_id: str, auth: AuthInfo = Depends(check_access)):
     sv = await DServer.from_id(request.app.state.db[MONGO_DB], server_id)
 
     if sv is None:
         raise HTTPException(detail='Server was not found', status_code=404)
 
-    if (
-        sv.server_info is None
-        or (datetime.now(tz=UTC).replace(tzinfo=None) - sv.server_info.last_updated).total_seconds() > 900
-    ):
+    if is_server_locked(sv) and not can_view_locked_servers(auth):
+        raise HTTPException(detail='This server is password protected', status_code=403)
+
+    if not is_server_online(sv):
         raise HTTPException(detail='Server is offline', status_code=503)
 
     players = [_duserip_to_ply(ply) for ply in sv.server_info.players]
