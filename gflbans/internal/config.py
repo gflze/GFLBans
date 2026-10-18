@@ -12,8 +12,6 @@ REDIS_URI = config('REDIS_URI', default='redis://127.0.0.1/3')
 # gflbans General
 ROOT_USER = config('ROOT_USER', cast=int, default=None)
 
-MEDIA_URL = config('MEDIA_URL', default='https://bans.gflclan.com/media/')
-STATIC_URL = config('STATIC_URL', default='https://bans.gflclan.com/static/')
 HOST = config('HOST', default='bans.gflclan.com')
 
 # Auto stacking infractions
@@ -44,7 +42,7 @@ DISCORD_BOT_TOKEN = config('DISCORD_BOT_TOKEN', default=None)
 GLOBAL_INFRACTION_WEBHOOK = config('GLOBAL_INFRACTION_WEBHOOK', default=None) or None  # For global monitoring
 STEAM_API_KEY = config('STEAM_API_KEY', default=None)
 STEAM_OPENID_ACCESS_TOKEN_LIFETIME = config('STEAM_OPENID_ACCESS_TOKEN_LIFETIME', cast=int, default=604800)
-IPHUB_API_KEY = config('IPHUB_API_KEY', default=None)
+IPHUB_API_KEY = config('IPHUB_API_KEY', default=None) or None
 IPHUB_CACHE_TIME = config('IPHUB_CACHE_TIME', cast=int, default=(60 * 60 * 24 * 7))  # Seconds to cache IPHub results
 
 # Web Server Configuration

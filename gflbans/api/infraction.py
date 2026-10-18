@@ -22,7 +22,13 @@ from gflbans.api_util import (
     str_id,
     user_str,
 )
-from gflbans.internal.config import AUTO_STACK_MAX_AGE, AUTO_STACK_MULTIPLIER, AUTO_STACK_START_TIME, MONGO_DB
+from gflbans.internal.config import (
+    AUTO_STACK_MAX_AGE,
+    AUTO_STACK_MULTIPLIER,
+    AUTO_STACK_START_TIME,
+    MAX_UPLOAD_SIZE,
+    MONGO_DB,
+)
 from gflbans.internal.constants import AUTHED_USER, NOT_AUTHED_USER, SERVER_KEY
 from gflbans.internal.database.audit_log import (
     EVENT_COMMENT_DELETE,
@@ -1309,7 +1315,7 @@ async def add_attachment(
     ):
         raise HTTPException(detail='You do not have permission to do this!', status_code=403)
 
-    if 'Content-Length' not in request.headers or int(request.headers['Content-Length']) > 30 * 1024 * 1024:
+    if 'Content-Length' not in request.headers or int(request.headers['Content-Length']) > MAX_UPLOAD_SIZE:
         raise HTTPException(detail="File is too large or request doesn't specify content length", status_code=413)
 
     dinf = await DInfraction.from_id(request.app.state.db[MONGO_DB], infraction_id)
