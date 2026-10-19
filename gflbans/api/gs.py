@@ -20,12 +20,11 @@ from gflbans.internal.config import MONGO_DB
 from gflbans.internal.constants import NOT_AUTHED_USER, SERVER_KEY
 from gflbans.internal.database.common import DFile
 from gflbans.internal.database.infraction import DInfraction, build_query_dict
-from gflbans.internal.database.server import DCallData, DChatLog, DServer, DServerInfo, DUserIP
+from gflbans.internal.database.server import DCallAdmin, DChatLog, DServer, DServerInfo, DUserIP
 from gflbans.internal.discord_calladmin import (
-    claim_monitor_task,
-    execute_claim,
-    execute_webhook,
-    prepare_calladmin_image,
+    send_call_message,
+    try_claim_call,
+    update_call_message,
 )
 from gflbans.internal.errors import NoSuchAdminError
 from gflbans.internal.flags import (
@@ -322,16 +321,31 @@ async def call_admin(request: Request, exe: ExecuteCallAdmin, auth: AuthInfo = D
             cooldown=((srv.last_calladmin + exe.cooldown) - datetime.now(tz=UTC).timestamp()),
         )
 
-    call_admin_image = await prepare_calladmin_image(exe.image) if exe.image else None
+    db = request.app.state.db[MONGO_DB]
 
-    ct = await execute_webhook(request.app, srv, exe, image=call_admin_image)
+    call = DCallAdmin(
+        server=srv.id,
+        created=datetime.now(tz=UTC).timestamp(),
+        call_info=exe,
+    )
 
-    srv.last_calladmin = datetime.now(tz=UTC).timestamp()
-    srv.call_data = DCallData(claim_token=ct, call_info=exe)
+    # Insert first so the call has an id for the claim button to reference
+    await call.commit(db)
 
-    asyncio.get_running_loop().create_task(claim_monitor_task(request.app, srv.id, ct))
+    try:
+        await send_call_message(request.app, srv, call)
+    except Exception:
+        await db[DCallAdmin.__collection__].delete_one({'_id': call.id})
+        raise
 
-    await srv.commit(request.app.state.db[MONGO_DB])
+    # Only set the message fields, as the call may already have been claimed through its button
+    await db[DCallAdmin.__collection__].update_one(
+        {'_id': call.id},
+        {'$set': {k: v for k, v in (('message_id', call.message_id), ('channel_id', call.channel_id)) if v}},
+    )
+
+    srv.last_calladmin = call.created
+    await srv.commit(db)
 
     return ExecuteCallAdminReply(sent=True, is_banned=False, cooldown=exe.cooldown)
 
@@ -354,14 +368,22 @@ async def claim_call(request: Request, claim: ClaimCallAdmin, auth: AuthInfo = D
     if not srv.discord_staff_tag or not srv.discord_webhook:
         raise HTTPException(status_code=405, detail='Call Admin is not configured on this server')
 
-    if srv.call_data is None:
+    db = request.app.state.db[MONGO_DB]
+
+    # Claim the most recent open call. Older ones can still be claimed through their Discord button
+    open_calls = await DCallAdmin.list_from_query(
+        db, {'server': srv.id, 'claimed_by': None, 'message_id': {'$ne': None}}, limit=1, sort=('created', -1)
+    )
+    call = await try_claim_call(db, open_calls[0].id, claim.admin_name) if open_calls else None
+
+    if call is None:
         return ClaimCallAdminReply(success=False, msg='There is no admin call to claim. Was it already claimed?')
 
-    await execute_claim(request.app, srv, claim, srv.call_data)
-
-    srv.call_data = None
-
-    await srv.commit(request.app.state.db[MONGO_DB])
+    try:
+        await update_call_message(request.app, srv, call)
+    except Exception:
+        # The claim itself has gone through, so don't fail the request over the message edit
+        logger.error(f'Failed to update call admin message for {call.id}', exc_info=True)
 
     return ClaimCallAdminReply(success=True)
 

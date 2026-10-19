@@ -41,7 +41,8 @@ GFLBANS_ICON = config(
 )  # Branding for GFLBans in Discord embeds
 
 # Integrations with other services
-DISCORD_BOT_TOKEN = config('DISCORD_BOT_TOKEN', default=None)
+DISCORD_BOT_TOKEN = config('DISCORD_BOT_TOKEN', default=None) or None  # Sends call admin messages with claim buttons
+DISCORD_PUBLIC_KEY = config('DISCORD_PUBLIC_KEY', default=None) or None  # Verifies claim button interactions
 GLOBAL_INFRACTION_WEBHOOK = config('GLOBAL_INFRACTION_WEBHOOK', default=None) or None  # For global monitoring
 STEAM_API_KEY = config('STEAM_API_KEY', default=None)
 STEAM_OPENID_ACCESS_TOKEN_LIFETIME = config('STEAM_OPENID_ACCESS_TOKEN_LIFETIME', cast=int, default=604800)

@@ -346,7 +346,6 @@ class ExecuteCallAdmin(BaseModel):
     caller_name: str = 'UNKNOWN PLAYER'
     include_other_servers: bool = False
     message: constr(min_length=1, max_length=120)
-    image: Optional[constr(max_length=5 * 1024 * 1024)] = None
     cooldown: PositiveInt = 600
     report_target: Optional[PlayerObjNoIp] = None
     report_target_name: str = 'UNKNOWN PLAYER'

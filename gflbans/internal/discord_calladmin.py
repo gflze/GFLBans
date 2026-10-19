@@ -1,27 +1,33 @@
-import asyncio
-import base64
-import binascii
-import io
-from concurrent.futures import ProcessPoolExecutor
 from datetime import datetime
 from typing import Optional
 
-import PIL
-from bson.objectid import ObjectId
+from bson import ObjectId
+from bson.errors import InvalidId
+from cryptography.exceptions import InvalidSignature
+from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
 from dateutil.tz import UTC
 from fastapi import HTTPException
-from gridfs import AsyncGridFSBucket
-from PIL import Image
+from pymongo import ReturnDocument
+from pymongo.asynchronous.database import AsyncDatabase
 
-from gflbans.internal.config import BRANDING, COMMUNITY_ICON, DISCORD_BOT_TOKEN, GFLBANS_ICON, HOST, MONGO_DB
+from gflbans.internal.config import BRANDING, COMMUNITY_ICON, DISCORD_BOT_TOKEN, DISCORD_PUBLIC_KEY, GFLBANS_ICON, HOST
 from gflbans.internal.constants import COLOR_SUCCESS, COLOR_WARNING, GB_VERSION
-from gflbans.internal.database.common import DFile
-from gflbans.internal.database.server import DCallData, DServer
+from gflbans.internal.database.server import DCallAdmin, DServer
 from gflbans.internal.log import logger
 from gflbans.internal.models.api import PlayerObjNoIp
-from gflbans.internal.models.protocol import ClaimCallAdmin, ExecuteCallAdmin
 
 STEAM_MODS = {'cs2', 'garrysmod'}
+
+DISCORD_API = 'https://discord.com/api/v10'
+CLAIM_BUTTON_PREFIX = 'gflbans_calladmin_claim:'
+
+# https://discord.com/developers/docs/interactions/receiving-and-responding
+INTERACTION_PING = 1
+INTERACTION_MESSAGE_COMPONENT = 3
+RESPONSE_PONG = 1
+RESPONSE_CHANNEL_MESSAGE = 4
+RESPONSE_UPDATE_MESSAGE = 7
+MESSAGE_FLAG_EPHEMERAL = 1 << 6
 
 
 def sanitize_discord_username(name: str) -> str:
@@ -59,247 +65,202 @@ def fn(srv):
         return srv.ip
 
 
-async def execute_webhook(app, srv: DServer, call: ExecuteCallAdmin, image: Optional[DFile] = None):
-    embed_info = {
-        'color': COLOR_WARNING,
-        'timestamp': datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ'),
+def _headers(bot: bool = False) -> dict:
+    headers = {'User-Agent': f'{BRANDING} ({HOST}, {GB_VERSION})'}
+
+    if bot:
+        headers['Authorization'] = f'Bot {DISCORD_BOT_TOKEN}'
+
+    return headers
+
+
+def build_call_embed(srv: DServer, call: DCallAdmin) -> dict:
+    info = call.call_info
+    caller_name = sanitize_discord_username(info.caller_name)
+
+    if call.claimed_by:
+        admin_name = sanitize_discord_username(call.claimed_by)
+        description = f'{caller_name} has requested an admin on {fn(srv)}. {admin_name} took the call.'
+    elif call.channel_id:
+        admin_name = '(Nobody yet)'
+        description = f'{caller_name} has requested an admin on {fn(srv)}. Press **Claim** or type `!claim` in-game.'
+    else:
+        admin_name = '(Nobody yet)'
+        description = f'{caller_name} has requested an admin on {fn(srv)}. Type `!claim` in-game to claim.'
+
+    embed = {
+        'color': COLOR_SUCCESS if call.claimed_by else COLOR_WARNING,
+        'title': srv.server_info.hostname if srv.server_info is not None else fn(srv),
+        'description': description,
+        'url': f'http://{HOST}/api/gs/calladmin/connect?server={srv.ip}%3A{srv.game_port}',
+        'timestamp': datetime.fromtimestamp(call.created, tz=UTC).strftime('%Y-%m-%dT%H:%M:%SZ'),
         'footer': {'icon_url': GFLBANS_ICON, 'text': f'GFLBans {GB_VERSION}'},
         'fields': [
-            {
-                'name': 'Player',
-                'value': clickable_where_supported(call.caller_name, call.caller),
-                'inline': True,
-            },
-            {'name': 'Admin', 'value': '(Nobody yet)', 'inline': True},
-            {'name': 'Reason', 'value': f'{call.message}'},
+            {'name': 'Player', 'value': clickable_where_supported(info.caller_name, info.caller), 'inline': True},
+            {'name': 'Admin', 'value': admin_name, 'inline': True},
+            {'name': 'Reason', 'value': info.message},
         ],
     }
 
-    if call.report_target:
-        embed_info['fields'].insert(
+    if info.report_target:
+        embed['fields'].insert(
             1,
             {
                 'name': 'Reported Player',
-                'value': clickable_where_supported(call.report_target_name, call.report_target),
+                'value': clickable_where_supported(info.report_target_name, info.report_target),
                 'inline': True,
             },
         )
 
-    embed_info['url'] = f'http://{HOST}/api/gs/calladmin/connect?server={srv.ip}%3A{srv.game_port}'
-
     if srv.server_info is not None:
-        embed_info['title'] = srv.server_info.hostname
-        embed_info['fields'].append(
-            {
-                'name': 'Map',
-                'value': srv.server_info.map,
-            },
-        )
-    else:
-        embed_info['title'] = fn(srv)
-    embed_info['description'] = (
-        f'{call.caller_name} has requested an admin on {fn(srv)}. React :mouse: or type `!claim` in-game to claim.'
-    )
+        embed['fields'].append({'name': 'Map', 'value': srv.server_info.map})
 
-    if image:
-        embed_info['image'] = {'url': f'http://{HOST}/file/uploads/{image.gridfs_file}/{image.file_name}'}
+    return embed
 
-        embed_info['fields'].append(
-            {
-                'name': 'Warning',
-                'value': 'The attached image file will expire after 30 days.'
-                'If the image will be needed after this point, '
-                'you should save a copy and upload it elsewhere.',
-                'inline': False,
-            }
-        )
 
-    bot_name = f'{BRANDING}'
-    bot_avatar = COMMUNITY_ICON
+def build_call_components(call: DCallAdmin) -> list:
+    if call.claimed_by or not call.channel_id:
+        return []
 
+    return [
+        {
+            'type': 1,  # Action row
+            'components': [
+                {
+                    'type': 2,  # Button
+                    'style': 3,  # Success (green)
+                    'label': 'Claim',
+                    'custom_id': f'{CLAIM_BUTTON_PREFIX}{call.id}',
+                }
+            ],
+        }
+    ]
+
+
+async def get_webhook_channel(app, webhook_url: str) -> str:
+    async with app.state.aio_session.get(webhook_url, headers=_headers()) as resp:
+        resp.raise_for_status()
+        return (await resp.json())['channel_id']
+
+
+async def send_call_message(app, srv: DServer, call: DCallAdmin):
+    """Post a call to Discord, setting its message_id (and channel_id if it was sent with a claim button)."""
     request_json = {
         'content': '@here' if srv.discord_staff_tag == 'here' else f'<@&{srv.discord_staff_tag}>',
-        'username': bot_name,
-        'avatar_url': bot_avatar,
         'allowed_mentions': {'parse': ['everyone']}
         if srv.discord_staff_tag == 'here'
         else {'roles': [srv.discord_staff_tag]},
-        'embeds': [embed_info],
     }
 
-    async with app.state.aio_session.post(
-        srv.discord_webhook + '?wait=true',
-        headers={'User-Agent': f'{BRANDING} ({HOST}, {GB_VERSION})'},
-        json=request_json,
-    ) as resp:
-        try:
-            resp.raise_for_status()
-
-            result = await resp.json()
-
-            # This is the discord message id
-            # in gflbans land, we call it the claim token
-            # because it's needed for an admin to claim a call
-            return result['id']
-        except Exception as e:
-            logger.error('Failed to execute webhook!', exc_info=True)
-            raise HTTPException(detail='Failed to communicate with Discord', status_code=500) from e
-
-
-calladmin_thread_pool = ProcessPoolExecutor(max_workers=1)
-
-
-def sync_process_calladmin_image(image: bytes):
-    image = Image.open(io.BytesIO(image))
-    # This functionality is almost exclusively for unturned
-    # so we're gonna kneecap the res here to what unturned gives us
-    image = image.resize((640, 480), resample=PIL.Image.LANCZOS)
-
-    target = io.BytesIO()
-
-    image.save(fp=target, format='webp', quality=100)
-
-    new_bytes = target.getvalue()
-
-    return new_bytes
-
-
-# request context only
-async def prepare_calladmin_image(db_ref, image: str) -> DFile:
     try:
-        decoded = base64.b64decode(image)
+        if DISCORD_BOT_TOKEN:
+            # Interactive buttons can't be sent through a user created webhook, so the bot posts the message itself in
+            # the webhook's channel, and Discord delivers button presses to the application's interactions endpoint
+            call.channel_id = await get_webhook_channel(app, srv.discord_webhook)
+            request_json['embeds'] = [build_call_embed(srv, call)]
+            request_json['components'] = build_call_components(call)
 
-        converted = await asyncio.get_running_loop().run_in_executor(
-            calladmin_thread_pool, sync_process_calladmin_image, decoded
-        )
+            async with app.state.aio_session.post(
+                f'{DISCORD_API}/channels/{call.channel_id}/messages', headers=_headers(bot=True), json=request_json
+            ) as resp:
+                resp.raise_for_status()
+                call.message_id = (await resp.json())['id']
+        else:
+            request_json['embeds'] = [build_call_embed(srv, call)]
+            request_json['username'] = BRANDING
+            request_json['avatar_url'] = COMMUNITY_ICON
 
-        file_id = await AsyncGridFSBucket(db_ref).upload_from_stream(
-            'callimg.webp', converted, metadata={'dispose_created': datetime.now(tz=UTC), 'content-type': 'image/webp'}
-        )
+            async with app.state.aio_session.post(
+                srv.discord_webhook + '?wait=true', headers=_headers(), json=request_json
+            ) as resp:
+                resp.raise_for_status()
+                call.message_id = (await resp.json())['id']
+    except Exception as e:
+        logger.error('Failed to send call admin message!', exc_info=True)
+        raise HTTPException(detail='Failed to communicate with Discord', status_code=500) from e
 
-        return DFile(gridfs_file=str(file_id), file_name='callimg.webp')
-    except binascii.Error as e:
-        raise HTTPException(detail='Bad base64 encoded image file', status_code=401) from e
 
+async def update_call_message(app, srv: DServer, call: DCallAdmin):
+    request_json = {'embeds': [build_call_embed(srv, call)], 'components': build_call_components(call)}
 
-async def execute_claim(app, srv: DServer, claim: ClaimCallAdmin, call: DCallData):
-    embed_info = {
-        'color': COLOR_SUCCESS,
-        'timestamp': datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ'),
-        'footer': {'icon_url': GFLBANS_ICON, 'text': f'GFLBans {GB_VERSION}'},
-        'fields': [
-            {
-                'name': 'Player',
-                'value': clickable_where_supported(call.call_info.caller_name, call.call_info.caller),
-                'inline': True,
-            },
-            {'name': 'Admin', 'value': f'{claim.admin_name}', 'inline': True},
-            {'name': 'Reason', 'value': f'{call.call_info.message}'},
-        ],
-    }
-
-    if call.call_info.report_target:
-        embed_info['fields'].insert(
-            1,
-            {
-                'name': 'Reported Player',
-                'value': clickable_where_supported(call.call_info.report_target_name, call.call_info.report_target),
-                'inline': True,
-            },
-        )
-
-    if srv.server_info is not None:
-        embed_info['title'] = srv.server_info.hostname
-        embed_info['fields'].append(
-            {
-                'name': 'Map',
-                'value': srv.server_info.map,
-            },
-        )
+    if call.channel_id:
+        url = f'{DISCORD_API}/channels/{call.channel_id}/messages/{call.message_id}'
+        headers = _headers(bot=True)
     else:
-        embed_info['title'] = fn(srv)
-    embed_info['description'] = (
-        f'{call.call_info.caller_name} has requested an admin on {fn(srv)}. {claim.admin_name} took the call.'
-    )
+        url = f'{srv.discord_webhook}/messages/{call.message_id}'
+        headers = _headers()
 
-    embed_info['url'] = f'http://{HOST}/api/gs/calladmin/connect?server={srv.ip}%3A{srv.game_port}'
-
-    async with app.state.aio_session.patch(
-        srv.discord_webhook + f'/messages/{call.claim_token}',
-        headers={'User-Agent': f'{BRANDING} ({HOST}, {GB_VERSION})'},
-        json={'embeds': [embed_info]},
-    ) as resp:
-        try:
-            resp.raise_for_status()
-        except Exception as e:
-            logger.error('Failed to edit webhook!', exc_info=True)
-            raise HTTPException(detail='Failed to communicate with Discord', status_code=500) from e
-
-
-async def claim_monitor_task(app, server_id: ObjectId, msg_id: str):
-    if not DISCORD_BOT_TOKEN:
-        logger.warning('No discord bot token. Claim monitor is therefore unsupported!')
-
-    logger.debug(f'starting discord msg monitor {msg_id}')
-
-    logger.debug('fetching channel id from webhook')
-
-    srv: DServer = await DServer.from_id(app.state.db[MONGO_DB], server_id)
-
-    if not srv or not srv.discord_webhook:
-        logger.error(
-            f'monitor for {msg_id} is dying because there is no server {str(server_id)} exists or no call admin'
-        )
-        return
-
-    async with app.state.aio_session.get(
-        srv.discord_webhook, headers={'User-Agent': f'{BRANDING} ({HOST}, {GB_VERSION})'}
-    ) as resp:
+    async with app.state.aio_session.patch(url, headers=headers, json=request_json) as resp:
         resp.raise_for_status()
 
-        j = await resp.json()
 
-        channel_id = j['channel_id']
+async def try_claim_call(db_ref: AsyncDatabase, call_id: ObjectId, admin_name: str) -> Optional[DCallAdmin]:
+    """Atomically claim a call, returning None if it doesn't exist or was already claimed."""
+    doc = await db_ref[DCallAdmin.__collection__].find_one_and_update(
+        {'_id': call_id, 'claimed_by': None},
+        {'$set': {'claimed_by': admin_name, 'claimed_at': datetime.now(tz=UTC).timestamp()}},
+        return_document=ReturnDocument.AFTER,
+    )
+
+    return DCallAdmin.load_document(doc) if doc else None
+
+
+def verify_interaction(body: bytes, signature: Optional[str], timestamp: Optional[str]) -> bool:
+    if not DISCORD_PUBLIC_KEY or not signature or not timestamp:
+        return False
 
     try:
-        while True:
-            await asyncio.sleep(10)
-            logger.debug(f'tick monitor for {msg_id}')
+        Ed25519PublicKey.from_public_bytes(bytes.fromhex(DISCORD_PUBLIC_KEY)).verify(
+            bytes.fromhex(signature), timestamp.encode() + body
+        )
+        return True
+    except InvalidSignature, ValueError:
+        return False
 
-            srv: DServer = await DServer.from_id(app.state.db[MONGO_DB], server_id)
 
-            if not srv or not srv.discord_webhook:
-                logger.error(
-                    f'monitor for {msg_id} is dying because there is no server {str(server_id)} exists or no call admin'
-                )
-                return
+def interaction_display_name(interaction: dict) -> str:
+    # Guild interactions carry the user inside member, alongside their server nickname
+    member = interaction.get('member') or {}
+    user = member.get('user') or interaction.get('user') or {}
 
-            if not srv.call_data or srv.call_data.claim_token != msg_id:
-                logger.error(f'monitor for {msg_id} is dying because call_data is unset or has a different token')
-                return
+    return member.get('nick') or user.get('global_name') or user.get('username') or 'Unknown Discord User'
 
-            async with app.state.aio_session.get(
-                f'https://discord.com/api/v9/channels/{channel_id}/messages/{msg_id}/reactions/%F0%9F%90%AD?limit=1',
-                headers={
-                    'User-Agent': f'{BRANDING} ({HOST}, {GB_VERSION})',
-                    'Authorization': f'Bot {DISCORD_BOT_TOKEN}',
-                },
-            ) as resp:
-                try:
-                    resp.raise_for_status()
-                except Exception:
-                    logger.error(f'monitor for {msg_id} dying because discord communication failure', exc_info=True)
-                    raise
 
-                j = await resp.json()
+def _ephemeral(content: str) -> dict:
+    return {'type': RESPONSE_CHANNEL_MESSAGE, 'data': {'content': content, 'flags': MESSAGE_FLAG_EPHEMERAL}}
 
-                for user in j:
-                    await execute_claim(
-                        app,
-                        srv,
-                        ClaimCallAdmin(admin_name=f'{user["username"]}#{user["discriminator"]}'),
-                        srv.call_data,
-                    )
-                    raise StopIteration
-    except StopIteration:
-        pass
+
+async def handle_interaction(db_ref: AsyncDatabase, interaction: dict) -> dict:
+    if interaction.get('type') == INTERACTION_PING:
+        return {'type': RESPONSE_PONG}
+
+    custom_id = (interaction.get('data') or {}).get('custom_id', '')
+
+    if interaction.get('type') != INTERACTION_MESSAGE_COMPONENT or not custom_id.startswith(CLAIM_BUTTON_PREFIX):
+        return _ephemeral('Unknown interaction.')
+
+    try:
+        call_id = ObjectId(custom_id.removeprefix(CLAIM_BUTTON_PREFIX))
+    except InvalidId:
+        return _ephemeral('Unknown interaction.')
+
+    call = await try_claim_call(db_ref, call_id, interaction_display_name(interaction))
+
+    if call is None:
+        existing = await DCallAdmin.from_id(db_ref, call_id)
+
+        if existing is None:
+            return _ephemeral('This admin call no longer exists.')
+
+        return _ephemeral(f'This admin call was already claimed by {existing.claimed_by}.')
+
+    srv = await DServer.from_id(db_ref, call.server)
+
+    if srv is None:
+        return _ephemeral('The server for this admin call no longer exists.')
+
+    # Respond by editing the message the button is attached to
+    return {
+        'type': RESPONSE_UPDATE_MESSAGE,
+        'data': {'embeds': [build_call_embed(srv, call)], 'components': build_call_components(call)},
+    }

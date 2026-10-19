@@ -8,6 +8,7 @@ attrs==26.1.0
 bbcode==1.1.0
 cffi==2.1.1
 click==8.5.0
+cryptography==50.0.2
 defusedxml==0.7.1
 djlint==1.46.6
 dnspython==2.9.0

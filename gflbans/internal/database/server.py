@@ -38,9 +38,18 @@ class DServerInfo(BaseModel):
     locked: bool = False
 
 
-class DCallData(BaseModel):
-    claim_token: str
+class DCallAdmin(DBase):
+    __collection__: ClassVar[str] = 'call_admins'
+
+    server: ObjectId
+    created: float
     call_info: ExecuteCallAdmin
+
+    message_id: Optional[str] = None
+    channel_id: Optional[str] = None  # Only set when the message was sent by the bot (and so has a claim button)
+
+    claimed_by: Optional[str] = None
+    claimed_at: Optional[float] = None
 
 
 class DServer(DBase):
@@ -57,7 +66,6 @@ class DServer(DBase):
     server_key_salt: Optional[str] = None
 
     last_calladmin: float = 0
-    call_data: Optional[DCallData] = None
 
     server_info: Optional[DServerInfo] = None
 
@@ -102,7 +110,6 @@ class DServer(DBase):
         censored_self['infract_webhook'] = None
         censored_self['server_key'] = None
         censored_self['server_key_salt'] = None
-        censored_self['call_data'] = None
         censored_self['server_info'] = None
 
         return censored_self

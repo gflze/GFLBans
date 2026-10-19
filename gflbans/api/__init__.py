@@ -2,6 +2,7 @@ from fastapi import APIRouter
 
 from gflbans.api.admin import admin_router
 from gflbans.api.api_key import api_key_router
+from gflbans.api.discord import discord_router
 from gflbans.api.group import group_router
 from gflbans.api.gs import gs_router
 from gflbans.api.infraction import infraction_router
@@ -16,6 +17,7 @@ api = APIRouter()
 
 api.include_router(admin_router, prefix='/admin')
 api.include_router(api_key_router, prefix='/apikey')
+api.include_router(discord_router, prefix='/discord')
 api.include_router(group_router, prefix='/group')
 api.include_router(gs_router, prefix='/gs')
 api.include_router(infraction_router, prefix='/infractions')

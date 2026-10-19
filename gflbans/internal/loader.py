@@ -99,10 +99,8 @@ async def gflbans_init(app):
             [('metadata.mod_name', ASCENDING), ('metadata.map_name', ASCENDING)], name='gridfs_mn_idx'
         )
 
-        # Call Admin images
-        await app.state.db[MONGO_DB].fs.files.create_index(
-            [('metadata.dispose_created', ASCENDING)], name='gridfs_cai_idx', expireAfterSeconds=2592000
-        )
+        # Call Admin
+        await app.state.db[MONGO_DB].call_admins.create_index([('server', ASCENDING), ('created', DESCENDING)])
 
         # VPN
         await app.state.db[MONGO_DB].vpns.create_index([('added_on', ASCENDING)])
