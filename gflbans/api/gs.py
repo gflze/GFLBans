@@ -370,11 +370,12 @@ async def claim_call(request: Request, claim: ClaimCallAdmin, auth: AuthInfo = D
 
     db = request.app.state.db[MONGO_DB]
 
-    # Claim the most recent open call. Older ones can still be claimed through their Discord button
-    open_calls = await DCallAdmin.list_from_query(
-        db, {'server': srv.id, 'claimed_by': None, 'message_id': {'$ne': None}}, limit=1, sort=('created', -1)
+    # Only the most recent call can be claimed in-game, older ones can only be claimed through their Discord button.
+    # Look up the latest call regardless of state, so this doesn't fall back to an older call once it's claimed
+    latest_calls = await DCallAdmin.list_from_query(
+        db, {'server': srv.id, 'message_id': {'$ne': None}}, limit=1, sort=('created', -1)
     )
-    call = await try_claim_call(db, open_calls[0].id, claim.admin_name) if open_calls else None
+    call = await try_claim_call(db, latest_calls[0].id, claim.admin_name) if latest_calls else None
 
     if call is None:
         return ClaimCallAdminReply(success=False, msg='There is no admin call to claim. Was it already claimed?')
