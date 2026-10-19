@@ -1240,9 +1240,18 @@ img {
     height: 48px;
 }
 
+.infractions-toolbar {
+    margin: 0 1.5rem;
+}
+
 .infractions-toolbar > .pagination {
     margin-left: 0;
     margin-right: 0;
+}
+
+#infraction-pages-bottom-nav {
+    margin-left: 1.5rem;
+    margin-right: 1.5rem;
 }
 
 /* Keep the page buttons compact and left aligned, Bulma stretches them below 769px */
@@ -1274,6 +1283,21 @@ img {
         flex: 1;
         min-width: 0;
         margin: 0;
+    }
+
+    /* Only the page buttons wrap when they run out of room, the create button stays beside the search button */
+    .infractions-pagination {
+        flex-wrap: nowrap;
+    }
+
+    .infractions-pagination .pagination-list {
+        flex-wrap: wrap;
+        min-width: 0;
+    }
+
+    #infraction-pages {
+        height: auto;
+        min-height: 48px;
     }
 
     #advancedSearchToggle {
@@ -1315,6 +1339,25 @@ img {
 .infraction-pager-compact > a[disabled] {
     opacity: 0.4;
     pointer-events: none;
+}
+
+/* Keep the compact pager, create button and search on one line, lined up with the rows below */
+@media screen and (max-width: 600px) {
+    .infractions-toolbar,
+    #infraction-pages-bottom-nav {
+        margin-left: 1rem;
+        margin-right: 1rem;
+    }
+
+    .infraction-pager-compact {
+        min-width: 0;
+    }
+}
+
+@media screen and (max-width: 359px) {
+    .infraction-pager-word {
+        display: none;
+    }
 }
 
 #advancedSearchBlock {

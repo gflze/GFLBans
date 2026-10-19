@@ -121,7 +121,14 @@ function renderCompactNav(compact, current_page, total_pages) {
 
     const page_label = document.createElement('span');
     page_label.classList.add('text-primary');
-    page_label.innerText = 'Page ' + current_page + ' of ' + total_pages;
+
+    // "Page" is dropped on very narrow screens so the numbers never get cut off
+    const page_word = document.createElement('span');
+    page_word.classList.add('infraction-pager-word');
+    page_word.innerText = 'Page ';
+    page_label.appendChild(page_word);
+
+    page_label.appendChild(document.createTextNode(current_page + ' of ' + total_pages));
     compact.appendChild(page_label);
 
     make_step(current_page + 1, 'fa-chevron-right', 'Next page');
