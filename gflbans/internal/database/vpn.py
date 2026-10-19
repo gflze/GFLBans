@@ -13,7 +13,7 @@ class DVPN(DBase):
 
     payload: str  # ASN if is_asn is true, CIDR otherwise
     comment: str = 'NO COMMENT'
-    added_on: int
+    added_on: float  # UNIX; legacy documents store fractional timestamps
 
     @classmethod
     async def find_cidr_rule(cls, db_ref: AsyncDatabase, ip: IPAddress):
