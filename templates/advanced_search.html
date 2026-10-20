@@ -12,7 +12,7 @@
             </div>
             <h2 class="text-primary">User</h2>
             <div class="search-area">
-                {% if user is not none %}
+                {% if user is not none and has_flag(user.permissions, p_nodes["Can See IP Addresses"]) %}
                     <div class="control field">
                         <label class="checkbox">
                             <input id="search-user-vpn-check" type="checkbox" name="isWebInfract">

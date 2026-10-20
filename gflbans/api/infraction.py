@@ -247,7 +247,11 @@ async def get_infractions(
             dinf.files = []
         infs.append(
             await as_infraction(
-                request.app, dinf, incl_ip, exclude_priv_comments, include_vpn=should_include_vpn(auth.type)
+                request.app,
+                dinf,
+                incl_ip,
+                exclude_priv_comments,
+                include_vpn=should_include_vpn(auth.type, auth.permissions),
             )
         )
 
@@ -274,7 +278,7 @@ async def get_infraction(request: Request, infraction_id: str, auth: AuthInfo = 
         inf,
         should_include_ip(auth.type, auth.permissions),
         exclude_private_comments(auth.type, auth.permissions),
-        include_vpn=should_include_vpn(auth.type),
+        include_vpn=should_include_vpn(auth.type, auth.permissions),
     )
 
 
@@ -291,7 +295,7 @@ async def search_infractions(
     auth: AuthInfo = Depends(check_access),
 ):
     incl_ip = should_include_ip(auth.type, auth.permissions)
-    incl_vpn = should_include_vpn(auth.type)
+    incl_vpn = should_include_vpn(auth.type, auth.permissions)
 
     try:
         cq = await do_infraction_search(request.app, query, include_ip=incl_ip, include_vpn=incl_vpn)
@@ -415,8 +419,12 @@ async def search_recursive_infractions(
     auth: AuthInfo = Depends(check_access),
 ):
     incl_ip = should_include_ip(auth.type, auth.permissions)
-    # If we do not have permission to view IP, force it to None
-    ip = query.ip if incl_ip else None
+
+    # Alt search links accounts through shared IPs, so it requires IP permission
+    if not incl_ip:
+        raise HTTPException(status_code=403, detail='You do not have permission to use alt search!')
+
+    ip = query.ip
 
     if not ip and not query.gs_id:
         raise HTTPException(status_code=400, detail="At least one of 'ip' or 'gs_id' must be provided.")
@@ -450,7 +458,11 @@ async def search_recursive_infractions(
     return GetInfractionsReply(
         results=[
             await as_infraction(
-                request.app, inf, incl_ip, exclude_priv_comments, include_vpn=should_include_vpn(auth.type)
+                request.app,
+                inf,
+                incl_ip,
+                exclude_priv_comments,
+                include_vpn=should_include_vpn(auth.type, auth.permissions),
             )
             for inf in paginated_infractions
         ],

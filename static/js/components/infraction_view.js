@@ -366,9 +366,14 @@ async function setupViewModal(infraction) {
     if (search.length === 0) {
         $('#total-blocks').text('Unknown');
     } else {
+        // Alt search links accounts through shared IPs, so it requires IP permission
+        const canAltSearch = parseInt(getMeta('active_permissions')) & PERMISSION.VIEW_IP_ADDR;
+
         const [blocksResp, altBlocksResp] = await Promise.all([
             gbRequest('GET', '/api/infractions/search?limit=1&' + blocksUrlParams, null),
-            gbRequest('GET', '/api/infractions/alt_search?depth=3&limit=1' + altSearchUrlParams, null),
+            canAltSearch
+                ? gbRequest('GET', '/api/infractions/alt_search?depth=3&limit=1' + altSearchUrlParams, null)
+                : null,
         ]);
 
         let totalBlocks = 'Unknown';
@@ -380,7 +385,7 @@ async function setupViewModal(infraction) {
         }
         $('#total-blocks').append($('<p>').text(totalBlocks + ' ').append(blocksLink));
 
-        if (altBlocksResp.ok) {
+        if (altBlocksResp && altBlocksResp.ok) {
             const altBlocksJson = await altBlocksResp.json();
 
             if (altBlocksJson.hasOwnProperty('total_matched') && altBlocksJson['total_matched'] !== totalBlocks) {

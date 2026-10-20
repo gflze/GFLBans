@@ -263,8 +263,8 @@ def should_include_ip(actor_type: int, actor_perms: int):
     return actor_type != NOT_AUTHED_USER and actor_perms & PERMISSION_VIEW_IP_ADDR == PERMISSION_VIEW_IP_ADDR
 
 
-def should_include_vpn(actor_type: int):
-    return actor_type != NOT_AUTHED_USER
+def should_include_vpn(actor_type: int, actor_perms: int):
+    return should_include_ip(actor_type, actor_perms)
 
 
 def exclude_private_comments(actor_type: int, actor_perms: int):
