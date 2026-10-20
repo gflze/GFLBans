@@ -587,7 +587,9 @@ th {
     .inf-view-tab > tr:has(#scopeValue),
     .inf-view-tab > tr:has(#restrictionsValue),
     .inf-view-tab > tr:has(#removedOnValue),
-    .inf-view-tab > tr:has(#removedByValue) {
+    .inf-view-tab > tr:has(#removedByValue),
+    .inf-view-tab > tr:has(#total-blocks),
+    .inf-view-tab > #altSearchRow {
         width: 50%;
         padding-right: 0.75rem;
     }
@@ -599,7 +601,8 @@ th {
     /* Restrictions next to Scope, before Reason */
     .inf-view-tab > tr:has(#reasonValue),
     .inf-view-tab > .rmEl,
-    .inf-view-tab > tr:has(#total-blocks) {
+    .inf-view-tab > tr:has(#total-blocks),
+    .inf-view-tab > #altSearchRow {
         order: 1;
     }
 
