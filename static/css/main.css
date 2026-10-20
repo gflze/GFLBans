@@ -122,6 +122,10 @@
     color: #fff;
 }
 
+.navbar-burger:hover {
+    color: #fff;
+}
+
 .background-primary {
     background-color: var(--background-primary);
 }
