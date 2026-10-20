@@ -828,8 +828,8 @@ async function loadServerMenu(serverID) {
         $('#manageSubmit').attr('data-server', serverID);
         $('#manageDelete').off('click').click(toggleServer);
 
-        $('#generateToken').off('click').click(function (ev) {
-            toggleButton(ev.target);
+        $('#generateToken').off('click').click(function () {
+            regenerateServerToken(serverID).catch(logException);
         });
     }
 
@@ -900,30 +900,26 @@ async function submitServerChange() {
         showNewToken(await serverInfo.json());
     } else {
         // Patching existing server
-        let route = '/api/server/' + serverID;
-        if (!$('#generateToken').hasClass('is-outlined')) {
-            let serverInfo = await gbRequest('PATCH', route, serverCall[1], true);
-
-            if (!serverInfo.ok) {
-                const errorData = await serverInfo.json();
-                logException(Error(errorData.detail || defaultAPIError));
-                return;
-            }
-
-            route = route + '/token';
-            serverInfo = await gbRequest('GET', route, null, true);
-
-            if (!serverInfo.ok) {
-                const errorData = await serverInfo.json();
-                logException(Error(errorData.detail || defaultAPIError));
-                return;
-            }
-
-            showNewToken(await serverInfo.json());
-        } else {
-            gbRequest('PATCH', route, serverCall[1], true).then(handleServerSubmission).catch(logException);
-        }
+        const route = '/api/server/' + serverID;
+        gbRequest('PATCH', route, serverCall[1], true).then(handleServerSubmission).catch(logException);
     }
+}
+
+async function regenerateServerToken(serverID) {
+    if (!window.confirm('Generate a new token? The current token will stop working immediately.'))
+        return;
+
+    setLoading();
+
+    const serverInfo = await gbRequest('GET', '/api/server/' + serverID + '/token', null, true);
+
+    if (!serverInfo.ok) {
+        const errorData = await serverInfo.json();
+        logException(Error(errorData.detail || defaultAPIError));
+        return;
+    }
+
+    showNewToken(await serverInfo.json());
 }
 
 function toggleServer() {
