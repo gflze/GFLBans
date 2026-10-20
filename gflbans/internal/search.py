@@ -321,7 +321,7 @@ async def do_infraction_search(
             raise SearchError('Cannot search by IP without proper permissions.')
 
         if not include_vpn and field == 'is_vpn' and value is not None:
-            raise SearchError('Cannot search by VPN status without being logged in.')
+            raise SearchError('Cannot search by VPN status without proper permissions.')
 
         if value is None or not (callable(field_type) or isinstance(value, field_type)):
             continue
