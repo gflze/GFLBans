@@ -1,23 +1,34 @@
-<nav class="pagination mr-5 ml-5"
-     role="navigation"
-     aria-label="pagination">
-    {% if user is not none and has_flag(user.permissions, p_nodes["Add Infractions"]) and has_flag(user.permissions, bit_or(p_nodes["Assign an Infraction to a Specific Server"], p_nodes["Add Global Infractions"])) %}
-        <a id="createInfractionLoader" class="pagination-next is-accent button"><i class="fas fa-gavel"></i></a>
-    {% endif %}
-    <ul id="infraction-pages" class="pagination-list">
-    </ul>
-</nav>
-<a id="advancedSearchToggle" class="is-accent is-hidden-mobile button">Advanced Search</a>
+<div class="infractions-toolbar">
+    <nav class="pagination infractions-pagination"
+         role="navigation"
+         aria-label="pagination">
+        {% if user is not none and has_flag(user.permissions, p_nodes["Add Infractions"]) and has_flag(user.permissions, bit_or(p_nodes["Assign an Infraction to a Specific Server"], p_nodes["Add Global Infractions"])) %}
+            <a id="createInfractionLoader" class="pagination-next is-accent button"><i class="fas fa-gavel"></i></a>
+        {% endif %}
+        <ul id="infraction-pages" class="pagination-list is-hidden-phone">
+        </ul>
+        <div id="infraction-pages-compact"
+             class="infraction-pager-compact is-phone-only"></div>
+    </nav>
+    <a id="advancedSearchToggle" class="is-accent button">
+        <span class="is-hidden-phone">Advanced Search</span>
+        <span class="is-phone-only">Search</span>
+    </a>
+</div>
 <div class="table-container is-hidden" id="infractions_tab">
     <table class="table is-fullwidth background-primary infractions-table">
         <thead>
             <tr>
-                <th class="has-text-centered max-50 is-hidden-mobile text-primary">Svc</th>
+                <th class="has-text-centered max-50 is-hidden-touch text-primary">Svc</th>
                 <th class="has-text-centered max-200 is-hidden-touch text-primary">Created</th>
-                <th class="has-text-centered max-200 is-hidden-mobile-tiny text-primary">Restrictions</th>
-                <th class="has-text-centered min-200 text-primary">User</th>
-                <th class="has-text-centered min-200 is-hidden-mobile text-primary">Admin</th>
-                <th class="has-text-centered max-250 text-primary">Remaining</th>
+                <th class="has-text-centered max-200 is-hidden-touch text-primary">Restrictions</th>
+                <th class="has-text-centered-desktop min-200 inf-col-user text-primary">
+                    <span class="is-hidden-touch">User</span>
+                    <span class="is-hidden-desktop">User · Admin</span>
+                </th>
+                <th class="is-hidden-phone is-hidden-desktop inf-col-summary text-primary">Infraction</th>
+                <th class="has-text-centered min-200 is-hidden-touch text-primary">Admin</th>
+                <th class="has-text-centered-desktop has-text-right-touch max-250 inf-col-remaining text-primary">Remaining</th>
             </tr>
         </thead>
         <tbody id="infractionBase">
@@ -29,11 +40,13 @@
         </p>
     </div>
     <nav id="infraction-pages-bottom-nav"
-         class="pagination mt-3 mr-5 ml-5 is-hidden"
+         class="pagination infractions-pagination mt-3 is-hidden"
          role="navigation"
          aria-label="pagination">
-        <ul id="infraction-pages-bottom" class="pagination-list">
+        <ul id="infraction-pages-bottom" class="pagination-list is-hidden-phone">
         </ul>
+        <div id="infraction-pages-bottom-compact"
+             class="infraction-pager-compact is-phone-only"></div>
     </nav>
 </div>
 <script src="/static/js/components/infraction_list.js?v={{ GB_VERSION }}"></script>

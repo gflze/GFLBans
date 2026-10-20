@@ -8,10 +8,14 @@ function setupNav(current_page, total_pages, page_rows) {
     // Reset the blocks
 
     const top_nav = document.getElementById('infraction-pages');
+    const top_compact = document.getElementById('infraction-pages-compact');
     const bottom_nav = document.getElementById('infraction-pages-bottom');
+    const bottom_compact = document.getElementById('infraction-pages-bottom-compact');
 
     $(top_nav).empty();
+    $(top_compact).empty();
     $(bottom_nav).empty();
+    $(bottom_compact).empty();
     $('#infraction-pages-bottom-nav').addClass('is-hidden');
 
     // We do not render the navbar when there are only one page of bans to show
@@ -20,9 +24,11 @@ function setupNav(current_page, total_pages, page_rows) {
     }
 
     renderNav(top_nav, current_page, total_pages);
+    renderCompactNav(top_compact, current_page, total_pages);
 
     if (page_rows > BOTTOM_NAV_THRESHOLD) {
         renderNav(bottom_nav, current_page, total_pages);
+        renderCompactNav(bottom_compact, current_page, total_pages);
         $('#infraction-pages-bottom-nav').removeClass('is-hidden');
     }
 }
@@ -89,6 +95,45 @@ function renderNav(nav, current_page, total_pages) {
 }
 
 
+// Compact pagination: < "Page X of Y" >
+function renderCompactNav(compact, current_page, total_pages) {
+    function make_step(page_n, icon, label) {
+        const step_a = document.createElement('a');
+        step_a.classList.add('text-link');
+        step_a.setAttribute('aria-label', label);
+
+        const step_icon = document.createElement('i');
+        step_icon.classList.add('fas', icon);
+        step_a.appendChild(step_icon);
+
+        if (page_n < 1 || page_n > total_pages) {
+            step_a.setAttribute('disabled', '');
+        } else {
+            $(step_a).click(function () {
+                insertParam('page', page_n);
+            });
+        }
+
+        compact.appendChild(step_a);
+    }
+
+    make_step(current_page - 1, 'fa-chevron-left', 'Previous page');
+
+    const page_label = document.createElement('span');
+    page_label.classList.add('text-primary');
+
+    // "Page" is dropped on very narrow screens so the numbers never get cut off
+    const page_word = document.createElement('span');
+    page_word.classList.add('infraction-pager-word');
+    page_word.innerText = 'Page ';
+    page_label.appendChild(page_word);
+
+    page_label.appendChild(document.createTextNode(current_page + ' of ' + total_pages));
+    compact.appendChild(page_label);
+
+    make_step(current_page + 1, 'fa-chevron-right', 'Next page');
+}
+
 const services = {
     'steam': ['fab', 'fa-steam']
 };
@@ -140,7 +185,7 @@ function addInfractionRow(infraction) {
     }
 
     const svc_cell = document.createElement('td');
-    svc_cell.classList.add('vertical-center', 'is-hidden-mobile');
+    svc_cell.classList.add('vertical-center', 'is-hidden-touch');
 
     const svc_wrap = getWrapper(svc_cell);
     const svc_icon = document.createElement('i');
@@ -164,33 +209,52 @@ function addInfractionRow(infraction) {
     date_wrap.appendChild(date_span);
     row.appendChild(date_cell);
 
+    // Small "service icon + date" line
+    function makeMeta(text) {
+        const meta = document.createElement('div');
+        meta.classList.add('infraction-meta');
+        meta.setAttribute('title', dateStr);
+
+        const meta_icon = document.createElement('i');
+        meta_icon.classList.add(fa_type, fa_icon);
+        meta.appendChild(meta_icon);
+
+        const meta_text = document.createElement('span');
+        meta_text.innerText = text;
+        meta.appendChild(meta_text);
+
+        return meta;
+    }
+
     // Infraction icons
-    const restrictions_cell = document.createElement('td');
-    restrictions_cell.classList.add('vertical-center', 'is-hidden-mobile-tiny');
+    function appendRestrictionIcons(el) {
+        let b = false;
 
-    const restrictions_wrap = getWrapper(restrictions_cell);
+        flags_to_str.forEach(function (v, k) {
+            if (infraction['flags'] & k) {
+                b = true;
 
-    let b = false;
+                const a = restrictions[v];
 
-    flags_to_str.forEach(function (v, k) {
-        if (infraction['flags'] & k) {
-            b = true;
+                const ri = document.createElement('i');
+                ri.classList.add(a[0], a[1], a[2]);
+                el.appendChild(ri);
+            }
+        });
 
-            const a = restrictions[v];
+        if (!b) {
+            const a = restrictions['warning'];
 
             const ri = document.createElement('i');
             ri.classList.add(a[0], a[1], a[2]);
-            restrictions_wrap.appendChild(ri);
+            el.appendChild(ri);
         }
-    });
-
-    if (!b) {
-        const a = restrictions['warning'];
-
-        const ri = document.createElement('i');
-        ri.classList.add(a[0], a[1], a[2]);
-        restrictions_wrap.appendChild(ri);
     }
+
+    const restrictions_cell = document.createElement('td');
+    restrictions_cell.classList.add('vertical-center', 'is-hidden-touch');
+
+    appendRestrictionIcons(getWrapper(restrictions_cell));
 
     row.appendChild(restrictions_cell);
 
@@ -212,22 +276,57 @@ function addInfractionRow(infraction) {
     }
 
     const user_cell = document.createElement('td');
-    user_cell.classList.add('vertical-center', 'has-text-centered', 'text-primary');
+    user_cell.classList.add('vertical-center', 'has-text-centered-desktop', 'text-primary', 'inf-col-user');
+
+    const user_wrap = document.createElement('div');
+    user_wrap.classList.add('infraction-user');
+    user_cell.appendChild(user_wrap);
 
     const uimg = document.createElement('img');
-    uimg.classList.add('infraction-user-av', 'mr-2');
+    uimg.classList.add('infraction-user-av');
     uimg.setAttribute('src', uicon);
-    user_cell.appendChild(uimg);
+    user_wrap.appendChild(uimg);
+
+    const user_text = document.createElement('div');
+    user_text.classList.add('infraction-user-text');
+    user_wrap.appendChild(user_text);
 
     const utxt = document.createElement('span');
+    utxt.classList.add('infraction-user-name');
     utxt.innerText = uname;
-    user_cell.appendChild(utxt);
+    user_text.appendChild(utxt);
+
+    // "by <admin>" + restriction icons, mobile, tablet
+    const user_sub = document.createElement('div');
+    user_sub.classList.add('infraction-user-sub', 'is-hidden-desktop');
+    user_text.appendChild(user_sub);
+
+    const user_sub_icons = document.createElement('span');
+    user_sub_icons.classList.add('infraction-icons', 'is-phone-only');
+    appendRestrictionIcons(user_sub_icons);
+    user_sub.appendChild(user_sub_icons);
+
+    const user_sub_admin = document.createElement('span');
+    user_sub.appendChild(user_sub_admin);
 
     row.appendChild(user_cell);
 
+    // Restrictions and creation date, as its own column on tablet only
+    const summary_cell = document.createElement('td');
+    summary_cell.classList.add('vertical-center', 'is-hidden-phone', 'is-hidden-desktop', 'inf-col-summary');
+
+    const summary_icons = document.createElement('div');
+    summary_icons.classList.add('infraction-icons');
+    appendRestrictionIcons(summary_icons);
+    summary_cell.appendChild(summary_icons);
+
+    summary_cell.appendChild(makeMeta(moment(date).format('MMM D, HH:mm')));
+
+    row.appendChild(summary_cell);
+
     // Admin
     const admin_cell = document.createElement('td');
-    admin_cell.classList.add('vertical-center', 'has-text-centered', 'is-hidden-mobile', 'text-primary');
+    admin_cell.classList.add('vertical-center', 'has-text-centered', 'is-hidden-touch', 'text-primary');
 
     const aimg = document.createElement('img');
     aimg.classList.add('infraction-user-av', 'mr-2');
@@ -235,11 +334,17 @@ function addInfractionRow(infraction) {
     admin_cell.appendChild(aimg);
 
     const atxt = document.createElement('span');
-    atxt.innerText = 'Fetching...';
     admin_cell.appendChild(atxt);
 
+    function setAdminName(name) {
+        atxt.innerText = name;
+        user_sub_admin.innerText = 'by ' + name;
+    }
+
+    setAdminName('Fetching...');
+
     if (infraction['flags'] & (INFRACTION.SYSTEM) || !infraction.hasOwnProperty('admin')) { // System infraction
-        atxt.innerText = 'System';
+        setAdminName('System');
     } else {
         get_admin(infraction['admin']).then(result => {
             if (result.hasOwnProperty('avatar_id')) {
@@ -247,9 +352,9 @@ function addInfractionRow(infraction) {
             }
 
             if (result.hasOwnProperty('admin_name')) {
-                atxt.innerText = result['admin_name'];
+                setAdminName(result['admin_name']);
             } else {
-                atxt.innerText = 'Unknown Admin';
+                setAdminName('Unknown Admin');
             }
         });
     }
@@ -257,24 +362,37 @@ function addInfractionRow(infraction) {
     // Time remaining
 
     const time_cell = document.createElement('td');
-    time_cell.classList.add('vertical-center');
-
-    const time_wrapper = document.createElement('div');
-    time_wrapper.classList.add('has-text-centered');
-
-    time_cell.appendChild(time_wrapper);
+    time_cell.classList.add(
+        'vertical-center', 'has-text-centered-desktop', 'has-text-right-touch', 'inf-col-remaining'
+    );
 
     const time_text = document.createElement('span');
+    time_text.classList.add('infraction-remaining');
     const time_icon = document.createElement('i');
     time_icon.classList.add('mr-1');
     time_text.appendChild(time_icon);
-    const it = getTimeRemainingText(infraction);
 
-    const is = document.createElement('span');
-    is.innerText = it;
-    time_text.appendChild(is);
+    // Mobile/Tablet needs compacted text
+    const time_texts = getTimeRemainingTexts(infraction);
+    const time_layouts = [
+        ['desktop', 'is-hidden-touch'],
+        ['tablet', 'is-hidden-phone', 'is-hidden-desktop'],
+        ['phone', 'is-phone-only']
+    ];
 
-    time_wrapper.appendChild(time_text);
+    for (const [layout, ...hidden_classes] of time_layouts) {
+        const is = document.createElement('span');
+        is.classList.add(...hidden_classes);
+        is.innerText = time_texts[layout];
+        time_text.appendChild(is);
+    }
+
+    time_cell.appendChild(time_text);
+
+    const date_short = moment(date).isSame(moment(), 'day') ? 'HH:mm' : 'MMM D';
+    const time_meta = makeMeta(moment(date).format(date_short));
+    time_meta.classList.add('is-phone-only');
+    time_cell.appendChild(time_meta);
 
     // Color and icons
     if (infraction['flags'] & INFRACTION.REMOVED) {
@@ -317,39 +435,69 @@ function addInfractionRow(infraction) {
     ibase.appendChild(row);
 }
 
-function getTimeRemainingText(infraction) {
-    let original = 0;
+const SHORT_DURATION_UNITS = {
+    'second': 's',
+    'minute': 'm',
+    'hour': 'h',
+    'day': 'd',
+    'week': 'w',
+    'month': 'mo',
+    'year': 'y'
+};
 
+function capitalize(text) {
+    return text.charAt(0).toUpperCase() + text.slice(1);
+}
+
+// "a few seconds" -> "few seconds", "an hour" -> "1 hour", "26 minutes" stays as is
+function humanizeDuration(ms) {
+    return moment.duration(ms).humanize().replace(/^a few /, 'few ').replace(/^an? /, '1 ');
+}
+
+// "few seconds" -> "<1m", "1 hour" -> "1h", "26 minutes" -> "26m"
+function shortenDuration(ms) {
+    const [amount, unit] = humanizeDuration(ms).split(' ');
+
+    if (amount === 'few') {
+        return '<1m';
+    }
+
+    return amount + SHORT_DURATION_UNITS[unit.replace(/s$/, '')];
+}
+
+function getTimeRemainingTexts(infraction) {
     // Simple cases that do not require any other work
     if (infraction['flags'] & INFRACTION.REMOVED) {
-        if (infraction['flags'] & INFRACTION.SESSION || infraction['flags'] & INFRACTION.PERMANENT) {
-            return 'Removed';
-        }
+        // Session and permanent infractions never had a length to show
+        const has_length = !(infraction['flags'] & (INFRACTION.SESSION | INFRACTION.PERMANENT));
+        let original = 0;
 
-        if (infraction['flags'] & INFRACTION.PLAYTIME_DURATION) {
+        if (has_length && infraction['flags'] & INFRACTION.PLAYTIME_DURATION) {
             if (infraction.hasOwnProperty('orig_length')) {
                 original = infraction['orig_length'] * 1000;
             }
-        } else {
+        } else if (has_length) {
             original = (infraction['expires'] - infraction['created']) * 1000;
         }
 
         if (original <= 0) {
-            return 'Removed';
+            return {desktop: 'Removed', tablet: 'Removed', phone: 'Removed'};
         }
 
-        const o_dur = moment.duration(original).humanize();
-
-        return 'Removed (' + o_dur.charAt(0).toUpperCase() + o_dur.slice(1) + ')';
+        return {
+            desktop: 'Removed (' + capitalize(moment.duration(original).humanize()) + ')',
+            tablet: 'Removed · ' + humanizeDuration(original),
+            phone: 'Removed'
+        };
     } else if (infraction['flags'] & INFRACTION.SESSION) {
-        return 'Session';
+        return {desktop: 'Session', tablet: 'Session', phone: 'Session'};
     } else if (infraction['flags'] & INFRACTION.PERMANENT) {
-        return 'Permanent';
+        return {desktop: 'Permanent', tablet: 'Permanent', phone: 'Permanent'};
     }
 
     // For both standard infractions and pausable infractions, we'd like to show remaining and original
     let remaining = 0;
-    original = 0;
+    let original = 0;
 
     if (infraction['flags'] & INFRACTION.PLAYTIME_DURATION) {
         remaining = infraction['time_left'] * 1000;
@@ -364,12 +512,17 @@ function getTimeRemainingText(infraction) {
         original = (infraction['expires'] - infraction['created']) * 1000;
     }
 
-    const r_dur = moment.duration(remaining).humanize();
-    const o_dur = moment.duration(original).humanize();
-
     if (remaining > 0) {
-        return r_dur.charAt(0).toUpperCase() + r_dur.slice(1);
+        return {
+            desktop: capitalize(moment.duration(remaining).humanize()),
+            tablet: capitalize(humanizeDuration(remaining)) + ' left',
+            phone: shortenDuration(remaining) + ' left'
+        };
     } else {
-        return 'Expired (' + o_dur.charAt(0).toUpperCase() + o_dur.slice(1) + ')';
+        return {
+            desktop: 'Expired (' + capitalize(moment.duration(original).humanize()) + ')',
+            tablet: 'Expired · ' + humanizeDuration(original),
+            phone: 'Expired'
+        };
     }
 }

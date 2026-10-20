@@ -691,8 +691,131 @@ th {
     border-radius: 50%;
 }
 
+.infraction-user {
+    display: inline-flex;
+    align-items: center;
+}
+
+.infraction-user > .infraction-user-av {
+    flex-shrink: 0;
+    margin-right: 0.5rem;
+}
+
+.infraction-user-text {
+    min-width: 0;
+    text-align: left;
+}
+
+.infraction-meta {
+    font-size: 0.8rem;
+    color: var(--text-placeholder);
+    white-space: nowrap;
+}
+
+.infraction-meta > i {
+    margin-right: 0.35em;
+}
+
+.infraction-icons > i + i {
+    margin-left: 0.5em;
+}
+
+/* Tablet */
+@media screen and (max-width: 1023px) {
+    .infractions-table th {
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    .infractions-table .inf-col-user {
+        width: 45%;
+        min-width: 0;
+        max-width: 0; /* Lets long names truncate instead of widening the table */
+        padding-left: 1.5rem;
+    }
+
+    .infractions-table .inf-col-remaining {
+        padding-right: 1.5rem;
+        white-space: nowrap;
+    }
+
+    .infraction-user {
+        display: flex;
+    }
+
+    .infraction-user > .infraction-user-av {
+        width: 40px;
+        height: 40px;
+        margin-right: 0.75rem;
+    }
+
+    .infraction-user-name,
+    .infraction-user-sub {
+        display: block;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .infraction-user-name {
+        font-weight: 600;
+    }
+
+    .infraction-user-sub {
+        font-size: 0.8rem;
+        color: var(--text-placeholder);
+    }
+
+    .infraction-remaining {
+        font-size: 0.9rem;
+        font-weight: 600;
+    }
+}
+
+/* Mobile */
+@media screen and (max-width: 600px) {
+    .infractions-table thead {
+        display: none;
+    }
+
+    .infractions-table .inf-col-user {
+        width: 100%;
+        padding-left: 1rem;
+    }
+
+    .infractions-table .inf-col-remaining {
+        padding-right: 1rem;
+    }
+
+    .infraction-user-sub > .infraction-icons {
+        margin-right: 0.5em;
+    }
+
+    .infraction-remaining {
+        font-size: 0.85rem;
+    }
+
+    .inf-col-remaining > .infraction-meta {
+        margin-top: 0.15rem;
+    }
+}
+
 @media screen and (max-width: 475px) {
     .is-hidden-mobile-tiny {
+        display: none !important;
+    }
+}
+
+/* Mobile breakpoint, narrower than Bulma's mobile */
+@media screen and (max-width: 600px) {
+    .is-hidden-phone {
+        display: none !important;
+    }
+}
+
+@media screen and (min-width: 601px) {
+    .is-phone-only {
         display: none !important;
     }
 }
@@ -1115,6 +1238,126 @@ img {
 
 #infraction-pages {
     height: 48px;
+}
+
+.infractions-toolbar {
+    margin: 0 1.5rem;
+}
+
+.infractions-toolbar > .pagination {
+    margin-left: 0;
+    margin-right: 0;
+}
+
+#infraction-pages-bottom-nav {
+    margin-left: 1.5rem;
+    margin-right: 1.5rem;
+}
+
+/* Keep the page buttons compact and left aligned, Bulma stretches them below 769px */
+.infractions-pagination .pagination-list {
+    flex-grow: 1;
+    order: 1;
+    justify-content: flex-start;
+}
+
+.infractions-pagination .pagination-list li {
+    flex-grow: 0;
+}
+
+.infractions-pagination #createInfractionLoader {
+    order: 3;
+    flex-grow: 0;
+}
+
+/* Below desktop the search button sits next to the pagination instead of floating above it */
+@media screen and (max-width: 1023px) {
+    .infractions-toolbar {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-bottom: 1rem;
+    }
+
+    .infractions-toolbar > .pagination {
+        flex: 1;
+        min-width: 0;
+        margin: 0;
+    }
+
+    /* Only the page buttons wrap when they run out of room, the create button stays beside the search button */
+    .infractions-pagination {
+        flex-wrap: nowrap;
+    }
+
+    .infractions-pagination .pagination-list {
+        flex-wrap: wrap;
+        min-width: 0;
+    }
+
+    #infraction-pages {
+        height: auto;
+        min-height: 48px;
+    }
+
+    #advancedSearchToggle {
+        position: static;
+        flex-shrink: 0;
+        transform: none;
+    }
+}
+
+.infraction-pager-compact {
+    display: flex;
+    flex: 1;
+    align-items: center;
+    justify-content: space-between;
+    height: 2.5em;
+    margin: 0.25rem;
+    border: 1px solid var(--background-tertiary);
+    border-radius: 4px;
+}
+
+.infraction-pager-compact:empty {
+    display: none;
+}
+
+.infraction-pager-compact > a {
+    display: flex;
+    align-items: center;
+    height: 100%;
+    padding: 0 0.75em;
+}
+
+.infraction-pager-compact > span {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.infraction-pager-compact > a[disabled] {
+    opacity: 0.4;
+    pointer-events: none;
+}
+
+/* Keep the compact pager, create button and search on one line, lined up with the rows below */
+@media screen and (max-width: 600px) {
+    .infractions-toolbar,
+    #infraction-pages-bottom-nav {
+        margin-left: 1rem;
+        margin-right: 1rem;
+    }
+
+    .infraction-pager-compact {
+        min-width: 0;
+    }
+}
+
+@media screen and (max-width: 359px) {
+    .infraction-pager-word {
+        display: none;
+    }
 }
 
 #advancedSearchBlock {
