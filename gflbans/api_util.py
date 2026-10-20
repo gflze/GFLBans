@@ -151,7 +151,7 @@ async def as_files(app, f: List[DFile], exclude_priv=True) -> List[FileInfo]:
         if df.created:
             fi.created = int(df.created.replace(tzinfo=UTC).timestamp())
 
-        fi.rendered = '<em>Attached a file: <a href="%s">%s</a></em>' % (
+        fi.rendered = '<em>Attached a file: <a href="%s" target="_blank" rel="noopener">%s</a></em>' % (
             html.escape(f'/file/uploads/{df.gridfs_file}/{df.file_name}', True),
             html.escape(f'{df.file_name}', True),
         )
