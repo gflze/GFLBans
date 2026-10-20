@@ -95,7 +95,7 @@ function doSearch(page = 1, s, m) {
         $('#advancedSearchToggle')
             .attr('disabled', true)
             .addClass('has-tooltip-bottom')
-            .attr('data-tooltip', 'Advanced search is disabled during account searches');
+            .attr('data-tooltip', 'Advanced search is disabled during alt searches');
     } else
         query += 'search?';
 
