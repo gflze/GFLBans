@@ -659,7 +659,7 @@ function startEditComment(event, index) {
     const editTextarea = $('<textarea>');
     editTextarea.addClass('textarea edit-comment-text');
     editTextarea.val(originalMessage);
-    editTextarea.attr('maxlength', '280');
+    editTextarea.attr('maxlength', '1000');
     editTextarea.attr('rows', '2');
 
     const submitEditButton = $('<button>');

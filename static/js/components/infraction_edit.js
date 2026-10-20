@@ -734,7 +734,7 @@ function startRemove(infraction) {
 
         const reason = $('#removalReason').val();
 
-        if (reason.length < 1 || reason.length > 240) {
+        if (reason.length < 1 || reason.length > 100) {
             return;
         }
 

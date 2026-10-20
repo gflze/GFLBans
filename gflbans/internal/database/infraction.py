@@ -21,7 +21,7 @@ class DComment(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
     ctype: int = 0  # Deprecated
-    content: constr(min_length=1, max_length=280)
+    content: constr(min_length=1, max_length=1000)
     author: Optional[ObjectId] = None
     edit_data: Optional[Dict[str, Union[datetime, ObjectId]]] = {}  # admin_id, unix time
     private: bool = False

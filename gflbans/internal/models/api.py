@@ -91,7 +91,7 @@ class PlayerObj(PlayerObjSimple):
 
 class Comment(BaseModel):
     author: Optional[NonNegativeInt] = None
-    content: constr(min_length=1, max_length=280)
+    content: constr(min_length=1, max_length=1000)
     edit_data: Optional[Dict[str, Union[int, str]]] = None  # admin_id, unix time
     private: bool = False
     rendered: Optional[str] = None

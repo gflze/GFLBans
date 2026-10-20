@@ -78,8 +78,8 @@ class Search(BaseModel):
     admin_id: Optional[constr(min_length=1, max_length=256)] = None
     admin: Optional[constr(min_length=1, max_length=30)] = None
     server: Optional[constr(min_length=1, max_length=30)] = None
-    reason: Optional[constr(min_length=1, max_length=256)] = None
-    ureason: Optional[constr(min_length=1, max_length=256)] = None
+    reason: Optional[constr(min_length=1, max_length=280)] = None
+    ureason: Optional[constr(min_length=1, max_length=280)] = None
     is_active: Optional[bool] = None
     is_expired: Optional[bool] = None
     is_system: Optional[bool] = None
@@ -160,7 +160,7 @@ class CreateInfraction(BaseModel):
     auto_duration: bool = False  # If True, ignores duration
     player: PlayerObjSimple
     admin: Optional[Initiator] = None
-    reason: constr(min_length=1, max_length=280)
+    reason: constr(min_length=1, max_length=100)
     punishments: List[constr(pattern=valid_types_regex)]
     scope: constr(pattern=r'^(server|global)$')
     session: bool = False
@@ -192,7 +192,7 @@ class CreateInfractionReply(BaseModel):
 class CreateInfractionFromChatLog(BaseModel):
     chatlog_id: str
     preset: constr(pattern=r'^(warn|text|silence)$') = 'text'
-    reason: constr(min_length=1, max_length=280)
+    reason: constr(min_length=1, max_length=100)
     scope: constr(pattern=r'^(server|global)$')
     duration: Optional[PositiveInt] = None
     auto_duration: bool = False
@@ -202,7 +202,7 @@ class CreateInfractionFromChatLog(BaseModel):
 
 class RemoveInfractionsOfPlayer(BaseModel):
     player: PlayerObjSimple
-    remove_reason: constr(min_length=1, max_length=280)
+    remove_reason: constr(min_length=1, max_length=100)
     admin: Optional[Initiator] = None
     include_other_servers: bool = True
     restrict_types: Optional[List[constr(pattern=valid_types_regex)]] = None
@@ -230,7 +230,7 @@ class ModifyInfraction(BaseModel):
     # Misc attrs
     make_web: bool = False
     server: Optional[str] = None
-    reason: Optional[constr(min_length=1, max_length=280)] = None
+    reason: Optional[constr(min_length=1, max_length=100)] = None
     ip: Optional[str] = None  # Empty string to clear
 
     # Removal related stuff.
@@ -238,7 +238,7 @@ class ModifyInfraction(BaseModel):
     set_removal_state: Optional[bool] = None
     removed_by: Optional[Initiator] = None
     # Also accepted alone to change the removal reason of an already removed infraction
-    removal_reason: Optional[constr(min_length=1, max_length=280)] = None
+    removal_reason: Optional[constr(min_length=1, max_length=100)] = None
 
     # Other flag stuff
     punishments: Optional[List[constr(pattern=valid_types_regex)]] = None
@@ -263,14 +263,14 @@ class ModifyInfractionReply(BaseModel):
 
 class AddComment(BaseModel):
     admin: Optional[Initiator] = None
-    content: constr(min_length=1, max_length=280)
+    content: constr(min_length=1, max_length=1000)
     set_private: bool = False
 
 
 class EditComment(BaseModel):
     comment_index: NonNegativeInt  # The index of the comment in the infraction's comment list
     admin: Optional[Initiator] = None
-    content: constr(min_length=1, max_length=280)
+    content: constr(min_length=1, max_length=1000)
 
 
 class DeleteComment(BaseModel):
