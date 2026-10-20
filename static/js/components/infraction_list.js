@@ -454,12 +454,12 @@ function humanizeDuration(ms) {
     return moment.duration(ms).humanize().replace(/^a few /, 'few ').replace(/^an? /, '1 ');
 }
 
-// "few seconds" -> "Seconds", "1 hour" -> "1h", "26 minutes" -> "26m"
+// "few seconds" -> "<1m", "1 hour" -> "1h", "26 minutes" -> "26m"
 function shortenDuration(ms) {
     const [amount, unit] = humanizeDuration(ms).split(' ');
 
     if (amount === 'few') {
-        return 'few secs';
+        return '<1m';
     }
 
     return amount + SHORT_DURATION_UNITS[unit.replace(/s$/, '')];
@@ -513,12 +513,10 @@ function getTimeRemainingTexts(infraction) {
     }
 
     if (remaining > 0) {
-        const short = shortenDuration(remaining);
-
         return {
             desktop: capitalize(moment.duration(remaining).humanize()),
             tablet: capitalize(humanizeDuration(remaining)) + ' left',
-            phone: short === 'Seconds' ? short : short + ' left'
+            phone: shortenDuration(remaining) + ' left'
         };
     } else {
         return {
