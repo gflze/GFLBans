@@ -186,7 +186,6 @@ async function LoadAdminList() {
             $('#logs-admin div').removeClass('selected');
             $(this).addClass('selected');
             ResetAndLoadLogs();
-            LoadNewLogs();
         });
 
         adminList.append(el);
@@ -224,8 +223,9 @@ function LoadNewLogs(append = false) {
     }
 
     const selectedAdmin = $('#logs-admin .selected');
-    const selectedAdminID = selectedAdmin.data('type');
-    if (selectedAdminID != 0)
+    // Read via attr() so the ID stays a string; data() would convert numeric IDs to numbers, which the API rejects
+    const selectedAdminID = selectedAdmin.attr('data-type');
+    if (selectedAdminID !== undefined && selectedAdminID !== '0')
         getAuditLogs['admin'] = selectedAdminID;
 
     gbRequest('POST', '/api/logs/', getAuditLogs, true).then(function (response) {
