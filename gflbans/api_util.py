@@ -202,13 +202,19 @@ def as_player(user: Optional[DUser], ip: Optional[str], include_ip: bool = True)
 
 
 async def as_infraction(
-    app, infraction: DInfraction, include_ip=True, exclude_private=False, include_vpn=True
+    app, infraction: DInfraction, include_ip=True, exclude_private=False, include_vpn=True, load_fast=False
 ) -> Infraction:
+    # Counts are always included, but load_fast skips rendering the full comments and files
+    visible_comments = [c for c in infraction.comments if not (exclude_private and c.private)]
+    visible_files = [f for f in infraction.files if not (exclude_private and f.private)]
+
     return Infraction(
         id=str_id(infraction.id),
         flags=infraction.flags if include_vpn else infraction.flags & ~INFRACTION_VPN,
-        comments=await as_comments(app, infraction.comments, exclude_priv=exclude_private),
-        files=await as_files(app, infraction.files, exclude_priv=exclude_private),
+        comments=[] if load_fast else await as_comments(app, visible_comments, exclude_priv=False),
+        files=[] if load_fast else await as_files(app, visible_files, exclude_priv=False),
+        comment_count=len(visible_comments),
+        file_count=len(visible_files),
         server=str_id(infraction.server),
         created=infraction.created,
         expires=infraction.expires,

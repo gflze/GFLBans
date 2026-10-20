@@ -706,6 +706,27 @@ th {
     text-align: left;
 }
 
+.infraction-user-line {
+    display: flex;
+    align-items: baseline;
+    min-width: 0;
+}
+
+.infraction-user-line > .infraction-user-name {
+    min-width: 0;
+}
+
+.infraction-comment-count {
+    flex-shrink: 0;
+    margin-left: 0.5em;
+    font-size: 0.85em;
+    white-space: nowrap;
+}
+
+.infraction-comment-count > i {
+    margin-right: 0.25em;
+}
+
 .infraction-meta {
     font-size: 0.8rem;
     color: var(--text-placeholder);

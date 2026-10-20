@@ -291,10 +291,45 @@ function addInfractionRow(infraction) {
     user_text.classList.add('infraction-user-text');
     user_wrap.appendChild(user_text);
 
+    // Name and comment indicator share a line, so a truncated name never hides the indicator
+    const user_line = document.createElement('div');
+    user_line.classList.add('infraction-user-line');
+    user_text.appendChild(user_line);
+
     const utxt = document.createElement('span');
     utxt.classList.add('infraction-user-name');
     utxt.innerText = uname;
-    user_text.appendChild(utxt);
+    user_line.appendChild(utxt);
+
+    // Comment indicator, counts comments and files together like the infraction view does
+    const comment_count = infraction['comment_count'] || 0;
+    const file_count = infraction['file_count'] || 0;
+
+    if (comment_count + file_count > 0) {
+        const tooltip = [];
+
+        if (comment_count > 0) {
+            tooltip.push(comment_count + (comment_count === 1 ? ' comment' : ' comments'));
+        }
+
+        if (file_count > 0) {
+            tooltip.push(file_count + (file_count === 1 ? ' file' : ' files'));
+        }
+
+        const cind = document.createElement('span');
+        cind.classList.add('infraction-comment-count', 'text-secondary');
+        cind.setAttribute('title', tooltip.join(', '));
+
+        const cicon = document.createElement('i');
+        cicon.classList.add('far', 'fa-comment');
+        cind.appendChild(cicon);
+
+        const ctxt = document.createElement('span');
+        ctxt.innerText = (comment_count + file_count).toString();
+        cind.appendChild(ctxt);
+
+        user_line.appendChild(cind);
+    }
 
     // "by <admin>" + restriction icons, mobile, tablet
     const user_sub = document.createElement('div');

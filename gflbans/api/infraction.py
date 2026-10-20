@@ -242,9 +242,6 @@ async def get_infractions(
     async for dinf in DInfraction.from_query(
         request.app.state.db[MONGO_DB], q, limit=query.limit, skip=query.skip, sort=('created', DESCENDING)
     ):
-        if load_fast:
-            dinf.comments = []
-            dinf.files = []
         infs.append(
             await as_infraction(
                 request.app,
@@ -252,6 +249,7 @@ async def get_infractions(
                 incl_ip,
                 exclude_priv_comments,
                 include_vpn=should_include_vpn(auth.type, auth.permissions),
+                load_fast=load_fast,
             )
         )
 
@@ -307,10 +305,6 @@ async def search_infractions(
     async for dinf in DInfraction.from_query(
         request.app.state.db[MONGO_DB], cq, limit=query.limit, skip=query.skip, sort=('created', DESCENDING)
     ):
-        if load_fast:
-            dinf.comments = []
-            dinf.files = []
-
         # If time left is > 100 years, just say it is perma
         if dinf.expires is not None and dinf.expires > MAX_UNIX_TIMESTAMP:
             dinf.expires = None
@@ -322,6 +316,7 @@ async def search_infractions(
                 incl_ip,
                 exclude_private_comments(auth.type, auth.permissions),
                 include_vpn=incl_vpn,
+                load_fast=load_fast,
             )
         )
 
@@ -337,7 +332,6 @@ async def recursive_infraction_search(
     found_infractions: Set[str],
     limit: int,
     skip: int,
-    load_fast: bool,
 ) -> List[DInfraction]:
     if depth <= 0 or (not ips and not steam_ids):
         return []
@@ -378,10 +372,6 @@ async def recursive_infraction_search(
         if str(dinf.id) in found_infractions:
             continue  # Skip already found infractions
 
-        if load_fast:
-            dinf.comments = []
-            dinf.files = []
-
         found_infractions.add(str(dinf.id))
 
         # Normalize excessive expiration times
@@ -399,7 +389,7 @@ async def recursive_infraction_search(
 
     # Recursively search with all newly found identifiers in a **single batch**
     new_results = await recursive_infraction_search(
-        app, list(new_ips), list(new_steam_ids), depth - 1, visited_ids, found_infractions, limit, skip, load_fast
+        app, list(new_ips), list(new_steam_ids), depth - 1, visited_ids, found_infractions, limit, skip
     )
 
     infractions.extend(new_results)
@@ -441,7 +431,6 @@ async def search_recursive_infractions(
         found_infractions,
         query.limit,
         query.skip,
-        load_fast,
     )
 
     if query.limit == 0:
@@ -463,6 +452,7 @@ async def search_recursive_infractions(
                 incl_ip,
                 exclude_priv_comments,
                 include_vpn=should_include_vpn(auth.type, auth.permissions),
+                load_fast=load_fast,
             )
             for inf in paginated_infractions
         ],

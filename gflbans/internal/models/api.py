@@ -140,6 +140,8 @@ class Infraction(BaseModel):
     flags: int
     comments: List[Comment]
     files: List[FileInfo] = []
+    comment_count: Optional[NonNegativeInt] = None
+    file_count: Optional[NonNegativeInt] = None
     server: Optional[str] = None
     created: float
     expires: Optional[NonNegativeFloat] = None
