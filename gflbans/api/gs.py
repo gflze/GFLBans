@@ -303,7 +303,7 @@ async def call_admin(request: Request, exe: ExecuteCallAdmin, auth: AuthInfo = D
         auth.authenticator_id,
         gs_service=exe.caller.gs_service,
         gs_id=exe.caller.gs_id,
-        ignore_others=exe.include_other_servers,
+        ignore_others=not exe.include_other_servers,
         active_only=True,
     )
 
