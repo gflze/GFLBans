@@ -500,7 +500,7 @@ function addComments(renderableComments) {
         if (rc['edit_time']) {
             $(edit).text('(Edited)');
             $(edit).css('color', 'grey');
-            edit.classList.add('has-tooltip-dark');
+            edit.classList.add('has-tooltip-dark', 'has-tooltip-left');
             $(edit).attr('data-tooltip', 'Edited ' + moment.unix(rc['edit_time']).format('LLL'));
             if (rc['edit_user']) {
                 get_admin(rc['edit_user']).then(function (adm) {
