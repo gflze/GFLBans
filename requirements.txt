@@ -11,7 +11,7 @@ click==8.5.0
 cryptography==50.0.2
 defusedxml==0.7.1
 djlint==1.46.6
-dnspython==2.9.0
+dnspython==2.9.2
 fastapi==0.146.0
 frozenlist==1.8.0
 h11==0.16.0
