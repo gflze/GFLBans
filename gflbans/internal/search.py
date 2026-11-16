@@ -224,7 +224,7 @@ async def admin_name_to_mongo_ids(app, s: str):
     r = [doc['_id'] for doc in col.find({'name': {'$regex': s, '$options': 'i'}})]
 
     if len(r) <= 0:
-        return str(os.urandom(32).hex())
+        return {'admin': str(os.urandom(32).hex())}  # This should result in the search returning nothing.
 
     return {'$or': [{'admin': admin_id} for admin_id in r]}
 
