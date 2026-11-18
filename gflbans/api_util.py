@@ -269,6 +269,19 @@ def should_include_ip(actor_type: int, actor_perms: int):
     return actor_type != NOT_AUTHED_USER and actor_perms & PERMISSION_VIEW_IP_ADDR == PERMISSION_VIEW_IP_ADDR
 
 
+def is_ip_only(infraction: DInfraction) -> bool:
+    return infraction.user is None and infraction.ip is not None
+
+
+def hide_ip_only_infractions(query: dict, include_ip: bool) -> dict:
+    # IP only infractions are hidden entirely from those who can't see IP addresses
+    if include_ip:
+        return query
+
+    has_user = {'user': {'$ne': None}}
+    return {'$and': [query, has_user]} if query else has_user
+
+
 def should_include_vpn(actor_type: int, actor_perms: int):
     return should_include_ip(actor_type, actor_perms)
 

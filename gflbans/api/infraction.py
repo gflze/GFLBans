@@ -18,6 +18,8 @@ from gflbans.api_util import (
     as_infraction,
     construct_ci_resp,
     exclude_private_comments,
+    hide_ip_only_infractions,
+    is_ip_only,
     obj_id,
     should_include_ip,
     should_include_vpn,
@@ -235,6 +237,7 @@ async def get_infractions(
         ignore_others=(not query.include_other_servers),
         active_only=query.active_only,
     )
+    q = hide_ip_only_infractions(q, incl_ip)
 
     exclude_priv_comments = exclude_private_comments(auth.type, auth.permissions)
     infs = []
@@ -271,6 +274,9 @@ async def get_infraction(request: Request, infraction_id: str, auth: AuthInfo = 
     if inf is None:
         raise HTTPException(detail='No such infraction', status_code=404)
 
+    if is_ip_only(inf) and not should_include_ip(auth.type, auth.permissions):
+        raise HTTPException(detail='You do not have permission to view this infraction', status_code=403)
+
     return await as_infraction(
         request.app,
         inf,
@@ -300,6 +306,7 @@ async def search_infractions(
     except SearchError as e:
         raise HTTPException(detail=f'SearchError: {e.args[0]}', status_code=400)
 
+    cq = hide_ip_only_infractions(cq, incl_ip)
     infs = []
 
     async for dinf in DInfraction.from_query(

@@ -805,6 +805,13 @@ function _openInfraction(infraction_id, start, skip_push=false) {
 
     gbRequest('GET', '/api/infractions/' + infraction_id + '/info', null, false).then(function (r) {
         r.json().then(function (j) {
+            if (!r.ok) {
+                unsetLoading();
+                showError(j.detail || defaultAPIError);
+                return;
+            }
+
+
             wrapSetupView(j, start);
         }).catch(logException);
     }).catch(logException);

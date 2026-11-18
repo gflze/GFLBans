@@ -3,6 +3,7 @@ from bson import ObjectId
 from fastapi import APIRouter, Depends, HTTPException
 from starlette.requests import Request
 
+from gflbans.api_util import hide_ip_only_infractions, is_ip_only
 from gflbans.internal.config import HOST, MONGO_DB
 from gflbans.internal.constants import GB_VERSION
 from gflbans.internal.database.infraction import DInfraction
@@ -36,9 +37,14 @@ async def preload_infraction(request: Request, infraction_id: str, query: Search
     if dinf is None:
         raise HTTPException(detail='No such infraction exists', status_code=404)
 
+    incl_ip = sc['user'] is not None and sc['user'].permissions & PERMISSION_VIEW_IP_ADDR == PERMISSION_VIEW_IP_ADDR
+
+    if is_ip_only(dinf) and not incl_ip:
+        raise HTTPException(detail='You do not have permission to view this infraction', status_code=403)
+
     # Determine what page dinf is on
 
-    s_dict = {'created': {'$gt': dinf.created}}
+    s_dict = hide_ip_only_infractions({'created': {'$gt': dinf.created}}, incl_ip)
     do_search = False
     for field, (mongo_field, field_type, *flag_value) in FIELD_MAP.items():
         if getattr(query, field, None) is not None:
@@ -46,11 +52,6 @@ async def preload_infraction(request: Request, infraction_id: str, query: Search
             break
 
     if do_search:
-        incl_ip = False
-
-        if sc['user'] is not None:
-            incl_ip = sc['user'].permissions & PERMISSION_VIEW_IP_ADDR == PERMISSION_VIEW_IP_ADDR
-
         try:
             cq = await do_infraction_search(request.app, query, include_ip=incl_ip, include_vpn=incl_ip)
         except SearchError as e:
