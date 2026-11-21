@@ -116,10 +116,44 @@ async function gbRequest(method='GET', url='', data={}, send_token=false) {
 
 $(document).ready(function () {
     // Toggle the burger for mobile mode
-    $('.navbar-burger').click(function () {
-        $('.navbar-burger').toggleClass('is-active');
-        $('.navbar-menu').toggleClass('is-active');
+    const navbarMenu = $('.navbar-menu');
+
+    $('.navbar-burger').on('click', function () {
+        setNavbarMenuOpen(!navbarMenu.hasClass('is-active'));
+    }).on('keydown', function (e) {
+        if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            setNavbarMenuOpen(!navbarMenu.hasClass('is-active'));
+        }
     });
+
+    $('.navbar-backdrop, .navbar-drawer-close').on('click', function () {
+        setNavbarMenuOpen(false);
+    });
+
+    $(document).on('keydown', function (e) {
+        if (e.key === 'Escape' && navbarMenu.hasClass('is-active'))
+            setNavbarMenuOpen(false);
+    });
+
+    const closeNavbarMenuIfOpen = function () {
+        if (navbarMenu.hasClass('is-active'))
+            setNavbarMenuOpen(false);
+    };
+    const desktopQuery = window.matchMedia('(min-width: 1024px)');
+    const onDesktopChange = function (e) {
+        if (e.matches)
+            closeNavbarMenuIfOpen();
+    };
+
+    if (typeof desktopQuery.addEventListener === 'function')
+        desktopQuery.addEventListener('change', onDesktopChange);
+    else
+        desktopQuery.addListener(onDesktopChange);
+
+    $(window).on('pageshow', closeNavbarMenuIfOpen);
+
+    setupNavbarDrawerSwipe();
 
     // Switch between light and dark mode
     $('#dark-mode-toggle').click(function () {
@@ -147,6 +181,85 @@ $(document).ready(function () {
         closeModals();
     });
 });
+
+function setNavbarMenuOpen(open) {
+    const menu = $('.navbar-menu');
+    const burger = $('.navbar-burger');
+    const wasOpen = menu.hasClass('is-active');
+
+    burger.toggleClass('is-active', open).attr('aria-expanded', open);
+    menu.toggleClass('is-active', open);
+    $('#htmlRoot').toggleClass('is-clipped', open || $('.modal.is-active').length > 0);
+
+    if (open && !wasOpen)
+        $('.navbar-drawer-close').trigger('focus');
+    else if (!open && wasOpen && $.contains(menu[0], document.activeElement))
+        burger.trigger('focus');
+}
+
+function setupNavbarDrawerSwipe() {
+    const drawer = $('.navbar-menu');
+    let startX = null;
+    let startY = 0;
+    let dx = 0;
+    let dragging = false;
+
+    drawer.on('touchstart', function (e) {
+        if (!drawer.hasClass('is-active') || e.originalEvent.touches.length > 1 || $(e.target).is('input')) {
+            return;
+        }
+
+        startX = e.originalEvent.touches[0].clientX;
+        startY = e.originalEvent.touches[0].clientY;
+        dx = 0;
+        dragging = false;
+    });
+
+    drawer.on('touchmove', function (e) {
+        if (startX === null) {
+            return;
+        }
+
+        const touch = e.originalEvent.touches[0];
+        const dy = Math.abs(touch.clientY - startY);
+        dx = touch.clientX - startX;
+
+        if (!dragging) {
+            if (Math.abs(dx) < 8 && dy < 8) {
+                return;
+            }
+
+            if (dx <= 0 || dy > Math.abs(dx)) {
+                startX = null;
+                return;
+            }
+
+            dragging = true;
+            drawer.css('transition', 'none');
+        }
+
+        e.preventDefault();
+        drawer.css('transform', 'translateX(' + Math.max(0, dx) + 'px)');
+    });
+
+    drawer.on('touchend touchcancel', function (e) {
+        if (startX === null) {
+            return;
+        }
+
+        startX = null;
+
+        if (!dragging) {
+            return;
+        }
+
+        drawer.css({transition: '', transform: ''});
+
+        if (e.type === 'touchend' && dx > 80) {
+            setNavbarMenuOpen(false);
+        }
+    });
+}
 
 function closeModals() {
     $('.modal').removeClass('is-active');
