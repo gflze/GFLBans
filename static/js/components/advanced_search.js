@@ -26,7 +26,9 @@ async function loadSearchModal() {
     if (!loadedAdvancedSearch) {
         $('#search-scope-web-check').click(handleWebCheck);
         $('[name="time-type"]').click(handleTimeCheck);
-        $('[name="status-type"]').click(handleStatusCheck);
+        $('[name="status-type"]').click(function () {
+            animateLayoutChange('#search-time-type-group', handleStatusCheck);
+        });
         $('#search-admin-admin-check').click(clickedAdminCheck);
         $('#search-admin-demoted-check').click(function() {
             $('#search-admin-info').removeClass('is-hidden');
@@ -37,7 +39,9 @@ async function loadSearchModal() {
             $('#search-admin-field').addClass('is-hidden');
         });
         $('.restriction-button').click(function (ev) {
-            toggleRestriction(ev.target);
+            animateLayoutChange('#advanced-search-modal .restriction-buttons', function () {
+                toggleRestriction(ev.target);
+            });
         });
         $('#search-admin-name').on('input', function () {
             if ($(this).val().trim() !== '') {

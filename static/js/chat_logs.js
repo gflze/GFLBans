@@ -175,17 +175,23 @@ function renderMessageGroup(user, messages) {
 function openQuickPunish(user, message) {
     // Reset and open base modal
     loadModal().then(() => {
-        $('#gameIdEntry').closest('.field').addClass('is-hidden');
-        $('#ipEntry').closest('.field').addClass('is-hidden');
-        let ctxEl = document.getElementById('chatlogContext');
-        if (!ctxEl) {
-            ctxEl = document.createElement('div');
-            ctxEl.id = 'chatlogContext';
-            ctxEl.classList.add('notification', 'is-info');
-            const targetServerField = document.getElementById('targetServerField');
-            targetServerField.parentNode.insertBefore(ctxEl, targetServerField);
+        const userSection = $('#cUserSection').addClass('is-hidden');
+        let ctx = $('#chatlogContext');
+        if (!ctx.length) {
+            ctx = $(
+                '<div id="chatlogContext" class="form-row">'
+                + '<span class="form-label">Message</span>'
+                + '<blockquote class="chatlog-quote">'
+                + '<div class="chatlog-quote-meta"><strong class="chatlog-quote-name"></strong>'
+                + '<time class="chatlog-quote-time"></time></div>'
+                + '<p class="chatlog-quote-text"></p>'
+                + '</blockquote></div>'
+            ).insertBefore(userSection);
         }
-        ctxEl.innerText = `${user.gs_name || 'Unknown Player'}: ${message.content}`;
+        const sentAt = new Date(message.created * 1000);
+        ctx.find('.chatlog-quote-name').text(user.gs_name || 'Unknown Player');
+        ctx.find('.chatlog-quote-time').text(sentAt.toLocaleString()).attr('datetime', sentAt.toISOString());
+        ctx.find('.chatlog-quote-text').text(message.content);
 
         const serverId = document.getElementById('filter-server').value;
         if (serverId) {

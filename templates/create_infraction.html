@@ -1,88 +1,94 @@
-<div id="createModal" class="modal">
+<div id="createModal" class="modal form-sheet">
     <div class="modal-background"></div>
     <div class="modal-card">
-        <header class="modal-card-head background-tertiary">
+        <header class="modal-card-head background-secondary">
             <p class="modal-card-title text-primary">Create Infraction</p>
-            <button class="delete cInfractionDismiss"></button>
+            <button class="delete cInfractionDismiss" aria-label="Close"></button>
         </header>
         <section class="modal-card-body background-secondary">
             <div id="infractionCreateError" class="notification is-danger is-hidden">
-                <button class="delete cDismissError"></button>
+                <button class="delete cDismissError" aria-label="Dismiss"></button>
                 <span id="infractionCreateErrorMsg"></span>
             </div>
-            <label class="label text-primary">User</label>
-            <div class="field has-addons mr-3">
-                <input id="gameIdEntry" class="input" type="text" placeholder="Steam ID">
-                <input id="ipEntry"
-                       class="input"
-                       type="text"
-                       maxlength="15"
-                       placeholder="IP Address">
-            </div>
-            <label class="label text-primary">Scoping</label>
-            <div class="field">
-                <div class="control {% if user is none or not has_flag(user.permissions, p_nodes['Add Global Infractions']) %}is-hidden{% endif %}">
-                    <label class="checkbox">
-                        <input id="isWebToggle" type="checkbox" name="isWebInfract">
-                        This is a web infraction
-                    </label>
-                </div>
-            </div>
-            <div class="field" id="targetServerField">
-                <p>Target server</p>
-                <div class="control">
-                    <div class="select">
-                        <select id="serverSelector" class="select-exp"></select>
+            <div id="cUserSection" class="form-row">
+                <span class="form-label">User</span>
+                <div class="form-control-group">
+                    <div class="form-pair">
+                        <input id="gameIdEntry"
+                               class="input"
+                               type="text"
+                               placeholder="Steam ID"
+                               aria-label="User Steam ID">
+                        <input id="ipEntry"
+                               class="input"
+                               type="text"
+                               maxlength="15"
+                               placeholder="IP Address"
+                               aria-label="User IP address">
                     </div>
                 </div>
             </div>
-            <div class="control {% if user is none or not has_flag(user.permissions, p_nodes['Add Global Infractions']) %}is-hidden{% endif %}">
-                <label id="serverOnlyLabel" class="radio">
-                    <input class="scope-check"
-                           id="serverOnlyCheck"
-                           type="radio"
-                           name="scope"
-                           data-has-permissions="1"
-                           checked>
-                    Server
-                </label>
-                <label id="globalLabel" class="radio">
-                    <input class="scope-check"
-                           id="globalCheck"
-                           type="radio"
-                           name="scope"
-                           {% if user is not none and has_flag(user.permissions, p_nodes['Add Global Infractions']) %}data-has-permissions="1"{% else %}data-has-permissions="0"{% endif %}
-                           checked>
-                    Global
-                </label>
+            <div class="form-row">
+                <span class="form-label">Scope</span>
+                <div class="form-control-group">
+                    <div class="choice-group {% if user is none or not has_flag(user.permissions, p_nodes['Add Global Infractions']) %}is-hidden{% endif %}"
+                         role="radiogroup"
+                         aria-label="Scope">
+                        <label id="serverOnlyLabel" class="radio choice">
+                            <input class="scope-check"
+                                   id="serverOnlyCheck"
+                                   type="radio"
+                                   name="scope"
+                                   data-has-permissions="1"
+                                   checked>
+                            Server
+                        </label>
+                        <label id="globalLabel" class="radio choice">
+                            <input class="scope-check"
+                                   id="globalCheck"
+                                   type="radio"
+                                   name="scope"
+                                   {% if user is not none and has_flag(user.permissions, p_nodes['Add Global Infractions']) %}data-has-permissions="1"{% else %}data-has-permissions="0"{% endif %}
+                                   checked>
+                            Global
+                        </label>
+                    </div>
+                    <label class="checkbox {% if user is none or not has_flag(user.permissions, p_nodes['Add Global Infractions']) %}is-hidden{% endif %}">
+                        <input id="isWebToggle" type="checkbox" name="isWebInfract">
+                        This is a web infraction
+                    </label>
+                    <div id="targetServerField" class="select is-fullwidth">
+                        <select id="serverSelector" class="select-exp" aria-label="Target server"></select>
+                    </div>
+                </div>
             </div>
-            <br>
-            <label class="label text-primary">Reasoning and Evidence</label>
-            <textarea id="reasonEntry"
-                      class="textarea"
-                      maxlength="100"
-                      placeholder="Reason"></textarea>
-            <br>
-            <div class="file is-normal has-name">
-                <label class="file-label">
-                    <input id="fileInput" class="file-input" type="file" name="resume">
-                    <span class="file-cta">
-                        <span class="file-icon">
-                            <i class="fas fa-upload"></i>
-                        </span>
-                        <span class="file-label">Attach evidence</span>
-                    </span>
-                    <span id="fileName" class="file-name">No file uploaded.</span>
-                </label>
+            <div class="form-row">
+                <label class="form-label" for="reasonEntry">Reason</label>
+                <div class="form-control-group">
+                    <textarea id="reasonEntry"
+                              class="textarea"
+                              rows="2"
+                              maxlength="100"
+                              placeholder="Why is this infraction being issued?"></textarea>
+                    <div class="file is-fullwidth has-name">
+                        <label class="file-label">
+                            <input id="fileInput" class="file-input" type="file" name="resume">
+                            <span class="file-cta">
+                                <span class="file-icon">
+                                    <i class="fas fa-upload"></i>
+                                </span>
+                                <span class="file-label">Evidence</span>
+                            </span>
+                            <span id="fileName" class="file-name">No file uploaded.</span>
+                        </label>
+                    </div>
+                </div>
             </div>
-            <br>
             {% if user is not none and has_flag(user.permissions, bit_or(p_nodes["Restrict Text"], p_nodes["Restrict Voice"], p_nodes["Restrict Admin Chat"], p_nodes["Restrict Call Admin"], p_nodes["Ban"], p_nodes["Restrict Map Items"])) %}
-                <div id="cRestrictionsSection">
-                    <label class="label text-primary">Restrictions</label>
-                    <p>To issue a warning, deselect all restrictions.</p>
-                    <br>
-                    <div class="is-flex is-justify-content-center">
-                        <div class="buttons is-justify-content-center">
+                <div id="cRestrictionsSection" class="form-row">
+                    <span class="form-label">Restrictions</span>
+                    <div class="form-control-group">
+                        <div class="restriction-buttons">
                             {% if user is not none and has_flag(user.permissions, p_nodes["Restrict Voice"]) %}
                                 <button id="restrictVoice" class="rbtn button is-voice-btn is-outlined">
                                     <span class="icon is-small ricon">
@@ -134,68 +140,57 @@
                                 </button>
                             {% endif %}
                         </div>
+                        <p class="form-hint">To issue a warning, deselect all restrictions.</p>
                     </div>
-                    <br>
                 </div>
             {% endif %}
-            <div id="cExpirationSection">
-                <label class="label text-primary">Expiration</label>
-                <div class="field" id="cTimeDecCheckField">
-                    <div class="control">
-                        <label class="checkbox">
-                            <input id="timeDecCheck"
-                                   type="checkbox"
-                                   name="isTimeDec"
-                                   data-auto-select="{{ '1' if AUTO_SELECT_PLAYTIME else '0' }}">
-                            Playtime (time remaining only decreases while the user is connected)
-                        </label>
-                    </div>
-                </div>
-                <!--Possible future TODO: Make auto-stacking smarter and un-hide this option-->
-                <div class="field" id="cAutoStackCheckField" style="display: none;">
-                    <div class="control">
-                        <label class="checkbox">
-                            <input id="autoStackCheck" type="checkbox" name="isAutoStack">
-                            Automatically pick duration based on infraction history
-                        </label>
-                    </div>
-                </div>
-                <div class="field" id="cPermCheckField">
-                    <div class="control">
-                        <label class="checkbox">
-                            <input id="permanentCheck" type="checkbox" name="isPermanent">
-                            This infraction shouldn't expire
-                        </label>
-                    </div>
-                </div>
-                <div class="field has-addons is-justify-content-center"
-                     id="cDurationField">
-                    <div class="control">
-                        <input id="durationEntry"
-                               class="input"
-                               type="number"
-                               min="1"
-                               placeholder="Duration">
-                    </div>
-                    <div class="control">
-                        <div class="select">
-                            <select id="unitSelector">
-                                <option value="m">Minutes</option>
-                                <option value="h" selected>Hours</option>
-                                <option value="d">Days</option>
-                                <option value="w">Weeks</option>
-                                <option value="mo">Months</option>
-                                <option value="y">Years</option>
-                            </select>
+            <div id="cExpirationSection" class="form-row">
+                <span class="form-label">Duration</span>
+                <div class="form-control-group">
+                    <div class="field has-addons" id="cDurationField">
+                        <div class="control is-expanded">
+                            <input id="durationEntry"
+                                   class="input"
+                                   type="number"
+                                   min="1"
+                                   placeholder="Duration"
+                                   aria-label="Duration">
+                        </div>
+                        <div class="control">
+                            <div class="select">
+                                <select id="unitSelector" aria-label="Duration unit">
+                                    <option value="m">Minutes</option>
+                                    <option value="h" selected>Hours</option>
+                                    <option value="d">Days</option>
+                                    <option value="w">Weeks</option>
+                                    <option value="mo">Months</option>
+                                    <option value="y">Years</option>
+                                </select>
+                            </div>
                         </div>
                     </div>
+                    <label class="checkbox" id="cTimeDecCheckField">
+                        <input id="timeDecCheck"
+                               type="checkbox"
+                               name="isTimeDec"
+                               data-auto-select="{{ '1' if AUTO_SELECT_PLAYTIME else '0' }}">
+                        Playtime (only counts down while the user is connected)
+                    </label>
+                    <!--Possible future TODO: Make auto-stacking smarter and un-hide this option-->
+                    <label class="checkbox" id="cAutoStackCheckField" style="display: none;">
+                        <input id="autoStackCheck" type="checkbox" name="isAutoStack">
+                        Automatically pick duration based on infraction history
+                    </label>
+                    <label class="checkbox" id="cPermCheckField">
+                        <input id="permanentCheck" type="checkbox" name="isPermanent">
+                        Permanent
+                    </label>
                 </div>
-                <br>
             </div>
         </section>
-        <footer class="modal-card-foot background-tertiary">
+        <footer class="modal-card-foot background-secondary">
+            <button class="button is-cancel cInfractionDismiss">Cancel</button>
             <button id="cInfractionSubmit" class="button is-success">Add Infraction</button>
-            <button class="button is-danger cInfractionDismiss">Cancel</button>
         </footer>
     </div>
 </div>

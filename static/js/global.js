@@ -146,7 +146,134 @@ $(document).ready(function () {
         }
         closeModals();
     });
+
+    setupFormSheetDrag();
 });
+
+const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+function animateLayoutChange(containers, change) {
+    if (reducedMotion.matches) {
+        change();
+        return;
+    }
+
+    const items = $(containers).children().toArray().map(el => ({
+        el,
+        before: el.getBoundingClientRect(),
+        wasHidden: el.classList.contains('is-hidden'),
+    }));
+
+    change();
+
+    const parentRects = new Map();
+    for (const item of items) {
+        item.hidden = item.el.classList.contains('is-hidden');
+        if (item.hidden) {
+            const parent = item.el.parentElement;
+            if (!parentRects.has(parent))
+                parentRects.set(parent, parent.getBoundingClientRect());
+        } else {
+            item.after = item.el.getBoundingClientRect();
+        }
+    }
+
+    const timing = {duration: 180, easing: 'ease-out'};
+
+    for (const {el, before, wasHidden, hidden, after} of items) {
+        if (hidden && !wasHidden) {
+            const parentRect = parentRects.get(el.parentElement);
+            const ghost = el.cloneNode(true);
+
+            ghost.querySelectorAll('input').forEach(i => i.remove());
+            ghost.removeAttribute('id');
+            ghost.classList.remove('is-hidden', 'restriction-button');
+            ghost.setAttribute('aria-hidden', 'true');
+            Object.assign(ghost.style, {
+                position: 'absolute',
+                left: (before.left - parentRect.left) + 'px',
+                top: (before.top - parentRect.top) + 'px',
+                width: before.width + 'px',
+                height: before.height + 'px',
+                margin: '0',
+                pointerEvents: 'none',
+            });
+            el.parentElement.appendChild(ghost);
+
+            const fade = ghost.animate(
+                [{opacity: 1, transform: 'none'}, {opacity: 0, transform: 'scale(0.9)'}],
+                timing
+            );
+            fade.onfinish = fade.oncancel = () => ghost.remove();
+        } else if (!hidden && wasHidden) {
+            el.animate([{opacity: 0, transform: 'scale(0.9)'}, {opacity: 1, transform: 'none'}], timing);
+        } else if (!hidden) {
+            const dx = before.left - after.left;
+            const dy = before.top - after.top;
+
+            if (dx || dy)
+                el.animate([{transform: `translate(${dx}px, ${dy}px)`}, {transform: 'none'}], timing);
+        }
+    }
+}
+
+function setupFormSheetDrag() {
+    const sheets = $('.form-sheet');
+    if (!sheets.length)
+        return;
+
+    const isPhone = window.matchMedia('(max-width: 600px)');
+
+    sheets.each(function () {
+        const card = $(this).find('.modal-card');
+        const head = $(this).find('.modal-card-head');
+        let startY = null;
+        let dy = 0;
+
+        function endDrag() {
+            startY = null;
+            card.css({transition: '', transform: ''});
+        }
+
+        head.on('touchstart', function (e) {
+            if (!isPhone.matches || e.originalEvent.touches.length > 1 || $(e.target).is('button')) {
+                return;
+            }
+
+            startY = e.originalEvent.touches[0].clientY;
+            dy = 0;
+            card.css('transition', 'none');
+        });
+
+        head.on('touchmove', function (e) {
+            if (startY === null) {
+                return;
+            }
+
+            if (e.originalEvent.touches.length > 1) {
+                dy = 0;
+                endDrag();
+                return;
+            }
+
+            dy = Math.max(0, e.originalEvent.touches[0].clientY - startY);
+            e.preventDefault();
+            card.css('transform', 'translateY(' + dy + 'px)');
+        });
+
+        head.on('touchend touchcancel', function () {
+            if (startY === null) {
+                return;
+            }
+
+            endDrag();
+
+            if (dy > 100) {
+                head.find('.delete').click();
+            }
+        });
+    });
+}
 
 function closeModals() {
     $('.modal').removeClass('is-active');
