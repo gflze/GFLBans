@@ -9,6 +9,7 @@
         </a>
         <a role="button"
            class="navbar-burger is-accent"
+           tabindex="0"
            aria-label="menu"
            aria-expanded="false"
            data-target="navbarContents">
@@ -18,6 +19,10 @@
         </a>
     </div>
     <div id="navbarContents" class="navbar-menu is-accent">
+        <div class="navbar-drawer-head is-hidden-desktop">
+            <span>Menu</span>
+            <button class="delete is-medium navbar-drawer-close" aria-label="Close menu"></button>
+        </div>
         <div class="navbar-start">
             <a href="/"
                class="navbar-item {% if page == 'index' %}is-active{% endif %}"><i class="fas fa-tachometer-alt nav-icon"></i>Dashboard</a>
@@ -36,37 +41,38 @@
                 </a>
             {% endif %}
             {% if user is not none and has_flag(user.permissions, bit_or(p_nodes["Manage Servers"], p_nodes["Manage Groups and Admins"], p_nodes["Manage VPNs"])) %}
-                <div class="navbar-item has-dropdown is-hoverable">
+                <div class="navbar-item has-dropdown is-hoverable navbar-manage">
                     <a href="/manage/"
                        class="navbar-link is-arrowless is-hoverable is-hidden-touch {% if page == 'manage' %}is-active{% endif %}"><i class="fas fa-user-shield nav-icon"></i>Manage
                     </a>
+                    <p class="navbar-section-label is-hidden-desktop">Manage</p>
                     <div class="navbar-dropdown is-paddingless is-accent">
                         <div class="has-addons">
                             <div class="is-flex-grow-1">
                                 {% if user is not none and has_flag(user.permissions, p_nodes["Manage Groups and Admins"]) %}
                                     <a id="admin-mgmt"
                                        href="/manage/admin/"
-                                       class="panel-block{% if mode == 'admin' %} is-active{% endif %}">Admins</a>
+                                       class="panel-block{% if mode == 'admin' %} is-active{% endif %}"><i class="fas fa-users-cog nav-icon is-hidden-desktop"></i>Admins</a>
                                     <a id="group-mgmt"
                                        href="/manage/group/"
-                                       class="panel-block{% if mode == 'group' %} is-active{% endif %}">Groups</a>
+                                       class="panel-block{% if mode == 'group' %} is-active{% endif %}"><i class="fas fa-layer-group nav-icon is-hidden-desktop"></i>Groups</a>
                                 {% endif %}
                                 {% if user is not none and has_flag(user.permissions, p_nodes["Manage Servers"]) %}
                                     <a id="server-mgmt"
                                        href="/manage/server/"
-                                       class="panel-block{% if mode == 'server' %} is-active{% endif %}">Servers</a>
+                                       class="panel-block{% if mode == 'server' %} is-active{% endif %}"><i class="fas fa-network-wired nav-icon is-hidden-desktop"></i>Servers</a>
                                 {% endif %}
                                 {% if user is not none and has_flag(user.permissions, p_nodes["Manage VPNs"]) %}
                                     <a id="API-mgmt"
                                        href="/manage/vpn/"
-                                       class="panel-block{% if mode == 'vpn' %} is-active{% endif %}">VPNs</a>
+                                       class="panel-block{% if mode == 'vpn' %} is-active{% endif %}"><i class="fas fa-user-secret nav-icon is-hidden-desktop"></i>VPNs</a>
                                 {% endif %}
                             </div>
                         </div>
                     </div>
                 </div>
             {% endif %}
-            <div class="navbar-item has-dropdown is-hoverable">
+            <div class="navbar-item has-dropdown is-hoverable navbar-search">
                 <div class="navbar-link is-arrowless is-hoverable is-hidden-touch">
                     <i class="fa fa-search nav-icon-mobile"></i>
                 </div>
@@ -94,14 +100,15 @@
         <div class="navbar-end">
             <a id="dark-mode-toggle"
                data-modeset="{% if opposite_theme %}opposite{% endif %}"
-               class="navbar-item"><i class="fas nav-icon-mobile"></i><span class="is-hidden-desktop">Toggle Dark Mode</span></a>
+               class="navbar-item"
+               aria-label="Toggle dark mode"><i class="fas nav-icon-mobile"></i></a>
             {% if user is none %}
                 <a id="login" class="navbar-item" href="/login/">
                     <img src="/static/images/steam_login.png" alt="Login with Steam">
                 </a>
             {% else %}
                 <div class="navbar-item user-button">
-                    <div class="is-hidden-touch">
+                    <div>
                         {% if user.avatar %}
                             <img class="user-avatar"
                                  src="/file/uploads/{{ user.avatar.gridfs_file }}/avatar.webp"
@@ -110,16 +117,18 @@
                             <img class="user-avatar" src="/static/images/fallback_av.png" alt="">
                         {% endif %}
                     </div>
-                    <i class="is-hidden-desktop nav-icon fas fa-user"></i>
                     <span>{{ user.name }}</span>
                 </div>
-                <a class="navbar-item" href="/login/logout">
+                <a id="sign-out"
+                   class="navbar-item"
+                   href="/login/logout"
+                   aria-label="Sign out">
                     <i class="fas fa-sign-out-alt nav-icon-mobile"></i>
-                    <span class="is-hidden-desktop">Sign Out</span>
                 </a>
             {% endif %}
         </div>
     </div>
+    <div class="navbar-backdrop is-hidden-desktop" aria-hidden="true"></div>
 </nav>
 {% if user is not none and UPDATE_AVAILABLE %}
     <div class="notification is-danger has-text-centered"
